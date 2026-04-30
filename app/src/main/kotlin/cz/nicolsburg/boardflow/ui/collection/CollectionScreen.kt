@@ -96,7 +96,8 @@ private enum class SortMode(val label: String) {
 
 private enum class TabMode(val label: String) {
     OWNED("Owned"),
-    WISHLIST("Wishlist")
+    WISHLIST("Wishlist"),
+    SLEEVES("Sleeves")
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -118,8 +119,7 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
 
     val listState = rememberLazyListState()
     val hasActiveFilters =
-        tabMode != TabMode.OWNED ||
-                filterPlayers != null ||
+        filterPlayers != null ||
                 filterBestFor != null ||
                 sortMode != SortMode.RATING
 
@@ -143,6 +143,7 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
         result = when (tabMode) {
             TabMode.OWNED -> result.filter { it.isOwned || !it.isWishlisted }
             TabMode.WISHLIST -> result.filter { it.isWishlisted }
+            TabMode.SLEEVES -> emptyList()
         }
 
         filterPlayers?.let { players ->
@@ -185,7 +186,25 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                 )
 
                 else -> {
-                    GameSearchField(
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        items(TabMode.entries) { tab ->
+                            FilterChip(
+                                selected = tabMode == tab,
+                                onClick = { tabMode = tab },
+                                colors = boardFlowFilterChipColors(),
+                                label = { Text(tab.label) }
+                            )
+                        }
+                    }
+
+                    if (tabMode == TabMode.SLEEVES) {
+                        SleevesContent(allGames = allGames)
+                    } else {
+                        GameSearchField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         trailingAction = {
@@ -228,20 +247,6 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                                     ) {
                                         Text("Reset")
                                     }
-                                }
-                            }
-
-                            Row(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                TabMode.entries.forEach { tab ->
-                                    FilterChip(
-                                        selected = tabMode == tab,
-                                        onClick = { tabMode = tab },
-                                        colors = boardFlowFilterChipColors(),
-                                        label = { Text(tab.label) }
-                                    )
                                 }
                             }
 
@@ -363,6 +368,7 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                             }
                         }
                     }
+                    } // end if (tabMode != SLEEVES)
                 }
             }
         }

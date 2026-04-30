@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
@@ -31,5 +32,6 @@ object BoardFlowIcons {
     val OpenWeb: ImageVector = Icons.Default.Language
     val Refresh: ImageVector = Icons.Default.Refresh
     val Settings: ImageVector = Icons.Default.Settings
+    val Sleeves: ImageVector = Icons.Default.Layers
     val Sync: ImageVector = Icons.Default.Sync
 }

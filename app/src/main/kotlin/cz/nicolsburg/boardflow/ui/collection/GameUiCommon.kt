@@ -205,14 +205,14 @@ fun compactPlayTime(game: GameItem): String? {
     }
 }
 
-private enum class SheetSleeveStatus {
+internal enum class SheetSleeveStatus {
     SLEEVED,
     TO_SLEEVE,
     UNSLEEVED,
     UNKNOWN
 }
 
-private fun sheetSleeveStatus(game: GameItem): SheetSleeveStatus {
+internal fun sheetSleeveStatus(game: GameItem): SheetSleeveStatus {
     val value = game.spreadsheetValues.entries
         .firstOrNull { (key, _) -> key.equals("sleeved", ignoreCase = true) }
         ?.value
