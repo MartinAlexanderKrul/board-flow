@@ -44,6 +44,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -160,6 +161,8 @@ fun HistoryScreen(viewModel: AppViewModel) {
             isLoading = editPlayLoading,
             onDismiss = { editingPlay = null; editError = null },
             onSave = { date, durationMinutes, location, comments, players ->
+                editingPlay = null
+                editError = null
                 viewModel.editPlay(
                     play = play,
                     date = date,
@@ -167,7 +170,7 @@ fun HistoryScreen(viewModel: AppViewModel) {
                     location = location,
                     comments = comments,
                     players = players,
-                    onSuccess = { editingPlay = null; editError = null },
+                    onSuccess = { editError = null },
                     onError = { editError = it }
                 )
             }
@@ -789,7 +792,9 @@ private fun EditPlayDialog(
                                 player = player,
                                 onNameChange = { editPlayers[index] = player.copy(name = it) },
                                 onScoreChange = { editPlayers[index] = player.copy(score = it) },
-                                onToggleWinner = { editPlayers[index] = player.copy(isWinner = !player.isWinner) }
+                                onColorChange = { editPlayers[index] = player.copy(color = it) },
+                                onToggleWinner = { editPlayers[index] = player.copy(isWinner = !player.isWinner) },
+                                onFirstPlayChange = { editPlayers[index] = player.copy(isNew = it) }
                             )
                         }
                     }
@@ -818,39 +823,75 @@ private fun EditPlayerRow(
     player: PlayerResult,
     onNameChange: (String) -> Unit,
     onScoreChange: (String) -> Unit,
-    onToggleWinner: () -> Unit
+    onColorChange: (String) -> Unit,
+    onToggleWinner: () -> Unit,
+    onFirstPlayChange: (Boolean) -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        if (player.color.isNotBlank()) {
-            PlayerColorDot(player.color)
-        }
-        OutlinedTextField(
-            value = player.name,
-            onValueChange = onNameChange,
-            label = { Text("Name") },
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(1.6f)
-        )
-        OutlinedTextField(
-            value = player.score,
-            onValueChange = onScoreChange,
-            label = { Text("Score") },
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(0.8f)
-        )
-        BoardFlowIconButton(onClick = onToggleWinner) {
-            Icon(
-                Icons.Default.EmojiEvents,
-                contentDescription = "Toggle winner",
-                tint = if (player.isWinner) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
-                modifier = Modifier.size(18.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (player.color.isNotBlank()) {
+                PlayerColorDot(player.color)
+            }
+            OutlinedTextField(
+                value = player.name,
+                onValueChange = onNameChange,
+                label = { Text("Name") },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1.6f)
             )
+            OutlinedTextField(
+                value = player.score,
+                onValueChange = onScoreChange,
+                label = { Text("Score") },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(0.8f)
+            )
+            BoardFlowIconButton(onClick = onToggleWinner) {
+                Icon(
+                    Icons.Default.EmojiEvents,
+                    contentDescription = "Toggle winner",
+                    tint = if (player.isWinner) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = player.color,
+                onValueChange = onColorChange,
+                label = { Text("Team / color") },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f)
+            )
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Checkbox(
+                    checked = player.isNew,
+                    onCheckedChange = onFirstPlayChange
+                )
+                Text(
+                    "First play",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

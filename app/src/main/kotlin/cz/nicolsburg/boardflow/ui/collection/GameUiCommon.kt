@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -204,14 +205,29 @@ fun compactPlayTime(game: GameItem): String? {
     }
 }
 
-fun isSleeved(game: GameItem): Boolean {
-    if (game.sleeveCardSets.any { (it.count ?: 0) > 0 }) return true
+private enum class SheetSleeveStatus {
+    SLEEVED,
+    TO_SLEEVE,
+    UNSLEEVED,
+    UNKNOWN
+}
 
-    return game.spreadsheetValues.entries.any { (key, value) ->
-        key.equals("sleeved", ignoreCase = true) &&
-                value.trim().lowercase() in setOf("1", "1.0", "true", "yes", "y")
+private fun sheetSleeveStatus(game: GameItem): SheetSleeveStatus {
+    val value = game.spreadsheetValues.entries
+        .firstOrNull { (key, _) -> key.equals("sleeved", ignoreCase = true) }
+        ?.value
+        ?.trim()
+
+    return when (value?.lowercase()) {
+        "1", "1.0", "true", "yes", "y" -> SheetSleeveStatus.SLEEVED
+        "!", "to sleeve", "tosleeve" -> SheetSleeveStatus.TO_SLEEVE
+        "0", "0.0", "false", "no", "n" -> SheetSleeveStatus.UNSLEEVED
+        else -> SheetSleeveStatus.UNKNOWN
     }
 }
+
+fun isSleeved(game: GameItem): Boolean =
+    sheetSleeveStatus(game) == SheetSleeveStatus.SLEEVED
 
 fun headerStatusChips(
     game: GameItem,
@@ -219,8 +235,11 @@ fun headerStatusChips(
     secondary: Color
 ): List<HeaderChip> {
     return buildList {
-        if (isSleeved(game)) {
-            add(HeaderChip("Sleeved", Icons.Default.Check, primary))
+        when (sheetSleeveStatus(game)) {
+            SheetSleeveStatus.SLEEVED -> add(HeaderChip("Sleeved", Icons.Default.Check, primary))
+            SheetSleeveStatus.TO_SLEEVE -> add(HeaderChip("To sleeve", Icons.Default.WarningAmber, secondary))
+            SheetSleeveStatus.UNSLEEVED,
+            SheetSleeveStatus.UNKNOWN -> Unit
         }
         if (game.isOwned) {
             add(HeaderChip("Owned", Icons.Default.Inventory2, primary))

@@ -269,6 +269,7 @@ private fun EditPlayerDialog(
                 onClick = {
                     if (displayName.isNotBlank() && displayName != player.displayName) onRenameDisplayName(displayName)
                     if (bggUsername.trim() != player.bggUsername) onUpdateBggUsername(bggUsername)
+                    onDismiss()
                 },
                 enabled = identityChanged,
                 modifier = Modifier.fillMaxWidth()

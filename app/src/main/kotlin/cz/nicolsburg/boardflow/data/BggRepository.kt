@@ -140,25 +140,33 @@ class BggRepository {
         durationMinutes: Int = 0,
         location: String = "",
         comments: String = "",
+        quantity: Int = 1,
+        incomplete: Boolean = false,
+        nowInStats: Boolean = true,
         playId: String? = null
-    ): Result<Unit> = withContext(Dispatchers.IO) {
+    ): Result<String?> = withContext(Dispatchers.IO) {
         runCatching {
             val formBody = FormBody.Builder().apply {
-                add("ajax", "1"); add("action", "save"); add("objecttype", "thing")
+                add("ajax", "1"); add("action", "save"); add("version", "2"); add("objecttype", "thing")
                 add("objectid", gameId.toString()); add("playdate", date.toString())
                 add("dateinput", date.toString()); add("length", durationMinutes.toString())
                 add("location", location); add("comments", comments)
-                add("quantity", "1"); add("incomplete", "0"); add("nowinstats", "0")
+                add("quantity", quantity.coerceAtLeast(1).toString())
+                add("incomplete", if (incomplete) "1" else "0")
+                add("nowinstats", if (nowInStats) "1" else "0")
                 if (playId != null) add("playid", playId)
                 players.forEachIndexed { index, player ->
-                    add("players[$index][name]", player.name)
-                    add("players[$index][score]", player.score)
-                    add("players[$index][win]", if (player.isWinner) "1" else "0")
-                    add("players[$index][new]", "0")
-                    add("players[$index][rating]", "0")
-                    add("players[$index][selected]", "0")
+                    val position = index + 1
                     val bggUsername = playerBggUsernames[index]
-                    if (!bggUsername.isNullOrBlank()) add("players[$index][username]", bggUsername)
+                    add("players[$position][name]", player.name)
+                    add("players[$position][position]", position.toString())
+                    add("players[$position][score]", player.score)
+                    add("players[$position][color]", player.color)
+                    add("players[$position][win]", if (player.isWinner) "1" else "0")
+                    add("players[$position][new]", if (player.isNew) "1" else "0")
+                    add("players[$position][rating]", player.rating.takeUnless { it.isBlank() || it == "N/A" } ?: "0")
+                    add("players[$position][selected]", if (bggUsername.isNullOrBlank()) "0" else "1")
+                    if (!bggUsername.isNullOrBlank()) add("players[$position][username]", bggUsername)
                 }
             }.build()
             val request = Request.Builder()
@@ -170,8 +178,11 @@ class BggRepository {
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string() ?: ""
             if (!response.isSuccessful) throw Exception("Failed to log play: HTTP ${response.code}")
-            if (!responseBody.contains("playid") && !responseBody.contains("\"error\":null"))
+            val savedPlayId = extractSavedPlayId(responseBody) ?: playId
+            if (savedPlayId == null && !looksLikePlaySaveAccepted(responseBody)) {
                 throw Exception("Unexpected BGG response: $responseBody")
+            }
+            savedPlayId
         }
     }
 
@@ -288,6 +299,41 @@ class BggRepository {
             || body.contains("success", ignoreCase = true)
             || body.contains("play has been deleted", ignoreCase = true)
             || body.isBlank()
+    }
+
+    private fun looksLikePlaySaveAccepted(body: String): Boolean {
+        return body.contains("\"error\":null")
+            || body.contains("\"error\": null")
+            || body.contains("\"error\":false")
+            || body.contains("\"error\": false")
+            || body.contains("saved", ignoreCase = true)
+            || body.isBlank()
+    }
+
+    private fun extractSavedPlayId(body: String): String? {
+        runCatching {
+            val json = JSONObject(body.trim())
+            listOf("playid", "playId", "id").forEach { key ->
+                json.optString(key).takeIf { it.isNotBlank() && it != "0" }?.let { return it }
+            }
+        }
+
+        Regex(
+            """"(?:playid|playId|id)"\s*:\s*"?([0-9]+)"?""",
+            RegexOption.IGNORE_CASE
+        ).find(body)?.groupValues?.getOrNull(1)?.let { return it }
+
+        Regex(
+            """name=["']playid["'][^>]*value=["']([0-9]+)["']""",
+            RegexOption.IGNORE_CASE
+        ).find(body)?.groupValues?.getOrNull(1)?.let { return it }
+
+        Regex(
+            """\bplayid\b\s*[:=]\s*["']?([0-9]+)""",
+            RegexOption.IGNORE_CASE
+        ).find(body)?.groupValues?.getOrNull(1)?.let { return it }
+
+        return null
     }
 
     suspend fun getPlays(username: String): Result<List<LoggedPlay>> = withContext(Dispatchers.IO) {

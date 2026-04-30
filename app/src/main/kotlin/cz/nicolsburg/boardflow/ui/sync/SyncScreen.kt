@@ -691,7 +691,9 @@ private fun LogDialog(
 
     AnimatedDialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
