@@ -171,55 +171,70 @@ fun AnimatedDialog(
                 modifier = Modifier
                     .offset { IntOffset(0, offsetY.value.roundToInt()) }
                     .heightIn(max = maxH)
-                    .pointerInput(onDismissRequest) {
-                        awaitEachGesture {
-                            val down = awaitFirstDown(requireUnconsumed = false)
-                            var pointerId = down.id
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Drag handle — sole gesture zone; scroll area below is untouched
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp)
+                            .pointerInput(onDismissRequest) {
+                                awaitEachGesture {
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    var pointerId = down.id
 
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                val change = event.changes.firstOrNull { it.id == pointerId }
-                                    ?: event.changes.firstOrNull()
-                                    ?: break
+                                    while (true) {
+                                        val event = awaitPointerEvent()
+                                        val change = event.changes.firstOrNull { it.id == pointerId }
+                                            ?: event.changes.firstOrNull()
+                                            ?: break
+                                        pointerId = change.id
+                                        if (!change.pressed) break
 
-                                pointerId = change.id
+                                        val dragAmount = change.positionChange().y
+                                        if (dragAmount != 0f) {
+                                            change.consume()
+                                            scope.launch {
+                                                offsetY.snapTo(
+                                                    (offsetY.value + dragAmount).coerceAtLeast(0f)
+                                                )
+                                            }
+                                        }
+                                    }
 
-                                if (!change.pressed) {
-                                    break
-                                }
-
-                                val dragAmount = change.positionChange().y
-                                // Only intercept unconsumed downward drags — lets inner
-                                // scrollables handle their own scroll events first.
-                                if (dragAmount > 0f && !change.isConsumed) {
-                                    change.consume()
-                                    val nextOffset = (offsetY.value + dragAmount).coerceAtLeast(0f)
                                     scope.launch {
-                                        offsetY.snapTo(nextOffset)
+                                        if (offsetY.value > dismissThresholdPx) {
+                                            onDismissRequest()
+                                        } else {
+                                            offsetY.animateTo(
+                                                targetValue = 0f,
+                                                animationSpec = tween(
+                                                    settleDuration,
+                                                    easing = FastOutSlowInEasing
+                                                )
+                                            )
+                                        }
                                     }
                                 }
-                            }
-
-                            scope.launch {
-                                if (offsetY.value > dismissThresholdPx) {
-                                    onDismissRequest()
-                                } else {
-                                    offsetY.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = tween(settleDuration, easing = FastOutSlowInEasing)
-                                    )
-                                }
-                            }
-                        }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(width = 36.dp, height = 4.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                                    shape = CircleShape
+                                )
+                        )
                     }
-            ) {
-                content()
-                CornerCloseStrip(
-                    onClick = onDismissRequest,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(horizontal = 20.dp)
-                )
+
+                    // Content — weight(fill=false) gives it bounded height so inner
+                    // LazyColumns scroll correctly, while short dialogs stay compact.
+                    Box(modifier = Modifier.weight(1f, fill = false)) {
+                        content()
+                    }
+                }
             }
         }
     }
