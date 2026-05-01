@@ -35,22 +35,22 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 
+private data class GameSleevesEntry(val name: String, val count: Int)
+
 private data class SleeveSizeGroup(
     val size: String,
     val totalCount: Int,
-    val games: List<String>,
+    val games: List<GameSleevesEntry>,
     val isUnknown: Boolean = false
 )
 
 private fun computeSleeveSummary(games: List<GameItem>): List<SleeveSizeGroup> {
     val toSleeve = games.filter { game ->
-        game.isOwned && sheetSleeveStatus(game).let {
-            it == SheetSleeveStatus.TO_SLEEVE || it == SheetSleeveStatus.UNSLEEVED
-        }
+        game.isOwned && sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE
     }
 
-    // size → (total card count, ordered set of contributing game names)
-    val sizeGroups = LinkedHashMap<String, Pair<Int, LinkedHashSet<String>>>()
+    // size → (total count across all games, game name → count for that game)
+    val sizeGroups = LinkedHashMap<String, Pair<Int, LinkedHashMap<String, Int>>>()
     val noDataGames = LinkedHashSet<String>()
 
     for (game in toSleeve) {
@@ -60,28 +60,47 @@ private fun computeSleeveSummary(games: List<GameItem>): List<SleeveSizeGroup> {
             continue
         }
 
-        var hasAnySize = false
+        // Aggregate counts per size for this game first (multiple card sets may share a size)
+        val countsForThisGame = mutableMapOf<String, Int>()
         for (cs in cardSets) {
             val size = cs.size?.takeIf { it.isNotBlank() } ?: continue
-            hasAnySize = true
-            val count = cs.count ?: 0
-            val existing = sizeGroups[size]
-            if (existing == null) {
-                sizeGroups[size] = count to linkedSetOf(game.name)
-            } else {
-                sizeGroups[size] = (existing.first + count) to existing.second.also { it += game.name }
-            }
+            countsForThisGame[size] = (countsForThisGame[size] ?: 0) + (cs.count ?: 0)
         }
 
-        if (!hasAnySize) noDataGames += game.name
+        if (countsForThisGame.isEmpty()) {
+            noDataGames += game.name
+            continue
+        }
+
+        for ((size, gameCount) in countsForThisGame) {
+            val existing = sizeGroups[size]
+            if (existing == null) {
+                sizeGroups[size] = gameCount to linkedMapOf(game.name to gameCount)
+            } else {
+                sizeGroups[size] = (existing.first + gameCount) to existing.second.also {
+                    it[game.name] = (it[game.name] ?: 0) + gameCount
+                }
+            }
+        }
     }
 
     val knownGroups = sizeGroups.entries
-        .map { (size, pair) -> SleeveSizeGroup(size, pair.first, pair.second.toList()) }
+        .map { (size, pair) ->
+            SleeveSizeGroup(
+                size = size,
+                totalCount = pair.first,
+                games = pair.second.map { (name, count) -> GameSleevesEntry(name, count) }
+            )
+        }
         .sortedByDescending { it.totalCount }
 
     return if (noDataGames.isNotEmpty()) {
-        knownGroups + SleeveSizeGroup("No size data", 0, noDataGames.toList(), isUnknown = true)
+        knownGroups + SleeveSizeGroup(
+            size = "No size data",
+            totalCount = 0,
+            games = noDataGames.map { GameSleevesEntry(it, 0) },
+            isUnknown = true
+        )
     } else {
         knownGroups
     }
@@ -95,9 +114,7 @@ internal fun SleevesContent(
     val groups = remember(allGames) { computeSleeveSummary(allGames) }
     val gamesCount = remember(allGames) {
         allGames.count { game ->
-            game.isOwned && sheetSleeveStatus(game).let {
-                it == SheetSleeveStatus.TO_SLEEVE || it == SheetSleeveStatus.UNSLEEVED
-            }
+            game.isOwned && sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE
         }
     }
 
@@ -246,13 +263,29 @@ private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
                 HorizontalDivider(
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                 )
-                group.games.forEach { gameName ->
-                    Text(
-                        "· $gameName",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                    )
+                group.games.forEach { entry ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 4.dp, top = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "· ${entry.name}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (!group.isUnknown && entry.count > 0) {
+                            Text(
+                                "×${entry.count}",
+                                style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }

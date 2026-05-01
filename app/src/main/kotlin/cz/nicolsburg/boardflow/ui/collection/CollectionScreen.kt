@@ -53,10 +53,10 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -208,11 +208,20 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         trailingAction = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                SearchFieldActionButton(onClick = { showFilters = !showFilters }) {
+                            Box {
+                                SearchFieldActionButton(onClick = { showFilters = true }) {
                                     Icon(
                                         BoardFlowIcons.Filter,
-                                        contentDescription = if (showFilters) "Hide filters" else "Show filters"
+                                        contentDescription = "Sort & filter"
+                                    )
+                                }
+                                if (hasActiveFilters) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(top = 8.dp, end = 8.dp)
+                                            .size(7.dp)
+                                            .background(MaterialTheme.colorScheme.primary, CircleShape)
                                     )
                                 }
                             }
@@ -222,98 +231,22 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
-                    AnimatedVisibility(visible = showFilters) {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "Filters",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                if (hasActiveFilters) {
-                                    BoardFlowInlineAction(
-                                        onClick = {
-                                            tabMode = TabMode.OWNED
-                                            sortMode = SortMode.RATING
-                                            filterPlayers = null
-                                            filterBestFor = null
-                                        }
-                                    ) {
-                                        Text("Reset")
-                                    }
+                    if (showFilters) {
+                        ModalBottomSheet(onDismissRequest = { showFilters = false }) {
+                            FilterSheetContent(
+                                sortMode = sortMode,
+                                onSortMode = { sortMode = it },
+                                filterPlayers = filterPlayers,
+                                onFilterPlayers = { filterPlayers = it },
+                                filterBestFor = filterBestFor,
+                                onFilterBestFor = { filterBestFor = it },
+                                hasActiveFilters = hasActiveFilters,
+                                onReset = {
+                                    sortMode = SortMode.RATING
+                                    filterPlayers = null
+                                    filterBestFor = null
                                 }
-                            }
-
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            ) {
-                                items(SortMode.entries) { mode ->
-                                    FilterChip(
-                                        selected = sortMode == mode,
-                                        onClick = { sortMode = mode },
-                                        colors = boardFlowFilterChipColors(),
-                                        label = { Text(mode.label) }
-                                    )
-                                }
-                            }
-
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            ) {
-                                item {
-                                    FilterChip(
-                                        selected = filterPlayers == null,
-                                        onClick = { filterPlayers = null },
-                                        colors = boardFlowFilterChipColors(),
-                                        label = { Text("Any players") }
-                                    )
-                                }
-                                items((1..6).toList()) { players ->
-                                    FilterChip(
-                                        selected = filterPlayers == players,
-                                        onClick = {
-                                            filterPlayers = if (filterPlayers == players) null else players
-                                        },
-                                        colors = boardFlowFilterChipColors(),
-                                        label = { Text(if (players == 6) "6+" else "$players") }
-                                    )
-                                }
-                            }
-
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                item {
-                                    FilterChip(
-                                        selected = filterBestFor == null,
-                                        onClick = { filterBestFor = null },
-                                        colors = boardFlowFilterChipColors(),
-                                        label = { Text("Any best for") }
-                                    )
-                                }
-                                items((1..6).toList()) { players ->
-                                    FilterChip(
-                                        selected = filterBestFor == players,
-                                        onClick = {
-                                            filterBestFor = if (filterBestFor == players) null else players
-                                        },
-                                        colors = boardFlowFilterChipColors(),
-                                        label = { Text("Best $players") }
-                                    )
-                                }
-                            }
+                            )
                         }
                     }
 
@@ -355,7 +288,6 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                                     ) {
                                         BoardFlowOutlinedButton(
                                             onClick = {
-                                                tabMode = TabMode.OWNED
                                                 sortMode = SortMode.RATING
                                                 filterPlayers = null
                                                 filterBestFor = null
@@ -752,3 +684,99 @@ private fun boardFlowFilterChipColors() = FilterChipDefaults.filterChipColors(
     selectedLabelColor = MaterialTheme.colorScheme.primary,
     selectedLeadingIconColor = MaterialTheme.colorScheme.primary
 )
+
+@Composable
+private fun FilterSheetContent(
+    sortMode: SortMode,
+    onSortMode: (SortMode) -> Unit,
+    filterPlayers: Int?,
+    onFilterPlayers: (Int?) -> Unit,
+    filterBestFor: Int?,
+    onFilterBestFor: (Int?) -> Unit,
+    hasActiveFilters: Boolean,
+    onReset: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Sort & Filter",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            if (hasActiveFilters) {
+                BoardFlowInlineAction(onClick = onReset) { Text("Reset") }
+            }
+        }
+
+        FilterSection("Sort by") {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SortMode.entries.forEach { mode ->
+                    FilterChip(
+                        selected = sortMode == mode,
+                        onClick = { onSortMode(mode) },
+                        colors = boardFlowFilterChipColors(),
+                        label = { Text(mode.label) }
+                    )
+                }
+            }
+        }
+
+        FilterSection("Players") {
+            NumberPicker(selected = filterPlayers, onSelect = onFilterPlayers)
+        }
+
+        FilterSection("Best for") {
+            NumberPicker(selected = filterBestFor, onSelect = onFilterBestFor)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun FilterSection(label: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        content()
+    }
+}
+
+@Composable
+private fun NumberPicker(selected: Int?, onSelect: (Int?) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        (1..6).forEach { n ->
+            val isSelected = selected == n
+            Surface(
+                shape = CircleShape,
+                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable { onSelect(if (isSelected) null else n) }
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        if (n == 6) "6+" else "$n",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+    }
+}
