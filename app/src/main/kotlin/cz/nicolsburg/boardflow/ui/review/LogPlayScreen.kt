@@ -458,65 +458,36 @@ private fun PlayerRow(
     onRemove: () -> Unit,
     suggestions: List<BggPlayer> = emptyList()
 ) {
-    // Only show suggestions that aren't an exact match for current input
     val activeSuggestions: List<BggPlayer> = remember(suggestions, player.name) {
         suggestions.filter { it.displayName.lowercase() != player.name.lowercase().trim() }
     }
 
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Label row aligned to each field's width
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    "Name",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    "Score",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.width(90.dp)
-                )
-                // Spacer to account for the two icon buttons (2 x 48dp)
-                Spacer(Modifier.width(96.dp))
-            }
-            // Input row with icons centered to the text fields
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = player.name,
-                    onValueChange = { onUpdate(player.copy(name = it)) },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = player.score,
-                    onValueChange = { onUpdate(player.copy(score = it)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.width(90.dp)
-                )
-                BoardFlowIconButton(onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) }) {
-                    Icon(
-                        Icons.Default.EmojiEvents,
-                        contentDescription = "Toggle winner",
-                        tint = if (player.isWinner) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Row 1: Name + Trophy
+            FieldBlock(label = "Name") {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = player.name,
+                        onValueChange = { onUpdate(player.copy(name = it)) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
                     )
-                }
-                BoardFlowIconButton(onClick = onRemove) {
-                    Icon(BoardFlowIcons.Delete, "Remove", tint = MaterialTheme.colorScheme.error)
+                    BoardFlowIconButton(onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) }) {
+                        Icon(
+                            Icons.Default.EmojiEvents,
+                            contentDescription = "Toggle winner",
+                            tint = if (player.isWinner) MaterialTheme.colorScheme.primary
+                                   else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+                        )
+                    }
                 }
             }
 
-            // Fuzzy-match suggestions as chips
+            // Suggestions under name
             if (activeSuggestions.isNotEmpty()) {
                 Row(
                     modifier = Modifier.padding(start = 4.dp),
@@ -536,6 +507,75 @@ private fun PlayerRow(
                     }
                 }
             }
+
+            // Row 2: Score + Team/color
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                FieldBlock(label = "Score", modifier = Modifier.width(100.dp)) {
+                    OutlinedTextField(
+                        value = player.score,
+                        onValueChange = { onUpdate(player.copy(score = it)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                FieldBlock(label = "Team / color", modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = player.color,
+                        onValueChange = { onUpdate(player.copy(color = it)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // Row 3: First play + Delete
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Checkbox(
+                        checked = player.isNew,
+                        onCheckedChange = { onUpdate(player.copy(isNew = it)) }
+                    )
+                    Text(
+                        "First play",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                BoardFlowIconButton(onClick = onRemove) {
+                    Icon(
+                        BoardFlowIcons.Delete,
+                        contentDescription = "Remove",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun FieldBlock(
+    label: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        content()
     }
 }
