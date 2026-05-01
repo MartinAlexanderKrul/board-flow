@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -49,7 +51,7 @@ private fun computeSleeveSummary(games: List<GameItem>): List<SleeveSizeGroup> {
         game.isOwned && sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE
     }
 
-    // size → (total count across all games, game name → count for that game)
+    // size -> (total count across all games, game name -> count for that game)
     val sizeGroups = LinkedHashMap<String, Pair<Int, LinkedHashMap<String, Int>>>()
     val noDataGames = LinkedHashSet<String>()
 
@@ -109,6 +111,7 @@ private fun computeSleeveSummary(games: List<GameItem>): List<SleeveSizeGroup> {
 @Composable
 internal fun SleevesContent(
     allGames: List<GameItem>,
+    listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier
 ) {
     val groups = remember(allGames) { computeSleeveSummary(allGames) }
@@ -146,6 +149,7 @@ internal fun SleevesContent(
     }
 
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -235,7 +239,7 @@ private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
             ) {
                 if (!group.isUnknown && group.totalCount > 0) {
                     Text(
-                        "×${group.totalCount}",
+                        "x${group.totalCount}",
                         style = MaterialTheme.typography.titleLarge.withTabularNumbers(),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
