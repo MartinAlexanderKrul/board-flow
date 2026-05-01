@@ -144,10 +144,10 @@ fun LogPlayScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            LazyColumn(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
@@ -363,8 +363,7 @@ fun LogPlayScreen(
 
             // Space for FAB
             item { Spacer(Modifier.height(80.dp)) }
-            } // end LazyColumn
-        } // end Column
+        } // end LazyColumn
     }
 }
 

@@ -12,6 +12,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.LocalIndication
@@ -61,6 +63,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -280,6 +283,7 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                     if (showFilters) {
                         ModalBottomSheet(
                             onDismissRequest = { showFilters = false },
+                            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                             containerColor = MaterialTheme.colorScheme.background,
                             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
                         ) {
@@ -819,6 +823,7 @@ private fun FilterSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

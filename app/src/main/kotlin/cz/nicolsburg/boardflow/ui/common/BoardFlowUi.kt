@@ -57,6 +57,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
@@ -156,6 +157,7 @@ fun AnimatedDialog(
         val dismissThresholdPx = with(density) { 96.dp.toPx() }
         val offsetY = remember { Animatable(0f) }
         val settleDuration = 180
+        val maxH = LocalConfiguration.current.screenHeightDp.dp * 0.85f
         LaunchedEffect(Unit) { visible = true }
         AnimatedVisibility(
             visible = visible,
@@ -167,16 +169,14 @@ fun AnimatedDialog(
             Box(
                 modifier = Modifier
                     .offset { IntOffset(0, offsetY.value.roundToInt()) }
+                    .heightIn(max = maxH)
                     .pointerInput(onDismissRequest) {
                         awaitEachGesture {
-                            val down = awaitFirstDown(
-                                requireUnconsumed = false,
-                                pass = PointerEventPass.Initial
-                            )
+                            val down = awaitFirstDown(requireUnconsumed = false)
                             var pointerId = down.id
 
                             while (true) {
-                                val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                                val event = awaitPointerEvent()
                                 val change = event.changes.firstOrNull { it.id == pointerId }
                                     ?: event.changes.firstOrNull()
                                     ?: break
@@ -188,7 +188,9 @@ fun AnimatedDialog(
                                 }
 
                                 val dragAmount = change.positionChange().y
-                                if (dragAmount != 0f) {
+                                // Only intercept unconsumed downward drags — lets inner
+                                // scrollables handle their own scroll events first.
+                                if (dragAmount > 0f && !change.isConsumed) {
                                     change.consume()
                                     val nextOffset = (offsetY.value + dragAmount).coerceAtLeast(0f)
                                     scope.launch {
