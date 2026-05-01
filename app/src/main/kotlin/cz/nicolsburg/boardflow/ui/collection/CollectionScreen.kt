@@ -233,127 +233,154 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                         }
                     }
 
-                    AnimatedVisibility(visible = !controlsVisible) {
-                        CollectionCollapsedHeader(
-                            tabMode = tabMode,
-                            onTabMode = { tabMode = it },
-                            resultCount = if (tabMode == TabMode.SLEEVES) null else filteredGames.size,
-                            searchQuery = searchQuery,
-                            sortMode = sortMode,
-                            filterPlayers = filterPlayers,
-                            filterBestFor = filterBestFor,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
-
                     if (tabMode == TabMode.SLEEVES) {
                         SleevesContent(allGames = allGames, listState = sleeveListState)
                     } else {
                         AnimatedVisibility(visible = controlsVisible) {
-                        GameSearchField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        trailingAction = {
-                            Box {
-                                SearchFieldActionButton(onClick = { showFilters = true }) {
-                                    Icon(
-                                        BoardFlowIcons.Filter,
-                                        contentDescription = "Sort & filter"
-                                    )
-                                }
-                                if (hasActiveFilters) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.TopEnd)
-                                            .padding(top = 8.dp, end = 8.dp)
-                                            .size(7.dp)
-                                            .background(MaterialTheme.colorScheme.primary, CircleShape)
-                                    )
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                        }
-
-                    if (showFilters) {
-                        ModalBottomSheet(
-                            onDismissRequest = { showFilters = false },
-                            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                            containerColor = MaterialTheme.colorScheme.background,
-                            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-                        ) {
-                            FilterSheetContent(
-                                sortMode = sortMode,
-                                onSortMode = { sortMode = it },
-                                filterPlayers = filterPlayers,
-                                onFilterPlayers = { filterPlayers = it },
-                                filterBestFor = filterBestFor,
-                                onFilterBestFor = { filterBestFor = it },
-                                hasActiveFilters = hasActiveFilters,
-                                onReset = {
-                                    sortMode = SortMode.RATING
-                                    filterPlayers = null
-                                    filterBestFor = null
-                                }
-                            )
-                        }
-                    }
-
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(filteredGames, key = { it.objectId.ifBlank { it.name } }) { game ->
-                            GameCard(
-                                game = game,
-                                onClick = { selectedGame = game },
-                                modifier = Modifier.animateItem()
+                            GameSearchField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                trailingAction = {
+                                    Box {
+                                        SearchFieldActionButton(onClick = { showFilters = true }) {
+                                            Icon(
+                                                BoardFlowIcons.Filter,
+                                                contentDescription = "Sort & filter"
+                                            )
+                                        }
+                                        if (hasActiveFilters) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                                    .padding(top = 8.dp, end = 8.dp)
+                                                    .size(7.dp)
+                                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                            )
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
                             )
                         }
 
-                        if (filteredGames.isEmpty()) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(32.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "No games match these filters",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        if (showFilters) {
+                            ModalBottomSheet(
+                                onDismissRequest = { showFilters = false },
+                                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                                containerColor = MaterialTheme.colorScheme.background,
+                                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                            ) {
+                                FilterSheetContent(
+                                    sortMode = sortMode,
+                                    onSortMode = { sortMode = it },
+                                    filterPlayers = filterPlayers,
+                                    onFilterPlayers = { filterPlayers = it },
+                                    filterBestFor = filterBestFor,
+                                    onFilterBestFor = { filterBestFor = it },
+                                    hasActiveFilters = hasActiveFilters,
+                                    onReset = {
+                                        sortMode = SortMode.RATING
+                                        filterPlayers = null
+                                        filterBestFor = null
+                                    }
+                                )
+                            }
+                        }
+
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(filteredGames, key = { it.objectId.ifBlank { it.name } }) { game ->
+                                    GameCard(
+                                        game = game,
+                                        onClick = { selectedGame = game },
+                                        modifier = Modifier.animateItem()
                                     )
                                 }
-                            }
 
-                            if (hasActiveFilters) {
-                                item {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        BoardFlowOutlinedButton(
-                                            onClick = {
-                                                sortMode = SortMode.RATING
-                                                filterPlayers = null
-                                                filterBestFor = null
-                                            }
+                                if (filteredGames.isEmpty()) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(32.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Text("Clear filters")
+                                            Text(
+                                                "No games match these filters",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    if (hasActiveFilters) {
+                                        item {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                BoardFlowOutlinedButton(
+                                                    onClick = {
+                                                        sortMode = SortMode.RATING
+                                                        filterPlayers = null
+                                                        filterBestFor = null
+                                                    }
+                                                ) {
+                                                    Text("Clear filters")
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
+
+                            // Floating filter button — appears when the search bar is scrolled away
+                            AnimatedVisibility(
+                                visible = !controlsVisible,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(end = 16.dp, top = 8.dp)
+                            ) {
+                                Box {
+                                    Surface(
+                                        onClick = { showFilters = true },
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.surface,
+                                        shadowElevation = 4.dp,
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Icon(
+                                                BoardFlowIcons.Filter,
+                                                contentDescription = "Sort & filter",
+                                                modifier = Modifier.size(20.dp),
+                                                tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary
+                                                       else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                    if (hasActiveFilters) {
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .padding(top = 2.dp, end = 2.dp)
+                                                .size(7.dp)
+                                                .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                        )
+                                    }
+                                }
+                            }
                         }
-                    }
                     } // end if (tabMode != SLEEVES)
                 }
             }
@@ -361,74 +388,6 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
     }
 }
 
-@Composable
-private fun CollectionCollapsedHeader(
-    tabMode: TabMode,
-    onTabMode: (TabMode) -> Unit,
-    resultCount: Int?,
-    searchQuery: String,
-    sortMode: SortMode,
-    filterPlayers: Int?,
-    filterBestFor: Int?,
-    modifier: Modifier = Modifier
-) {
-    val details = remember(resultCount, searchQuery, sortMode, filterPlayers, filterBestFor) {
-        buildList {
-            resultCount?.let { add("$it ${if (it == 1) "game" else "games"}") }
-            if (searchQuery.isNotBlank()) add("\"${searchQuery.trim()}\"")
-            if (sortMode != SortMode.RATING) add("Sort: ${sortMode.label}")
-            filterPlayers?.let { add("${it}P") }
-            filterBestFor?.let { add("Best ${it}P") }
-        }.joinToString(" · ")
-    }
-
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp,
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TabMode.entries.forEachIndexed { index, tab ->
-                    Text(
-                        text = tab.label,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = if (tabMode == tab) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (tabMode == tab) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                        modifier = Modifier.clickable { onTabMode(tab) }
-                    )
-                    if (index != TabMode.entries.lastIndex) {
-                        Text(
-                            "·",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-                        )
-                    }
-                }
-            }
-            if (details.isNotBlank()) {
-                Text(
-                    details,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun LoadingState() {
