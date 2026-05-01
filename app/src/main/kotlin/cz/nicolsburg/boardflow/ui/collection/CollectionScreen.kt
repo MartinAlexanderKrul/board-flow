@@ -342,44 +342,14 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                             }
 
                             // Floating filter button — appears when the search bar is scrolled away
-                            AnimatedVisibility(
+                            FloatingFilterButton(
                                 visible = !controlsVisible,
+                                hasActiveFilters = hasActiveFilters,
+                                onClick = { showFilters = true },
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
                                     .padding(end = 16.dp, top = 8.dp)
-                            ) {
-                                Box {
-                                    Surface(
-                                        onClick = { showFilters = true },
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surface,
-                                        shadowElevation = 4.dp,
-                                        modifier = Modifier.size(40.dp)
-                                    ) {
-                                        Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier.fillMaxSize()
-                                        ) {
-                                            Icon(
-                                                BoardFlowIcons.Filter,
-                                                contentDescription = "Sort & filter",
-                                                modifier = Modifier.size(20.dp),
-                                                tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary
-                                                       else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-                                    if (hasActiveFilters) {
-                                        Box(
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                                .padding(top = 2.dp, end = 2.dp)
-                                                .size(7.dp)
-                                                .background(MaterialTheme.colorScheme.primary, CircleShape)
-                                        )
-                                    }
-                                }
-                            }
+                            )
                         }
                     } // end if (tabMode != SLEEVES)
                 }
@@ -758,6 +728,48 @@ private fun bestForMatches(game: GameItem, players: Int): Boolean {
                 else -> false
             }
         }
+}
+
+@Composable
+private fun FloatingFilterButton(
+    visible: Boolean,
+    hasActiveFilters: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        Box {
+            Surface(
+                onClick = onClick,
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        BoardFlowIcons.Filter,
+                        contentDescription = "Sort & filter",
+                        modifier = Modifier.size(20.dp),
+                        tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary
+                               else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            if (hasActiveFilters) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 2.dp, end = 2.dp)
+                        .size(7.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                )
+            }
+        }
+    }
 }
 
 @Composable
