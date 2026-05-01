@@ -177,7 +177,7 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
         ) {
             when {
                 loading -> LoadingState()
-                error != null -> ErrorState(error = error!!, onRetry = null)
+                error != null -> ErrorState(error = error.orEmpty(), onRetry = null)
                 allGames.isEmpty() -> EmptyState(
                     accountReady = account != null,
                     spreadsheetReady = spreadsheetId.isNotBlank(),

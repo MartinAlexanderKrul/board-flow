@@ -21,6 +21,7 @@ import cz.nicolsburg.boardflow.model.LogEntry
 import cz.nicolsburg.boardflow.model.SpreadsheetDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -394,8 +395,11 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun stopSync() {
-        syncJob?.cancel()
-        entry("Stopped", "Sync was cancelled by user", LogEntry.Type.ERROR)
+        val activeJob = syncJob
+        if (activeJob?.isActive == true) {
+            activeJob.cancel()
+            entry("Stopped", "Sync was cancelled by user", LogEntry.Type.ERROR)
+        }
     }
 
     private fun entry(name: String, status: String, type: LogEntry.Type) {
@@ -422,10 +426,14 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             entry(title, "Starting...", LogEntry.Type.HEADER)
             try {
                 block()
+            } catch (_: CancellationException) {
+                // User-initiated cancellation is already reflected in the sync log.
             } catch (e: Exception) {
                 entry("Error", e.message ?: "Unknown error", LogEntry.Type.ERROR)
             } finally {
-                _busy.value = false
+                if (syncJob == currentCoroutineContext()[Job]) {
+                    _busy.value = false
+                }
             }
         }
     }

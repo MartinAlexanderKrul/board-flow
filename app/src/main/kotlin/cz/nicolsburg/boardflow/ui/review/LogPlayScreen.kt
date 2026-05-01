@@ -290,7 +290,8 @@ fun LogPlayScreen(
             }
 
             // AI output debug card
-            if (showAiOutput && extractedPlay != null) {
+            val extracted = extractedPlay
+            if (showAiOutput && extracted != null) {
                 item {
                     val clipboardManager = LocalClipboardManager.current
                     var copied by remember { mutableStateOf(false) }
@@ -312,7 +313,7 @@ fun LogPlayScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 BoardFlowInlineAction(onClick = {
-                                    clipboardManager.setText(AnnotatedString(extractedPlay!!.rawText))
+                                    clipboardManager.setText(AnnotatedString(extracted.rawText))
                                     copied = true
                                 }, icon = Icons.Default.ContentCopy) {
                                     Text(if (copied) "Copied!" else "Copy")
@@ -321,7 +322,7 @@ fun LogPlayScreen(
                             Spacer(Modifier.height(8.dp))
                             SelectionContainer {
                                 Text(
-                                    text = extractedPlay!!.rawText,
+                                    text = extracted.rawText,
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -342,7 +343,7 @@ fun LogPlayScreen(
             }
 
             // Error card
-            if (errorMsg != null) {
+            errorMsg?.let { message ->
                 item {
                     Card(
                         colors = CardDefaults.cardColors(
@@ -351,7 +352,7 @@ fun LogPlayScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text  = errorMsg!!,
+                            text  = message,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(12.dp)

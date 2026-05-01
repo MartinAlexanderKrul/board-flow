@@ -386,6 +386,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         if (username.isBlank()) { onError("BGG username not set"); return }
         _deletingBggPlayId.value = playId
         viewModelScope.launch {
+            val deletedPlay = (_bggPlays.value + container.canonicalCollectionStore.getBggPlaysCache())
+                .firstOrNull { it.id == playId }
             container.bggRepository.login(creds)
                 .onFailure {
                     _deletingBggPlayId.value = null
@@ -402,6 +404,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                             } else {
                                 _bggPlays.value = refreshed
                                 container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+                                removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
                                 _bggPlaysCacheAgeMinutes.value = 0L
                                 _deletingBggPlayId.value = null
                                 onSuccess()
@@ -417,6 +420,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     onError(it.message ?: "Failed to delete play")
                 }
         }
+    }
+
+    private suspend fun removeLocalCopyOfDeletedBggPlay(playId: String, deletedPlay: LoggedPlay?) {
+        val deletedSignature = deletedPlay?.signatureKey()
+        container.canonicalCollectionStore.getLoggedPlays()
+            .filter { localPlay ->
+                localPlay.id == playId || (deletedSignature != null && localPlay.signatureKey() == deletedSignature)
+            }
+            .forEach { container.canonicalCollectionStore.deleteLoggedPlay(it.id) }
+        _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
     }
 
     // --- Post to BGG ---
@@ -461,10 +474,12 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             _postLoading.value = true
             container.bggRepository.login(creds).onFailure { _postLoading.value = false; onError(it.message ?: "Login failed"); return@launch }
-            container.bggRepository.logPlay(gameId = game.id, date = date, players = normalizedPlayers, playerBggUsernames = buildBggUsernameMap(normalizedPlayers), durationMinutes = durationMinutes, location = location, comments = comments)
+            val playerBggUsernames = buildBggUsernameMap(normalizedPlayers)
+            container.bggRepository.logPlay(gameId = game.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments)
                 .onSuccess { savedPlayId ->
                     normalizedPlayers.forEach { recordPlayerName(it.name) }
                     val postedPlays = mutableListOf<LoggedPlay>()
+                    val locallySavedExtras = mutableListOf<LoggedPlay>()
                     val mainPlay = LoggedPlay(
                         id = savedPlayId ?: UUID.randomUUID().toString(),
                         gameId = game.id,
@@ -478,9 +493,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     )
                     container.canonicalCollectionStore.saveLoggedPlay(mainPlay)
                     postedPlays += mainPlay
-                    val extras = _additionalGames.value; _additionalGames.value = emptyList()
+                    val extras = _additionalGames.value
                     extras.forEach { extra ->
-                        container.bggRepository.logPlay(gameId = extra.id, date = date, players = normalizedPlayers, playerBggUsernames = buildBggUsernameMap(normalizedPlayers), durationMinutes = durationMinutes, location = location, comments = comments)
+                        container.bggRepository.logPlay(gameId = extra.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments)
                             .onSuccess { extraPlayId ->
                                 val extraPlay = LoggedPlay(
                                     id = extraPlayId ?: UUID.randomUUID().toString(),
@@ -496,9 +511,29 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                                 container.canonicalCollectionStore.saveLoggedPlay(extraPlay)
                                 postedPlays += extraPlay
                             }
+                            .onFailure {
+                                val localExtraPlay = LoggedPlay(
+                                    id = UUID.randomUUID().toString(),
+                                    gameId = extra.id,
+                                    gameName = extra.name,
+                                    date = date.toString(),
+                                    players = normalizedPlayers,
+                                    durationMinutes = durationMinutes,
+                                    location = location,
+                                    postedToBgg = false,
+                                    comments = comments
+                                )
+                                container.canonicalCollectionStore.saveLoggedPlay(localExtraPlay)
+                                locallySavedExtras += localExtraPlay
+                            }
                     }
+                    _additionalGames.value = emptyList()
+                    prefs.addRecentGame(game)
                     _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                     addOptimisticBggPlays(postedPlays)
+                    if (locallySavedExtras.isNotEmpty()) {
+                        _postResult.value = "Logged main play. Saved ${locallySavedExtras.size} extra game(s) locally for later BGG sync."
+                    }
                     _logPlayHasUnsavedChanges.value = false
                     _postLoading.value = false
                     onSuccess()

@@ -55,9 +55,7 @@ private fun formatPlayDate(yyyyMMdd: String): String = try {
 @Composable
 fun PlayersScreen(viewModel: AppViewModel) {
     val players    by viewModel.players.collectAsState()
-    val localPlays by viewModel.playHistory.collectAsState()
-    val bggPlays   by viewModel.bggPlays.collectAsState()
-    val sourcePlays = if (bggPlays.isNotEmpty()) bggPlays else localPlays
+    val sourcePlays by viewModel.historyPlays.collectAsState()
 
     var showAddDialog  by remember { mutableStateOf(false) }
     var editingPlayer  by remember { mutableStateOf<Player?>(null) }

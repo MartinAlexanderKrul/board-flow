@@ -119,7 +119,14 @@ class BggRepository {
 
     suspend fun login(credentials: BggCredentials): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val json = """{"credentials":{"username":"${credentials.username}","password":"${credentials.password}"}}"""
+            val json = JSONObject()
+                .put(
+                    "credentials",
+                    JSONObject()
+                        .put("username", credentials.username)
+                        .put("password", credentials.password)
+                )
+                .toString()
             val body = json.toRequestBody("application/json".toMediaType())
             val request = Request.Builder()
                 .url("https://boardgamegeek.com/login/api/v1")
@@ -401,13 +408,18 @@ class BggRepository {
                 XmlPullParser.END_TAG -> when (parser.name) {
                     "players"  -> insidePlayers = false
                     "comments" -> insideComments = false
-                    "play"     -> if (playId != null && gameName != null && gameId != null) {
+                    "play"     -> {
+                        val parsedPlayId = playId
+                        val parsedGameName = gameName
+                        val parsedGameId = gameId
+                        if (parsedPlayId != null && parsedGameName != null && parsedGameId != null) {
                         plays.add(LoggedPlay(
-                            id = playId!!, gameId = gameId!!, gameName = gameName!!, date = date,
+                            id = parsedPlayId, gameId = parsedGameId, gameName = parsedGameName, date = date,
                             players = players.toList(), durationMinutes = length, location = location,
                             postedToBgg = true, comments = comments.trim(),
                             quantity = quantity, incomplete = incomplete, nowInStats = nowInStats
                         ))
+                        }
                     }
                 }
             }
@@ -429,7 +441,13 @@ class BggRepository {
                     "name" -> { if (parser.getAttributeValue(null, "type") == "primary") currentName = parser.getAttributeValue(null, "value") }
                     "yearpublished" -> { currentYear = parser.getAttributeValue(null, "value") }
                 }
-                XmlPullParser.END_TAG -> { if (parser.name == "item" && currentId != null && currentName != null) { games.add(BggGame(id = currentId!!, name = currentName!!, yearPublished = currentYear, thumbnailUrl = null)) } }
+                XmlPullParser.END_TAG -> if (parser.name == "item") {
+                    val parsedId = currentId
+                    val parsedName = currentName
+                    if (parsedId != null && parsedName != null) {
+                        games.add(BggGame(id = parsedId, name = parsedName, yearPublished = currentYear, thumbnailUrl = null))
+                    }
+                }
             }
             event = parser.next()
         }
@@ -457,7 +475,14 @@ class BggRepository {
                 }
                 XmlPullParser.END_TAG -> when (parser.name) {
                     "name" -> insideName = false
-                    "item" -> { if (currentId != null && currentName != null) { games.add(BggGame(id = currentId!!, name = currentName!!, yearPublished = currentYear, thumbnailUrl = null)) }; currentId = null; currentName = null; currentYear = null }
+                    "item" -> {
+                        val parsedId = currentId
+                        val parsedName = currentName
+                        if (parsedId != null && parsedName != null) {
+                            games.add(BggGame(id = parsedId, name = parsedName, yearPublished = currentYear, thumbnailUrl = null))
+                        }
+                        currentId = null; currentName = null; currentYear = null
+                    }
                 }
             }
             event = parser.next()

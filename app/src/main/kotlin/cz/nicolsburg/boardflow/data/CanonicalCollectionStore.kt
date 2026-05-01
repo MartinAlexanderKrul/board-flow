@@ -76,6 +76,10 @@ class CanonicalCollectionStore private constructor(
         dao.upsertLoggedPlay(LoggedPlayEntity.fromModel(transform(existing)))
     }
 
+    suspend fun deleteLoggedPlay(playId: String) {
+        dao.deleteLoggedPlay(playId)
+    }
+
     suspend fun clearLoggedPlays() {
         dao.clearLoggedPlays()
     }
@@ -145,6 +149,9 @@ private interface CanonicalCollectionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllLoggedPlays(plays: List<LoggedPlayEntity>)
+
+    @Query("DELETE FROM logged_plays WHERE id = :playId")
+    suspend fun deleteLoggedPlay(playId: String)
 
     @Query("DELETE FROM logged_plays")
     suspend fun clearLoggedPlays()

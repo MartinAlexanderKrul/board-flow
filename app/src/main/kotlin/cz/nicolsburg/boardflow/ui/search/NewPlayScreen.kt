@@ -81,8 +81,9 @@ fun NewPlayScreen(
                         )
                     ) {
                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(error!!, color = MaterialTheme.colorScheme.onErrorContainer)
-                            if (error!!.contains("private") || error!!.contains("401")) {
+                            val message = error.orEmpty()
+                            Text(message, color = MaterialTheme.colorScheme.onErrorContainer)
+                            if (message.contains("private") || message.contains("401")) {
                                 Text(
                                     "Tip: Make your BGG profile public in account settings, or use search mode.",
                                     style = MaterialTheme.typography.bodySmall,

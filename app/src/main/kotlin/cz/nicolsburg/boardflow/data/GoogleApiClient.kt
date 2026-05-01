@@ -350,7 +350,12 @@ class GoogleApiClient(
         val escaped = title.replace("\\", "\\\\").replace("'", "\\'")
         val query = "mimeType='${FOLDER_MIME}' and name='$escaped' and '$rootId' in parents and trashed=false"
         val existing = retry { drive.files().list().setQ(query).setFields("files(id,webViewLink)").setPageSize(1).execute() }
-        if (existing.files.isNotEmpty()) { lastGameFolderId = existing.files[0].id; lastQrFileId = findQrFileId(lastGameFolderId!!); return existing.files[0].webViewLink }
+        if (existing.files.isNotEmpty()) {
+            val folderId = existing.files[0].id
+            lastGameFolderId = folderId
+            lastQrFileId = findQrFileId(folderId)
+            return existing.files[0].webViewLink
+        }
         val meta = File().setName(title).setMimeType(FOLDER_MIME).setParents(listOf(rootId))
         val folder = retry { drive.files().create(meta).setFields("id,webViewLink").execute() }
         retry { drive.permissions().create(folder.id, Permission().setType("anyone").setRole("reader")).execute() }
@@ -384,11 +389,17 @@ class GoogleApiClient(
         rootFolderId?.let { return it }
         val query = "mimeType='${FOLDER_MIME}' and name='BoardGames' and trashed=false"
         val result = retry { drive.files().list().setQ(query).setFields("files(id)").setPageSize(1).execute() }
-        if (result.files.isNotEmpty()) { rootFolderId = result.files[0].id; return rootFolderId!! }
+        if (result.files.isNotEmpty()) {
+            val existingRootId = result.files[0].id
+            rootFolderId = existingRootId
+            return existingRootId
+        }
         val meta = File().setName("BoardGames").setMimeType(FOLDER_MIME)
         val created = retry { drive.files().create(meta).setFields("id").execute() }
         retry { drive.permissions().create(created.id, Permission().setType("anyone").setRole("reader")).execute() }
-        rootFolderId = created.id; return rootFolderId!!
+        val createdRootId = created.id
+        rootFolderId = createdRootId
+        return createdRootId
     }
 
     private fun findQrFileId(folderId: String): String? {

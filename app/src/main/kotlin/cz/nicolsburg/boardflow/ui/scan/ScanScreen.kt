@@ -60,8 +60,8 @@ fun ScanScreen(
 
     // Navigate when extraction succeeds
     LaunchedEffect(play) {
-        if (play != null) {
-            viewModel.initEditablePlayers(play!!.players)
+        play?.let { extracted ->
+            viewModel.initEditablePlayers(extracted.players)
             onScoresExtracted()
         }
     }
@@ -146,8 +146,8 @@ fun ScanScreen(
                 }
 
                 pendingPhoto != null -> {
-                    val file = pendingPhoto!!
-                    Surface(
+                    pendingPhoto?.let { file ->
+                        Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.72f)
                     ) {
@@ -208,6 +208,7 @@ fun ScanScreen(
                             }
                             Spacer(Modifier.weight(1f))
                         }
+                    }
                     }
                 }
 
@@ -345,11 +346,15 @@ fun ScanScreen(
 }
 
 /** Copy a content:// URI to a temp cache file so we can read it as a File. */
-private fun uriToFile(context: Context, uri: Uri): File? = try {
-    val input = context.contentResolver.openInputStream(uri) ?: return null
-    val file = File(context.cacheDir, "gallery_score_${System.currentTimeMillis()}.jpg")
-    file.outputStream().use { input.copyTo(it) }
-    file
-} catch (e: Exception) {
-    null
+private fun uriToFile(context: Context, uri: Uri): File? {
+    return try {
+        val file = File(context.cacheDir, "gallery_score_${System.currentTimeMillis()}.jpg")
+        val input = context.contentResolver.openInputStream(uri) ?: return null
+        input.use { source ->
+            file.outputStream().use { output -> source.copyTo(output) }
+        }
+        file
+    } catch (e: Exception) {
+        null
+    }
 }
