@@ -1,6 +1,7 @@
 package cz.nicolsburg.boardflow.ui.collection
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,12 +47,16 @@ private data class SleeveSizeGroup(
     val isUnknown: Boolean = false
 )
 
-private fun computeSleeveSummary(games: List<GameItem>): List<SleeveSizeGroup> {
+private fun computeSleeveSummary(
+    games: List<GameItem>,
+    excludedGameIds: Set<String>
+): List<SleeveSizeGroup> {
     val toSleeve = games.filter { game ->
-        game.isOwned && sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE
+        game.isOwned &&
+            sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE &&
+            game.objectId !in excludedGameIds
     }
 
-    // size -> (total count across all games, game name -> count for that game)
     val sizeGroups = LinkedHashMap<String, Pair<Int, LinkedHashMap<String, Int>>>()
     val noDataGames = LinkedHashSet<String>()
 
@@ -61,7 +67,6 @@ private fun computeSleeveSummary(games: List<GameItem>): List<SleeveSizeGroup> {
             continue
         }
 
-        // Aggregate counts per size for this game first (multiple card sets may share a size)
         val countsForThisGame = mutableMapOf<String, Int>()
         for (cs in cardSets) {
             val size = cs.size?.takeIf { it.isNotBlank() } ?: continue
@@ -111,16 +116,24 @@ private fun computeSleeveSummary(games: List<GameItem>): List<SleeveSizeGroup> {
 internal fun SleevesContent(
     allGames: List<GameItem>,
     listState: LazyListState = rememberLazyListState(),
+    excludedGameIds: Set<String> = emptySet(),
+    onToggleExclusion: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val groups = remember(allGames) { computeSleeveSummary(allGames) }
-    val gamesCount = remember(allGames) {
-        allGames.count { game ->
-            game.isOwned && sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE
-        }
+    val allGamesToSleeve = remember(allGames) {
+        allGames
+            .filter { game -> game.isOwned && sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE }
+            .sortedBy { it.name.lowercase() }
     }
 
-    if (groups.isEmpty()) {
+    val groups = remember(allGames, excludedGameIds) { computeSleeveSummary(allGames, excludedGameIds) }
+    val includedCount = remember(allGamesToSleeve, excludedGameIds) {
+        allGamesToSleeve.count { it.objectId !in excludedGameIds }
+    }
+
+    var showGameSelector by remember { mutableStateOf(false) }
+
+    if (allGamesToSleeve.isEmpty()) {
         Box(
             modifier = modifier
                 .fillMaxSize()
@@ -153,11 +166,67 @@ internal fun SleevesContent(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item {
+        item(key = "header") {
             SleeveSummaryHeader(
-                gamesCount = gamesCount,
-                sizesCount = groups.count { !it.isUnknown }
+                includedCount = includedCount,
+                totalCount = allGamesToSleeve.size,
+                sizesCount = groups.count { !it.isUnknown },
+                expanded = showGameSelector,
+                onToggleExpand = { showGameSelector = !showGameSelector }
             )
+        }
+
+        item(key = "game_selector") {
+            AnimatedVisibility(visible = showGameSelector) {
+                SectionCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            "Included in sleeve count",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        allGamesToSleeve.forEach { game ->
+                            val excluded = game.objectId in excludedGameIds
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onToggleExclusion(game.objectId) }
+                                    .padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    game.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 4.dp),
+                                    color = if (excluded)
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                    else
+                                        MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Checkbox(
+                                    checked = !excluded,
+                                    onCheckedChange = { onToggleExclusion(game.objectId) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (groups.isNotEmpty()) {
+            item(key = "divider") {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
         }
 
         items(groups, key = { it.size }) { group ->
@@ -167,34 +236,56 @@ internal fun SleevesContent(
 }
 
 @Composable
-private fun SleeveSummaryHeader(gamesCount: Int, sizesCount: Int) {
-    SectionCard(accented = true) {
+private fun SleeveSummaryHeader(
+    includedCount: Int,
+    totalCount: Int,
+    sizesCount: Int,
+    expanded: Boolean,
+    onToggleExpand: () -> Unit
+) {
+    SectionCard(accented = true, onClick = onToggleExpand) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                BoardFlowIcons.Sleeves,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    "$gamesCount ${if (gamesCount == 1) "game" else "games"} to sleeve",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    BoardFlowIcons.Sleeves,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                if (sizesCount > 0) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        "$sizesCount sleeve ${if (sizesCount == 1) "size" else "sizes"} needed",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "$includedCount ${if (includedCount == 1) "game" else "games"} to sleeve",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    val subtitle = buildList {
+                        if (sizesCount > 0) add("$sizesCount ${if (sizesCount == 1) "size" else "sizes"} needed")
+                        if (includedCount < totalCount) add("${totalCount - includedCount} excluded")
+                    }.joinToString("  ·  ")
+                    if (subtitle.isNotBlank()) {
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
+            Icon(
+                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = if (expanded) "Collapse" else "Expand game list",
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

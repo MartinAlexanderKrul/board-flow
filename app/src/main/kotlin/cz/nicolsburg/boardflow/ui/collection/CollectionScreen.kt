@@ -124,6 +124,7 @@ fun CollectionScreen(
     val allGames by syncViewModel.collectionGames.collectAsState()
     val loading by syncViewModel.collectionLoading.collectAsState()
     val error by syncViewModel.collectionError.collectAsState()
+    val sleevesExcludedGameIds by syncViewModel.sleevesExcludedGameIds.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(SortMode.RATING) }
@@ -259,7 +260,12 @@ fun CollectionScreen(
                     }
 
                     if (tabMode == TabMode.SLEEVES) {
-                        SleevesContent(allGames = allGames, listState = sleeveListState)
+                        SleevesContent(
+                            allGames = allGames,
+                            listState = sleeveListState,
+                            excludedGameIds = sleevesExcludedGameIds,
+                            onToggleExclusion = { syncViewModel.toggleSleeveGameExclusion(it) }
+                        )
                     } else {
                         AnimatedVisibility(visible = controlsVisible) {
                             GameSearchField(

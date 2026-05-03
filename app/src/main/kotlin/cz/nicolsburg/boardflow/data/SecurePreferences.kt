@@ -171,6 +171,21 @@ class SecurePreferences(context: Context) {
         } catch (e: Exception) { emptyList() }
     }
 
+    // --- Sleeves excluded games ---
+    fun getSleevesExcludedGameIds(): Set<String> {
+        val json = prefs.getString(KEY_SLEEVES_EXCLUDED, "[]") ?: "[]"
+        return try {
+            val array = JSONArray(json)
+            (0 until array.length()).map { array.getString(it) }.toSet()
+        } catch (e: Exception) { emptySet() }
+    }
+
+    fun saveSleevesExcludedGameIds(ids: Set<String>) {
+        val json = JSONArray()
+        ids.forEach { json.put(it) }
+        prefs.edit().putString(KEY_SLEEVES_EXCLUDED, json.toString()).apply()
+    }
+
     // --- Legacy BGG history cache compatibility ---
     fun clearLegacyBggPlayCacheArtifacts() {
         prefs.edit().remove(KEY_BGG_PLAYS_CACHE).remove(KEY_BGG_PLAYS_CACHE_TS).apply()
@@ -271,5 +286,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_SYNC_SHEET_TAB_NAME = "sync_sheet_tab_name"
         private const val KEY_GOOGLE_AUTHORIZED_EMAIL = "google_authorized_email"
         private const val KEY_COLLECTION_SNAPSHOT_PREFIX = "collection_snapshot_"
+        private const val KEY_SLEEVES_EXCLUDED = "sleeves_excluded_game_ids"
     }
 }

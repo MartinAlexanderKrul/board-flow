@@ -79,6 +79,9 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     private val _collectionError = MutableStateFlow<String?>(null)
     val collectionError: StateFlow<String?> = _collectionError.asStateFlow()
 
+    private val _sleevesExcludedGameIds = MutableStateFlow(securePrefs.getSleevesExcludedGameIds())
+    val sleevesExcludedGameIds: StateFlow<Set<String>> = _sleevesExcludedGameIds.asStateFlow()
+
     private val collectionMutex = Mutex()
     private val refreshMutex = Mutex()
     @Volatile private var suppressLog = false
@@ -104,6 +107,13 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
     fun refreshCredentialState() {
         _hasBggCredentials.value = securePrefs.hasCredentials()
+    }
+
+    fun toggleSleeveGameExclusion(objectId: String) {
+        val updated = _sleevesExcludedGameIds.value.toMutableSet()
+        if (objectId in updated) updated.remove(objectId) else updated.add(objectId)
+        _sleevesExcludedGameIds.value = updated
+        securePrefs.saveSleevesExcludedGameIds(updated)
     }
 
     fun connectExistingSpreadsheet(account: Account, input: String) = runSync("Connect spreadsheet") {
