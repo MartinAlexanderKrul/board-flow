@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material3.HorizontalDivider
@@ -104,6 +105,9 @@ fun BoardFlowApp(
     val logPlayHasUnsavedChanges by appViewModel.logPlayHasUnsavedChanges.collectAsState()
     var startupSilentSyncRequested by rememberSaveable { mutableStateOf(false) }
     var showDiscardLogPlayConfirm by rememberSaveable { mutableStateOf(false) }
+    var collectionHeaderFilterVisible by remember { mutableStateOf(false) }
+    var collectionHeaderHasActiveFilters by remember { mutableStateOf(false) }
+    var collectionHeaderFilterClick by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     LaunchedEffect(Unit) {
         appViewModel.syncUnpostedPlays()
@@ -132,7 +136,14 @@ fun BoardFlowApp(
     var contentScrolled by remember { mutableFloatStateOf(0f) }
     val showHeaderDivider by remember { derivedStateOf { contentScrolled > 0f } }
 
-    LaunchedEffect(currentRoute) { contentScrolled = 0f }
+    LaunchedEffect(currentRoute) {
+        contentScrolled = 0f
+        if (currentRoute != AppRoutes.COLLECTION) {
+            collectionHeaderFilterVisible = false
+            collectionHeaderHasActiveFilters = false
+            collectionHeaderFilterClick = null
+        }
+    }
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -207,12 +218,25 @@ fun BoardFlowApp(
         else -> null
     }
 
+    val headerAction: (@Composable () -> Unit)? =
+        if (currentRoute == AppRoutes.COLLECTION && collectionHeaderFilterVisible && collectionHeaderFilterClick != null) {
+            {
+                CollectionHeaderFilterAction(
+                    hasActiveFilters = collectionHeaderHasActiveFilters,
+                    onClick = collectionHeaderFilterClick ?: {}
+                )
+            }
+        } else {
+            null
+        }
+
     Scaffold(
         topBar = {
             AppHeader(
                 subtitle = headerSubtitle,
                 onNavigateBack = headerBack,
                 showDivider = showHeaderDivider,
+                actionContent = headerAction,
             )
         },
         bottomBar = {
@@ -284,7 +308,14 @@ fun BoardFlowApp(
             }
 
             composable(AppRoutes.COLLECTION) {
-                CollectionScreen(syncViewModel = syncViewModel)
+                CollectionScreen(
+                    syncViewModel = syncViewModel,
+                    onHeaderFilterStateChange = { visible, hasActiveFilters, onClick ->
+                        collectionHeaderFilterVisible = visible
+                        collectionHeaderHasActiveFilters = hasActiveFilters
+                        collectionHeaderFilterClick = onClick
+                    }
+                )
             }
 
             composable(AppRoutes.SYNC) {
@@ -357,6 +388,7 @@ private fun AppHeader(
     subtitle: String,
     onNavigateBack: (() -> Unit)? = null,
     showDivider: Boolean = false,
+    actionContent: (@Composable () -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
@@ -420,6 +452,7 @@ private fun AppHeader(
                         )
                     }
                 }
+                actionContent?.invoke()
                 if (onNavigateBack != null) {
                     BoardFlowIconButton(onClick = onNavigateBack, modifier = Modifier.size(AppChromeTokens.HeaderCloseSize)) {
                         BoardFlowCloseGlyph(
@@ -439,6 +472,39 @@ private fun AppHeader(
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
                 thickness = 1.dp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CollectionHeaderFilterAction(
+    hasActiveFilters: Boolean,
+    onClick: () -> Unit
+) {
+    Box {
+        BoardFlowIconButton(
+            onClick = onClick,
+            modifier = Modifier.size(AppChromeTokens.HeaderCloseSize)
+        ) {
+            Icon(
+                BoardFlowIcons.Filter,
+                contentDescription = "Sort & filter",
+                modifier = Modifier.size(20.dp),
+                tint = if (hasActiveFilters) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
+        }
+        if (hasActiveFilters) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 8.dp, end = 8.dp)
+                    .size(7.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
             )
         }
     }

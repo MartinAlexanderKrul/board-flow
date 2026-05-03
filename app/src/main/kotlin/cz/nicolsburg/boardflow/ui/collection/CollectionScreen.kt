@@ -65,6 +65,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -112,7 +113,10 @@ private enum class TabMode(val label: String) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
-fun CollectionScreen(syncViewModel: SyncViewModel) {
+fun CollectionScreen(
+    syncViewModel: SyncViewModel,
+    onHeaderFilterStateChange: (visible: Boolean, hasActiveFilters: Boolean, onClick: (() -> Unit)?) -> Unit = { _, _, _ -> }
+) {
     val account by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
     val allGames by syncViewModel.collectionGames.collectAsState()
@@ -134,6 +138,12 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
         filterPlayers != null ||
                 filterBestFor != null ||
                 sortMode != SortMode.RATING
+    val showHeaderFilterAction =
+        !controlsVisible &&
+                tabMode != TabMode.SLEEVES &&
+                allGames.isNotEmpty() &&
+                !loading &&
+                error == null
 
     LaunchedEffect(account, spreadsheetId) {
         if (allGames.isNotEmpty() || loading) return@LaunchedEffect
@@ -190,6 +200,18 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                 lastIndex = index
                 lastOffset = offset
             }
+    }
+
+    LaunchedEffect(showHeaderFilterAction, hasActiveFilters) {
+        onHeaderFilterStateChange(showHeaderFilterAction, hasActiveFilters) {
+            showFilters = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            onHeaderFilterStateChange(false, false, null)
+        }
     }
 
     selectedGame?.let { game ->
@@ -289,67 +311,55 @@ fun CollectionScreen(syncViewModel: SyncViewModel) {
                             }
                         }
 
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            LazyColumn(
-                                state = listState,
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                items(filteredGames, key = { it.objectId.ifBlank { it.name } }) { game ->
-                                    GameCard(
-                                        game = game,
-                                        onClick = { selectedGame = game },
-                                        modifier = Modifier.animateItem()
-                                    )
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(filteredGames, key = { it.objectId.ifBlank { it.name } }) { game ->
+                                GameCard(
+                                    game = game,
+                                    onClick = { selectedGame = game },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+
+                            if (filteredGames.isEmpty()) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(32.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "No games match these filters",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
 
-                                if (filteredGames.isEmpty()) {
+                                if (hasActiveFilters) {
                                     item {
                                         Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(32.dp),
+                                            modifier = Modifier.fillMaxWidth(),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text(
-                                                "No games match these filters",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-
-                                    if (hasActiveFilters) {
-                                        item {
-                                            Box(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                BoardFlowOutlinedButton(
-                                                    onClick = {
-                                                        sortMode = SortMode.RATING
-                                                        filterPlayers = null
-                                                        filterBestFor = null
-                                                    }
-                                                ) {
-                                                    Text("Clear filters")
+                                            BoardFlowOutlinedButton(
+                                                onClick = {
+                                                    sortMode = SortMode.RATING
+                                                    filterPlayers = null
+                                                    filterBestFor = null
                                                 }
+                                            ) {
+                                                Text("Clear filters")
                                             }
                                         }
                                     }
                                 }
                             }
-
-                            // Floating filter button — appears when the search bar is scrolled away
-                            FloatingFilterButton(
-                                visible = !controlsVisible,
-                                hasActiveFilters = hasActiveFilters,
-                                onClick = { showFilters = true },
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(end = 16.dp, top = 8.dp)
-                            )
                         }
                     } // end if (tabMode != SLEEVES)
                 }
@@ -728,48 +738,6 @@ private fun bestForMatches(game: GameItem, players: Int): Boolean {
                 else -> false
             }
         }
-}
-
-@Composable
-private fun FloatingFilterButton(
-    visible: Boolean,
-    hasActiveFilters: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    AnimatedVisibility(visible = visible, modifier = modifier) {
-        Box {
-            Surface(
-                onClick = onClick,
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 4.dp,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        BoardFlowIcons.Filter,
-                        contentDescription = "Sort & filter",
-                        modifier = Modifier.size(20.dp),
-                        tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            if (hasActiveFilters) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 2.dp, end = 2.dp)
-                        .size(7.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                )
-            }
-        }
-    }
 }
 
 @Composable

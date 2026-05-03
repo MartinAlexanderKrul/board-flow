@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -167,17 +168,20 @@ fun AnimatedDialog(
                 initialScale = 0.92f,
             ),
         ) {
-            Box(
+            Card(
                 modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
                     .offset { IntOffset(0, offsetY.value.roundToInt()) }
-                    .heightIn(max = maxH)
+                    .heightIn(max = maxH),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // Drag handle — sole gesture zone; scroll area below is untouched
+                    // Drag target spans the modal top, while scrollable content below remains untouched.
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 10.dp)
+                            .height(36.dp)
                             .pointerInput(onDismissRequest) {
                                 awaitEachGesture {
                                     val down = awaitFirstDown(requireUnconsumed = false)
@@ -229,7 +233,7 @@ fun AnimatedDialog(
                         )
                     }
 
-                    // Content — weight(fill=false) gives it bounded height so inner
+                    // Content weight(fill=false) gives it bounded height so inner
                     // LazyColumns scroll correctly, while short dialogs stay compact.
                     Box(modifier = Modifier.weight(1f, fill = false)) {
                         content()

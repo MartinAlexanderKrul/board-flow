@@ -521,15 +521,14 @@ fun SettingsScreen(
                         if (showApiHelp) {
                             AnimatedDialog(onDismissRequest = { showApiHelp = false }) {
                                 val uriHandler = LocalUriHandler.current
-                                Card(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 16.dp)
-                                    ) {
+                                    item {
                                         Row(
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                                            modifier = Modifier.fillMaxWidth(),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
@@ -539,23 +538,24 @@ fun SettingsScreen(
                                                 modifier = Modifier.weight(1f)
                                             )
                                         }
-                                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                                        Column(
-                                            modifier = Modifier.padding(horizontal = 16.dp),
-                                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text("1. Visit ", style = MaterialTheme.typography.bodyMedium)
-                                                TextButton(
-                                                    onClick = { uriHandler.openUri("https://aistudio.google.com") },
-                                                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
-                                                ) {
-                                                    Text("aistudio.google.com", style = MaterialTheme.typography.bodyMedium)
-                                                }
+                                    }
+                                    item { HorizontalDivider() }
+                                    item {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("1. Visit ", style = MaterialTheme.typography.bodyMedium)
+                                            TextButton(
+                                                onClick = { uriHandler.openUri("https://aistudio.google.com") },
+                                                contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
+                                            ) {
+                                                Text("aistudio.google.com", style = MaterialTheme.typography.bodyMedium)
                                             }
-                                            Text("2. Sign in and open your profile > API Keys.", style = MaterialTheme.typography.bodyMedium)
-                                            Text("3. Create a key and paste it here.", style = MaterialTheme.typography.bodyMedium)
                                         }
+                                    }
+                                    item {
+                                        Text("2. Sign in and open your profile > API Keys.", style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                    item {
+                                        Text("3. Create a key and paste it here.", style = MaterialTheme.typography.bodyMedium)
                                     }
                                 }
                             }

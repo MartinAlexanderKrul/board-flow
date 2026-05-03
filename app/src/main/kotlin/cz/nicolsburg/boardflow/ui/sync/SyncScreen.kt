@@ -690,17 +690,9 @@ private fun LogDialog(
     val summary = log.deriveSummary()
 
     AnimatedDialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
-            ) {
                 // Header
                 Row(
                     modifier = Modifier
@@ -766,6 +758,7 @@ private fun LogDialog(
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
+                        .weight(1f, fill = false)
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp),
                     contentPadding = PaddingValues(vertical = 4.dp),
@@ -773,7 +766,6 @@ private fun LogDialog(
                 ) {
                     items(log) { entry -> LogEntryRow(entry) }
                 }
-            }
         }
     }
 }
@@ -847,14 +839,10 @@ private fun GoogleManageModal(
     }
 
     AnimatedDialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -906,7 +894,6 @@ private fun GoogleManageModal(
                         }
                     }
                 }
-            }
         }
     }
 }
@@ -923,14 +910,10 @@ private fun BggEditModal(
     var showPwd by remember { mutableStateOf(false) }
 
     AnimatedDialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -995,7 +978,6 @@ private fun BggEditModal(
                         Text("Save")
                     }
                 }
-            }
         }
     }
 }

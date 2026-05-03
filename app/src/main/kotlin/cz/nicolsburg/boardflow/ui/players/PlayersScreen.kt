@@ -345,16 +345,10 @@ private fun PlayerDialog(
     content: @Composable ColumnScope.() -> Unit
 ) {
     AnimatedDialog(onDismissRequest = onDismissRequest) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -375,7 +369,6 @@ private fun PlayerDialog(
                 item {
                     Column(content = actions)
                 }
-            }
         }
     }
 }

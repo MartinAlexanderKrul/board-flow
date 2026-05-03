@@ -289,9 +289,12 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 saveSleevesToSheetIfAvailable(merged)
                 entry("Collection cached", "${merged.size} games ready in the app", LogEntry.Type.DONE)
                 launch { BggImageCache.preloadAll(getApplication(), merged) }
-            } catch (e: Exception) {
-                _collectionError.value = e.message ?: "Failed to refresh collection"
+            } catch (e: CancellationException) {
                 throw e
+            } catch (e: Exception) {
+                val cached = readCanonicalSnapshot()
+                _collectionGames.value = cached
+                entry("Collection cache", fallbackMessage(e, cached.size), fallbackLogType(cached))
             } finally {
                 _collectionLoading.value = false
             }
@@ -343,18 +346,13 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             _collectionLoading.value = true
             _collectionError.value = null
-            _account.value = account
-            val cached = if (!forceRefresh) {
-                readCanonicalSnapshot()
-            } else {
-                emptyList()
-            }
-            if (cached.isNotEmpty()) {
-                _collectionGames.value = cached
-                _collectionLoading.value = false
-                return@launch
-            }
             try {
+                _account.value = account
+                val cached = readCanonicalSnapshot()
+                if (!forceRefresh && cached.isNotEmpty()) {
+                    _collectionGames.value = cached
+                    return@launch
+                }
                 refreshMutex.withLock {
                     val merged = buildCanonicalCollectionSnapshot(
                         forceRefresh = forceRefresh,
@@ -365,14 +363,15 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     _collectionGames.value = merged
                     launch { BggImageCache.preloadAll(getApplication(), merged) }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (_collectionGames.value.isEmpty()) {
-                    _collectionError.value = e.message ?: "Failed to load collection"
-                }
+                val cached = readCanonicalSnapshot()
+                _collectionGames.value = cached
+                entry("Collection cache", fallbackMessage(e, cached.size), fallbackLogType(cached))
+            } finally {
                 _collectionLoading.value = false
-                return@launch
             }
-            _collectionLoading.value = false
         }
     }
 
@@ -740,18 +739,33 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val spreadsheetId = _spreadsheetId.value.ifBlank { securePrefs.syncSpreadsheetId }.trim()
         if (account != null && spreadsheetId.isNotBlank()) {
             entry("Google Sheets", "Fetching collection rows", LogEntry.Type.INFO)
-            val api = GoogleApiClient(getApplication(), account, spreadsheetId, _sheetTabName.value)
-            val sheetGames = api.readCollectionRows()
-            merged = mergeGameItems(merged, sheetGames, CollectionUpdateSource.SHEET)
-            sheetLoaded = true
-            entry("Google Sheets", "${sheetGames.size} rows loaded", LogEntry.Type.INFO)
+            try {
+                val api = GoogleApiClient(getApplication(), account, spreadsheetId, _sheetTabName.value)
+                val sheetGames = api.readCollectionRows()
+                merged = mergeGameItems(merged, sheetGames, CollectionUpdateSource.SHEET)
+                sheetLoaded = true
+                entry("Google Sheets", "${sheetGames.size} rows loaded", LogEntry.Type.INFO)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.SHEET)
+                sheetLoaded = true
+                entry("Google Sheets", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
+            }
         } else {
             entry("Google Sheets", "Skipping sheet refresh", LogEntry.Type.INFO)
         }
 
-        val bggGames = buildBggCollection(forceRefresh)
-        merged = mergeGameItems(merged, bggGames, CollectionUpdateSource.BGG)
-        entry("BGG", "${bggGames.size} games merged", LogEntry.Type.INFO)
+        try {
+            val bggGames = buildBggCollection(forceRefresh)
+            merged = mergeGameItems(merged, bggGames, CollectionUpdateSource.BGG)
+            entry("BGG", "${bggGames.size} games merged", LogEntry.Type.INFO)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.BGG)
+            entry("BGG", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
+        }
 
         if (!sheetLoaded) {
             merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.SHEET)
@@ -759,8 +773,15 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.SLEEVES)
 
         if (refreshSleeves && merged.isNotEmpty()) {
-            val sleeveUpdates = fetchSleeveUpdates(merged, forceRefresh = false)
-            merged = mergeGameItems(merged, sleeveUpdates, CollectionUpdateSource.SLEEVES)
+            try {
+                val sleeveUpdates = fetchSleeveUpdates(merged, forceRefresh = false)
+                merged = mergeGameItems(merged, sleeveUpdates, CollectionUpdateSource.SLEEVES)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.SLEEVES)
+                entry("BGG sleeves", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
+            }
         }
 
         val (withHistoryCounts, backfilledCount) = backfillMissingBggPlayCountsFromHistory(merged)
@@ -888,13 +909,32 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
     private suspend fun refreshBggPlayHistory() {
         entry("BGG history", "Refreshing play history", LogEntry.Type.INFO)
-        refreshBggPlayCache(securePrefs, collectionStore, bggRepository)
-            .onSuccess { plays ->
-                entry("BGG history", "${plays.size} plays cached", LogEntry.Type.DONE)
-            }
-            .onFailure {
-                entry("BGG history", it.message ?: "Failed to refresh play history", LogEntry.Type.ERROR)
-            }
+        try {
+            refreshBggPlayCache(securePrefs, collectionStore, bggRepository)
+                .onSuccess { plays ->
+                    entry("BGG history", "${plays.size} plays cached", LogEntry.Type.DONE)
+                }
+                .onFailure {
+                    entry("BGG history", it.message ?: "Failed to refresh play history", LogEntry.Type.ERROR)
+                }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            entry("BGG history", e.message ?: "Failed to refresh play history", LogEntry.Type.ERROR)
+        }
+    }
+
+    private fun fallbackMessage(error: Exception, cachedCount: Int): String {
+        val reason = error.message?.takeIf { it.isNotBlank() } ?: "Refresh failed"
+        return if (cachedCount > 0) {
+            "$reason - using $cachedCount cached games"
+        } else {
+            "$reason - no cached games available"
+        }
+    }
+
+    private fun fallbackLogType(cachedGames: List<GameItem>): LogEntry.Type {
+        return if (cachedGames.isEmpty()) LogEntry.Type.ERROR else LogEntry.Type.INFO
     }
 
     private fun saveSleevesToSheetIfAvailable(games: List<GameItem>) {

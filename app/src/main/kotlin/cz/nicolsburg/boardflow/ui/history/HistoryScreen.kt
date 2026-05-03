@@ -18,6 +18,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,11 +33,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
@@ -67,9 +72,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.text.input.KeyboardType
@@ -81,7 +89,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
@@ -158,6 +172,7 @@ fun HistoryScreen(viewModel: AppViewModel) {
     editingPlay?.let { play ->
         EditPlayDialog(
             play = play,
+            rosterPlayers = players,
             isLoading = editPlayLoading,
             onDismiss = { editingPlay = null; editError = null },
             onSave = { date, durationMinutes, location, comments, players ->
@@ -217,6 +232,7 @@ fun HistoryScreen(viewModel: AppViewModel) {
                 error = bggError,
                 hasBggUsername = viewModel.prefs.bggUsername.isNotBlank(),
                 onOpenPlay = { selectedPlay = it },
+                onRefresh = viewModel::fetchBggPlays,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -231,83 +247,214 @@ private fun PlaysContent(
     error: String?,
     hasBggUsername: Boolean,
     onOpenPlay: (LoggedPlay) -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    when {
-        loading && plays.isEmpty() -> LazyColumn(
-            modifier = modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 8.dp)
-        ) {
-            items(5) { ShimmerPlayCard() }
+    val listState = rememberLazyListState()
+    val emptyState = rememberScrollState()
+    val listAtTop by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
         }
+    }
+    val isAtTop = if (plays.isEmpty() && !loading) emptyState.value == 0 else listAtTop
 
-        error != null && plays.isEmpty() -> Box(modifier, contentAlignment = Alignment.Center) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(32.dp)
+    HistoryPullRefreshContainer(
+        isRefreshing = loading,
+        isAtTop = isAtTop,
+        onRefresh = onRefresh,
+        modifier = modifier
+    ) {
+        when {
+            loading && plays.isEmpty() -> LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                Icon(
-                    Icons.Default.History,
-                    contentDescription = null,
-                    modifier = Modifier.size(72.dp),
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.55f)
-                )
-                Text(
-                    "Couldn't load history",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    error,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
-                    textAlign = TextAlign.Center
-                )
+                items(5) { ShimmerPlayCard() }
+            }
+
+            error != null && plays.isEmpty() -> Box(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(emptyState),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.History,
+                        contentDescription = null,
+                        modifier = Modifier.size(72.dp),
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.55f)
+                    )
+                    Text(
+                        "Couldn't load history",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            plays.isEmpty() -> Box(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(emptyState),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.History,
+                        contentDescription = null,
+                        modifier = Modifier.size(72.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                    )
+                    Text(
+                        "No play history",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        if (!hasBggUsername)
+                            "Set your BGG username in Settings to start tracking your play history."
+                        else
+                            "Use Sync to refresh your play history from BGG.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            else -> LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 8.dp)
+            ) {
+                items(plays, key = { it.id }) { play ->
+                    PlayHistoryCard(
+                        play = play,
+                        players = players,
+                        onClick = { onOpenPlay(play) }
+                    )
+                }
             }
         }
+    }
+}
 
-        plays.isEmpty() -> Box(modifier, contentAlignment = Alignment.Center) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(32.dp)
-            ) {
-                Icon(
-                    Icons.Default.History,
-                    contentDescription = null,
-                    modifier = Modifier.size(72.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-                )
-                Text(
-                    "No play history",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    if (!hasBggUsername)
-                        "Set your BGG username in Settings to start tracking your play history."
-                    else
-                        "Use Sync to refresh your play history from BGG.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center
-                )
+
+@Composable
+private fun HistoryPullRefreshContainer(
+    isRefreshing: Boolean,
+    isAtTop: Boolean,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val density = LocalDensity.current
+    val refreshThresholdPx = with(density) { 72.dp.toPx() }
+    val onRefreshState by rememberUpdatedState(onRefresh)
+    val isAtTopState by rememberUpdatedState(isAtTop)
+    val isRefreshingState by rememberUpdatedState(isRefreshing)
+    var pullDistance by remember { mutableFloatStateOf(0f) }
+    var refreshTriggered by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isRefreshing, refreshThresholdPx) {
+        if (isRefreshing) {
+            pullDistance = refreshThresholdPx
+        } else {
+            pullDistance = 0f
+            refreshTriggered = false
+        }
+    }
+
+    val refreshConnection = remember(refreshThresholdPx) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source != NestedScrollSource.UserInput || available.y >= 0f || pullDistance <= 0f) {
+                    return Offset.Zero
+                }
+                val consumed = minOf(-available.y, pullDistance)
+                pullDistance -= consumed
+                return Offset(0f, -consumed)
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                if (
+                    source != NestedScrollSource.UserInput ||
+                    available.y <= 0f ||
+                    !isAtTopState ||
+                    isRefreshingState ||
+                    refreshTriggered
+                ) {
+                    return Offset.Zero
+                }
+
+                pullDistance = (pullDistance + available.y * 0.5f).coerceAtMost(refreshThresholdPx)
+                if (pullDistance >= refreshThresholdPx) {
+                    refreshTriggered = true
+                    onRefreshState()
+                }
+                return Offset(0f, available.y)
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                if (!refreshTriggered && !isRefreshingState) {
+                    pullDistance = 0f
+                }
+                return Velocity.Zero
             }
         }
+    }
 
-        else -> LazyColumn(
-            modifier = modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 8.dp)
-        ) {
-            items(plays, key = { it.id }) { play ->
-                PlayHistoryCard(
-                    play = play,
-                    players = players,
-                    onClick = { onOpenPlay(play) }
-                )
+    Box(modifier = modifier.nestedScroll(refreshConnection)) {
+        content()
+        if (isRefreshing || pullDistance > 0f) {
+            val indicatorScale = if (isRefreshing) {
+                1f
+            } else {
+                (pullDistance / refreshThresholdPx).coerceIn(0.35f, 1f)
+            }
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 8.dp)
+                    .size(36.dp)
+                    .scale(indicatorScale),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
             }
         }
     }
@@ -570,16 +717,10 @@ private fun PlayDetailsDialog(
     onDeletePlay: () -> Unit
 ) {
     AnimatedDialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -690,11 +831,11 @@ private fun PlayDetailsDialog(
             }
         }
     }
-}
 
 @Composable
 private fun EditPlayDialog(
     play: LoggedPlay,
+    rosterPlayers: List<Player>,
     isLoading: Boolean,
     onDismiss: () -> Unit,
     onSave: (date: String, durationMinutes: Int, location: String, comments: String, players: List<PlayerResult>) -> Unit
@@ -703,7 +844,7 @@ private fun EditPlayDialog(
     var duration by remember(play.id) { mutableStateOf(if (play.durationMinutes > 0) play.durationMinutes.toString() else "") }
     var location by remember(play.id) { mutableStateOf(play.location) }
     var comments by remember(play.id) { mutableStateOf(play.comments) }
-    val editPlayers = remember(play.id) { play.players.toMutableStateList() }
+    val editPlayers = remember(play.id, rosterPlayers) { play.players.collapsedByName(rosterPlayers).toMutableStateList() }
     var showDatePicker by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState(
@@ -728,16 +869,10 @@ private fun EditPlayDialog(
     }
 
     AnimatedDialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
                 item {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text("Edit Play", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -802,7 +937,15 @@ private fun EditPlayDialog(
 
                 item {
                     BoardFlowButton(
-                        onClick = { onSave(date, duration.toIntOrNull() ?: 0, location, comments, editPlayers.toList()) },
+                        onClick = {
+                            onSave(
+                                date,
+                                duration.toIntOrNull() ?: 0,
+                                location,
+                                comments,
+                                editPlayers.toList().collapsedByName(rosterPlayers)
+                            )
+                        },
                         enabled = !isLoading,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -813,9 +956,52 @@ private fun EditPlayDialog(
                         }
                     }
                 }
-            }
         }
     }
+}
+
+
+private fun List<PlayerResult>.collapsedByName(rosterPlayers: List<Player>): List<PlayerResult> {
+    val collapsed = linkedMapOf<String, PlayerResult>()
+    val blankNamePlayers = mutableListOf<PlayerResult>()
+
+    forEach { player ->
+        val trimmedName = player.name.trim()
+        if (trimmedName.isBlank()) {
+            blankNamePlayers += player.copy(name = trimmedName)
+            return@forEach
+        }
+
+        val displayName = resolveDisplayName(trimmedName, rosterPlayers).trim()
+        val key = displayName.lowercase()
+        val normalized = player.copy(name = displayName)
+        collapsed[key] = collapsed[key]?.mergeSameNamePlayer(normalized) ?: normalized
+    }
+
+    return (collapsed.values + blankNamePlayers).sortedWith(
+        compareBy<PlayerResult> { it.name.trim().lowercase() }
+            .thenBy { it.color.trim().lowercase() }
+            .thenBy { it.score.trim() }
+    )
+}
+
+private fun PlayerResult.mergeSameNamePlayer(other: PlayerResult): PlayerResult {
+    return copy(
+        score = score.meaningfulPlayerValueOr(other.score, treatZeroAsEmpty = true),
+        isWinner = isWinner || other.isWinner,
+        color = color.meaningfulPlayerValueOr(other.color),
+        rating = rating.meaningfulPlayerValueOr(other.rating),
+        isNew = isNew || other.isNew
+    )
+}
+
+private fun String.meaningfulPlayerValueOr(fallback: String, treatZeroAsEmpty: Boolean = false): String {
+    val value = trim()
+    val fallbackValue = fallback.trim()
+    val emptyValue = value.isBlank() ||
+        value.equals("N/A", ignoreCase = true) ||
+        (treatZeroAsEmpty && (value == "0" || value == "0.0"))
+    return if (emptyValue) fallbackValue else value
 }
 
 @Composable
@@ -827,73 +1013,127 @@ private fun EditPlayerRow(
     onToggleWinner: () -> Unit,
     onFirstPlayChange: (Boolean) -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = player.name.ifBlank { "Unnamed player" }
+    val scoreText = player.score.takeUnless {
+        val normalized = it.trim()
+        normalized.isEmpty() || normalized == "0" || normalized == "0.0"
+    }
+
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
+            .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded },
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (player.color.isNotBlank()) {
                 PlayerColorDot(player.color)
             }
-            OutlinedTextField(
-                value = player.name,
-                onValueChange = onNameChange,
-                label = { Text("Name") },
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(1.6f)
-            )
-            OutlinedTextField(
-                value = player.score,
-                onValueChange = onScoreChange,
-                label = { Text("Score") },
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(0.8f)
-            )
-            BoardFlowIconButton(onClick = onToggleWinner) {
-                Icon(
-                    Icons.Default.EmojiEvents,
-                    contentDescription = "Toggle winner",
-                    tint = if (player.isWinner) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = player.color,
-                onValueChange = onColorChange,
-                label = { Text("Team / color") },
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall,
+            Text(
+                label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Checkbox(
-                    checked = player.isNew,
-                    onCheckedChange = onFirstPlayChange
-                )
+            if (scoreText != null) {
                 Text(
-                    "First play",
-                    style = MaterialTheme.typography.bodySmall,
+                    scoreText,
+                    style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            if (player.isWinner) {
+                Icon(
+                    Icons.Default.EmojiEvents,
+                    contentDescription = "Winner",
+                    tint = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Icon(
+                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = if (expanded) "Collapse player" else "Expand player",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        if (expanded) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (player.color.isNotBlank()) {
+                    PlayerColorDot(player.color)
+                }
+                OutlinedTextField(
+                    value = player.name,
+                    onValueChange = onNameChange,
+                    label = { Text("Name") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1.6f)
+                )
+                OutlinedTextField(
+                    value = player.score,
+                    onValueChange = onScoreChange,
+                    label = { Text("Score") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(0.8f)
+                )
+                BoardFlowIconButton(onClick = onToggleWinner) {
+                    Icon(
+                        Icons.Default.EmojiEvents,
+                        contentDescription = "Toggle winner",
+                        tint = if (player.isWinner) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = player.color,
+                    onValueChange = onColorChange,
+                    label = { Text("Team / color") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f)
+                )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Checkbox(
+                        checked = player.isNew,
+                        onCheckedChange = onFirstPlayChange
+                    )
+                    Text(
+                        "First play",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
         }
     }
+}
+
 }
 
 @Composable
