@@ -54,11 +54,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -89,13 +86,16 @@ import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
+import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
 import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
-import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import kotlinx.coroutines.flow.collect
 
@@ -297,11 +297,9 @@ fun CollectionScreen(
                         }
 
                         if (showFilters) {
-                            ModalBottomSheet(
+                            BoardFlowModalBottomSheet(
                                 onDismissRequest = { showFilters = false },
-                                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                                containerColor = MaterialTheme.colorScheme.background,
-                                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                             ) {
                                 FilterSheetContent(
                                     sortMode = sortMode,
@@ -407,6 +405,7 @@ private fun ShimmerGameCard() {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = BoardFlowSurfaceTokens.Shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -548,12 +547,13 @@ private fun GameCard(
         modifier = modifier
             .fillMaxWidth()
             .scale(scale)
-            .clip(CardDefaults.shape)
+            .clip(BoardFlowSurfaceTokens.Shape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
                 onClick = onClick
             ),
+        shape = BoardFlowSurfaceTokens.Shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -750,13 +750,6 @@ private fun bestForMatches(game: GameItem, players: Int): Boolean {
 }
 
 @Composable
-private fun boardFlowFilterChipColors() = FilterChipDefaults.filterChipColors(
-    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-    selectedLabelColor = MaterialTheme.colorScheme.primary,
-    selectedLeadingIconColor = MaterialTheme.colorScheme.primary
-)
-
-@Composable
 @OptIn(ExperimentalLayoutApi::class)
 private fun FilterSheetContent(
     sortMode: SortMode,
@@ -808,7 +801,7 @@ private fun FilterSheetContent(
             }
         }
 
-        FilterSection(
+        BoardFlowFilterSection(
             label = "Sort by",
             detail = "Choose how the collection list is ordered."
         ) {
@@ -817,16 +810,15 @@ private fun FilterSheetContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SortMode.entries.forEach { mode ->
-                    FilterChip(
+                    BoardFlowFilterChip(
                         selected = sortMode == mode,
                         onClick = { onSortMode(mode) },
-                        colors = boardFlowFilterChipColors(),
                         leadingIcon = if (sortMode == mode) {
                             {
                                 Icon(
                                     Icons.Default.Check,
                                     contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(BoardFlowSurfaceTokens.FilterIconSize)
                                 )
                             }
                         } else {
@@ -838,14 +830,14 @@ private fun FilterSheetContent(
             }
         }
 
-        FilterSection(
+        BoardFlowFilterSection(
             label = "Players",
             detail = "Games that support this player count."
         ) {
             NumberPicker(selected = filterPlayers, onSelect = onFilterPlayers)
         }
 
-        FilterSection(
+        BoardFlowFilterSection(
             label = "Best for",
             detail = "Games recommended as strongest at this count."
         ) {
@@ -857,59 +849,32 @@ private fun FilterSheetContent(
 }
 
 @Composable
-private fun FilterSection(
-    label: String,
-    detail: String,
-    content: @Composable () -> Unit
-) {
-    SectionCard {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    detail,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            content()
-        }
-    }
-}
-
-@Composable
 @OptIn(ExperimentalLayoutApi::class)
 private fun NumberPicker(selected: Int?, onSelect: (Int?) -> Unit) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilterChip(
+        BoardFlowFilterChip(
             selected = selected == null,
             onClick = { onSelect(null) },
-            colors = boardFlowFilterChipColors(),
             label = { Text("Any") }
         )
         (1..6).forEach { n ->
             val isSelected = selected == n
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = BoardFlowSurfaceTokens.Shape,
                 color = if (isSelected) {
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                 } else {
                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
                 },
                 modifier = Modifier
-                    .height(40.dp)
+                    .height(BoardFlowSurfaceTokens.FilterControlHeight)
                     .clickable { onSelect(if (isSelected) null else n) }
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 14.dp),
+                    modifier = Modifier.padding(horizontal = BoardFlowSurfaceTokens.FilterControlHorizontalPadding),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -917,7 +882,7 @@ private fun NumberPicker(selected: Int?, onSelect: (Int?) -> Unit) {
                         Icon(
                             Icons.Default.Check,
                             contentDescription = null,
-                            modifier = Modifier.size(15.dp),
+                            modifier = Modifier.size(BoardFlowSurfaceTokens.FilterIconSize),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }

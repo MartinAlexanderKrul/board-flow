@@ -1,6 +1,7 @@
 package cz.nicolsburg.boardflow.ui.collection
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,12 +17,13 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -163,7 +165,7 @@ internal fun SleevesContent(
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item(key = "header") {
@@ -192,7 +194,7 @@ internal fun SleevesContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onToggleExclusion(game.objectId) }
-                                    .padding(vertical = 2.dp),
+                                    .padding(vertical = 0.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -209,10 +211,7 @@ internal fun SleevesContent(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
-                                Checkbox(
-                                    checked = !excluded,
-                                    onCheckedChange = { onToggleExclusion(game.objectId) }
-                                )
+                                CompactSleeveCheckmark(checked = !excluded)
                             }
                         }
                     }
@@ -220,17 +219,40 @@ internal fun SleevesContent(
             }
         }
 
-        if (groups.isNotEmpty()) {
-            item(key = "divider") {
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-            }
-        }
-
         items(groups, key = { it.size }) { group ->
             SleeveSizeGroupCard(group = group)
+        }
+    }
+}
+
+@Composable
+private fun CompactSleeveCheckmark(checked: Boolean) {
+    Surface(
+        modifier = Modifier.size(22.dp),
+        shape = MaterialTheme.shapes.extraSmall,
+        color = if (checked) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+        },
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (checked) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
+            }
+        )
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            if (checked) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(15.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }

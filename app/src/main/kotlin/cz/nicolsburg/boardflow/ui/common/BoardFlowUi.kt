@@ -32,12 +32,17 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -63,6 +68,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -111,6 +117,15 @@ fun SectionHeader(
     }
 }
 
+object BoardFlowSurfaceTokens {
+    val CornerRadius = 12.dp
+    val Shape = RoundedCornerShape(CornerRadius)
+    val CardContentPadding = 12.dp
+    val FilterControlHeight = 40.dp
+    val FilterControlHorizontalPadding = 14.dp
+    val FilterIconSize = 16.dp
+}
+
 @Composable
 fun SectionCard(
     modifier: Modifier = Modifier,
@@ -127,16 +142,90 @@ fun SectionCard(
     val cardModifier = modifier.fillMaxWidth().animateContentSize()
     val columnContent: @Composable ColumnScope.() -> Unit = {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(BoardFlowSurfaceTokens.CardContentPadding),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             content = content
         )
     }
     if (onClick != null) {
-        Card(onClick = onClick, modifier = cardModifier, colors = colors, border = border, content = columnContent)
+        Card(
+            onClick = onClick,
+            modifier = cardModifier,
+            shape = BoardFlowSurfaceTokens.Shape,
+            colors = colors,
+            border = border,
+            content = columnContent
+        )
     } else {
-        Card(modifier = cardModifier, colors = colors, border = border, content = columnContent)
+        Card(
+            modifier = cardModifier,
+            shape = BoardFlowSurfaceTokens.Shape,
+            colors = colors,
+            border = border,
+            content = columnContent
+        )
     }
+}
+
+@Composable
+fun BoardFlowFilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = label,
+        modifier = modifier.defaultMinSize(minHeight = BoardFlowSurfaceTokens.FilterControlHeight),
+        enabled = enabled,
+        leadingIcon = leadingIcon,
+        shape = BoardFlowSurfaceTokens.Shape,
+        colors = boardFlowFilterChipColors()
+    )
+}
+
+@Composable
+fun BoardFlowFilterSection(
+    label: String,
+    detail: String,
+    content: @Composable () -> Unit
+) {
+    SectionCard {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    detail,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            content()
+        }
+    }
+}
+
+@Composable
+fun boardFlowFilterChipColors() = FilterChipDefaults.filterChipColors(
+    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+    selectedLabelColor = MaterialTheme.colorScheme.primary,
+    selectedLeadingIconColor = MaterialTheme.colorScheme.primary
+)
+
+object BoardFlowModalTokens {
+    val TopDismissDragAreaHeight = 36.dp
+    val DismissThreshold = 96.dp
+    val BottomSheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+    const val DismissGestureRegionFraction = 0.25f
 }
 
 /**
@@ -153,10 +242,13 @@ fun AnimatedDialog(
         var visible by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
         val density = LocalDensity.current
-        val dismissThresholdPx = with(density) { 96.dp.toPx() }
+        val dismissThresholdPx = with(density) { BoardFlowModalTokens.DismissThreshold.toPx() }
+        val dismissGestureFallbackPx = with(density) { BoardFlowModalTokens.TopDismissDragAreaHeight.toPx() }
+        val dismissSlopPx = with(density) { 8.dp.toPx() }
         val offsetY = remember { Animatable(0f) }
         val settleDuration = 180
         val maxH = LocalConfiguration.current.screenHeightDp.dp * 0.85f
+        var modalHeightPx by remember { mutableStateOf(0) }
         LaunchedEffect(Unit) { visible = true }
         AnimatedVisibility(
             visible = visible,
@@ -170,65 +262,71 @@ fun AnimatedDialog(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
                     .offset { IntOffset(0, offsetY.value.roundToInt()) }
-                    .heightIn(max = maxH),
+                    .heightIn(max = maxH)
+                    .onGloballyPositioned { modalHeightPx = it.size.height }
+                    .pointerInput(onDismissRequest, modalHeightPx) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            val dismissGestureHeight = (modalHeightPx * BoardFlowModalTokens.DismissGestureRegionFraction)
+                                .takeIf { it > 0f }
+                                ?: dismissGestureFallbackPx
+                            if (down.position.y > dismissGestureHeight) return@awaitEachGesture
+
+                            var pointerId = down.id
+                            var totalDragY = 0f
+                            var totalDragX = 0f
+                            var dismissDragActive = false
+
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == pointerId }
+                                    ?: event.changes.firstOrNull()
+                                    ?: break
+                                pointerId = change.id
+                                if (!change.pressed) break
+
+                                val dragAmount = change.positionChange()
+                                totalDragX += dragAmount.x
+                                totalDragY += dragAmount.y
+
+                                if (!dismissDragActive &&
+                                    totalDragY > dismissSlopPx &&
+                                    kotlin.math.abs(totalDragY) > kotlin.math.abs(totalDragX)
+                                ) {
+                                    dismissDragActive = true
+                                }
+
+                                if (dismissDragActive) {
+                                    change.consume()
+                                    scope.launch {
+                                        offsetY.snapTo(
+                                            (offsetY.value + dragAmount.y).coerceAtLeast(0f)
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (dismissDragActive) {
+                                scope.launch {
+                                    if (offsetY.value > dismissThresholdPx) {
+                                        onDismissRequest()
+                                    } else {
+                                        offsetY.animateTo(
+                                            targetValue = 0f,
+                                            animationSpec = tween(
+                                                settleDuration,
+                                                easing = FastOutSlowInEasing
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // Drag target spans the modal top, while scrollable content below remains untouched.
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                            .pointerInput(onDismissRequest) {
-                                awaitEachGesture {
-                                    val down = awaitFirstDown(requireUnconsumed = false)
-                                    var pointerId = down.id
-
-                                    while (true) {
-                                        val event = awaitPointerEvent()
-                                        val change = event.changes.firstOrNull { it.id == pointerId }
-                                            ?: event.changes.firstOrNull()
-                                            ?: break
-                                        pointerId = change.id
-                                        if (!change.pressed) break
-
-                                        val dragAmount = change.positionChange().y
-                                        if (dragAmount != 0f) {
-                                            change.consume()
-                                            scope.launch {
-                                                offsetY.snapTo(
-                                                    (offsetY.value + dragAmount).coerceAtLeast(0f)
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    scope.launch {
-                                        if (offsetY.value > dismissThresholdPx) {
-                                            onDismissRequest()
-                                        } else {
-                                            offsetY.animateTo(
-                                                targetValue = 0f,
-                                                animationSpec = tween(
-                                                    settleDuration,
-                                                    easing = FastOutSlowInEasing
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(width = 36.dp, height = 4.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-                                    shape = CircleShape
-                                )
-                        )
-                    }
+                    BoardFlowDismissDragHandle()
 
                     // Content weight(fill=false) gives it bounded height so inner
                     // LazyColumns scroll correctly, while short dialogs stay compact.
@@ -238,6 +336,47 @@ fun AnimatedDialog(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BoardFlowModalBottomSheet(
+    onDismissRequest: () -> Unit,
+    sheetState: SheetState,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background,
+        shape = BoardFlowModalTokens.BottomSheetShape,
+        dragHandle = { BoardFlowDismissDragHandle() },
+        content = content
+    )
+}
+
+@Composable
+private fun BoardFlowDismissDragHandle(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(BoardFlowModalTokens.TopDismissDragAreaHeight)
+            .then(modifier),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 36.dp, height = 4.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                    shape = CircleShape
+                )
+        )
     }
 }
 

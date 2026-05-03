@@ -23,6 +23,7 @@ fun GameSearchField(
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         trailingIcon = trailingAction,
         singleLine = true,
+        shape = BoardFlowSurfaceTokens.Shape,
         modifier = modifier
     )
 }

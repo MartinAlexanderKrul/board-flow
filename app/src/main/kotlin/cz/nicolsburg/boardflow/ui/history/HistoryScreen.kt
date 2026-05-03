@@ -117,15 +117,15 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.snapshotFlow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
-import cz.nicolsburg.boardflow.ui.common.SectionCard
 import kotlinx.coroutines.flow.collect
 import androidx.compose.material.icons.filled.Add
 import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
@@ -436,11 +436,9 @@ fun HistoryScreen(
             }
 
             if (showFilters) {
-                ModalBottomSheet(
+                BoardFlowModalBottomSheet(
                     onDismissRequest = { showFilters = false },
-                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    containerColor = MaterialTheme.colorScheme.background,
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                 ) {
                     HistoryFilterSheetContent(
                         sortMode = sortMode,
@@ -764,12 +762,13 @@ private fun PlayHistoryCard(
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
-            .clip(CardDefaults.shape)
+            .clip(BoardFlowSurfaceTokens.Shape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
                 onClick = onClick,
             ),
+        shape = BoardFlowSurfaceTokens.Shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -873,6 +872,7 @@ private fun ShimmerPlayCard() {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = BoardFlowSurfaceTokens.Shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
@@ -1309,7 +1309,7 @@ private fun EditPlayerRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(BoardFlowSurfaceTokens.Shape)
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -1456,39 +1456,6 @@ private fun resolveDisplayName(name: String, players: List<Player>): String {
 
 
 @Composable
-private fun historyFilterChipColors() = FilterChipDefaults.filterChipColors(
-    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-    selectedLabelColor = MaterialTheme.colorScheme.primary,
-    selectedLeadingIconColor = MaterialTheme.colorScheme.primary
-)
-
-@Composable
-private fun HistoryFilterSection(
-    label: String,
-    detail: String,
-    content: @Composable () -> Unit
-) {
-    SectionCard {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    detail,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            content()
-        }
-    }
-}
-
-@Composable
 private fun HistoryFilterSheetContent(
     sortMode: HistorySortMode,
     onSortMode: (HistorySortMode) -> Unit,
@@ -1540,7 +1507,7 @@ private fun HistoryFilterSheetContent(
             }
         }
 
-        HistoryFilterSection(
+        BoardFlowFilterSection(
             label = "Sort by",
             detail = "Choose how the history list is ordered."
         ) {
@@ -1549,12 +1516,17 @@ private fun HistoryFilterSheetContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 HistorySortMode.entries.forEach { mode ->
-                    FilterChip(
+                    BoardFlowFilterChip(
                         selected = sortMode == mode,
                         onClick = { onSortMode(mode) },
-                        colors = historyFilterChipColors(),
                         leadingIcon = if (sortMode == mode) {
-                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(BoardFlowSurfaceTokens.FilterIconSize)
+                                )
+                            }
                         } else null,
                         label = { Text(mode.label) }
                     )
@@ -1562,7 +1534,7 @@ private fun HistoryFilterSheetContent(
             }
         }
 
-        HistoryFilterSection(
+        BoardFlowFilterSection(
             label = "Date range",
             detail = "Show plays from a specific time period."
         ) {
@@ -1571,12 +1543,17 @@ private fun HistoryFilterSheetContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 HistoryDateRange.entries.forEach { range ->
-                    FilterChip(
+                    BoardFlowFilterChip(
                         selected = filterDateRange == range,
                         onClick = { onFilterDateRange(range) },
-                        colors = historyFilterChipColors(),
                         leadingIcon = if (filterDateRange == range) {
-                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(BoardFlowSurfaceTokens.FilterIconSize)
+                                )
+                            }
                         } else null,
                         label = { Text(range.label) }
                     )
@@ -1585,7 +1562,7 @@ private fun HistoryFilterSheetContent(
         }
 
         if (players.isNotEmpty()) {
-            HistoryFilterSection(
+            BoardFlowFilterSection(
                 label = "Player",
                 detail = "Show only plays with this player."
             ) {
@@ -1593,20 +1570,24 @@ private fun HistoryFilterSheetContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    FilterChip(
+                    BoardFlowFilterChip(
                         selected = filterPlayer == null,
                         onClick = { onFilterPlayer(null) },
-                        colors = historyFilterChipColors(),
                         label = { Text("Anyone") }
                     )
                     players.forEach { player ->
                         val isSelected = filterPlayer == player.displayName
-                        FilterChip(
+                        BoardFlowFilterChip(
                             selected = isSelected,
                             onClick = { onFilterPlayer(if (isSelected) null else player.displayName) },
-                            colors = historyFilterChipColors(),
                             leadingIcon = if (isSelected) {
-                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(BoardFlowSurfaceTokens.FilterIconSize)
+                                    )
+                                }
                             } else null,
                             label = { Text(player.displayName) }
                         )
