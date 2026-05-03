@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.LoggedPlay
@@ -28,17 +29,17 @@ import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-private data class PlayerStats(
+internal data class PlayerStats(
     val totalPlays: Int,
     val wins: Int,
     val lastPlayedDate: String?,
     val favoriteGame: String?
 )
 
-private val PlayerStats.winRate: Int
+internal val PlayerStats.winRate: Int
     get() = if (totalPlays > 0) wins * 100 / totalPlays else 0
 
-private fun List<LoggedPlay>.statsForPlayer(player: Player): PlayerStats {
+internal fun List<LoggedPlay>.statsForPlayer(player: Player): PlayerStats {
     val names = (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() }
     val myPlays = filter { play -> play.players.any { it.name.lowercase().trim() in names } }
     val wins = myPlays.count { play -> play.players.any { it.name.lowercase().trim() in names && it.isWinner } }
@@ -47,7 +48,7 @@ private fun List<LoggedPlay>.statsForPlayer(player: Player): PlayerStats {
     return PlayerStats(totalPlays = myPlays.size, wins = wins, lastPlayedDate = lastDate, favoriteGame = favGame)
 }
 
-private fun formatPlayDate(yyyyMMdd: String): String = try {
+internal fun formatPlayDate(yyyyMMdd: String): String = try {
     LocalDate.parse(yyyyMMdd).format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
 } catch (_: Exception) { yyyyMMdd }
 
@@ -65,39 +66,10 @@ fun PlayersScreen(viewModel: AppViewModel) {
     }
 
     if (showAddDialog) {
-        var newName by remember { mutableStateOf("") }
-        PlayerDialog(
-            onDismissRequest = { showAddDialog = false },
-            title = "New Player",
-            actions = {
-                BoardFlowButton(
-                    onClick = {
-                        viewModel.addNewPlayer(newName)
-                        showAddDialog = false
-                    },
-                    enabled = newName.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Add Player")
-                }
-            }
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    "Add a player manually. They will also continue to be created automatically from logged plays.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(4.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Display Name", style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    OutlinedTextField(value = newName, onValueChange = { newName = it },
-                        placeholder = { Text("e.g. Alice") }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth())
-                }
-            }
-        }
+        AddPlayerDialog(
+            onDismiss = { showAddDialog = false },
+            onAdd = { name -> viewModel.addNewPlayer(name); showAddDialog = false }
+        )
     }
 
     editingPlayer?.let { ep ->
@@ -155,7 +127,7 @@ fun PlayersScreen(viewModel: AppViewModel) {
 }
 
 @Composable
-private fun PlayerListItem(player: Player, stats: PlayerStats, onEdit: () -> Unit) {
+internal fun PlayerListItem(player: Player, stats: PlayerStats, onEdit: () -> Unit) {
     SectionCard {
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -210,7 +182,7 @@ private fun PlayerListItem(player: Player, stats: PlayerStats, onEdit: () -> Uni
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun EditPlayerDialog(
+internal fun EditPlayerDialog(
     player: Player,
     onDismiss: () -> Unit,
     onRenameDisplayName: (String) -> Unit,
@@ -338,7 +310,7 @@ private fun EditPlayerDialog(
 }
 
 @Composable
-private fun PlayerDialog(
+internal fun PlayerDialog(
     onDismissRequest: () -> Unit,
     title: String,
     actions: @Composable ColumnScope.() -> Unit = {},
@@ -369,6 +341,94 @@ private fun PlayerDialog(
                 item {
                     Column(content = actions)
                 }
+        }
+    }
+}
+
+@Composable
+fun PlayersTabContent(
+    players: List<Player>,
+    sourcePlays: List<LoggedPlay>,
+    onEditPlayer: (Player) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (players.isEmpty()) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(32.dp)
+            ) {
+                Icon(
+                    Icons.Default.Person, contentDescription = null,
+                    modifier = Modifier.size(72.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                )
+                Text(
+                    "No players yet",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "Players are added automatically when you log plays.\nTap + to add your first player manually.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 8.dp)
+        ) {
+            items(players, key = { it.id }) { player ->
+                val stats = remember(sourcePlays, player) { sourcePlays.statsForPlayer(player) }
+                PlayerListItem(player = player, stats = stats, onEdit = { onEditPlayer(player) })
+            }
+        }
+    }
+}
+
+@Composable
+internal fun AddPlayerDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String) -> Unit
+) {
+    var newName by remember { mutableStateOf("") }
+    PlayerDialog(
+        onDismissRequest = onDismiss,
+        title = "New Player",
+        actions = {
+            BoardFlowButton(
+                onClick = { onAdd(newName) },
+                enabled = newName.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Add Player")
+            }
+        }
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                "Add a player manually. They will also continue to be created automatically from logged plays.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(4.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    "Display Name",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = newName, onValueChange = { newName = it },
+                    placeholder = { Text("e.g. Alice") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿@file:OptIn(ExperimentalMaterial3Api::class)
+﻿@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 
 package cz.nicolsburg.boardflow.ui.history
 
@@ -70,6 +70,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -110,9 +111,54 @@ import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.snapshotFlow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.GameSearchField
+import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
+import cz.nicolsburg.boardflow.ui.common.SectionCard
+import kotlinx.coroutines.flow.collect
+import androidx.compose.material.icons.filled.Add
+import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
+import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
+import cz.nicolsburg.boardflow.ui.players.AddPlayerDialog
+import cz.nicolsburg.boardflow.ui.players.EditPlayerDialog
+import cz.nicolsburg.boardflow.ui.players.PlayersTabContent
+
+private enum class HistorySortMode(val label: String) {
+    DATE_DESC("Newest first"),
+    DATE_ASC("Oldest first"),
+    GAME_NAME("Game name"),
+    DURATION("Duration")
+}
+
+private enum class HistoryDateRange(val label: String) {
+    ALL("All time"),
+    THIS_WEEK("This week"),
+    THIS_MONTH("This month"),
+    THIS_YEAR("This year")
+}
+
+private enum class HistoryTab(val label: String) {
+    PLAYS("Plays"),
+    STATS("Stats"),
+    PLAYERS("Players")
+}
 
 @Composable
-fun HistoryScreen(viewModel: AppViewModel) {
+fun HistoryScreen(
+    viewModel: AppViewModel,
+    onActiveTabChange: (String?) -> Unit = {}
+) {
     val historyPlays by viewModel.historyPlays.collectAsState()
     val bggLoading by viewModel.bggPlaysLoading.collectAsState()
     val bggError by viewModel.bggPlaysError.collectAsState()
@@ -125,10 +171,102 @@ fun HistoryScreen(viewModel: AppViewModel) {
     var deleteError by remember { mutableStateOf<String?>(null) }
     var editError by remember { mutableStateOf<String?>(null) }
 
+    var searchQuery by remember { mutableStateOf("") }
+    var sortMode by remember { mutableStateOf(HistorySortMode.DATE_DESC) }
+    var filterDateRange by remember { mutableStateOf(HistoryDateRange.ALL) }
+    var filterPlayer by remember { mutableStateOf<String?>(null) }
+    var showFilters by remember { mutableStateOf(false) }
+    var controlsVisible by remember { mutableStateOf(true) }
+    val listState = rememberLazyListState()
+
+    val hasActiveFilters = sortMode != HistorySortMode.DATE_DESC ||
+        filterDateRange != HistoryDateRange.ALL ||
+        filterPlayer != null
+
+    val filteredPlays = remember(historyPlays, searchQuery, sortMode, filterDateRange, filterPlayer, players) {
+        var result = historyPlays
+
+        if (searchQuery.isNotBlank()) {
+            val query = searchQuery.trim().lowercase()
+            result = result.filter {
+                it.gameName.lowercase().contains(query) ||
+                    it.players.any { p -> p.name.lowercase().contains(query) }
+            }
+        }
+
+        val today = LocalDate.now()
+        result = when (filterDateRange) {
+            HistoryDateRange.ALL -> result
+            HistoryDateRange.THIS_WEEK -> {
+                val cutoff = today.minusWeeks(1)
+                result.filter { runCatching { !LocalDate.parse(it.date).isBefore(cutoff) }.getOrDefault(true) }
+            }
+            HistoryDateRange.THIS_MONTH -> result.filter {
+                runCatching {
+                    LocalDate.parse(it.date).let { d -> d.year == today.year && d.monthValue == today.monthValue }
+                }.getOrDefault(true)
+            }
+            HistoryDateRange.THIS_YEAR -> result.filter {
+                runCatching { LocalDate.parse(it.date).year == today.year }.getOrDefault(true)
+            }
+        }
+
+        filterPlayer?.let { playerDisplayName ->
+            val player = players.find { it.displayName == playerDisplayName }
+            val names = if (player != null) {
+                (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() }
+            } else {
+                listOf(playerDisplayName.lowercase().trim())
+            }
+            result = result.filter { play -> play.players.any { it.name.lowercase().trim() in names } }
+        }
+
+        when (sortMode) {
+            HistorySortMode.DATE_DESC -> result
+            HistorySortMode.DATE_ASC -> result.sortedBy { it.date }
+            HistorySortMode.GAME_NAME -> result.sortedBy { it.gameName.lowercase() }
+            HistorySortMode.DURATION -> result.sortedByDescending { it.durationMinutes }
+        }
+    }
+
+    var activeTab by remember { mutableStateOf(HistoryTab.PLAYS) }
+    var showAddPlayerDialog by remember { mutableStateOf(false) }
+    var editingPlayer by remember { mutableStateOf<cz.nicolsburg.boardflow.model.Player?>(null) }
+
+    LaunchedEffect(activeTab) {
+        controlsVisible = true
+        if (activeTab == HistoryTab.PLAYS) listState.scrollToItem(0)
+    }
+
+    LaunchedEffect(listState) {
+        var lastIndex = 0
+        var lastOffset = 0
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                val scrollingDown = index > lastIndex || (index == lastIndex && offset > lastOffset)
+                val atTop = index == 0 && offset < 8
+                controlsVisible = atTop || !scrollingDown
+                lastIndex = index
+                lastOffset = offset
+            }
+    }
+
+    LaunchedEffect(searchQuery, sortMode, filterDateRange, filterPlayer) {
+        listState.scrollToItem(0)
+    }
+
     LaunchedEffect(Unit) {
         viewModel.loadPlayers()
         viewModel.loadPlayHistory()
         viewModel.loadCachedBggPlays()
+    }
+
+    LaunchedEffect(controlsVisible, activeTab) {
+        onActiveTabChange(if (controlsVisible) null else activeTab.label)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { onActiveTabChange(null) }
     }
 
     playToDelete?.let { play ->
@@ -192,17 +330,63 @@ fun HistoryScreen(viewModel: AppViewModel) {
         )
     }
 
+    if (showAddPlayerDialog) {
+        AddPlayerDialog(
+            onDismiss = { showAddPlayerDialog = false },
+            onAdd = { name -> viewModel.addNewPlayer(name); showAddPlayerDialog = false }
+        )
+    }
+
+    editingPlayer?.let { ep ->
+        val livePlayer = players.find { it.id == ep.id }
+        if (livePlayer != null) {
+            EditPlayerDialog(
+                player = livePlayer,
+                onDismiss = { editingPlayer = null },
+                onRenameDisplayName = { viewModel.updatePlayerDisplayName(livePlayer.id, it) },
+                onUpdateBggUsername = { viewModel.updatePlayerBggUsername(livePlayer.id, it) },
+                onAddAlias = { viewModel.addPlayerAlias(livePlayer.id, it) },
+                onRemoveAlias = { viewModel.removePlayerAlias(livePlayer.id, it) },
+                onDelete = { viewModel.deletePlayer(livePlayer.id); editingPlayer = null }
+            )
+        } else {
+            editingPlayer = null
+        }
+    }
+
     Scaffold(
-        contentWindowInsets = WindowInsets(0)
+        contentWindowInsets = WindowInsets(0),
+        floatingActionButton = {
+            if (activeTab == HistoryTab.PLAYERS) {
+                FloatingActionButton(onClick = { showAddPlayerDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add player")
+                }
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .swipeToNavigateTabs(
+                    tabCount = HistoryTab.entries.size,
+                    selectedIndex = activeTab.ordinal,
+                    onNavigate = { activeTab = HistoryTab.entries[it] }
+                )
         ) {
-            deleteError?.let { message ->
-                Surface(color = MaterialTheme.colorScheme.errorContainer) {
-                    Text(
+            AnimatedVisibility(visible = controlsVisible) {
+                ScreenTabRow(
+                    tabs = HistoryTab.entries.map { it.label },
+                    selectedIndex = activeTab.ordinal,
+                    onTabSelected = { activeTab = HistoryTab.entries[it] }
+                )
+            }
+
+            when (activeTab) {
+                HistoryTab.PLAYS -> Column(modifier = Modifier.fillMaxSize()) {
+                    deleteError?.let { message ->
+                        Surface(color = MaterialTheme.colorScheme.errorContainer) {
+                            Text(
                         message,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodySmall,
@@ -225,16 +409,88 @@ fun HistoryScreen(viewModel: AppViewModel) {
                 }
             }
 
-            PlaysContent(
-                plays = historyPlays,
-                players = players,
-                loading = bggLoading,
-                error = bggError,
-                hasBggUsername = viewModel.prefs.bggUsername.isNotBlank(),
-                onOpenPlay = { selectedPlay = it },
-                onRefresh = viewModel::fetchBggPlays,
-                modifier = Modifier.fillMaxSize()
-            )
+            AnimatedVisibility(visible = controlsVisible) {
+                GameSearchField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    trailingAction = {
+                        Box {
+                            SearchFieldActionButton(onClick = { showFilters = true }) {
+                                Icon(BoardFlowIcons.Filter, contentDescription = "Sort & filter")
+                            }
+                            if (hasActiveFilters) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = 8.dp, end = 8.dp)
+                                        .size(7.dp)
+                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+
+            if (showFilters) {
+                ModalBottomSheet(
+                    onDismissRequest = { showFilters = false },
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                ) {
+                    HistoryFilterSheetContent(
+                        sortMode = sortMode,
+                        onSortMode = { sortMode = it },
+                        filterDateRange = filterDateRange,
+                        onFilterDateRange = { filterDateRange = it },
+                        filterPlayer = filterPlayer,
+                        onFilterPlayer = { filterPlayer = it },
+                        players = players,
+                        hasActiveFilters = hasActiveFilters,
+                        onReset = {
+                            sortMode = HistorySortMode.DATE_DESC
+                            filterDateRange = HistoryDateRange.ALL
+                            filterPlayer = null
+                        }
+                    )
+                }
+            }
+
+                    PlaysContent(
+                        plays = filteredPlays,
+                        players = players,
+                        loading = bggLoading,
+                        error = bggError,
+                        hasBggUsername = viewModel.prefs.bggUsername.isNotBlank(),
+                        onOpenPlay = { selectedPlay = it },
+                        onRefresh = viewModel::fetchBggPlays,
+                        listState = listState,
+                        hasActiveFilters = hasActiveFilters,
+                        onResetFilters = {
+                            sortMode = HistorySortMode.DATE_DESC
+                            filterDateRange = HistoryDateRange.ALL
+                            filterPlayer = null
+                            searchQuery = ""
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                HistoryTab.STATS -> StatsContent(
+                    plays = historyPlays,
+                    players = players,
+                    modifier = Modifier.fillMaxSize()
+                )
+                HistoryTab.PLAYERS -> PlayersTabContent(
+                    players = players,
+                    sourcePlays = historyPlays,
+                    onEditPlayer = { editingPlayer = it },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }
@@ -248,9 +504,11 @@ private fun PlaysContent(
     hasBggUsername: Boolean,
     onOpenPlay: (LoggedPlay) -> Unit,
     onRefresh: () -> Unit,
+    listState: LazyListState = rememberLazyListState(),
+    hasActiveFilters: Boolean = false,
+    onResetFilters: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val listState = rememberLazyListState()
     val emptyState = rememberScrollState()
     val listAtTop by remember {
         derivedStateOf {
@@ -305,6 +563,34 @@ private fun PlaysContent(
                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
                     )
+                }
+            }
+
+            plays.isEmpty() && hasActiveFilters -> Box(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(emptyState),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Icon(
+                        BoardFlowIcons.Filter,
+                        contentDescription = null,
+                        modifier = Modifier.size(72.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+                    )
+                    Text(
+                        "No plays match your filters",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    BoardFlowSecondaryButton(onClick = onResetFilters) {
+                        Text("Reset filters")
+                    }
                 }
             }
 
@@ -1166,4 +1452,239 @@ private fun resolveDisplayName(name: String, players: List<Player>): String {
     return players.firstOrNull { player ->
         (listOf(player.displayName) + player.aliases).any { it.lowercase().trim() == lower }
     }?.displayName ?: name
+}
+
+@Composable
+private fun StatsContent(
+    plays: List<LoggedPlay>,
+    players: List<cz.nicolsburg.boardflow.model.Player>,
+    modifier: Modifier = Modifier
+) {
+    val totalPlays = remember(plays) { plays.sumOf { it.quantity.coerceAtLeast(1) } }
+    val uniqueGames = remember(plays) { plays.map { it.gameName }.toSet().size }
+    val totalMinutes = remember(plays) { plays.sumOf { it.durationMinutes } }
+
+    LazyColumn(
+        modifier = modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(vertical = 16.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatSummaryCard("Plays", "$totalPlays", modifier = Modifier.weight(1f))
+                StatSummaryCard("Games", "$uniqueGames", modifier = Modifier.weight(1f))
+                StatSummaryCard("Players", "${players.size}", modifier = Modifier.weight(1f))
+                StatSummaryCard("Hours", "${totalMinutes / 60}", modifier = Modifier.weight(1f))
+            }
+        }
+        if (plays.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Log some plays to see your statistics.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatSummaryCard(label: String, value: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                value,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun historyFilterChipColors() = FilterChipDefaults.filterChipColors(
+    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+    selectedLabelColor = MaterialTheme.colorScheme.primary,
+    selectedLeadingIconColor = MaterialTheme.colorScheme.primary
+)
+
+@Composable
+private fun HistoryFilterSection(
+    label: String,
+    detail: String,
+    content: @Composable () -> Unit
+) {
+    SectionCard {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    detail,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            content()
+        }
+    }
+}
+
+@Composable
+private fun HistoryFilterSheetContent(
+    sortMode: HistorySortMode,
+    onSortMode: (HistorySortMode) -> Unit,
+    filterDateRange: HistoryDateRange,
+    onFilterDateRange: (HistoryDateRange) -> Unit,
+    filterPlayer: String?,
+    onFilterPlayer: (String?) -> Unit,
+    players: List<Player>,
+    hasActiveFilters: Boolean,
+    onReset: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.FilterAlt,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        "Sort & Filter",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "Play history",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            if (hasActiveFilters) {
+                BoardFlowInlineAction(onClick = onReset) { Text("Reset") }
+            }
+        }
+
+        HistoryFilterSection(
+            label = "Sort by",
+            detail = "Choose how the history list is ordered."
+        ) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                HistorySortMode.entries.forEach { mode ->
+                    FilterChip(
+                        selected = sortMode == mode,
+                        onClick = { onSortMode(mode) },
+                        colors = historyFilterChipColors(),
+                        leadingIcon = if (sortMode == mode) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        } else null,
+                        label = { Text(mode.label) }
+                    )
+                }
+            }
+        }
+
+        HistoryFilterSection(
+            label = "Date range",
+            detail = "Show plays from a specific time period."
+        ) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                HistoryDateRange.entries.forEach { range ->
+                    FilterChip(
+                        selected = filterDateRange == range,
+                        onClick = { onFilterDateRange(range) },
+                        colors = historyFilterChipColors(),
+                        leadingIcon = if (filterDateRange == range) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        } else null,
+                        label = { Text(range.label) }
+                    )
+                }
+            }
+        }
+
+        if (players.isNotEmpty()) {
+            HistoryFilterSection(
+                label = "Player",
+                detail = "Show only plays with this player."
+            ) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = filterPlayer == null,
+                        onClick = { onFilterPlayer(null) },
+                        colors = historyFilterChipColors(),
+                        label = { Text("Anyone") }
+                    )
+                    players.forEach { player ->
+                        val isSelected = filterPlayer == player.displayName
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { onFilterPlayer(if (isSelected) null else player.displayName) },
+                            colors = historyFilterChipColors(),
+                            leadingIcon = if (isSelected) {
+                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            } else null,
+                            label = { Text(player.displayName) }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+    }
 }

@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -95,7 +94,9 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
+import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
 import cz.nicolsburg.boardflow.ui.common.SectionCard
+import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import kotlinx.coroutines.flow.collect
 
 private enum class SortMode(val label: String) {
@@ -115,7 +116,8 @@ private enum class TabMode(val label: String) {
 @Composable
 fun CollectionScreen(
     syncViewModel: SyncViewModel,
-    onHeaderFilterStateChange: (visible: Boolean, hasActiveFilters: Boolean, onClick: (() -> Unit)?) -> Unit = { _, _, _ -> }
+    onHeaderFilterStateChange: (visible: Boolean, hasActiveFilters: Boolean, onClick: (() -> Unit)?) -> Unit = { _, _, _ -> },
+    onActiveTabChange: (String?) -> Unit = {}
 ) {
     val account by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
@@ -211,7 +213,12 @@ fun CollectionScreen(
     DisposableEffect(Unit) {
         onDispose {
             onHeaderFilterStateChange(false, false, null)
+            onActiveTabChange(null)
         }
+    }
+
+    LaunchedEffect(controlsVisible, tabMode) {
+        onActiveTabChange(if (controlsVisible) null else tabMode.label)
     }
 
     selectedGame?.let { game ->
@@ -226,6 +233,11 @@ fun CollectionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .swipeToNavigateTabs(
+                    tabCount = TabMode.entries.size,
+                    selectedIndex = tabMode.ordinal,
+                    onNavigate = { tabMode = TabMode.entries[it] }
+                )
         ) {
             when {
                 loading -> LoadingState()
@@ -239,20 +251,11 @@ fun CollectionScreen(
 
                 else -> {
                     AnimatedVisibility(visible = controlsVisible) {
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        ) {
-                            items(TabMode.entries) { tab ->
-                                FilterChip(
-                                    selected = tabMode == tab,
-                                    onClick = { tabMode = tab },
-                                    colors = boardFlowFilterChipColors(),
-                                    label = { Text(tab.label) }
-                                )
-                            }
-                        }
+                        ScreenTabRow(
+                            tabs = TabMode.entries.map { it.label },
+                            selectedIndex = tabMode.ordinal,
+                            onTabSelected = { tabMode = TabMode.entries[it] }
+                        )
                     }
 
                     if (tabMode == TabMode.SLEEVES) {

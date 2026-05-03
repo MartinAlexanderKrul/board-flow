@@ -115,30 +115,27 @@ fun SectionHeader(
 fun SectionCard(
     modifier: Modifier = Modifier,
     accented: Boolean = false,
+    onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .animateContentSize(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (accented) {
-                MaterialTheme.colorScheme.surfaceVariant
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
-        border = if (accented) {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f))
-        } else {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
-        }
-    ) {
+    val colors = CardDefaults.cardColors(
+        containerColor = if (accented) MaterialTheme.colorScheme.surfaceVariant
+        else MaterialTheme.colorScheme.surface
+    )
+    val border = if (accented) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f))
+    else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+    val cardModifier = modifier.fillMaxWidth().animateContentSize()
+    val columnContent: @Composable ColumnScope.() -> Unit = {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             content = content
         )
+    }
+    if (onClick != null) {
+        Card(onClick = onClick, modifier = cardModifier, colors = colors, border = border, content = columnContent)
+    } else {
+        Card(modifier = cardModifier, colors = colors, border = border, content = columnContent)
     }
 }
 

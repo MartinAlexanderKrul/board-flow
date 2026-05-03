@@ -2,6 +2,7 @@
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
@@ -14,8 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -38,7 +38,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
@@ -51,11 +50,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Spacer
@@ -79,9 +81,12 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
+import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.SectionHeader
 import cz.nicolsburg.boardflow.ui.common.clickableRow
+import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
+import kotlinx.coroutines.flow.collect
 import cz.nicolsburg.boardflow.ui.sync.SpreadsheetConnectModal
 import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
@@ -101,7 +106,7 @@ fun SettingsScreen(
     syncViewModel: SyncViewModel,
     onSignIn: () -> Unit,
     onSignOut: () -> Unit,
-    onNavigateToPlayers: () -> Unit
+    onActiveTabChange: (String?) -> Unit = {}
 ) {
     val prefs = viewModel.prefs
     val context = LocalContext.current
@@ -132,6 +137,9 @@ fun SettingsScreen(
     var showGoogleSignOutConfirm by remember { mutableStateOf(false) }
     var showClearCollectionConfirm by remember { mutableStateOf(false) }
     val hasCollection = cachedCollection.isNotEmpty()
+
+    val listState = rememberLazyListState()
+    var controlsVisible by remember { mutableStateOf(true) }
     val collectionSize = cachedCollection.size
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -231,27 +239,59 @@ fun SettingsScreen(
         )
     }
 
+    LaunchedEffect(listState) {
+        var lastIndex = 0
+        var lastOffset = 0
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                val scrollingDown = index > lastIndex || (index == lastIndex && offset > lastOffset)
+                val atTop = index == 0 && offset < 8
+                controlsVisible = atTop || !scrollingDown
+                lastIndex = index
+                lastOffset = offset
+            }
+    }
+
+    LaunchedEffect(selectedSection) {
+        controlsVisible = true
+        listState.scrollToItem(0)
+    }
+
+    LaunchedEffect(controlsVisible, selectedSection) {
+        onActiveTabChange(if (controlsVisible) null else selectedSection.title)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { onActiveTabChange(null) }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0)
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(padding)
         ) {
-            item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(SettingsSection.entries) { section ->
-                        FilterChip(
-                            selected = selectedSection == section,
-                            onClick = { selectedSection = section },
-                            label = { Text(section.title) }
-                        )
-                    }
-                }
+            AnimatedVisibility(visible = controlsVisible) {
+                ScreenTabRow(
+                    tabs = SettingsSection.entries.map { it.title },
+                    selectedIndex = selectedSection.ordinal,
+                    onTabSelected = { selectedSection = SettingsSection.entries[it] }
+                )
             }
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .swipeToNavigateTabs(
+                        tabCount = SettingsSection.entries.size,
+                        selectedIndex = selectedSection.ordinal,
+                        onNavigate = { selectedSection = SettingsSection.entries[it] }
+                    ),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
 
             if (selectedSection == SettingsSection.SETUP) {
                 item {
@@ -428,21 +468,6 @@ fun SettingsScreen(
                         title = "Tools",
                         subtitle = "Manage supporting data and local caches."
                     )
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.People,
-                        title = "Players",
-                        subtitle = "Manage names, aliases, and BGG usernames."
-                    ) {
-                        ListItem(
-                            headlineContent = { Text("Manage Players") },
-                            supportingContent = { Text("Open the player manager") },
-                            leadingContent = { Icon(Icons.Default.People, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                            modifier = Modifier.clickableRow(onClick = onNavigateToPlayers)
-                        )
-                    }
                 }
 
                 item {
@@ -724,6 +749,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
                 }
+            }
             }
         }
     }

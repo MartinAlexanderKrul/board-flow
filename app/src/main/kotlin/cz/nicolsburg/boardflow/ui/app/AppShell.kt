@@ -66,7 +66,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.history.HistoryScreen
-import cz.nicolsburg.boardflow.ui.players.PlayersScreen
 import cz.nicolsburg.boardflow.ui.review.LogPlayScreen
 import cz.nicolsburg.boardflow.ui.scan.ScanScreen
 import cz.nicolsburg.boardflow.ui.search.NewPlayScreen
@@ -108,6 +107,7 @@ fun BoardFlowApp(
     var collectionHeaderFilterVisible by remember { mutableStateOf(false) }
     var collectionHeaderHasActiveFilters by remember { mutableStateOf(false) }
     var collectionHeaderFilterClick by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var activeTabLabel by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         appViewModel.syncUnpostedPlays()
@@ -138,6 +138,7 @@ fun BoardFlowApp(
 
     LaunchedEffect(currentRoute) {
         contentScrolled = 0f
+        activeTabLabel = null
         if (currentRoute != AppRoutes.COLLECTION) {
             collectionHeaderFilterVisible = false
             collectionHeaderHasActiveFilters = false
@@ -170,15 +171,13 @@ fun BoardFlowApp(
     val selectedGameName = appViewModel.selectedGame?.name.orEmpty()
     val isScan = currentRoute?.startsWith("scan/") == true
     val isReview = currentRoute == AppRoutes.LOG_PLAY
-    val isPlayers = currentRoute == AppRoutes.PLAYERS
 
     val headerSubtitle = when {
         currentRoute == AppRoutes.NEW_PLAY -> "Log a New Play"
-        currentRoute == AppRoutes.HISTORY -> "Play History"
-        currentRoute == AppRoutes.COLLECTION -> "My Collection"
+        currentRoute == AppRoutes.HISTORY -> activeTabLabel ?: "Play History"
+        currentRoute == AppRoutes.COLLECTION -> activeTabLabel ?: "My Collection"
         currentRoute == AppRoutes.SYNC -> "Sync to Sheets"
-        currentRoute == AppRoutes.SETTINGS -> "Settings"
-        currentRoute == AppRoutes.PLAYERS -> "Players"
+        currentRoute == AppRoutes.SETTINGS -> activeTabLabel ?: "Settings"
         isScan || isReview -> selectedGameName
         else -> ""
     }
@@ -214,7 +213,6 @@ fun BoardFlowApp(
                 }
             }
         })
-        isPlayers -> ({ navController.popBackStack() })
         else -> null
     }
 
@@ -240,7 +238,7 @@ fun BoardFlowApp(
             )
         },
         bottomBar = {
-            if (!isPlayers && !isScan && !isReview) {
+            if (!isScan && !isReview) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.background,
                     tonalElevation = 0.dp
@@ -304,7 +302,10 @@ fun BoardFlowApp(
             }
 
             composable(AppRoutes.HISTORY) {
-                HistoryScreen(viewModel = appViewModel)
+                HistoryScreen(
+                    viewModel = appViewModel,
+                    onActiveTabChange = { activeTabLabel = it }
+                )
             }
 
             composable(AppRoutes.COLLECTION) {
@@ -314,7 +315,8 @@ fun BoardFlowApp(
                         collectionHeaderFilterVisible = visible
                         collectionHeaderHasActiveFilters = hasActiveFilters
                         collectionHeaderFilterClick = onClick
-                    }
+                    },
+                    onActiveTabChange = { activeTabLabel = it }
                 )
             }
 
@@ -344,12 +346,8 @@ fun BoardFlowApp(
                     syncViewModel = syncViewModel,
                     onSignIn = onRequestSignIn,
                     onSignOut = onRequestSignOut,
-                    onNavigateToPlayers = { navController.navigate(AppRoutes.PLAYERS) }
+                    onActiveTabChange = { activeTabLabel = it }
                 )
-            }
-
-            composable(AppRoutes.PLAYERS) {
-                PlayersScreen(viewModel = appViewModel)
             }
 
             composable(
