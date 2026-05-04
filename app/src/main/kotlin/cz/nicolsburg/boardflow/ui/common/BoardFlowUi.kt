@@ -266,7 +266,10 @@ fun AnimatedDialog(
                     .onGloballyPositioned { modalHeightPx = it.size.height }
                     .pointerInput(onDismissRequest, modalHeightPx) {
                         awaitEachGesture {
-                            val down = awaitFirstDown(requireUnconsumed = false)
+                            val down = awaitFirstDown(
+                                requireUnconsumed = false,
+                                pass = PointerEventPass.Initial
+                            )
                             val dismissGestureHeight = (modalHeightPx * BoardFlowModalTokens.DismissGestureRegionFraction)
                                 .takeIf { it > 0f }
                                 ?: dismissGestureFallbackPx
@@ -278,7 +281,7 @@ fun AnimatedDialog(
                             var dismissDragActive = false
 
                             while (true) {
-                                val event = awaitPointerEvent()
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
                                 val change = event.changes.firstOrNull { it.id == pointerId }
                                     ?: event.changes.firstOrNull()
                                     ?: break
