@@ -177,6 +177,7 @@ fun SettingsScreen(
                     password = prefs.bggPassword
                     apiKey = prefs.geminiApiKey
                     modelEndpoint = prefs.geminiModelEndpoint
+                    syncViewModel.reloadLocalSyncPreferences()
                     syncViewModel.loadCachedCollection()
                     importExportStatus = true to "Data imported successfully"
                 } catch (e: Exception) {

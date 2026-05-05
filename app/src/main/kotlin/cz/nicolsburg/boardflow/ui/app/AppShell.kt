@@ -324,10 +324,7 @@ fun BoardFlowApp(
                 SyncScreen(
                     syncViewModel = syncViewModel,
                     onPickCsv = onRequestCsvPick,
-                    onSpreadsheetChanged = { id ->
-                        syncViewModel.setSpreadsheetId(id)
-                        appViewModel.prefs.syncSpreadsheetId = id
-                    },
+                    onSpreadsheetChanged = syncViewModel::setSpreadsheetId,
                     onSignIn = onRequestSignIn,
                     onSignOut = onRequestSignOut,
                     bggUsername = appViewModel.prefs.bggUsername,

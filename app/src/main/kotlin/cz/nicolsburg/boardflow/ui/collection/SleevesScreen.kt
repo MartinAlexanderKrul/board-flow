@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.SectionCard
@@ -181,12 +182,18 @@ internal fun SleevesContent(
         item(key = "game_selector") {
             AnimatedVisibility(visible = showGameSelector) {
                 SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Text(
                             "Included in sleeve count",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 4.dp)
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        )
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
                         )
                         allGamesToSleeve.forEach { game ->
                             val excluded = game.objectId in excludedGameIds
@@ -194,18 +201,18 @@ internal fun SleevesContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onToggleExclusion(game.objectId) }
-                                    .padding(vertical = 0.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                    .padding(vertical = 1.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     game.name,
-                                    style = MaterialTheme.typography.bodySmall,
+                                    style = MaterialTheme.typography.bodySmall.copy(lineHeight = 16.sp),
                                     modifier = Modifier
                                         .weight(1f)
-                                        .padding(end = 4.dp),
+                                        .padding(end = 2.dp),
                                     color = if (excluded)
-                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                     else
                                         MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,

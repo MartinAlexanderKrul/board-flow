@@ -228,6 +228,7 @@ class SecurePreferences(context: Context) {
             syncSpreadsheetId = syncSpreadsheetId,
             syncSheetTabName = syncSheetTabName,
             googleAuthorizedEmail = googleAuthorizedEmail,
+            sleevesExcludedGameIds = getSleevesExcludedGameIds(),
             players = getPlayers(),
             recentGames = getRecentGames(),
             availableModels = getAvailableModels(),
@@ -245,9 +246,15 @@ class SecurePreferences(context: Context) {
                 if (s.has("geminiModel")) geminiModelEndpoint = s.getString("geminiModel")
                 if (s.has("appTheme")) appTheme = s.getString("appTheme")
                 if (s.has("sheetTabName")) sheetTabName = s.getString("sheetTabName")
-                if (s.has("syncSpreadsheetId")) syncSpreadsheetId = s.getString("syncSpreadsheetId")
+                when {
+                    s.has("googleSpreadsheetId") -> syncSpreadsheetId = s.getString("googleSpreadsheetId")
+                    s.has("syncSpreadsheetId") -> syncSpreadsheetId = s.getString("syncSpreadsheetId")
+                }
                 if (s.has("syncSheetTabName")) syncSheetTabName = s.getString("syncSheetTabName")
                 if (s.has("googleAuthorizedEmail")) googleAuthorizedEmail = s.getString("googleAuthorizedEmail")
+                s.optJSONArray("sleevesExcludedGameIds")?.let { excluded ->
+                    saveSleevesExcludedGameIds((0 until excluded.length()).map { excluded.getString(it) }.toSet())
+                }
             },
             onSecureSettings = { s ->
                 if (s.has("bggPassword")) bggPassword = s.getString("bggPassword")

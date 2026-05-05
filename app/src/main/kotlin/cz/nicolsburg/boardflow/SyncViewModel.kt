@@ -98,7 +98,9 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setSpreadsheetId(id: String) {
-        _spreadsheetId.value = extractSheetId(id)
+        val normalizedId = extractSheetId(id)
+        _spreadsheetId.value = normalizedId
+        securePrefs.syncSpreadsheetId = normalizedId
     }
 
     fun setSheetTabName(name: String) {
@@ -107,6 +109,12 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
     fun refreshCredentialState() {
         _hasBggCredentials.value = securePrefs.hasCredentials()
+    }
+
+    fun reloadLocalSyncPreferences() {
+        setSpreadsheetId(securePrefs.syncSpreadsheetId)
+        setSheetTabName(securePrefs.syncSheetTabName)
+        _sleevesExcludedGameIds.value = securePrefs.getSleevesExcludedGameIds()
     }
 
     fun toggleSleeveGameExclusion(objectId: String) {
@@ -537,8 +545,24 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun extractSheetId(input: String): String {
-        val match = Regex("/spreadsheets(?:/u/\\d+)?/d/([a-zA-Z0-9_-]+)").find(input)
-        return match?.groupValues?.get(1) ?: input
+        val trimmed = input.trim()
+        if (trimmed.isBlank()) return ""
+
+        runCatching { Uri.parse(trimmed) }.getOrNull()?.let { uri ->
+            val segments = uri.pathSegments
+            val dIndex = segments.indexOf("d")
+            if (dIndex >= 0) {
+                segments.getOrNull(dIndex + 1)?.trim()?.takeIf { it.isNotBlank() }?.let { return it }
+            }
+            uri.getQueryParameter("id")?.trim()?.takeIf { it.isNotBlank() }?.let { return it }
+        }
+
+        val slashDMatch = Regex("/d/([a-zA-Z0-9_-]+)").find(trimmed)
+        if (slashDMatch != null) {
+            return slashDMatch.groupValues[1]
+        }
+
+        return trimmed
     }
 
     private fun String?.meaningfulOr(fallback: String?): String? {

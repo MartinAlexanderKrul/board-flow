@@ -28,6 +28,7 @@ object BackupSerializer {
         syncSpreadsheetId: String,
         syncSheetTabName: String,
         googleAuthorizedEmail: String,
+        sleevesExcludedGameIds: Set<String>,
         players: List<Player>,
         recentGames: List<BggGame>,
         availableModels: List<String>,
@@ -45,8 +46,12 @@ object BackupSerializer {
             put("appTheme", appTheme)
             put("sheetTabName", sheetTabName)
             put("syncSpreadsheetId", syncSpreadsheetId)
+            put("googleSpreadsheetId", syncSpreadsheetId)
             put("syncSheetTabName", syncSheetTabName)
             put("googleAuthorizedEmail", googleAuthorizedEmail)
+            put("sleevesExcludedGameIds", JSONArray().also { arr ->
+                sleevesExcludedGameIds.sorted().forEach { arr.put(it) }
+            })
         })
         if (includeSensitiveData) {
             root.put("secureSettings", JSONObject().apply {
