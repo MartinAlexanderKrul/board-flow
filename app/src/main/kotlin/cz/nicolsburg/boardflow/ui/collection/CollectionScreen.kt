@@ -39,6 +39,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarToday
@@ -64,9 +68,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -81,6 +88,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.SyncViewModel
@@ -98,6 +106,7 @@ import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
 import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
 import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import kotlinx.coroutines.flow.collect
+import androidx.compose.ui.platform.LocalDensity
 
 private enum class SortMode(val label: String) {
     RATING("Rating"),
@@ -125,6 +134,7 @@ fun CollectionScreen(
     val loading by syncViewModel.collectionLoading.collectAsState()
     val error by syncViewModel.collectionError.collectAsState()
     val sleevesExcludedGameIds by syncViewModel.sleevesExcludedGameIds.collectAsState()
+    val hasBggCredentials by syncViewModel.hasBggCredentials.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(SortMode.RATING) }
@@ -192,6 +202,11 @@ fun CollectionScreen(
     }
 
     val activeListState = if (tabMode == TabMode.SLEEVES) sleeveListState else listState
+    val activeListAtTop by remember(activeListState, tabMode) {
+        derivedStateOf {
+            activeListState.firstVisibleItemIndex == 0 && activeListState.firstVisibleItemScrollOffset == 0
+        }
+    }
     LaunchedEffect(activeListState, tabMode) {
         var lastIndex = activeListState.firstVisibleItemIndex
         var lastOffset = activeListState.firstVisibleItemScrollOffset
@@ -241,15 +256,7 @@ fun CollectionScreen(
                 )
         ) {
             when {
-                loading -> LoadingState()
-                error != null -> ErrorState(error = error.orEmpty(), onRetry = null)
-                allGames.isEmpty() -> EmptyState(
-                    accountReady = account != null,
-                    spreadsheetReady = spreadsheetId.isNotBlank(),
-                    hasCachedSource = spreadsheetId.isNotBlank(),
-                    onLoad = null
-                )
-
+                loading && allGames.isEmpty() -> LoadingState()
                 else -> {
                     AnimatedVisibility(visible = controlsVisible) {
                         ScreenTabRow(
@@ -259,116 +266,236 @@ fun CollectionScreen(
                         )
                     }
 
-                    if (tabMode == TabMode.SLEEVES) {
-                        SleevesContent(
-                            allGames = allGames,
-                            listState = sleeveListState,
-                            excludedGameIds = sleevesExcludedGameIds,
-                            onToggleExclusion = { syncViewModel.toggleSleeveGameExclusion(it) }
-                        )
-                    } else {
-                        AnimatedVisibility(visible = controlsVisible) {
-                            GameSearchField(
-                                value = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                trailingAction = {
-                                    Box {
-                                        SearchFieldActionButton(onClick = { showFilters = true }) {
-                                            Icon(
-                                                BoardFlowIcons.Filter,
-                                                contentDescription = "Sort & filter"
-                                            )
-                                        }
-                                        if (hasActiveFilters) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .align(Alignment.TopEnd)
-                                                    .padding(top = 8.dp, end = 8.dp)
-                                                    .size(7.dp)
-                                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                                            )
-                                        }
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    if (showFilters) {
+                        BoardFlowModalBottomSheet(
+                            onDismissRequest = { showFilters = false },
+                            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                        ) {
+                            FilterSheetContent(
+                                sortMode = sortMode,
+                                onSortMode = { sortMode = it },
+                                filterPlayers = filterPlayers,
+                                onFilterPlayers = { filterPlayers = it },
+                                filterBestFor = filterBestFor,
+                                onFilterBestFor = { filterBestFor = it },
+                                hasActiveFilters = hasActiveFilters,
+                                onReset = {
+                                    sortMode = SortMode.RATING
+                                    filterPlayers = null
+                                    filterBestFor = null
+                                }
                             )
                         }
+                    }
 
-                        if (showFilters) {
-                            BoardFlowModalBottomSheet(
-                                onDismissRequest = { showFilters = false },
-                                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                            ) {
-                                FilterSheetContent(
-                                    sortMode = sortMode,
-                                    onSortMode = { sortMode = it },
-                                    filterPlayers = filterPlayers,
-                                    onFilterPlayers = { filterPlayers = it },
-                                    filterBestFor = filterBestFor,
-                                    onFilterBestFor = { filterBestFor = it },
-                                    hasActiveFilters = hasActiveFilters,
-                                    onReset = {
-                                        sortMode = SortMode.RATING
-                                        filterPlayers = null
-                                        filterBestFor = null
-                                    }
-                                )
-                            }
-                        }
+                    CollectionPullRefreshContainer(
+                        isRefreshing = loading,
+                        isAtTop = activeListAtTop,
+                        onRefresh = { syncViewModel.refreshCollection(forceRefresh = true) },
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        when {
+                            error != null && allGames.isEmpty() -> ErrorState(
+                                error = error.orEmpty(),
+                                onRetry = if (hasBggCredentials) ({ syncViewModel.refreshCollection(forceRefresh = true) }) else null
+                            )
 
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(filteredGames, key = { it.objectId.ifBlank { it.name } }) { game ->
-                                GameCard(
-                                    game = game,
-                                    onClick = { selectedGame = game },
-                                    modifier = Modifier.animateItem()
-                                )
-                            }
+                            allGames.isEmpty() -> EmptyState(
+                                accountReady = account != null,
+                                spreadsheetReady = spreadsheetId.isNotBlank(),
+                                hasCachedSource = spreadsheetId.isNotBlank(),
+                                onLoad = if (hasBggCredentials) ({ syncViewModel.refreshCollection(forceRefresh = true) }) else null
+                            )
 
-                            if (filteredGames.isEmpty()) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(32.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            "No games match these filters",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            tabMode == TabMode.SLEEVES -> SleevesContent(
+                                allGames = allGames,
+                                listState = sleeveListState,
+                                excludedGameIds = sleevesExcludedGameIds,
+                                onToggleExclusion = { syncViewModel.toggleSleeveGameExclusion(it) }
+                            )
+
+                            else -> {
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    AnimatedVisibility(visible = controlsVisible) {
+                                        GameSearchField(
+                                            value = searchQuery,
+                                            onValueChange = { searchQuery = it },
+                                            trailingAction = {
+                                                Box {
+                                                    SearchFieldActionButton(onClick = { showFilters = true }) {
+                                                        Icon(
+                                                            BoardFlowIcons.Filter,
+                                                            contentDescription = "Sort & filter"
+                                                        )
+                                                    }
+                                                    if (hasActiveFilters) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .align(Alignment.TopEnd)
+                                                                .padding(top = 8.dp, end = 8.dp)
+                                                                .size(7.dp)
+                                                                .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 8.dp)
                                         )
                                     }
-                                }
 
-                                if (hasActiveFilters) {
-                                    item {
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            BoardFlowOutlinedButton(
-                                                onClick = {
-                                                    sortMode = SortMode.RATING
-                                                    filterPlayers = null
-                                                    filterBestFor = null
+                                    LazyColumn(
+                                        state = listState,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        items(filteredGames, key = { it.objectId.ifBlank { it.name } }) { game ->
+                                            GameCard(
+                                                game = game,
+                                                onClick = { selectedGame = game },
+                                                modifier = Modifier.animateItem()
+                                            )
+                                        }
+
+                                        if (filteredGames.isEmpty()) {
+                                            item {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(32.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        "No games match these filters",
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
                                                 }
-                                            ) {
-                                                Text("Clear filters")
+                                            }
+
+                                            if (hasActiveFilters) {
+                                                item {
+                                                    Box(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        BoardFlowOutlinedButton(
+                                                            onClick = {
+                                                                sortMode = SortMode.RATING
+                                                                filterPlayers = null
+                                                                filterBestFor = null
+                                                            }
+                                                        ) {
+                                                            Text("Clear filters")
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                    } // end if (tabMode != SLEEVES)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CollectionPullRefreshContainer(
+    isRefreshing: Boolean,
+    isAtTop: Boolean,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val density = LocalDensity.current
+    val refreshThresholdPx = with(density) { 72.dp.toPx() }
+    val onRefreshState by rememberUpdatedState(onRefresh)
+    val isAtTopState by rememberUpdatedState(isAtTop)
+    val isRefreshingState by rememberUpdatedState(isRefreshing)
+    var pullDistance by remember { mutableFloatStateOf(0f) }
+    var refreshTriggered by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isRefreshing, refreshThresholdPx) {
+        if (isRefreshing) {
+            pullDistance = refreshThresholdPx
+        } else {
+            pullDistance = 0f
+            refreshTriggered = false
+        }
+    }
+
+    val refreshConnection = remember(refreshThresholdPx) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source != NestedScrollSource.UserInput || available.y >= 0f || pullDistance <= 0f) {
+                    return Offset.Zero
+                }
+                val consumed = minOf(-available.y, pullDistance)
+                pullDistance -= consumed
+                return Offset(0f, -consumed)
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                if (
+                    source != NestedScrollSource.UserInput ||
+                    available.y <= 0f ||
+                    !isAtTopState ||
+                    isRefreshingState ||
+                    refreshTriggered
+                ) {
+                    return Offset.Zero
+                }
+
+                pullDistance = (pullDistance + available.y * 0.5f).coerceAtMost(refreshThresholdPx)
+                if (pullDistance >= refreshThresholdPx) {
+                    refreshTriggered = true
+                    onRefreshState()
+                }
+                return Offset(0f, available.y)
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                if (!refreshTriggered && !isRefreshingState) {
+                    pullDistance = 0f
+                }
+                return Velocity.Zero
+            }
+        }
+    }
+
+    Box(modifier = modifier.nestedScroll(refreshConnection)) {
+        content()
+        if (isRefreshing || pullDistance > 0f) {
+            val indicatorScale = if (isRefreshing) {
+                1f
+            } else {
+                (pullDistance / refreshThresholdPx).coerceIn(0.35f, 1f)
+            }
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 8.dp)
+                    .size(36.dp)
+                    .scale(indicatorScale),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
                 }
             }
         }
