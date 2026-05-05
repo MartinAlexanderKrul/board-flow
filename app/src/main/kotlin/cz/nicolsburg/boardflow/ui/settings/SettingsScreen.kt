@@ -93,7 +93,8 @@ import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import java.time.LocalDate
 
 private enum class SettingsSection(val title: String) {
-    SETUP("Setup"),
+    ACCOUNTS("Accounts"),
+    APPEARANCE("Appearance"),
     AI("AI"),
     DATA("Data")
 }
@@ -117,7 +118,7 @@ fun SettingsScreen(
     var showPwd by remember { mutableStateOf(false) }
     var showKey by remember { mutableStateOf(false) }
     var themeExpanded by remember { mutableStateOf(false) }
-    var selectedSection by remember { mutableStateOf(SettingsSection.SETUP) }
+    var selectedSection by remember { mutableStateOf(SettingsSection.ACCOUNTS) }
 
     val currentTheme by viewModel.appTheme.collectAsState()
     val googleAccount by syncViewModel.account.collectAsState()
@@ -289,10 +290,10 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
-            if (selectedSection == SettingsSection.SETUP) {
+            if (selectedSection == SettingsSection.ACCOUNTS) {
                 item {
                     SectionHeader(
-                        title = "Setup",
+                        title = "Accounts",
                         subtitle = "Sign in to Google for Sheets sync, then add your BGG account."
                     )
                 }
@@ -397,13 +398,21 @@ fun SettingsScreen(
                     }
                 }
 
-                item { SettingsSectionLabel("Preferences") }
+            }
+
+            if (selectedSection == SettingsSection.APPEARANCE) {
+                item {
+                    SectionHeader(
+                        title = "Appearance",
+                        subtitle = "Choose how BoardFlow looks."
+                    )
+                }
 
                 item {
                     SettingsCard(
                         icon = Icons.Default.Palette,
-                        title = "Appearance",
-                        subtitle = "Choose how BoardFlow looks."
+                        title = "Theme",
+                        subtitle = "Set the visual style for the app."
                     ) {
                         ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
                             OutlinedTextField(
