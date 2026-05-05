@@ -94,7 +94,6 @@ import java.time.LocalDate
 
 private enum class SettingsSection(val title: String) {
     SETUP("Setup"),
-    TOOLS("Tools"),
     AI("AI"),
     DATA("Data")
 }
@@ -113,11 +112,9 @@ fun SettingsScreen(
 
     var username by remember { mutableStateOf(prefs.bggUsername) }
     var password by remember { mutableStateOf(prefs.bggPassword) }
-    var xmlApiToken by remember { mutableStateOf(prefs.bggXmlApiToken) }
     var apiKey by remember { mutableStateOf(prefs.geminiApiKey) }
     var modelEndpoint by remember { mutableStateOf(prefs.geminiModelEndpoint) }
     var showPwd by remember { mutableStateOf(false) }
-    var showXmlToken by remember { mutableStateOf(false) }
     var showKey by remember { mutableStateOf(false) }
     var themeExpanded by remember { mutableStateOf(false) }
     var selectedSection by remember { mutableStateOf(SettingsSection.SETUP) }
@@ -178,7 +175,6 @@ fun SettingsScreen(
                     viewModel.importData(pendingJson)
                     username = prefs.bggUsername
                     password = prefs.bggPassword
-                    xmlApiToken = prefs.bggXmlApiToken
                     apiKey = prefs.geminiApiKey
                     modelEndpoint = prefs.geminiModelEndpoint
                     syncViewModel.loadCachedCollection()
@@ -216,8 +212,7 @@ fun SettingsScreen(
             kind = BoardFlowConfirmationKind.DESTRUCTIVE,
             onConfirm = {
                 showClearCollectionConfirm = false
-                viewModel.clearCollection()
-                syncViewModel.loadCachedCollection()
+                syncViewModel.clearCollectionCache()
             },
             onDismiss = { showClearCollectionConfirm = false }
         )
@@ -365,7 +360,7 @@ fun SettingsScreen(
                     SettingsCard(
                         icon = Icons.Default.People,
                         title = "BoardGameGeek",
-                        subtitle = "Used for BGG collection refresh, play sync, and XML API search outside your collection."
+                        subtitle = "Used for BGG collection refresh and play sync."
                     ) {
                         OutlinedTextField(
                             value = username,
@@ -397,31 +392,6 @@ fun SettingsScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = xmlApiToken,
-                            onValueChange = {
-                                xmlApiToken = it
-                                prefs.bggXmlApiToken = it.trim()
-                            },
-                            label = { Text("BGG XML API token") },
-                            placeholder = { Text("Bearer token from boardgamegeek.com/applications") },
-                            singleLine = true,
-                            visualTransformation = if (showXmlToken) VisualTransformation.None else PasswordVisualTransformation(),
-                            trailingIcon = {
-                                IconButton(onClick = { showXmlToken = !showXmlToken }) {
-                                    Icon(
-                                        if (showXmlToken) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "Toggle XML API token"
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Text(
-                            "Needed for searching games outside your collection through BGG's XML API.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -457,31 +427,6 @@ fun SettingsScreen(
                                     )
                                 }
                             }
-                        }
-                    }
-                }
-            }
-
-            if (selectedSection == SettingsSection.TOOLS) {
-                item {
-                    SectionHeader(
-                        title = "Tools",
-                        subtitle = "Manage supporting data and local caches."
-                    )
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.Storage,
-                        title = "Collection Cache",
-                        subtitle = if (hasCollection) "$collectionSize games cached locally" else "No collection cached"
-                    ) {
-                        BoardFlowOutlinedButton(
-                            onClick = { showClearCollectionConfirm = true },
-                            enabled = hasCollection,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Clear Collection Cache")
                         }
                     }
                 }
@@ -663,8 +608,24 @@ fun SettingsScreen(
                 item {
                     SectionHeader(
                         title = "Data",
-                        subtitle = "Back up your app state or restore it on a new device."
+                        subtitle = "Manage cached data, or back up and restore the app on a new device."
                     )
+                }
+
+                item {
+                    SettingsCard(
+                        icon = Icons.Default.Storage,
+                        title = "Collection Cache",
+                        subtitle = if (hasCollection) "$collectionSize games cached locally" else "No collection cached"
+                    ) {
+                        BoardFlowOutlinedButton(
+                            onClick = { showClearCollectionConfirm = true },
+                            enabled = hasCollection,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Clear Collection Cache")
+                        }
+                    }
                 }
 
                 item {

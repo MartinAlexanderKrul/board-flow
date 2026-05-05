@@ -35,10 +35,6 @@ class SecurePreferences(context: Context) {
         get() = prefs.getString(KEY_BGG_PASSWORD, "") ?: ""
         set(value) = prefs.edit().putString(KEY_BGG_PASSWORD, value).apply()
 
-    var bggXmlApiToken: String
-        get() = prefs.getString(KEY_BGG_XML_API_TOKEN, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_BGG_XML_API_TOKEN, value.trim()).apply()
-
     var geminiApiKey: String
         get() = prefs.getString(KEY_GEMINI_KEY, "") ?: ""
         set(value) = prefs.edit().putString(KEY_GEMINI_KEY, value).apply()
@@ -225,7 +221,6 @@ class SecurePreferences(context: Context) {
             includeSensitiveData = includeSensitiveData,
             bggUsername = bggUsername,
             bggPassword = bggPassword,
-            bggXmlApiToken = bggXmlApiToken,
             geminiApiKey = geminiApiKey,
             geminiModelEndpoint = geminiModelEndpoint,
             appTheme = appTheme,
@@ -256,7 +251,6 @@ class SecurePreferences(context: Context) {
             },
             onSecureSettings = { s ->
                 if (s.has("bggPassword")) bggPassword = s.getString("bggPassword")
-                if (s.has("bggXmlApiToken")) bggXmlApiToken = s.getString("bggXmlApiToken")
                 if (s.has("geminiApiKey")) geminiApiKey = s.getString("geminiApiKey")
             },
             onPlayers = { players -> savePlayers(players) },
@@ -269,7 +263,6 @@ class SecurePreferences(context: Context) {
     companion object {
         private const val KEY_BGG_USERNAME        = "bgg_username"
         private const val KEY_BGG_PASSWORD        = "bgg_password"
-        private const val KEY_BGG_XML_API_TOKEN   = "bgg_xml_api_token"
         private const val KEY_GEMINI_KEY          = "gemini_api_key"
         private const val KEY_GEMINI_MODEL        = "gemini_model_endpoint"
         private const val KEY_AVAILABLE_MODELS    = "available_gemini_models"

@@ -6,11 +6,18 @@
     alias(libs.plugins.google.services)
 }
 
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import java.util.Properties
 
 val localProps = Properties().also { props ->
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { props.load(it) }
 }
+
+fun buildConfigString(value: String): String =
+    "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+
+fun localProperty(name: String): String =
+    (localProps.getProperty(name) ?: "").trim()
 
 android {
     namespace = "cz.nicolsburg.boardflow"
@@ -23,7 +30,16 @@ android {
         versionCode = 200
         versionName = "2.0.0"
 
-        buildConfigField("String", "BGG_PASSWORD", "\"${System.getenv("BGG_PASSWORD") ?: ""}\"")
+        buildConfigField(
+            "String",
+            "BGG_PASSWORD",
+            buildConfigString((System.getenv("BGG_PASSWORD") ?: localProperty("BGG_PASSWORD")).trim())
+        )
+        buildConfigField(
+            "String",
+            "BGG_XML_API_TOKEN",
+            buildConfigString((System.getenv("BGG_XML_API_TOKEN") ?: localProperty("BGG_XML_API_TOKEN")).trim())
+        )
     }
 
     signingConfigs {
@@ -75,6 +91,13 @@ android {
                 "META-INF/io.netty.versions.properties"
             )
         }
+    }
+
+}
+
+android.applicationVariants.configureEach {
+    outputs.configureEach {
+        (this as BaseVariantOutputImpl).outputFileName = "board-flow-${name}.apk"
     }
 }
 

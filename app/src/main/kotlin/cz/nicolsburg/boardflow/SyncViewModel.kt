@@ -395,6 +395,14 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun clearCollectionCache() {
+        viewModelScope.launch(Dispatchers.IO) {
+            collectionStore.clearAllGames()
+            securePrefs.clearLegacyCollectionArtifacts()
+            _collectionGames.value = emptyList()
+        }
+    }
+
     fun appendLog(name: String, status: String = "", type: LogEntry.Type = LogEntry.Type.INFO) {
         entry(name, status, type)
     }

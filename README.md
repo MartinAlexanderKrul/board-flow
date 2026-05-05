@@ -115,7 +115,7 @@ From the repository root:
 Debug APK output:
 
 ```text
-app/build/outputs/apk/debug/app-debug.apk
+app/build/outputs/apk/debug/board-flow-debug.apk
 ```
 
 Install on a connected emulator/device:
@@ -139,13 +139,12 @@ Set in Settings:
 
 - BGG username
 - BGG password
-- BGG XML API token
 
 Notes:
 
 - Collection loading uses BGG XML endpoints and the canonical merged collection is cached locally in Room
 - Local/offline plays are also stored in Room and later reconciled with cached BGG play history
-- Searching for games outside your loaded collection uses the BGG XML API search endpoint and requires a valid application token
+- Searching for games outside your loaded collection uses the BGG XML API search endpoint and requires app-level configuration provided by `BGG_XML_API_TOKEN` from the environment or `local.properties` at build time
 - Play posting uses the unofficial BGG play logging endpoint
 
 ### Gemini

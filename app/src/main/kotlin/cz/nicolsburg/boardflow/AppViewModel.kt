@@ -3,6 +3,7 @@
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.core.di.AppContainer
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.ExtractedPlay
@@ -98,16 +99,6 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun clearCollection() {
-        viewModelScope.launch {
-            container.canonicalCollectionStore.clearAllGames()
-            prefs.clearLegacyCollectionArtifacts()
-            _allGames.value = emptyList()
-            _collectionLoaded.value = false
-            _searchResults.value = _recentGames.value
-        }
-    }
-
     fun updateFromCollection(games: List<GameItem>) {
         if (games.isEmpty()) return
         val bggGames = games.mapNotNull { item ->
@@ -152,7 +143,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         if (query.isBlank()) { _searchResults.value = if (_collectionLoaded.value) _allGames.value else _recentGames.value; return }
         viewModelScope.launch {
             _searchLoading.value = true; _searchError.value = null
-            container.bggRepository.searchGames(query, prefs.bggXmlApiToken)
+            container.bggRepository.searchGames(query, BuildConfig.BGG_XML_API_TOKEN)
                 .onSuccess { _searchResults.value = it }
                 .onFailure { _searchError.value = it.message }
             _searchLoading.value = false
