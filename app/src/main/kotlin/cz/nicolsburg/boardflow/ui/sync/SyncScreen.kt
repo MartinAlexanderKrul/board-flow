@@ -68,6 +68,7 @@ import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.model.LogEntry
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
@@ -579,7 +580,7 @@ private fun AdvancedSection(
             )
         }
 
-        AnimatedVisibility(visible = expanded) {
+        BoardFlowAnimatedVisibility(visible = expanded) {
             SectionCard {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     AdvancedGroupLabel("Import & Export")

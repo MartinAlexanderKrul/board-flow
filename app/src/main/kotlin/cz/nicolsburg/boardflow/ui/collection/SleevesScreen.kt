@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
+import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 
@@ -180,7 +181,7 @@ internal fun SleevesContent(
         }
 
         item(key = "game_selector") {
-            AnimatedVisibility(visible = showGameSelector) {
+            BoardFlowAnimatedVisibility(visible = showGameSelector) {
                 SectionCard {
                     Column(
                         modifier = Modifier.padding(vertical = 4.dp),
@@ -373,7 +374,7 @@ private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
             }
         }
 
-        AnimatedVisibility(visible = expanded) {
+        BoardFlowAnimatedVisibility(visible = expanded) {
             Column(
                 modifier = Modifier.padding(top = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)

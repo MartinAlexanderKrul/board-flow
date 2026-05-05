@@ -1,9 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.app
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -65,6 +62,8 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
+import cz.nicolsburg.boardflow.ui.common.boardFlowFadeIn
+import cz.nicolsburg.boardflow.ui.common.boardFlowFadeOut
 import cz.nicolsburg.boardflow.ui.history.HistoryScreen
 import cz.nicolsburg.boardflow.ui.review.LogPlayScreen
 import cz.nicolsburg.boardflow.ui.scan.ScanScreen
@@ -461,8 +460,8 @@ private fun AppHeader(
 
         AnimatedVisibility(
             visible = showDivider,
-            enter = fadeIn(tween(150)),
-            exit = fadeOut(tween(150)),
+            enter = boardFlowFadeIn(),
+            exit = boardFlowFadeOut(),
         ) {
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),

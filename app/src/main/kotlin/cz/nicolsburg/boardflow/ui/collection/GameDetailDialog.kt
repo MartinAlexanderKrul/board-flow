@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
+import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
@@ -215,7 +216,7 @@ fun GameDetailsDialog(
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
-                            AnimatedVisibility(visible = expanded) {
+                            BoardFlowAnimatedVisibility(visible = expanded) {
                                 SleevesSection(game)
                             }
                         }

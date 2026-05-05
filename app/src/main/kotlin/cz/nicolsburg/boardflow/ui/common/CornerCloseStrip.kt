@@ -1,8 +1,5 @@
 package cz.nicolsburg.boardflow.ui.common
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
@@ -41,19 +38,19 @@ fun CornerCloseStrip(
     val isPressed by interactionSource.collectIsPressedAsState()
     val density = LocalDensity.current
 
-    val fillAlpha by animateFloatAsState(
+    val fillAlpha by androidx.compose.animation.core.animateFloatAsState(
         targetValue = if (isPressed) 0.38f else 0.30f,
-        animationSpec = tween(140, easing = FastOutSlowInEasing),
+        animationSpec = boardFlowTween(BoardFlowMotion.QuickDuration),
         label = "closeStripFillAlpha"
     )
-    val separatorAlpha by animateFloatAsState(
+    val separatorAlpha by androidx.compose.animation.core.animateFloatAsState(
         targetValue = if (isPressed) 0.34f else 0.22f,
-        animationSpec = tween(140, easing = FastOutSlowInEasing),
+        animationSpec = boardFlowTween(BoardFlowMotion.QuickDuration),
         label = "closeStripSeparatorAlpha"
     )
-    val iconAlpha by animateFloatAsState(
+    val iconAlpha by androidx.compose.animation.core.animateFloatAsState(
         targetValue = if (isPressed) 1f else 0.92f,
-        animationSpec = tween(140, easing = FastOutSlowInEasing),
+        animationSpec = boardFlowTween(BoardFlowMotion.QuickDuration),
         label = "closeStripIconAlpha"
     )
 

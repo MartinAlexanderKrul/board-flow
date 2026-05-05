@@ -1,9 +1,7 @@
 package cz.nicolsburg.boardflow.ui.history
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,6 +55,8 @@ import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
+import cz.nicolsburg.boardflow.ui.common.BoardFlowMotion
+import cz.nicolsburg.boardflow.ui.common.boardFlowTween
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -427,7 +427,7 @@ private fun BucketBarChart(
     val progress = remember(values) { Animatable(0f) }
     LaunchedEffect(values) {
         progress.snapTo(0f)
-        progress.animateTo(1f, tween(700, easing = FastOutSlowInEasing))
+        progress.animateTo(1f, boardFlowTween(BoardFlowMotion.ChartBaseDuration))
     }
 
     val maxVal = (values.maxOrNull() ?: 1).coerceAtLeast(1).toFloat()
@@ -514,7 +514,7 @@ private fun TopGamesSection(games: List<GameStat>) {
 private fun TopGameRow(game: GameStat, rank: Int, maxPlays: Int) {
     val fraction by animateFloatAsState(
         targetValue = if (maxPlays > 0) game.plays.toFloat() / maxPlays else 0f,
-        animationSpec = tween(600 + rank * 35, easing = FastOutSlowInEasing),
+        animationSpec = boardFlowTween(BoardFlowMotion.ChartRowDuration + rank * BoardFlowMotion.ChartRowStagger),
         label = "bar_$rank"
     )
 
@@ -633,7 +633,7 @@ private fun TopPlayersSection(topPlayers: List<PlayerStat>) {
 private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int) {
     val fraction by animateFloatAsState(
         targetValue = if (maxPlays > 0) player.plays.toFloat() / maxPlays else 0f,
-        animationSpec = tween(550 + rank * 30, easing = FastOutSlowInEasing),
+        animationSpec = boardFlowTween(BoardFlowMotion.PlayerChartRowDuration + rank * BoardFlowMotion.PlayerChartRowStagger),
         label = "player_$rank"
     )
     val winRate = if (player.plays > 0) player.wins.toFloat() / player.plays else 0f

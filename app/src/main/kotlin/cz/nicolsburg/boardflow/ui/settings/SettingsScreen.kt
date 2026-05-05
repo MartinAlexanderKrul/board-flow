@@ -74,6 +74,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
+import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
@@ -270,7 +271,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            AnimatedVisibility(visible = controlsVisible) {
+            BoardFlowAnimatedVisibility(visible = controlsVisible) {
                 ScreenTabRow(
                     tabs = SettingsSection.entries.map { it.title },
                     selectedIndex = selectedSection.ordinal,

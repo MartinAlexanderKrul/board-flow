@@ -3,11 +3,6 @@
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -139,7 +134,9 @@ fun SectionCard(
     )
     val border = if (accented) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f))
     else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
-    val cardModifier = modifier.fillMaxWidth().animateContentSize()
+    val cardModifier = modifier
+        .fillMaxWidth()
+        .animateContentSize(animationSpec = boardFlowTween(BoardFlowMotion.ContentResizeDuration))
     val columnContent: @Composable ColumnScope.() -> Unit = {
         Column(
             modifier = Modifier.padding(BoardFlowSurfaceTokens.CardContentPadding),
@@ -246,15 +243,14 @@ fun AnimatedDialog(
         val dismissGestureFallbackPx = with(density) { BoardFlowModalTokens.TopDismissDragAreaHeight.toPx() }
         val dismissSlopPx = with(density) { 8.dp.toPx() }
         val offsetY = remember { Animatable(0f) }
-        val settleDuration = 180
         val maxH = LocalConfiguration.current.screenHeightDp.dp * 0.85f
         var modalHeightPx by remember { mutableStateOf(0) }
         LaunchedEffect(Unit) { visible = true }
         AnimatedVisibility(
             visible = visible,
-            enter = fadeIn(tween(200)) + scaleIn(
-                tween(200, easing = FastOutSlowInEasing),
-                initialScale = 0.92f,
+            enter = boardFlowFadeIn(BoardFlowMotion.DialogDuration) + androidx.compose.animation.scaleIn(
+                boardFlowTween(BoardFlowMotion.DialogDuration),
+                initialScale = BoardFlowMotion.DialogInitialScale,
             ),
         ) {
             Card(
@@ -316,10 +312,7 @@ fun AnimatedDialog(
                                     } else {
                                         offsetY.animateTo(
                                             targetValue = 0f,
-                                            animationSpec = tween(
-                                                settleDuration,
-                                                easing = FastOutSlowInEasing
-                                            )
+                                            animationSpec = boardFlowTween(BoardFlowMotion.VisibilityDuration)
                                         )
                                     }
                                 }
@@ -547,11 +540,7 @@ fun BoardFlowPrimaryButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = tween(120, easing = FastOutSlowInEasing),
-        label = "btnScale"
-    )
+    val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "btnScale")
     Button(
         onClick = onClick,
         modifier = modifier
@@ -576,11 +565,7 @@ fun BoardFlowSecondaryButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = tween(120, easing = FastOutSlowInEasing),
-        label = "btnScale"
-    )
+    val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "btnScale")
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
@@ -604,11 +589,7 @@ fun BoardFlowDestructiveButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = tween(120, easing = FastOutSlowInEasing),
-        label = "destructiveBtnScale"
-    )
+    val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "destructiveBtnScale")
     OutlinedButton(
         onClick = onClick,
         modifier = modifier

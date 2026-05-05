@@ -1,11 +1,5 @@
 ﻿package cz.nicolsburg.boardflow.ui.search
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -25,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
+import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import kotlinx.coroutines.delay
@@ -158,16 +153,7 @@ fun NewPlayScreen(
 
 @Composable
 private fun ShimmerGameRow() {
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val alpha by transition.animateFloat(
-        initialValue = 0.10f,
-        targetValue = 0.22f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "shimmerAlpha",
-    )
+    val alpha = rememberBoardFlowShimmerAlpha(label = "searchShimmerAlpha")
     val shimmer = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
 
     Row(

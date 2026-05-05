@@ -2,14 +2,6 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -75,10 +67,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.text.input.KeyboardType
@@ -90,13 +80,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
@@ -122,10 +106,16 @@ import androidx.compose.runtime.snapshotFlow
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowMotion
+import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
+import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
+import cz.nicolsburg.boardflow.ui.common.boardFlowTween
+import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowPressScale
+import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
 import kotlinx.coroutines.flow.collect
 import androidx.compose.material.icons.filled.Add
 import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
@@ -374,7 +364,7 @@ fun HistoryScreen(
                     onNavigate = { activeTab = HistoryTab.entries[it] }
                 )
         ) {
-            AnimatedVisibility(visible = controlsVisible) {
+            BoardFlowAnimatedVisibility(visible = controlsVisible) {
                 ScreenTabRow(
                     tabs = HistoryTab.entries.map { it.label },
                     selectedIndex = activeTab.ordinal,
@@ -409,7 +399,7 @@ fun HistoryScreen(
                 }
             }
 
-            AnimatedVisibility(visible = controlsVisible) {
+            BoardFlowAnimatedVisibility(visible = controlsVisible) {
                 GameSearchField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -515,7 +505,7 @@ private fun PlaysContent(
     }
     val isAtTop = if (plays.isEmpty() && !loading) emptyState.value == 0 else listAtTop
 
-    HistoryPullRefreshContainer(
+    BoardFlowPullRefreshContainer(
         isRefreshing = loading,
         isAtTop = isAtTop,
         onRefresh = onRefresh,
@@ -648,103 +638,6 @@ private fun PlaysContent(
 
 
 @Composable
-private fun HistoryPullRefreshContainer(
-    isRefreshing: Boolean,
-    isAtTop: Boolean,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    val density = LocalDensity.current
-    val refreshThresholdPx = with(density) { 72.dp.toPx() }
-    val onRefreshState by rememberUpdatedState(onRefresh)
-    val isAtTopState by rememberUpdatedState(isAtTop)
-    val isRefreshingState by rememberUpdatedState(isRefreshing)
-    var pullDistance by remember { mutableFloatStateOf(0f) }
-    var refreshTriggered by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isRefreshing, refreshThresholdPx) {
-        if (isRefreshing) {
-            pullDistance = refreshThresholdPx
-        } else {
-            pullDistance = 0f
-            refreshTriggered = false
-        }
-    }
-
-    val refreshConnection = remember(refreshThresholdPx) {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (source != NestedScrollSource.UserInput || available.y >= 0f || pullDistance <= 0f) {
-                    return Offset.Zero
-                }
-                val consumed = minOf(-available.y, pullDistance)
-                pullDistance -= consumed
-                return Offset(0f, -consumed)
-            }
-
-            override fun onPostScroll(
-                consumed: Offset,
-                available: Offset,
-                source: NestedScrollSource
-            ): Offset {
-                if (
-                    source != NestedScrollSource.UserInput ||
-                    available.y <= 0f ||
-                    !isAtTopState ||
-                    isRefreshingState ||
-                    refreshTriggered
-                ) {
-                    return Offset.Zero
-                }
-
-                pullDistance = (pullDistance + available.y * 0.5f).coerceAtMost(refreshThresholdPx)
-                if (pullDistance >= refreshThresholdPx) {
-                    refreshTriggered = true
-                    onRefreshState()
-                }
-                return Offset(0f, available.y)
-            }
-
-            override suspend fun onPreFling(available: Velocity): Velocity {
-                if (!refreshTriggered && !isRefreshingState) {
-                    pullDistance = 0f
-                }
-                return Velocity.Zero
-            }
-        }
-    }
-
-    Box(modifier = modifier.nestedScroll(refreshConnection)) {
-        content()
-        if (isRefreshing || pullDistance > 0f) {
-            val indicatorScale = if (isRefreshing) {
-                1f
-            } else {
-                (pullDistance / refreshThresholdPx).coerceIn(0.35f, 1f)
-            }
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 8.dp)
-                    .size(36.dp)
-                    .scale(indicatorScale),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 4.dp
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun PlayHistoryCard(
     play: LoggedPlay,
     players: List<Player>,
@@ -752,11 +645,7 @@ private fun PlayHistoryCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = tween(120, easing = FastOutSlowInEasing),
-        label = "cardScale",
-    )
+    val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "cardScale")
 
     Card(
         modifier = Modifier
@@ -858,16 +747,7 @@ private fun PlayHistoryCard(
 
 @Composable
 private fun ShimmerPlayCard() {
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val alpha by transition.animateFloat(
-        initialValue = 0.10f,
-        targetValue = 0.22f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "shimmerAlpha",
-    )
+    val alpha = rememberBoardFlowShimmerAlpha(label = "historyShimmerAlpha")
     val shimmer = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
 
     Card(
