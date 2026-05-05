@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.search
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,8 +20,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
+import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import kotlinx.coroutines.delay
 
@@ -28,13 +32,16 @@ import kotlinx.coroutines.delay
 @Composable
 fun NewPlayScreen(
     viewModel: AppViewModel,
-    onGameSelected: (BggGame) -> Unit
+    onGameSelected: (BggGame) -> Unit,
+    onPlayAgain: () -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
     val results by viewModel.searchResults.collectAsState()
     val loading by viewModel.searchLoading.collectAsState()
     val error   by viewModel.searchError.collectAsState()
     val collectionLoaded by viewModel.collectionLoaded.collectAsState()
+    val sessionBannerVisible by viewModel.sessionBannerVisible.collectAsState()
+    val sessionContext by viewModel.sessionContext.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.loadRecentGames() }
 
@@ -44,6 +51,20 @@ fun NewPlayScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
+        // Continue last session banner
+        AnimatedVisibility(visible = sessionBannerVisible) {
+            sessionContext?.let { ctx ->
+                SessionContinueBanner(
+                    context   = ctx,
+                    onUse     = {
+                        viewModel.setupPlayAgain(ctx)
+                        onPlayAgain()
+                    },
+                    onDismiss = { viewModel.dismissSessionBannerForSession() }
+                )
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -146,6 +167,53 @@ fun NewPlayScreen(
                         })
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionContinueBanner(
+    context: SessionContext,
+    onUse: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val playerNames = context.players.take(3).joinToString(", ") { it.name.trim() }
+        .let { if (context.players.size > 3) "$it +${context.players.size - 3}" else it }
+    val subtitle = buildString {
+        append(context.gameName)
+        if (playerNames.isNotBlank()) append(" · $playerNames")
+    }
+
+    Surface(
+        color  = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    "Continue last session?",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (subtitle.isNotBlank()) {
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            TextButton(onClick = onUse) { Text("Use") }
+            BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                BoardFlowCloseGlyph(contentDescription = "Dismiss", modifier = Modifier.size(14.dp), iconSize = 14.dp)
             }
         }
     }

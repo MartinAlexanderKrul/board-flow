@@ -9,15 +9,19 @@ import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.ExtractedPlay
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.GameRelations
+import cz.nicolsburg.boardflow.model.LogPlayPrefill
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
+import cz.nicolsburg.boardflow.model.RecordMoment
+import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -155,9 +159,18 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _logPlayHasUnsavedChanges.value = false
         prefs.addRecentGame(game)
         _recentGames.value = prefs.getRecentGames()
-        _extractedPlay.value = null; _editablePlayers.value = emptyList()
+        _extractedPlay.value = null
         _additionalGames.value = emptyList()
         _gameRelations.value = findRelatedGames(game, _allGames.value)
+
+        val pending = _changeGameSession?.takeIf { it.isActive() }
+        _changeGameSession = null
+        if (pending != null) {
+            _editablePlayers.value = pending.players.map { it.copy(score = "0", isWinner = false) }
+            _logPlayPrefill = LogPlayPrefill(location = pending.location)
+        } else {
+            _editablePlayers.value = emptyList()
+        }
     }
 
     // --- Game relations ---
@@ -761,6 +774,160 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun setLogPlayHasUnsavedChanges(hasChanges: Boolean) {
         _logPlayHasUnsavedChanges.value = hasChanges
+    }
+
+    // --- Session context ---
+    private val _sessionContext = MutableStateFlow<SessionContext?>(null)
+    val sessionContext: StateFlow<SessionContext?> = _sessionContext.asStateFlow()
+
+    private val _sessionBannerDismissed = MutableStateFlow(false)
+    val sessionBannerVisible: StateFlow<Boolean> = combine(_sessionContext, _sessionBannerDismissed) { ctx, dismissed ->
+        ctx != null && ctx.isActive() && !dismissed
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    // Consumed by selectGame to pre-populate players when user changes game mid-session.
+    private var _changeGameSession: SessionContext? = null
+
+    // Consumed once by LogPlayScreen on first composition for location/duration prefill.
+    private var _logPlayPrefill: LogPlayPrefill? = null
+
+    // Captured before postPlay so detectRecord can compare against prior history.
+    private var _historySnapshot: List<LoggedPlay>? = null
+
+    fun loadSessionContext() {
+        val ctx = prefs.loadSessionContext()
+        _sessionContext.value = if (ctx != null && ctx.isActive()) ctx else null
+    }
+
+    fun saveSession(game: BggGame, players: List<PlayerResult>, location: String) {
+        val ctx = SessionContext(
+            gameId            = game.id,
+            gameName          = game.name,
+            players           = players,
+            location          = location,
+            lastPlayTimestamp = System.currentTimeMillis()
+        )
+        _sessionContext.value = ctx
+        prefs.saveSessionContext(ctx)
+    }
+
+    fun clearSession() {
+        _sessionContext.value = null
+        _sessionBannerDismissed.value = false
+        prefs.clearSessionContext()
+    }
+
+    fun dismissSessionBannerForSession() {
+        _sessionBannerDismissed.value = true
+    }
+
+    fun takePrefill(): LogPlayPrefill? {
+        val result = _logPlayPrefill
+        _logPlayPrefill = null
+        return result
+    }
+
+    fun setupPlayAgain(ctx: SessionContext) {
+        val game = BggGame(ctx.gameId, ctx.gameName, null, null)
+        selectedGame = game
+        _editablePlayers.value = ctx.players.map { it.copy(score = "0", isWinner = false) }
+        _extractedPlay.value = ExtractedPlay(players = emptyList(), rawText = "Play again", date = java.time.LocalDate.now().toString())
+        _gameRelations.value = findRelatedGames(game, _allGames.value)
+        _additionalGames.value = emptyList()
+        _logPlayHasUnsavedChanges.value = false
+    }
+
+    fun setupChangeGameSession(ctx: SessionContext) {
+        _changeGameSession = ctx
+    }
+
+    fun setupPlayAgainFromPlay(play: LoggedPlay) {
+        val game = BggGame(play.gameId, play.gameName, null, null)
+        selectedGame = game
+        _editablePlayers.value = play.players.map { it.copy(score = "0", isWinner = false) }
+        _extractedPlay.value = ExtractedPlay(players = emptyList(), rawText = "Play again", date = java.time.LocalDate.now().toString())
+        _gameRelations.value = findRelatedGames(game, _allGames.value)
+        _additionalGames.value = emptyList()
+        _logPlayPrefill = LogPlayPrefill(location = play.location)
+        _logPlayHasUnsavedChanges.value = false
+    }
+
+    fun addPlayerFromRoster(player: Player) {
+        _editablePlayers.value = _editablePlayers.value + PlayerResult(player.displayName, "0", false)
+    }
+
+    fun captureHistorySnapshot() {
+        _historySnapshot = historyPlays.value.toList()
+    }
+
+    fun detectRecord(gameId: Int, gameName: String, savedPlayers: List<PlayerResult>): RecordMoment? {
+        val snapshot = _historySnapshot ?: return null
+        val gamePlays = snapshot.filter { it.gameId == gameId }
+
+        // Priority 1: first win (player had 0 wins in snapshot → this is their first)
+        for (pr in savedPlayers) {
+            if (!pr.isWinner) continue
+            val lower = pr.name.trim().lowercase()
+            val hadPriorWin = gamePlays.any { play ->
+                play.players.any { it.name.trim().lowercase() == lower && it.isWinner }
+            }
+            if (!hadPriorWin) return RecordMoment.FirstWin(pr.name.trim(), gameName)
+        }
+
+        // Priority 2: new high score (score > prior max in snapshot)
+        for (pr in savedPlayers) {
+            val newScore = pr.score.trim().toDoubleOrNull() ?: continue
+            if (newScore <= 0) continue
+            val lower = pr.name.trim().lowercase()
+            val priorMax = gamePlays
+                .flatMap { it.players }
+                .filter { it.name.trim().lowercase() == lower }
+                .mapNotNull { it.score.trim().toDoubleOrNull() }
+                .maxOrNull()
+            if (priorMax == null || newScore > priorMax) {
+                return RecordMoment.NewHighScore(pr.name.trim(), gameName)
+            }
+        }
+
+        // Priority 3: win streak of 2+ (prior consecutive wins + current win)
+        for (pr in savedPlayers) {
+            if (!pr.isWinner) continue
+            val lower = pr.name.trim().lowercase()
+            val playerGamingHistory = gamePlays
+                .filter { play -> play.players.any { it.name.trim().lowercase() == lower } }
+                .sortedByDescending { it.date }
+            var priorStreak = 0
+            for (play in playerGamingHistory) {
+                val p = play.players.first { it.name.trim().lowercase() == lower }
+                if (p.isWinner) priorStreak++ else break
+            }
+            val totalStreak = priorStreak + 1  // +1 for the current win
+            if (totalStreak >= 2) return RecordMoment.WinStreak(pr.name.trim(), totalStreak)
+        }
+
+        return null
+    }
+
+    fun getFrequentPlayers(gameId: Int, excludeNames: Set<String>): List<Player> {
+        val gamePlays = (historyPlays.value).filter { it.gameId == gameId }
+        if (gamePlays.isEmpty()) return emptyList()
+
+        val counts = mutableMapOf<String, Int>()
+        gamePlays.forEach { play ->
+            play.players.forEach { pr ->
+                val trimmed = pr.name.trim()
+                if (trimmed.isNotBlank()) counts[trimmed] = (counts[trimmed] ?: 0) + 1
+            }
+        }
+        val lowerExclude = excludeNames.map { it.lowercase().trim() }.toSet()
+        return counts.entries
+            .sortedByDescending { it.value }
+            .mapNotNull { (name, _) ->
+                if (name.lowercase().trim() in lowerExclude) return@mapNotNull null
+                resolveRosterPlayer(name)
+            }
+            .distinctBy { it.id }
+            .take(5)
     }
 
     private fun normalizePlayersForPosting(players: List<PlayerResult>): List<PlayerResult> {

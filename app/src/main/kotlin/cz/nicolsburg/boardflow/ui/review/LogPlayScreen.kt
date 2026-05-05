@@ -1,4 +1,4 @@
-﻿package cz.nicolsburg.boardflow.ui.review
+package cz.nicolsburg.boardflow.ui.review
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
@@ -21,25 +21,36 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.GameRelations
+import cz.nicolsburg.boardflow.model.RecordMoment
+import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.model.Player as BggPlayer
 import cz.nicolsburg.boardflow.model.PlayerResult
+import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-@OptIn(ExperimentalMaterial3Api::class)
+private data class PostSaveInfo(
+    val sessionContext: SessionContext,
+    val record: RecordMoment?
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun LogPlayScreen(
     viewModel: AppViewModel,
     onPosted: () -> Unit,
+    onChangeGame: () -> Unit,
     onNavigateBack: () -> Unit,
     onDiscard: () -> Unit = onNavigateBack
 ) {
@@ -49,13 +60,19 @@ fun LogPlayScreen(
     val gameRelations   by viewModel.gameRelations.collectAsState()
     val additionalGames by viewModel.additionalGames.collectAsState()
 
+    // Read prefill once on first composition (consumed from ViewModel).
+    val prefill = remember { viewModel.takePrefill() }
+
     var date           by remember { mutableStateOf(LocalDate.now().toString()) }
-    var duration       by remember { mutableStateOf("") }
-    var location       by remember { mutableStateOf("") }
+    var duration       by remember { mutableStateOf(prefill?.durationSuggestion ?: "") }
+    var location       by remember { mutableStateOf(prefill?.location ?: "") }
     var comments       by remember { mutableStateOf("") }
     var errorMsg       by remember { mutableStateOf<String?>(null) }
     var showAiOutput   by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+
+    // Post-save card state. Non-null while post-save card is visible.
+    var postSaveInfo by remember { mutableStateOf<PostSaveInfo?>(null) }
 
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = runCatching {
@@ -108,12 +125,53 @@ fun LogPlayScreen(
     }
 
     BackHandler {
-        onDiscard()
+        if (postSaveInfo != null) {
+            // Treat back as "Done" from post-save card
+            viewModel.clearSession()
+            postSaveInfo = null
+            onPosted()
+        } else {
+            onDiscard()
+        }
     }
 
-    // FAB label updates when additional games are queued
+    // Show post-save card when present
+    if (postSaveInfo != null) {
+        val info = postSaveInfo!!
+        PostSaveScreen(
+            info = info,
+            onPlayAgain = {
+                viewModel.setupPlayAgain(info.sessionContext)
+                date = LocalDate.now().toString()
+                location = info.sessionContext.location
+                duration = ""
+                comments = ""
+                errorMsg = null
+                postSaveInfo = null
+            },
+            onChangeGame = {
+                viewModel.setupChangeGameSession(info.sessionContext)
+                postSaveInfo = null
+                onChangeGame()
+            },
+            onDone = {
+                viewModel.clearSession()
+                postSaveInfo = null
+                onPosted()
+            }
+        )
+        return
+    }
+
     val online = viewModel.isOnline()
     val totalGames = 1 + additionalGames.size
+
+    // Compute frequent players in composable scope so remember is valid.
+    val gameId = viewModel.selectedGame?.id ?: 0
+    val excludedNames = remember(players) { players.map { it.name.trim() }.toSet() }
+    val frequentPlayers = remember(gameId, excludedNames) {
+        viewModel.getFrequentPlayers(gameId, excludedNames)
+    }
     val fabLabel = when {
         posting               -> "Posting..."
         !online && totalGames > 1 -> "Save $totalGames plays locally"
@@ -131,13 +189,32 @@ fun LogPlayScreen(
                 onClick = {
                     if (!posting) {
                         errorMsg = null
+                        val parsedDate = runCatching { LocalDate.parse(date) }.getOrDefault(LocalDate.now())
+                        val durationMin = duration.toIntOrNull() ?: 0
+                        viewModel.captureHistorySnapshot()
                         viewModel.postPlay(
-                            date            = runCatching { LocalDate.parse(date) }.getOrDefault(LocalDate.now()),
-                            durationMinutes = duration.toIntOrNull() ?: 0,
+                            date            = parsedDate,
+                            durationMinutes = durationMin,
                             location        = location,
                             comments        = comments,
-                            onSuccess       = { onPosted() },
-                            onError         = { errorMsg = it }
+                            onSuccess       = {
+                                val game = viewModel.selectedGame
+                                if (game != null) {
+                                    val ctx = SessionContext(
+                                        gameId            = game.id,
+                                        gameName          = game.name,
+                                        players           = players,
+                                        location          = location,
+                                        lastPlayTimestamp = System.currentTimeMillis()
+                                    )
+                                    viewModel.saveSession(game, players, location)
+                                    val record = viewModel.detectRecord(game.id, game.name, players)
+                                    postSaveInfo = PostSaveInfo(ctx, record)
+                                } else {
+                                    onPosted()
+                                }
+                            },
+                            onError = { errorMsg = it }
                         )
                     }
                 }
@@ -179,7 +256,6 @@ fun LogPlayScreen(
                             fontWeight = FontWeight.SemiBold
                         )
 
-                        // Date + Duration
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Column(
                                 modifier = Modifier.weight(1f),
@@ -254,7 +330,7 @@ fun LogPlayScreen(
                 }
             }
 
-            // Players section
+            // Players header
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -286,6 +362,16 @@ fun LogPlayScreen(
                             Icon(BoardFlowIcons.Add, "Add player")
                         }
                     }
+                }
+            }
+
+            // Frequent player chips
+            if (frequentPlayers.isNotEmpty()) {
+                item {
+                    FrequentPlayerChips(
+                        players     = frequentPlayers,
+                        onAddPlayer = { viewModel.addPlayerFromRoster(it) }
+                    )
                 }
             }
 
@@ -361,11 +447,149 @@ fun LogPlayScreen(
                 }
             }
 
-            // Space for FAB
             item { Spacer(Modifier.height(80.dp)) }
-        } // end LazyColumn
+        }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Post-save screen
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun PostSaveScreen(
+    info: PostSaveInfo,
+    onPlayAgain: () -> Unit,
+    onChangeGame: () -> Unit,
+    onDone: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Title
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.EmojiEvents,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        "Play saved",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                // Record moment (if any)
+                info.record?.let { record ->
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text  = record.displayText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                        )
+                    }
+                }
+
+                // Game context summary
+                val playerSummary = info.sessionContext.players
+                    .take(4).joinToString(", ") { it.name.trim() }
+                    .let { if (info.sessionContext.players.size > 4) "$it +${info.sessionContext.players.size - 4}" else it }
+                if (playerSummary.isNotBlank()) {
+                    Text(
+                        text  = "${info.sessionContext.gameName} · $playerSummary",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // Actions
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    BoardFlowButton(
+                        onClick   = onPlayAgain,
+                        modifier  = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Play again")
+                    }
+                    BoardFlowSecondaryButton(
+                        onClick  = onChangeGame,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Change game")
+                    }
+                    TextButton(
+                        onClick  = onDone,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Done")
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Frequent player chips
+// ---------------------------------------------------------------------------
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FrequentPlayerChips(
+    players: List<cz.nicolsburg.boardflow.model.Player>,
+    onAddPlayer: (cz.nicolsburg.boardflow.model.Player) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            "Frequent players",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement   = Arrangement.spacedBy(4.dp)
+        ) {
+            players.forEach { player ->
+                SuggestionChip(
+                    onClick = { onAddPlayer(player) },
+                    label   = { Text(player.displayName, style = MaterialTheme.typography.labelMedium) }
+                )
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Related games banner (unchanged)
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -438,7 +662,6 @@ private fun RelatedGamesBanner(
                 }
             }
 
-            // Hint shown only when at least one game is ticked
             if (anySelected) {
                 Text(
                     "Ticked games will be posted automatically with the same players & scores.",
@@ -449,6 +672,10 @@ private fun RelatedGamesBanner(
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Player row (unchanged)
+// ---------------------------------------------------------------------------
 
 @Composable
 private fun PlayerRow(
@@ -463,7 +690,6 @@ private fun PlayerRow(
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            // Row 1: Name + Trophy
             FieldBlock(label = "Name") {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -486,7 +712,6 @@ private fun PlayerRow(
                 }
             }
 
-            // Suggestions under name
             if (activeSuggestions.isNotEmpty()) {
                 Row(
                     modifier = Modifier.padding(start = 4.dp),
@@ -507,7 +732,6 @@ private fun PlayerRow(
                 }
             }
 
-            // Row 2: Score + Team/color
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.Top
@@ -531,7 +755,6 @@ private fun PlayerRow(
                 }
             }
 
-            // Row 3: First play + Delete
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

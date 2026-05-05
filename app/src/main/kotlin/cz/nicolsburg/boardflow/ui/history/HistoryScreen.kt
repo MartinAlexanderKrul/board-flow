@@ -147,7 +147,8 @@ private enum class HistoryTab(val label: String) {
 @Composable
 fun HistoryScreen(
     viewModel: AppViewModel,
-    onActiveTabChange: (String?) -> Unit = {}
+    onActiveTabChange: (String?) -> Unit = {},
+    onPlayAgain: (cz.nicolsburg.boardflow.model.LoggedPlay) -> Unit = {}
 ) {
     val historyPlays by viewModel.historyPlays.collectAsState()
     val bggLoading by viewModel.bggPlaysLoading.collectAsState()
@@ -293,6 +294,10 @@ fun HistoryScreen(
             onDeletePlay = {
                 selectedPlay = null
                 playToDelete = play
+            },
+            onPlayAgain = {
+                selectedPlay = null
+                onPlayAgain(play)
             }
         )
     }
@@ -880,7 +885,8 @@ private fun PlayDetailsDialog(
     isDeleting: Boolean,
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
-    onDeletePlay: () -> Unit
+    onDeletePlay: () -> Unit,
+    onPlayAgain: () -> Unit = {}
 ) {
     AnimatedDialog(onDismissRequest = onDismiss) {
         LazyColumn(
@@ -970,27 +976,41 @@ private fun PlayDetailsDialog(
 
                 item {
                     Spacer(Modifier.height(8.dp))
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        BoardFlowSecondaryButton(
-                            onClick = onEdit,
+                        BoardFlowButton(
+                            onClick = onPlayAgain,
                             enabled = !isDeleting,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.EmojiEvents, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Edit")
+                            Text("Play again")
                         }
-                        BoardFlowDestructiveButton(
-                            onClick = onDeletePlay,
-                            enabled = !isDeleting,
-                            modifier = Modifier.weight(1f)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(BoardFlowIcons.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Delete")
+                            BoardFlowSecondaryButton(
+                                onClick = onEdit,
+                                enabled = !isDeleting,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Edit")
+                            }
+                            BoardFlowDestructiveButton(
+                                onClick = onDeletePlay,
+                                enabled = !isDeleting,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(BoardFlowIcons.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Delete")
+                            }
                         }
                     }
                 }

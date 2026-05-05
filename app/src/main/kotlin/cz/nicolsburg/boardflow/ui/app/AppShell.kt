@@ -114,6 +114,8 @@ fun BoardFlowApp(
         syncViewModel.loadCachedCollection()
         appViewModel.loadPlayHistory()
         appViewModel.loadCachedBggPlays()
+        appViewModel.loadSessionContext()
+        appViewModel.loadPlayers()
     }
 
     LaunchedEffect(account?.name, spreadsheetId, hasBggCredentials) {
@@ -288,14 +290,15 @@ fun BoardFlowApp(
                 NewPlayScreen(
                     viewModel = appViewModel,
                     onGameSelected = { game ->
-                        appViewModel.selectedGame = game
                         if (appViewModel.isOnline()) {
                             navController.navigate(AppRoutes.scan(game.id, game.name))
                         } else {
-                            appViewModel.initEditablePlayers(emptyList())
                             appViewModel.setExtractedPlayManual()
                             navController.navigate(AppRoutes.LOG_PLAY)
                         }
+                    },
+                    onPlayAgain = {
+                        navController.navigate(AppRoutes.LOG_PLAY)
                     }
                 )
             }
@@ -303,7 +306,11 @@ fun BoardFlowApp(
             composable(AppRoutes.HISTORY) {
                 HistoryScreen(
                     viewModel = appViewModel,
-                    onActiveTabChange = { activeTabLabel = it }
+                    onActiveTabChange = { activeTabLabel = it },
+                    onPlayAgain = { play ->
+                        appViewModel.setupPlayAgainFromPlay(play)
+                        navController.navigate(AppRoutes.LOG_PLAY)
+                    }
                 )
             }
 
@@ -369,6 +376,7 @@ fun BoardFlowApp(
                 LogPlayScreen(
                     viewModel = appViewModel,
                     onPosted = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) },
+                    onChangeGame = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) },
                     onNavigateBack = { requestLeaveLogPlay() },
                     onDiscard = { requestLeaveLogPlay() }
                 )
