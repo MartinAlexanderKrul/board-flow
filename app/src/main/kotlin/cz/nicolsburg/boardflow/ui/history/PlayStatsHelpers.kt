@@ -5,11 +5,11 @@ import cz.nicolsburg.boardflow.model.Player
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-enum class StatsTimeRange(val label: String) {
+enum class StatsTimeRange(val label: String, val subtitle: String = label) {
     ALL("All time"),
     THIS_YEAR("This year"),
     THIS_MONTH("This month"),
-    LAST_30("Last 30 d")
+    LAST_30("Last 30 d", "Last 30 days")
 }
 
 fun List<LoggedPlay>.filterByTimeRange(range: StatsTimeRange): List<LoggedPlay> {
