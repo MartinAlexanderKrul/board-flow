@@ -3,17 +3,22 @@
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
@@ -24,8 +29,12 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowDestructiveButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
+import cz.nicolsburg.boardflow.ui.history.RivalryStat
+import cz.nicolsburg.boardflow.ui.history.playerCurrentWinStreak
+import cz.nicolsburg.boardflow.ui.history.rivalriesForPlayer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -33,7 +42,8 @@ internal data class PlayerStats(
     val totalPlays: Int,
     val wins: Int,
     val lastPlayedDate: String?,
-    val favoriteGame: String?
+    val favoriteGame: String?,
+    val currentWinStreak: Int = 0
 )
 
 internal val PlayerStats.winRate: Int
@@ -45,7 +55,9 @@ internal fun List<LoggedPlay>.statsForPlayer(player: Player): PlayerStats {
     val wins = myPlays.count { play -> play.players.any { it.name.lowercase().trim() in names && it.isWinner } }
     val lastDate = myPlays.maxOfOrNull { it.date }?.let { formatPlayDate(it) }
     val favGame = myPlays.groupingBy { it.gameName }.eachCount().maxByOrNull { it.value }?.key
-    return PlayerStats(totalPlays = myPlays.size, wins = wins, lastPlayedDate = lastDate, favoriteGame = favGame)
+    val streak = playerCurrentWinStreak(names)
+    return PlayerStats(totalPlays = myPlays.size, wins = wins, lastPlayedDate = lastDate,
+        favoriteGame = favGame, currentWinStreak = streak)
 }
 
 internal fun formatPlayDate(yyyyMMdd: String): String = try {
@@ -60,6 +72,7 @@ fun PlayersScreen(viewModel: AppViewModel) {
 
     var showAddDialog  by remember { mutableStateOf(false) }
     var editingPlayer  by remember { mutableStateOf<Player?>(null) }
+    var viewingPlayer  by remember { mutableStateOf<Player?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.loadPlayers(); viewModel.loadPlayHistory(); viewModel.loadCachedBggPlays()
@@ -70,6 +83,21 @@ fun PlayersScreen(viewModel: AppViewModel) {
             onDismiss = { showAddDialog = false },
             onAdd = { name -> viewModel.addNewPlayer(name); showAddDialog = false }
         )
+    }
+
+    viewingPlayer?.let { vp ->
+        val livePlayer = players.find { it.id == vp.id }
+        if (livePlayer != null) {
+            val stats = remember(sourcePlays, livePlayer) { sourcePlays.statsForPlayer(livePlayer) }
+            val rivalries = remember(sourcePlays, livePlayer) { sourcePlays.rivalriesForPlayer(livePlayer) }
+            PlayerDetailDialog(
+                player = livePlayer,
+                stats = stats,
+                rivalries = rivalries,
+                onDismiss = { viewingPlayer = null },
+                onEdit = { editingPlayer = livePlayer; viewingPlayer = null }
+            )
+        } else { viewingPlayer = null }
     }
 
     editingPlayer?.let { ep ->
@@ -118,7 +146,9 @@ fun PlayersScreen(viewModel: AppViewModel) {
                     contentPadding = PaddingValues(vertical = 8.dp)) {
                     items(players, key = { it.id }) { player ->
                         val stats = remember(sourcePlays, player) { sourcePlays.statsForPlayer(player) }
-                        PlayerListItem(player = player, stats = stats, onEdit = { editingPlayer = player })
+                        PlayerListItem(player = player, stats = stats,
+                            onTap = { viewingPlayer = player },
+                            onEdit = { editingPlayer = player })
                     }
                 }
             }
@@ -127,8 +157,8 @@ fun PlayersScreen(viewModel: AppViewModel) {
 }
 
 @Composable
-internal fun PlayerListItem(player: Player, stats: PlayerStats, onEdit: () -> Unit) {
-    SectionCard {
+internal fun PlayerListItem(player: Player, stats: PlayerStats, onTap: () -> Unit = {}, onEdit: () -> Unit) {
+    SectionCard(onClick = onTap) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top
@@ -352,6 +382,23 @@ fun PlayersTabContent(
     onEditPlayer: (Player) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var viewingPlayer by remember { mutableStateOf<Player?>(null) }
+
+    viewingPlayer?.let { vp ->
+        val livePlayer = players.find { it.id == vp.id }
+        if (livePlayer != null) {
+            val stats = remember(sourcePlays, livePlayer) { sourcePlays.statsForPlayer(livePlayer) }
+            val rivalries = remember(sourcePlays, livePlayer) { sourcePlays.rivalriesForPlayer(livePlayer) }
+            PlayerDetailDialog(
+                player = livePlayer,
+                stats = stats,
+                rivalries = rivalries,
+                onDismiss = { viewingPlayer = null },
+                onEdit = { onEditPlayer(livePlayer); viewingPlayer = null }
+            )
+        } else { viewingPlayer = null }
+    }
+
     if (players.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
@@ -385,7 +432,171 @@ fun PlayersTabContent(
         ) {
             items(players, key = { it.id }) { player ->
                 val stats = remember(sourcePlays, player) { sourcePlays.statsForPlayer(player) }
-                PlayerListItem(player = player, stats = stats, onEdit = { onEditPlayer(player) })
+                PlayerListItem(player = player, stats = stats,
+                    onTap = { viewingPlayer = player },
+                    onEdit = { onEditPlayer(player) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerDetailDialog(
+    player: Player,
+    stats: PlayerStats,
+    rivalries: List<RivalryStat>,
+    onDismiss: () -> Unit,
+    onEdit: () -> Unit
+) {
+    PlayerDialog(
+        onDismissRequest = onDismiss,
+        title = player.displayName,
+        actions = {
+            BoardFlowSecondaryButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Edit Player")
+            }
+        }
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            if (player.bggUsername.isNotBlank() || player.aliases.isNotEmpty()) {
+                SectionCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (player.bggUsername.isNotBlank()) {
+                            DetailRow("BGG username", player.bggUsername)
+                        }
+                        if (player.aliases.isNotEmpty()) {
+                            DetailRow("Aliases", player.aliases.joinToString(", "))
+                        }
+                    }
+                }
+            }
+
+            if (stats.totalPlays > 0) {
+                SectionCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("Play Stats", style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            PlayerStatCell("Plays", "${stats.totalPlays}", Modifier.weight(1f))
+                            PlayerStatCell("Wins", "${stats.wins}", Modifier.weight(1f))
+                            PlayerStatCell("Win rate", "${stats.winRate}%", Modifier.weight(1f))
+                        }
+                        if (stats.currentWinStreak >= 2) {
+                            DetailRow("Win streak", "${stats.currentWinStreak} in a row 🔥",
+                                valueColor = MaterialTheme.colorScheme.primary)
+                        }
+                        stats.lastPlayedDate?.let { DetailRow("Last played", it) }
+                        stats.favoriteGame?.let {
+                            DetailRow("Favourite game", it,
+                                valueColor = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+            }
+
+            if (rivalries.isNotEmpty()) {
+                SectionCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("Rivalries", style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold)
+                        rivalries.forEach { rivalry ->
+                            RivalryRow(rivalry = rivalry)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerStatCell(label: String, value: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary)
+            Text(label, style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String, valueColor: Color = Color.Unspecified) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(88.dp))
+        Text(value, style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f),
+            color = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else valueColor)
+    }
+}
+
+@Composable
+private fun RivalryRow(rivalry: RivalryStat) {
+    val initial = rivalry.opponentName.take(1).uppercase()
+    val winFraction = if (rivalry.playsTogetherCount > 0)
+        rivalry.myWins.toFloat() / rivalry.playsTogetherCount else 0f
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Surface(
+            modifier = Modifier.size(28.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(initial, style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontSize = 11.sp)
+            }
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                Text(rivalry.opponentName, style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium)
+                Text("${rivalry.playsTogetherCount} plays together",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            LinearProgressIndicator(
+                progress = { winFraction },
+                modifier = Modifier.fillMaxWidth().height(4.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.EmojiEvents, contentDescription = null,
+                    modifier = Modifier.size(11.dp),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                Text("${rivalry.myWins}–${rivalry.theirWins}",
+                    style = MaterialTheme.typography.labelSmall.withTabularNumbers(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

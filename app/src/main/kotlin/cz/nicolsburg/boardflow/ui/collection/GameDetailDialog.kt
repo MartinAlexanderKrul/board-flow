@@ -44,16 +44,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.model.GameItem
+import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
+import cz.nicolsburg.boardflow.ui.history.GameHistoryStats
+import cz.nicolsburg.boardflow.ui.history.gameHistoryStats
 
 @Composable
 fun GameDetailsDialog(
     game: GameItem,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    historyPlays: List<LoggedPlay> = emptyList()
 ) {
     val context = LocalContext.current
     val bggUrl = bggSleevesUrl(game)
@@ -63,6 +67,7 @@ fun GameDetailsDialog(
     val ratingStats = remember(game) { ratingStats(game) }
     val playerPreferenceStats = remember(game) { playerPreferenceStats(game) }
     val customRows = remember(game) { customDetailRows(game) }
+    val myStats = remember(game, historyPlays) { historyPlays.gameHistoryStats(game.identity.name) }
 
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
@@ -178,6 +183,14 @@ fun GameDetailsDialog(
                     }
                 }
 
+                if (myStats != null) {
+                    item {
+                        SectionBlock(title = "Your Stats") {
+                            YourStatsGrid(myStats)
+                        }
+                    }
+                }
+
                 if (playerPreferenceStats.isNotEmpty()) {
                     item {
                         SectionBlock(title = "Players") {
@@ -270,6 +283,24 @@ fun GameDetailsDialog(
                 }
         }
     }
+}
+
+@Composable
+private fun YourStatsGrid(stats: GameHistoryStats) {
+    val rows = buildList {
+        add(SectionStat("Plays logged", "${stats.plays}"))
+        stats.lastPlayedDate?.let { add(SectionStat("Last played", it)) }
+        stats.avgDurationMinutes?.let { avg ->
+            val label = if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"
+            add(SectionStat("Avg duration", label))
+        }
+        stats.bestScore?.let { (name, score) -> add(SectionStat("Best score", "$score by $name")) }
+        stats.mostWins?.let { (name, wins) -> add(SectionStat("Most wins", "$name ($wins)")) }
+        if (stats.commonPlayers.isNotEmpty()) {
+            add(SectionStat("Common players", stats.commonPlayers.joinToString(", ")))
+        }
+    }
+    DetailGrid(stats = rows, emphasizeSurface = false)
 }
 
 @Composable

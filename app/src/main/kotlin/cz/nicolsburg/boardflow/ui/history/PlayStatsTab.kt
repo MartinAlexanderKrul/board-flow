@@ -3,6 +3,7 @@ package cz.nicolsburg.boardflow.ui.history
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,8 +20,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilterChip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.History
@@ -36,7 +39,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -175,9 +180,12 @@ internal fun StatsContent(
     players: List<Player>,
     modifier: Modifier = Modifier
 ) {
-    val statPlays = remember(plays) { plays.filter { it.nowInStats } }
+    var timeRange by remember { mutableStateOf(StatsTimeRange.ALL) }
+    val statPlays = remember(plays, timeRange) {
+        plays.filter { it.nowInStats }.filterByTimeRange(timeRange)
+    }
 
-    if (statPlays.isEmpty()) {
+    if (plays.none { it.nowInStats }) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -229,13 +237,47 @@ internal fun StatsContent(
         statPlays.filter { it.durationMinutes > 0 }.maxByOrNull { it.durationMinutes }
             ?.let { it.gameName to it.durationMinutes }
     }
+    val hotStreak      = remember(statPlays, players) { statPlays.hotPlayerStreak(players) }
+    val mostThisMonth  = remember(statPlays) {
+        if (timeRange == StatsTimeRange.ALL) statPlays.mostPlayedThisMonth() else null
+    }
 
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item { SummarySection(totalPlays, uniqueGames, totalMinutes, players.size, playsThisYear) }
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatsTimeRange.entries.forEach { range ->
+                    FilterChip(
+                        selected = timeRange == range,
+                        onClick = { timeRange = range },
+                        label = { Text(range.label, style = MaterialTheme.typography.labelMedium) }
+                    )
+                }
+            }
+        }
+
+        if (statPlays.isEmpty()) {
+            item {
+                Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        "No plays in this period",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+
+        item { SummarySection(totalPlays, uniqueGames, totalMinutes, players.size,
+            if (timeRange == StatsTimeRange.ALL) playsThisYear else 0) }
 
         if (months.any { it.count > 0 }) {
             item { ActivitySection(months) }
@@ -259,9 +301,13 @@ internal fun StatsContent(
                 currentStreak = curStreak,
                 bestStreak = bestStreak,
                 avgDuration = avgDuration,
-                longestSession = longestSession
+                longestSession = longestSession,
+                hotPlayerStreak = hotStreak,
+                mostThisMonth = mostThisMonth
             )
         }
+
+        } // end else (statPlays not empty)
     }
 }
 
@@ -743,7 +789,9 @@ private fun InsightsSection(
     currentStreak: Int,
     bestStreak: Int,
     avgDuration: Int?,
-    longestSession: Pair<String, Int>?
+    longestSession: Pair<String, Int>?,
+    hotPlayerStreak: Pair<String, Int>? = null,
+    mostThisMonth: Pair<String, Int>? = null
 ) {
     SectionCard {
         StatsCardHeader(title = "Insights")
@@ -785,6 +833,24 @@ private fun InsightsSection(
                     icon = Icons.Default.EmojiEvents,
                     value = if (minutes >= 60) "${minutes / 60}h ${minutes % 60}m" else "${minutes}m",
                     label = "Longest session",
+                    detail = name,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            hotPlayerStreak?.let { (name, streak) ->
+                InsightChip(
+                    icon = Icons.Default.LocalFireDepartment,
+                    value = "${streak}W",
+                    label = "Hot streak",
+                    detail = "$name on a ${streak}-win streak 🔥",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            mostThisMonth?.let { (name, count) ->
+                InsightChip(
+                    icon = Icons.Default.Star,
+                    value = "${count}×",
+                    label = "This month",
                     detail = name,
                     modifier = Modifier.weight(1f)
                 )

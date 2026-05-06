@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.model.GameItem
+import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
@@ -113,6 +114,7 @@ private enum class TabMode(val label: String) {
 @Composable
 fun CollectionScreen(
     syncViewModel: SyncViewModel,
+    historyPlays: List<LoggedPlay> = emptyList(),
     onHeaderFilterStateChange: (visible: Boolean, hasActiveFilters: Boolean, onClick: (() -> Unit)?) -> Unit = { _, _, _ -> },
     onActiveTabChange: (String?) -> Unit = {}
 ) {
@@ -228,7 +230,8 @@ fun CollectionScreen(
     selectedGame?.let { game ->
         GameDetailsDialog(
             game = game,
-            onDismiss = { selectedGame = null }
+            onDismiss = { selectedGame = null },
+            historyPlays = historyPlays
         )
     }
 

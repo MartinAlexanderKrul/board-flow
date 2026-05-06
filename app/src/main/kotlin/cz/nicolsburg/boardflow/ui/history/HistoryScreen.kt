@@ -107,6 +107,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowMotion
+import cz.nicolsburg.boardflow.ui.history.playInsights
 import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
@@ -288,6 +289,7 @@ fun HistoryScreen(
         PlayDetailsDialog(
             play = play,
             players = players,
+            historyPlays = historyPlays,
             isDeleting = deletingPlayId == play.id,
             onDismiss = { selectedPlay = null },
             onEdit = { editingPlay = play; selectedPlay = null },
@@ -882,12 +884,14 @@ private fun PlayerRow(player: PlayerResult, displayName: String) {
 private fun PlayDetailsDialog(
     play: LoggedPlay,
     players: List<Player>,
+    historyPlays: List<LoggedPlay> = emptyList(),
     isDeleting: Boolean,
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
     onDeletePlay: () -> Unit,
     onPlayAgain: () -> Unit = {}
 ) {
+    val insights = remember(play, historyPlays) { historyPlays.playInsights(play) }
     AnimatedDialog(onDismissRequest = onDismiss) {
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -932,6 +936,38 @@ private fun PlayDetailsDialog(
                         }
                         if (isDeleting) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        }
+                    }
+                }
+
+                if (insights.isNotEmpty()) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            insights.forEach { insight ->
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Star,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            insight,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }

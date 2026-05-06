@@ -100,6 +100,7 @@ fun BoardFlowApp(
     val account by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
     val hasBggCredentials by syncViewModel.hasBggCredentials.collectAsState()
+    val historyPlays by appViewModel.historyPlays.collectAsState()
     val logPlayHasUnsavedChanges by appViewModel.logPlayHasUnsavedChanges.collectAsState()
     var startupSilentSyncRequested by rememberSaveable { mutableStateOf(false) }
     var showDiscardLogPlayConfirm by rememberSaveable { mutableStateOf(false) }
@@ -328,6 +329,7 @@ fun BoardFlowApp(
             composable(AppRoutes.COLLECTION) {
                 CollectionScreen(
                     syncViewModel = syncViewModel,
+                    historyPlays = historyPlays,
                     onHeaderFilterStateChange = { visible, hasActiveFilters, onClick ->
                         collectionHeaderFilterVisible = visible
                         collectionHeaderHasActiveFilters = hasActiveFilters
