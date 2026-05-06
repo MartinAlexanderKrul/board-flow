@@ -1107,7 +1107,18 @@ private fun EditPlayDialog(
 
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("Players", style = MaterialTheme.typography.titleSmall)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Players", style = MaterialTheme.typography.titleSmall)
+                            BoardFlowIconButton(onClick = {
+                                editPlayers.add(PlayerResult("", "0", false))
+                            }) {
+                                Icon(Icons.Default.Add, contentDescription = "Add player", modifier = Modifier.size(20.dp))
+                            }
+                        }
                         editPlayers.forEachIndexed { index, player ->
                             EditPlayerRow(
                                 player = player,
@@ -1115,7 +1126,8 @@ private fun EditPlayDialog(
                                 onScoreChange = { editPlayers[index] = player.copy(score = it) },
                                 onColorChange = { editPlayers[index] = player.copy(color = it) },
                                 onToggleWinner = { editPlayers[index] = player.copy(isWinner = !player.isWinner) },
-                                onFirstPlayChange = { editPlayers[index] = player.copy(isNew = it) }
+                                onFirstPlayChange = { editPlayers[index] = player.copy(isNew = it) },
+                                onRemove = { editPlayers.removeAt(index) }
                             )
                         }
                     }
@@ -1197,7 +1209,8 @@ private fun EditPlayerRow(
     onScoreChange: (String) -> Unit,
     onColorChange: (String) -> Unit,
     onToggleWinner: () -> Unit,
-    onFirstPlayChange: (Boolean) -> Unit
+    onFirstPlayChange: (Boolean) -> Unit,
+    onRemove: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     val label = player.name.ifBlank { "Unnamed player" }
@@ -1284,6 +1297,14 @@ private fun EditPlayerRow(
                         Icons.Default.EmojiEvents,
                         contentDescription = "Toggle winner",
                         tint = if (player.isWinner) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                BoardFlowIconButton(onClick = onRemove) {
+                    Icon(
+                        BoardFlowIcons.Delete,
+                        contentDescription = "Remove player",
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(18.dp)
                     )
                 }

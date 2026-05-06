@@ -197,6 +197,9 @@ data class SessionContext(
 ) {
     fun isActive(): Boolean =
         System.currentTimeMillis() - lastPlayTimestamp < 4L * 60 * 60 * 1000
+
+    fun isRecent(): Boolean =
+        System.currentTimeMillis() - lastPlayTimestamp < 60L * 60 * 1000
 }
 
 sealed class RecordMoment {

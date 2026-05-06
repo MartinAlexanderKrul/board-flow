@@ -42,6 +42,7 @@ fun NewPlayScreen(
     val collectionLoaded by viewModel.collectionLoaded.collectAsState()
     val sessionBannerVisible by viewModel.sessionBannerVisible.collectAsState()
     val sessionContext by viewModel.sessionContext.collectAsState()
+    val changeGameActive by viewModel.changeGameSessionActive.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.loadRecentGames() }
 
@@ -52,7 +53,7 @@ fun NewPlayScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Continue last session banner
-        AnimatedVisibility(visible = sessionBannerVisible) {
+        AnimatedVisibility(visible = sessionBannerVisible && !changeGameActive) {
             sessionContext?.let { ctx ->
                 SessionContinueBanner(
                     context   = ctx,
@@ -78,6 +79,15 @@ fun NewPlayScreen(
                 placeholder = "Search games...",
                 modifier = Modifier.fillMaxWidth()
             )
+
+            AnimatedVisibility(visible = changeGameActive) {
+                Text(
+                    "Changing game — players from last game will be kept",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                )
+            }
 
             when {
                 loading -> LazyColumn(
@@ -180,9 +190,16 @@ private fun SessionContinueBanner(
 ) {
     val playerNames = context.players.take(3).joinToString(", ") { it.name.trim() }
         .let { if (context.players.size > 3) "$it +${context.players.size - 3}" else it }
+    val elapsedMs = System.currentTimeMillis() - context.lastPlayTimestamp
+    val elapsedLabel = when {
+        elapsedMs < 60_000L -> "just now"
+        elapsedMs < 3_600_000L -> "${elapsedMs / 60_000}m ago"
+        else -> "${elapsedMs / 3_600_000}h ago"
+    }
     val subtitle = buildString {
         append(context.gameName)
         if (playerNames.isNotBlank()) append(" · $playerNames")
+        append(" · $elapsedLabel")
     }
 
     Surface(
