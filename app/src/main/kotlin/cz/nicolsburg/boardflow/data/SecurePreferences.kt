@@ -167,6 +167,59 @@ class SecurePreferences(context: Context) {
         } catch (e: Exception) { emptyList() }
     }
 
+    // --- Log play session context ---
+    fun saveSessionContext(ctx: cz.nicolsburg.boardflow.model.SessionContext) {
+        val playersArr = org.json.JSONArray()
+        ctx.players.forEach { p ->
+            playersArr.put(JSONObject().apply {
+                put("name", p.name)
+                put("score", p.score)
+                put("isWinner", p.isWinner)
+                put("color", p.color)
+                put("rating", p.rating)
+                put("isNew", p.isNew)
+            })
+        }
+        val json = JSONObject().apply {
+            put("gameId", ctx.gameId)
+            put("gameName", ctx.gameName)
+            put("location", ctx.location)
+            put("lastPlayTimestamp", ctx.lastPlayTimestamp)
+            put("players", playersArr)
+        }
+        prefs.edit().putString(KEY_SESSION_CONTEXT, json.toString()).apply()
+    }
+
+    fun loadSessionContext(): cz.nicolsburg.boardflow.model.SessionContext? {
+        val jsonStr = prefs.getString(KEY_SESSION_CONTEXT, null) ?: return null
+        return try {
+            val json = JSONObject(jsonStr)
+            val arr = json.getJSONArray("players")
+            val players = (0 until arr.length()).map { i ->
+                val p = arr.getJSONObject(i)
+                cz.nicolsburg.boardflow.model.PlayerResult(
+                    name     = p.getString("name"),
+                    score    = p.optString("score", "0"),
+                    isWinner = p.optBoolean("isWinner", false),
+                    color    = p.optString("color", ""),
+                    rating   = p.optString("rating", ""),
+                    isNew    = p.optBoolean("isNew", false)
+                )
+            }
+            cz.nicolsburg.boardflow.model.SessionContext(
+                gameId            = json.getInt("gameId"),
+                gameName          = json.getString("gameName"),
+                players           = players,
+                location          = json.optString("location", ""),
+                lastPlayTimestamp = json.getLong("lastPlayTimestamp")
+            )
+        } catch (_: Exception) { null }
+    }
+
+    fun clearSessionContext() {
+        prefs.edit().remove(KEY_SESSION_CONTEXT).apply()
+    }
+
     // --- Sleeves excluded games ---
     fun getSleevesExcludedGameIds(): Set<String> {
         val json = prefs.getString(KEY_SLEEVES_EXCLUDED, "[]") ?: "[]"
@@ -287,5 +340,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_GOOGLE_AUTHORIZED_EMAIL = "google_authorized_email"
         private const val KEY_COLLECTION_SNAPSHOT_PREFIX = "collection_snapshot_"
         private const val KEY_SLEEVES_EXCLUDED = "sleeves_excluded_game_ids"
+        private const val KEY_SESSION_CONTEXT  = "log_play_session_context"
     }
 }

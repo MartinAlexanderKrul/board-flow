@@ -114,6 +114,8 @@ fun BoardFlowApp(
         syncViewModel.loadCachedCollection()
         appViewModel.loadPlayHistory()
         appViewModel.loadCachedBggPlays()
+        appViewModel.loadSessionContext()
+        appViewModel.loadPlayers()
     }
 
     LaunchedEffect(account?.name, spreadsheetId, hasBggCredentials) {
@@ -126,8 +128,19 @@ fun BoardFlowApp(
     // Bridge: keep AppViewModel's game list in sync with the rich collection so all
     // screens (including Log Play) use the same cached data.
     val collectionGames by syncViewModel.collectionGames.collectAsState()
+    val syncBusy by syncViewModel.busy.collectAsState()
+
     LaunchedEffect(collectionGames) {
         appViewModel.updateFromCollection(collectionGames)
+    }
+
+    // Reload BGG play cache after any sync completes so historyPlays (and Stats) reflect
+    // fresh data. SyncViewModel writes to Room via its own store; AppViewModel's _bggPlays
+    // is not notified otherwise. Guard on !syncBusy prevents reads mid-sync and collapses
+    // the two triggers (collectionGames change + busy→false) into one effect so there is
+    // no duplicate call when both change together at sync completion.
+    LaunchedEffect(collectionGames, syncBusy) {
+        if (!syncBusy) appViewModel.loadCachedBggPlays()
     }
 
     // Tracks how far the current screen has scrolled so the header can show a divider.
@@ -288,14 +301,15 @@ fun BoardFlowApp(
                 NewPlayScreen(
                     viewModel = appViewModel,
                     onGameSelected = { game ->
-                        appViewModel.selectedGame = game
                         if (appViewModel.isOnline()) {
                             navController.navigate(AppRoutes.scan(game.id, game.name))
                         } else {
-                            appViewModel.initEditablePlayers(emptyList())
                             appViewModel.setExtractedPlayManual()
                             navController.navigate(AppRoutes.LOG_PLAY)
                         }
+                    },
+                    onPlayAgain = {
+                        navController.navigate(AppRoutes.LOG_PLAY)
                     }
                 )
             }
@@ -303,7 +317,11 @@ fun BoardFlowApp(
             composable(AppRoutes.HISTORY) {
                 HistoryScreen(
                     viewModel = appViewModel,
-                    onActiveTabChange = { activeTabLabel = it }
+                    onActiveTabChange = { activeTabLabel = it },
+                    onPlayAgain = { play ->
+                        appViewModel.setupPlayAgainFromPlay(play)
+                        navController.navigate(AppRoutes.LOG_PLAY)
+                    }
                 )
             }
 
@@ -368,7 +386,11 @@ fun BoardFlowApp(
             composable(AppRoutes.LOG_PLAY) {
                 LogPlayScreen(
                     viewModel = appViewModel,
-                    onPosted = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) },
+                    onPosted = {
+                        appViewModel.clearLogPlayFlow()
+                        navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false)
+                    },
+                    onChangeGame = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) },
                     onNavigateBack = { requestLeaveLogPlay() },
                     onDiscard = { requestLeaveLogPlay() }
                 )

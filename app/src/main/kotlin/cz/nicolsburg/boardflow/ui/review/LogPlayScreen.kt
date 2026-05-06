@@ -1,6 +1,13 @@
-﻿package cz.nicolsburg.boardflow.ui.review
+package cz.nicolsburg.boardflow.ui.review
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -17,29 +24,47 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.GameRelations
+import cz.nicolsburg.boardflow.model.RecordMoment
+import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.model.Player as BggPlayer
 import cz.nicolsburg.boardflow.model.PlayerResult
+import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-@OptIn(ExperimentalMaterial3Api::class)
+private data class PostSaveInfo(
+    val sessionContext: SessionContext,
+    val record: RecordMoment?
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun LogPlayScreen(
     viewModel: AppViewModel,
     onPosted: () -> Unit,
+    onChangeGame: () -> Unit,
     onNavigateBack: () -> Unit,
     onDiscard: () -> Unit = onNavigateBack
 ) {
@@ -49,13 +74,23 @@ fun LogPlayScreen(
     val gameRelations   by viewModel.gameRelations.collectAsState()
     val additionalGames by viewModel.additionalGames.collectAsState()
 
+    // Read prefill once on first composition (consumed from ViewModel).
+    val prefill = remember { viewModel.takePrefill() }
+
     var date           by remember { mutableStateOf(LocalDate.now().toString()) }
-    var duration       by remember { mutableStateOf("") }
-    var location       by remember { mutableStateOf("") }
+    var duration       by remember { mutableStateOf(prefill?.durationSuggestion ?: "") }
+    var location       by remember { mutableStateOf(prefill?.location ?: "") }
     var comments       by remember { mutableStateOf("") }
-    var errorMsg       by remember { mutableStateOf<String?>(null) }
-    var showAiOutput   by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var errorMsg          by remember { mutableStateOf<String?>(null) }
+    var showAiOutput      by remember { mutableStateOf(false) }
+    var showDatePicker    by remember { mutableStateOf(false) }
+    var focusFirstScore   by remember { mutableStateOf(false) }
+
+    // Post-save card state. Non-null while post-save card is visible.
+    var postSaveInfo     by remember { mutableStateOf<PostSaveInfo?>(null) }
+    // Snapshot kept alive so the exit fade animation has content to render.
+    var lastPostSaveInfo by remember { mutableStateOf<PostSaveInfo?>(null) }
+    if (postSaveInfo != null) lastPostSaveInfo = postSaveInfo
 
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = runCatching {
@@ -108,12 +143,28 @@ fun LogPlayScreen(
     }
 
     BackHandler {
-        onDiscard()
+        if (postSaveInfo != null) {
+            // Treat back as "Done" from post-save card
+            viewModel.clearSession()
+            postSaveInfo = null
+            onPosted()
+        } else {
+            onDiscard()
+        }
     }
 
-    // FAB label updates when additional games are queued
     val online = viewModel.isOnline()
     val totalGames = 1 + additionalGames.size
+
+    // Compute frequent players in composable scope so remember is valid.
+    val gameId = viewModel.selectedGame?.id ?: 0
+    val excludedNames = remember(players) { players.map { it.name.trim() }.toSet() }
+    val frequentPlayers = remember(gameId, excludedNames) {
+        viewModel.getFrequentPlayers(gameId, excludedNames)
+    }
+    val recentPlayers = remember(excludedNames) {
+        viewModel.getRecentPlayers(excludedNames)
+    }
     val fabLabel = when {
         posting               -> "Posting..."
         !online && totalGames > 1 -> "Save $totalGames plays locally"
@@ -122,6 +173,7 @@ fun LogPlayScreen(
         else                  -> "Log Play to BGG"
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         floatingActionButton = {
@@ -131,13 +183,32 @@ fun LogPlayScreen(
                 onClick = {
                     if (!posting) {
                         errorMsg = null
+                        val parsedDate = runCatching { LocalDate.parse(date) }.getOrDefault(LocalDate.now())
+                        val durationMin = duration.toIntOrNull() ?: 0
+                        viewModel.captureHistorySnapshot()
                         viewModel.postPlay(
-                            date            = runCatching { LocalDate.parse(date) }.getOrDefault(LocalDate.now()),
-                            durationMinutes = duration.toIntOrNull() ?: 0,
+                            date            = parsedDate,
+                            durationMinutes = durationMin,
                             location        = location,
                             comments        = comments,
-                            onSuccess       = { onPosted() },
-                            onError         = { errorMsg = it }
+                            onSuccess       = {
+                                val game = viewModel.selectedGame
+                                if (game != null) {
+                                    val ctx = SessionContext(
+                                        gameId            = game.id,
+                                        gameName          = game.name,
+                                        players           = players,
+                                        location          = location,
+                                        lastPlayTimestamp = System.currentTimeMillis()
+                                    )
+                                    viewModel.saveSession(game, players, location)
+                                    val record = viewModel.detectRecord(game.id, game.name, players)
+                                    postSaveInfo = PostSaveInfo(ctx, record)
+                                } else {
+                                    onPosted()
+                                }
+                            },
+                            onError = { errorMsg = it }
                         )
                     }
                 }
@@ -179,7 +250,6 @@ fun LogPlayScreen(
                             fontWeight = FontWeight.SemiBold
                         )
 
-                        // Date + Duration
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Column(
                                 modifier = Modifier.weight(1f),
@@ -254,7 +324,7 @@ fun LogPlayScreen(
                 }
             }
 
-            // Players section
+            // Players header
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -286,6 +356,18 @@ fun LogPlayScreen(
                             Icon(BoardFlowIcons.Add, "Add player")
                         }
                     }
+                }
+            }
+
+            // Frequent player chips
+            if (frequentPlayers.isNotEmpty() || recentPlayers.isNotEmpty()) {
+                item {
+                    FrequentPlayerChips(
+                        gameName        = gameName,
+                        frequentPlayers = frequentPlayers,
+                        recentPlayers   = recentPlayers,
+                        onAddPlayer     = { viewModel.addPlayerFromRoster(it) }
+                    )
                 }
             }
 
@@ -335,10 +417,12 @@ fun LogPlayScreen(
             // Player rows
             itemsIndexed(players) { index, player ->
                 PlayerRow(
-                    player      = player,
-                    onUpdate    = { viewModel.updatePlayer(index, it) },
-                    onRemove    = { viewModel.removePlayer(index) },
-                    suggestions = remember(player.name) { viewModel.getPlayerSuggestions(player.name) }
+                    player           = player,
+                    onUpdate         = { viewModel.updatePlayer(index, it) },
+                    onRemove         = { viewModel.removePlayer(index) },
+                    suggestions      = remember(player.name) { viewModel.getPlayerSuggestions(player.name) },
+                    requestScoreFocus = index == 0 && focusFirstScore,
+                    onFocusDone      = { focusFirstScore = false }
                 )
             }
 
@@ -361,11 +445,293 @@ fun LogPlayScreen(
                 }
             }
 
-            // Space for FAB
             item { Spacer(Modifier.height(80.dp)) }
-        } // end LazyColumn
+        }
+    }
+
+    // Post-save overlay — keeps form visible underneath, dims background
+    AnimatedVisibility(
+        visible = postSaveInfo != null,
+        enter   = fadeIn(tween(180)),
+        exit    = fadeOut(tween(160))
+    ) {
+        val info = lastPostSaveInfo ?: return@AnimatedVisibility
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.35f)),
+            contentAlignment = Alignment.Center
+        ) {
+            PostSaveCard(
+                info = info,
+                onPlayAgain = {
+                    viewModel.setupPlayAgain(info.sessionContext)
+                    date = LocalDate.now().toString()
+                    location = info.sessionContext.location
+                    duration = ""
+                    comments = ""
+                    errorMsg = null
+                    focusFirstScore = true
+                    postSaveInfo = null
+                },
+                onChangeGame = {
+                    viewModel.setupChangeGameSession(info.sessionContext)
+                    postSaveInfo = null
+                    onChangeGame()
+                },
+                onDone = {
+                    viewModel.clearSession()
+                    postSaveInfo = null
+                    onPosted()
+                }
+            )
+        }
+    }
+    } // end outer Box
+}
+
+// ---------------------------------------------------------------------------
+// Post-save card (overlay)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun PostSaveCard(
+    info: PostSaveInfo,
+    onPlayAgain: () -> Unit,
+    onChangeGame: () -> Unit,
+    onDone: () -> Unit
+) {
+    var animIn by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { animIn = true }
+
+    val players = info.sessionContext.players
+    val winners = players.filter { it.isWinner }
+    val hasNumericScores = players.any { it.score.trim().toDoubleOrNull() != null }
+    val sortedPlayers = if (hasNumericScores) {
+        players.sortedByDescending { it.score.trim().toDoubleOrNull() ?: Double.NEGATIVE_INFINITY }
+    } else {
+        players
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        AnimatedVisibility(
+            visible = animIn,
+            enter = scaleIn(
+                initialScale = 0.88f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness    = Spring.StiffnessMedium
+                )
+            ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium))
+        ) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Game name
+                    if (info.sessionContext.gameName.isNotBlank()) {
+                        Text(
+                            info.sessionContext.gameName,
+                            style     = MaterialTheme.typography.labelMedium,
+                            color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    // Winner callout
+                    if (winners.isNotEmpty()) {
+                        val winnerText = winners.joinToString(" & ") { it.name.trim() }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.EmojiEvents,
+                                contentDescription = null,
+                                tint     = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(36.dp)
+                            )
+                            Text(
+                                "$winnerText wins!",
+                                style      = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color      = MaterialTheme.colorScheme.onSurface,
+                                textAlign  = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    // Score table
+                    if (sortedPlayers.isNotEmpty()) {
+                        HorizontalDivider()
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            sortedPlayers.forEach { player ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (player.isWinner) {
+                                        Icon(
+                                            Icons.Default.EmojiEvents,
+                                            contentDescription = null,
+                                            tint     = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(Modifier.width(6.dp))
+                                    } else {
+                                        Spacer(Modifier.width(20.dp))
+                                    }
+                                    Text(
+                                        player.name.trim(),
+                                        style      = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                                        color      = if (player.isWinner) MaterialTheme.colorScheme.primary
+                                                     else MaterialTheme.colorScheme.onSurface,
+                                        modifier   = Modifier.weight(1f)
+                                    )
+                                    val score = player.score.trim()
+                                    Text(
+                                        score.ifBlank { "—" },
+                                        style      = if (player.isWinner) MaterialTheme.typography.bodyLarge
+                                                     else MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                                        color      = if (player.isWinner) MaterialTheme.colorScheme.primary
+                                                     else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Record moment — integrated inline, no separate surface
+                    info.record?.let { record ->
+                        Text(
+                            record.displayText,
+                            style     = MaterialTheme.typography.labelMedium,
+                            color     = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    // Actions
+                    HorizontalDivider()
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        BoardFlowButton(onClick = onPlayAgain, modifier = Modifier.fillMaxWidth()) {
+                            Text("Play again")
+                        }
+                        BoardFlowSecondaryButton(onClick = onChangeGame, modifier = Modifier.fillMaxWidth()) {
+                            Text("Change game")
+                        }
+                        TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+                            Text("Done")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Frequent player chips
+// ---------------------------------------------------------------------------
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FrequentPlayerChips(
+    gameName: String,
+    frequentPlayers: List<BggPlayer>,
+    recentPlayers: List<BggPlayer>,
+    onAddPlayer: (BggPlayer) -> Unit
+) {
+    val recentOnly = recentPlayers.filter { r -> frequentPlayers.none { it.id == r.id } }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        if (frequentPlayers.isNotEmpty()) {
+            Text(
+                if (gameName.isNotBlank()) "Frequent for $gameName" else "Frequent players",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement   = Arrangement.spacedBy(4.dp)
+            ) {
+                frequentPlayers.forEach { player ->
+                    PlayerChip(player = player, onClick = { onAddPlayer(player) })
+                }
+            }
+        }
+        if (recentOnly.isNotEmpty()) {
+            Text(
+                "Recent",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement   = Arrangement.spacedBy(4.dp)
+            ) {
+                recentOnly.forEach { player ->
+                    PlayerChip(player = player, onClick = { onAddPlayer(player) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerChip(player: BggPlayer, onClick: () -> Unit) {
+    SuggestionChip(
+        onClick = onClick,
+        label   = { Text(player.displayName, style = MaterialTheme.typography.labelMedium) },
+        icon    = {
+            Box(
+                modifier = Modifier
+                    .size(20.dp)
+                    .background(playerInitialColor(player.displayName), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text  = player.displayName.take(1).uppercase(),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp)
+                )
+            }
+        }
+    )
+}
+
+private fun playerInitialColor(name: String): Color {
+    val palette = listOf(
+        Color(0xFF7C4DFF), Color(0xFF448AFF), Color(0xFF00ACC1),
+        Color(0xFF43A047), Color(0xFFFF8F00), Color(0xFFE91E63),
+        Color(0xFF795548), Color(0xFF546E7A)
+    )
+    return palette[(name.hashCode() and 0x7FFFFFFF) % palette.size]
+}
+
+// ---------------------------------------------------------------------------
+// Related games banner (unchanged)
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -438,7 +804,6 @@ private fun RelatedGamesBanner(
                 }
             }
 
-            // Hint shown only when at least one game is ticked
             if (anySelected) {
                 Text(
                     "Ticked games will be posted automatically with the same players & scores.",
@@ -450,20 +815,33 @@ private fun RelatedGamesBanner(
     }
 }
 
+// ---------------------------------------------------------------------------
+// Player row (unchanged)
+// ---------------------------------------------------------------------------
+
 @Composable
 private fun PlayerRow(
     player: PlayerResult,
     onUpdate: (PlayerResult) -> Unit,
     onRemove: () -> Unit,
-    suggestions: List<BggPlayer> = emptyList()
+    suggestions: List<BggPlayer> = emptyList(),
+    requestScoreFocus: Boolean = false,
+    onFocusDone: () -> Unit = {}
 ) {
     val activeSuggestions: List<BggPlayer> = remember(suggestions, player.name) {
         suggestions.filter { it.displayName.lowercase() != player.name.lowercase().trim() }
     }
+    val scoreFocusRequester = remember { FocusRequester() }
+    LaunchedEffect(requestScoreFocus) {
+        if (requestScoreFocus) {
+            delay(150)
+            runCatching { scoreFocusRequester.requestFocus() }
+            onFocusDone()
+        }
+    }
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            // Row 1: Name + Trophy
             FieldBlock(label = "Name") {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -486,7 +864,6 @@ private fun PlayerRow(
                 }
             }
 
-            // Suggestions under name
             if (activeSuggestions.isNotEmpty()) {
                 Row(
                     modifier = Modifier.padding(start = 4.dp),
@@ -507,7 +884,6 @@ private fun PlayerRow(
                 }
             }
 
-            // Row 2: Score + Team/color
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.Top
@@ -518,7 +894,7 @@ private fun PlayerRow(
                         onValueChange = { onUpdate(player.copy(score = it)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().focusRequester(scoreFocusRequester)
                     )
                 }
                 FieldBlock(label = "Team / color", modifier = Modifier.weight(1f)) {
@@ -531,7 +907,6 @@ private fun PlayerRow(
                 }
             }
 
-            // Row 3: First play + Delete
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

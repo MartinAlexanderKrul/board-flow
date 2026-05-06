@@ -58,10 +58,14 @@ fun ScanScreen(
     val error   by viewModel.scanError.collectAsState()
     val play    by viewModel.extractedPlay.collectAsState()
 
-    // Navigate when extraction succeeds
+    // Navigate when extraction succeeds; only sync players when AI returned them.
+    // Manual-entry plays have players = emptyList() — we leave _editablePlayers alone so
+    // session/play-again pre-fills survive the transition to LogPlayScreen.
     LaunchedEffect(play) {
         play?.let { extracted ->
-            viewModel.initEditablePlayers(extracted.players)
+            if (extracted.players.isNotEmpty()) {
+                viewModel.initEditablePlayers(extracted.players)
+            }
             onScoresExtracted()
         }
     }
@@ -81,7 +85,6 @@ fun ScanScreen(
     var pendingPhoto by remember { mutableStateOf<File?>(null) }
 
     val onEnterManually: () -> Unit = {
-        viewModel.initEditablePlayers(emptyList())
         viewModel.setExtractedPlayManual()
         onScoresExtracted()
     }

@@ -9,15 +9,19 @@ import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.ExtractedPlay
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.GameRelations
+import cz.nicolsburg.boardflow.model.LogPlayPrefill
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
+import cz.nicolsburg.boardflow.model.RecordMoment
+import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -155,9 +159,25 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _logPlayHasUnsavedChanges.value = false
         prefs.addRecentGame(game)
         _recentGames.value = prefs.getRecentGames()
-        _extractedPlay.value = null; _editablePlayers.value = emptyList()
+        _extractedPlay.value = null
         _additionalGames.value = emptyList()
         _gameRelations.value = findRelatedGames(game, _allGames.value)
+
+        val pending = _changeGameSession?.takeIf { it.isActive() }
+        _changeGameSession = null
+        _changeGameSessionActive.value = false
+        when {
+            pending != null -> {
+                _editablePlayers.value = pending.players.map { it.copy(score = "0", isWinner = false) }
+                _logPlayPrefill = LogPlayPrefill(location = pending.location)
+            }
+            _sessionContext.value?.isRecent() == true && _sessionContext.value?.gameId == game.id -> {
+                val session = _sessionContext.value!!
+                _editablePlayers.value = session.players.map { it.copy(score = "0", isWinner = false) }
+                _logPlayPrefill = LogPlayPrefill(location = session.location)
+            }
+            else -> _editablePlayers.value = emptyList()
+        }
     }
 
     // --- Game relations ---
@@ -323,6 +343,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 .onSuccess {
                     _bggPlays.value = mergeBggPlayLists(it)
                     reconcilePendingLocalPlays(_bggPlays.value)
+                    pruneLocalPlaysDeletedOnBgg(it)
                     _bggPlaysCacheAgeMinutes.value = container.canonicalCollectionStore.getBggPlaysCacheAgeMinutes()
                 }
                 .onFailure { _bggPlaysError.value = it.message }
@@ -370,6 +391,19 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
     }
 
+    // After a full BGG play refresh, remove local plays that carry a real BGG ID but no
+    // longer exist on BGG — they were deleted externally (e.g. via the BGG website).
+    private suspend fun pruneLocalPlaysDeletedOnBgg(freshBggPlays: List<LoggedPlay>) {
+        val bggIds = freshBggPlays.mapTo(hashSetOf()) { it.id }
+        val local = container.canonicalCollectionStore.getLoggedPlays()
+        val pruned = local.filter { play ->
+            play.postedToBgg && !play.id.isLikelyLocalUuid() && play.id !in bggIds
+        }
+        if (pruned.isEmpty()) return
+        pruned.forEach { container.canonicalCollectionStore.deleteLoggedPlay(it.id) }
+        _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+    }
+
     fun deleteBggPlay(playId: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
         if (!isOnline()) { onError("Go online to delete plays from BGG"); return }
         val creds = prefs.getCredentials() ?: run { onError("BGG credentials not set"); return }
@@ -385,30 +419,51 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     onError(it.message ?: "Login failed")
                     return@launch
                 }
-            container.bggRepository.deletePlay(playId)
-                .onSuccess {
+            val deleteResult = container.bggRepository.deletePlay(playId)
+
+            // If delete "failed" with an unexpected-response error, the play may have already
+            // been deleted on BGG externally. Verify by re-fetching and treat as success if gone.
+            if (deleteResult.isFailure) {
+                val mightBeAlreadyGone = deleteResult.exceptionOrNull()?.message
+                    ?.contains("Unexpected BGG confirm-delete") == true
+                if (mightBeAlreadyGone) {
                     container.bggRepository.getPlays(username)
                         .onSuccess { refreshed ->
-                            if (refreshed.any { it.id == playId }) {
-                                _deletingBggPlayId.value = null
-                                onError("BGG did not confirm the delete yet. Please refresh and try again.")
-                            } else {
+                            if (!refreshed.any { it.id == playId }) {
                                 _bggPlays.value = refreshed
                                 container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
                                 removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
+                                pruneLocalPlaysDeletedOnBgg(refreshed)
                                 _bggPlaysCacheAgeMinutes.value = 0L
                                 _deletingBggPlayId.value = null
                                 onSuccess()
+                                return@launch
                             }
                         }
-                        .onFailure { error ->
-                            _deletingBggPlayId.value = null
-                            onError(error.message ?: "Deleted on BGG, but failed to refresh history")
-                        }
                 }
-                .onFailure {
+                _deletingBggPlayId.value = null
+                onError(deleteResult.exceptionOrNull()?.message ?: "Failed to delete play")
+                return@launch
+            }
+
+            // Delete was accepted — verify BGG confirms it's gone, then clean up locally.
+            container.bggRepository.getPlays(username)
+                .onSuccess { refreshed ->
+                    if (refreshed.any { it.id == playId }) {
+                        _deletingBggPlayId.value = null
+                        onError("BGG did not confirm the delete yet. Please refresh and try again.")
+                    } else {
+                        _bggPlays.value = refreshed
+                        container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+                        removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
+                        _bggPlaysCacheAgeMinutes.value = 0L
+                        _deletingBggPlayId.value = null
+                        onSuccess()
+                    }
+                }
+                .onFailure { error ->
                     _deletingBggPlayId.value = null
-                    onError(it.message ?: "Failed to delete play")
+                    onError(error.message ?: "Deleted on BGG, but failed to refresh history")
                 }
         }
     }
@@ -756,11 +811,187 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         selectedGame = null
         _gameRelations.value = null
         _logPlayHasUnsavedChanges.value = false
+        _logPlayPrefill = null
         clearExtractedPlay()
     }
 
     fun setLogPlayHasUnsavedChanges(hasChanges: Boolean) {
         _logPlayHasUnsavedChanges.value = hasChanges
+    }
+
+    // --- Session context ---
+    private val _sessionContext = MutableStateFlow<SessionContext?>(null)
+    val sessionContext: StateFlow<SessionContext?> = _sessionContext.asStateFlow()
+
+    private val _sessionBannerDismissed = MutableStateFlow(false)
+    val sessionBannerVisible: StateFlow<Boolean> = combine(_sessionContext, _sessionBannerDismissed) { ctx, dismissed ->
+        ctx != null && ctx.isActive() && !dismissed
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    // Consumed by selectGame to pre-populate players when user changes game mid-session.
+    private var _changeGameSession: SessionContext? = null
+    private val _changeGameSessionActive = MutableStateFlow(false)
+    val changeGameSessionActive: StateFlow<Boolean> = _changeGameSessionActive.asStateFlow()
+
+    // Consumed once by LogPlayScreen on first composition for location/duration prefill.
+    private var _logPlayPrefill: LogPlayPrefill? = null
+
+    // Captured before postPlay so detectRecord can compare against prior history.
+    private var _historySnapshot: List<LoggedPlay>? = null
+
+    fun loadSessionContext() {
+        val ctx = prefs.loadSessionContext()
+        _sessionContext.value = if (ctx != null && ctx.isActive()) ctx else null
+    }
+
+    fun saveSession(game: BggGame, players: List<PlayerResult>, location: String) {
+        val ctx = SessionContext(
+            gameId            = game.id,
+            gameName          = game.name,
+            players           = players,
+            location          = location,
+            lastPlayTimestamp = System.currentTimeMillis()
+        )
+        _sessionContext.value = ctx
+        prefs.saveSessionContext(ctx)
+    }
+
+    fun clearSession() {
+        _sessionContext.value = null
+        _sessionBannerDismissed.value = false
+        _changeGameSession = null
+        _changeGameSessionActive.value = false
+        prefs.clearSessionContext()
+    }
+
+    fun dismissSessionBannerForSession() {
+        _sessionBannerDismissed.value = true
+    }
+
+    fun takePrefill(): LogPlayPrefill? {
+        val result = _logPlayPrefill
+        _logPlayPrefill = null
+        return result
+    }
+
+    fun setupPlayAgain(ctx: SessionContext) {
+        val game = BggGame(ctx.gameId, ctx.gameName, null, null)
+        selectedGame = game
+        _editablePlayers.value = ctx.players.map { it.copy(score = "0", isWinner = false) }
+        _extractedPlay.value = null
+        _additionalGames.value = emptyList()
+        _gameRelations.value = findRelatedGames(game, _allGames.value)
+        _logPlayPrefill = LogPlayPrefill(location = ctx.location)
+        _logPlayHasUnsavedChanges.value = false
+    }
+
+    fun setupChangeGameSession(ctx: SessionContext) {
+        _changeGameSession = ctx
+        _changeGameSessionActive.value = true
+    }
+
+    fun setupPlayAgainFromPlay(play: LoggedPlay) {
+        val game = BggGame(play.gameId, play.gameName, null, null)
+        selectedGame = game
+        _editablePlayers.value = play.players.map { it.copy(score = "0", isWinner = false) }
+        _extractedPlay.value = null
+        _additionalGames.value = emptyList()
+        _gameRelations.value = findRelatedGames(game, _allGames.value)
+        _logPlayPrefill = LogPlayPrefill(location = play.location)
+        _logPlayHasUnsavedChanges.value = false
+    }
+
+    fun addPlayerFromRoster(player: Player) {
+        _editablePlayers.value = _editablePlayers.value + PlayerResult(player.displayName, "0", false)
+    }
+
+    fun captureHistorySnapshot() {
+        _historySnapshot = historyPlays.value.toList()
+    }
+
+    fun detectRecord(gameId: Int, gameName: String, savedPlayers: List<PlayerResult>): RecordMoment? {
+        val snapshot = _historySnapshot ?: return null
+        val gamePlays = snapshot.filter { it.gameId == gameId }
+
+        // Priority 1: first win (player had 0 wins in snapshot → this is their first)
+        for (pr in savedPlayers) {
+            if (!pr.isWinner) continue
+            val lower = pr.name.trim().lowercase()
+            val hadPriorWin = gamePlays.any { play ->
+                play.players.any { it.name.trim().lowercase() == lower && it.isWinner }
+            }
+            if (!hadPriorWin) return RecordMoment.FirstWin(pr.name.trim(), gameName)
+        }
+
+        // Priority 2: new high score (score > prior max in snapshot)
+        for (pr in savedPlayers) {
+            val newScore = pr.score.trim().toDoubleOrNull() ?: continue
+            if (newScore <= 0) continue
+            val lower = pr.name.trim().lowercase()
+            val priorMax = gamePlays
+                .flatMap { it.players }
+                .filter { it.name.trim().lowercase() == lower }
+                .mapNotNull { it.score.trim().toDoubleOrNull() }
+                .maxOrNull()
+            if (priorMax == null || newScore > priorMax) {
+                return RecordMoment.NewHighScore(pr.name.trim(), gameName)
+            }
+        }
+
+        // Priority 3: win streak of 2+ (prior consecutive wins + current win)
+        for (pr in savedPlayers) {
+            if (!pr.isWinner) continue
+            val lower = pr.name.trim().lowercase()
+            val playerGamingHistory = gamePlays
+                .filter { play -> play.players.any { it.name.trim().lowercase() == lower } }
+                .sortedByDescending { it.date }
+            var priorStreak = 0
+            for (play in playerGamingHistory) {
+                val p = play.players.firstOrNull { it.name.trim().lowercase() == lower }
+                if (p?.isWinner == true) priorStreak++ else break
+            }
+            val totalStreak = priorStreak + 1  // +1 for the current win
+            if (totalStreak >= 2) return RecordMoment.WinStreak(pr.name.trim(), totalStreak)
+        }
+
+        return null
+    }
+
+    fun getRecentPlayers(excludeNames: Set<String>): List<Player> {
+        val lowerExclude = excludeNames.map { it.lowercase().trim() }.toSet()
+        val seen = hashSetOf<String>()
+        return historyPlays.value
+            .take(20)
+            .flatMap { it.players }
+            .mapNotNull { pr ->
+                val trimmed = pr.name.trim()
+                if (trimmed.isBlank() || trimmed.lowercase() in lowerExclude) return@mapNotNull null
+                resolveRosterPlayer(trimmed)
+            }
+            .filter { seen.add(it.id) }
+            .take(4)
+    }
+
+    fun getFrequentPlayers(gameId: Int, excludeNames: Set<String>): List<Player> {
+        val gamePlays = (historyPlays.value).filter { it.gameId == gameId }
+        if (gamePlays.isEmpty()) return emptyList()
+
+        val counts = mutableMapOf<String, Int>()
+        gamePlays.forEach { play ->
+            play.players.forEach { pr ->
+                val trimmed = pr.name.trim()
+                if (trimmed.isNotBlank()) counts[trimmed] = (counts[trimmed] ?: 0) + 1
+            }
+        }
+        val lowerExclude = excludeNames.map { it.lowercase().trim() }.toSet()
+        return counts.entries
+            .sortedByDescending { it.value }
+            .mapNotNull { (name, _) ->
+                if (name.lowercase().trim() in lowerExclude) return@mapNotNull null
+                resolveRosterPlayer(name)
+            }
+            .distinctBy { it.id }
+            .take(5)
     }
 
     private fun normalizePlayersForPosting(players: List<PlayerResult>): List<PlayerResult> {
@@ -800,7 +1031,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 private fun mergeHistorySources(local: List<LoggedPlay>, remote: List<LoggedPlay>): List<LoggedPlay> {
     val remoteSignatures = remote.mapTo(hashSetOf()) { it.signatureKey() }
     val localOnly = local.filter { it.signatureKey() !in remoteSignatures }
-    return (localOnly + remote).sortedByDescending { it.date }
+    val combined = (localOnly + remote).sortedByDescending { it.date }
+    // Guarantee unique IDs — LazyColumn keys must not repeat
+    val seenIds = hashSetOf<String>()
+    return combined.filter { seenIds.add(it.id) }
 }
 
 private fun mergeBggPlayLists(vararg lists: List<LoggedPlay>): List<LoggedPlay> {
@@ -817,7 +1051,19 @@ private fun mergeBggPlayLists(vararg lists: List<LoggedPlay>): List<LoggedPlay> 
                 else -> existing
             }
         }
-    return bySignature.values.sortedByDescending { it.date }
+    // Secondary dedup by ID: two plays can share an ID with different signatures
+    // (e.g. BGG re-uses an ID, or normalization diverges). Keep the remote/posted one.
+    val byId = linkedMapOf<String, LoggedPlay>()
+    bySignature.values.forEach { play ->
+        val existing = byId[play.id]
+        byId[play.id] = when {
+            existing == null -> play
+            existing.prefersRemoteIdentityOver(play) -> existing
+            play.prefersRemoteIdentityOver(existing) -> play
+            else -> existing
+        }
+    }
+    return byId.values.sortedByDescending { it.date }
 }
 
 private fun LoggedPlay.prefersRemoteIdentityOver(other: LoggedPlay): Boolean {

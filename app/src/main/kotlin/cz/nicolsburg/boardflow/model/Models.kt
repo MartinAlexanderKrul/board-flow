@@ -188,6 +188,38 @@ data class SpreadsheetDetails(
     val webViewUrl: String? = null
 )
 
+data class SessionContext(
+    val gameId: Int,
+    val gameName: String,
+    val players: List<PlayerResult>,
+    val location: String,
+    val lastPlayTimestamp: Long
+) {
+    fun isActive(): Boolean =
+        System.currentTimeMillis() - lastPlayTimestamp < 4L * 60 * 60 * 1000
+
+    fun isRecent(): Boolean =
+        System.currentTimeMillis() - lastPlayTimestamp < 60L * 60 * 1000
+}
+
+sealed class RecordMoment {
+    data class FirstWin(val playerName: String, val gameName: String) : RecordMoment()
+    data class NewHighScore(val playerName: String, val gameName: String) : RecordMoment()
+    data class WinStreak(val playerName: String, val streakLength: Int) : RecordMoment()
+
+    val displayText: String
+        get() = when (this) {
+            is FirstWin    -> "🎉 First win for $playerName in $gameName"
+            is NewHighScore -> "🏆 New high score for $playerName in $gameName"
+            is WinStreak   -> "🔥 $playerName is on a ${streakLength}-win streak"
+        }
+}
+
+data class LogPlayPrefill(
+    val location: String,
+    val durationSuggestion: String = ""
+)
+
 data class LogEntry(
     val name: String,
     val status: String,
