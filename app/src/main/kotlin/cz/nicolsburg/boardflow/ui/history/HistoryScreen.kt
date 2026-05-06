@@ -152,6 +152,7 @@ fun HistoryScreen(
     onPlayAgain: (cz.nicolsburg.boardflow.model.LoggedPlay) -> Unit = {}
 ) {
     val historyPlays by viewModel.historyPlays.collectAsState()
+    val bggPlays by viewModel.bggPlays.collectAsState()
     val bggLoading by viewModel.bggPlaysLoading.collectAsState()
     val bggError by viewModel.bggPlaysError.collectAsState()
     val players by viewModel.players.collectAsState()
@@ -164,6 +165,8 @@ fun HistoryScreen(
     var editError by remember { mutableStateOf<String?>(null) }
 
     var searchQuery by remember { mutableStateOf("") }
+    var filterGameId by remember { mutableStateOf<Int?>(null) }
+    var filterGameName by remember { mutableStateOf<String?>(null) }
     var sortMode by remember { mutableStateOf(HistorySortMode.DATE_DESC) }
     var filterDateRange by remember { mutableStateOf(HistoryDateRange.ALL) }
     var filterPlayer by remember { mutableStateOf<String?>(null) }
@@ -173,12 +176,15 @@ fun HistoryScreen(
 
     val hasActiveFilters = sortMode != HistorySortMode.DATE_DESC ||
         filterDateRange != HistoryDateRange.ALL ||
-        filterPlayer != null
+        filterPlayer != null ||
+        filterGameId != null
 
-    val filteredPlays = remember(historyPlays, searchQuery, sortMode, filterDateRange, filterPlayer, players) {
+    val filteredPlays = remember(historyPlays, searchQuery, filterGameId, sortMode, filterDateRange, filterPlayer, players) {
         var result = historyPlays
 
-        if (searchQuery.isNotBlank()) {
+        filterGameId?.let { id -> result = result.filter { it.gameId == id } }
+
+        if (searchQuery.isNotBlank() && filterGameId == null) {
             val query = searchQuery.trim().lowercase()
             result = result.filter {
                 it.gameName.lowercase().contains(query) ||
@@ -243,7 +249,7 @@ fun HistoryScreen(
             }
     }
 
-    LaunchedEffect(searchQuery, sortMode, filterDateRange, filterPlayer) {
+    LaunchedEffect(searchQuery, filterGameId, sortMode, filterDateRange, filterPlayer) {
         listState.scrollToItem(0)
     }
 
@@ -450,10 +456,43 @@ fun HistoryScreen(
                             sortMode = HistorySortMode.DATE_DESC
                             filterDateRange = HistoryDateRange.ALL
                             filterPlayer = null
+                            filterGameId = null
+                            filterGameName = null
                         }
                     )
                 }
             }
+
+                    AnimatedVisibility(visible = filterGameId != null || (filterPlayer != null && searchQuery.isBlank())) {
+                        val label = filterGameName ?: filterPlayer ?: ""
+                        Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    "Filtered by: $label",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(onClick = {
+                                    filterGameId = null
+                                    filterGameName = null
+                                    filterPlayer = null
+                                }) {
+                                    Text(
+                                        "Clear",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     PlaysContent(
                         plays = filteredPlays,
@@ -469,6 +508,8 @@ fun HistoryScreen(
                             sortMode = HistorySortMode.DATE_DESC
                             filterDateRange = HistoryDateRange.ALL
                             filterPlayer = null
+                            filterGameId = null
+                            filterGameName = null
                             searchQuery = ""
                         },
                         modifier = Modifier.fillMaxSize()
@@ -477,7 +518,17 @@ fun HistoryScreen(
                 HistoryTab.STATS -> StatsContent(
                     plays = historyPlays,
                     players = players,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    onGameTapped = { gameId, gameName ->
+                        activeTab = HistoryTab.PLAYS
+                        filterGameId = gameId
+                        filterGameName = gameName
+                        searchQuery = ""
+                    },
+                    onPlayerTapped = { playerName ->
+                        activeTab = HistoryTab.PLAYS
+                        filterPlayer = playerName
+                    }
                 )
                 HistoryTab.PLAYERS -> PlayersTabContent(
                     players = players,
@@ -914,7 +965,12 @@ private fun PlayDetailsDialog(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                play.date,
+                                remember(play.date) {
+                                    runCatching {
+                                        LocalDate.parse(play.date)
+                                            .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                                    }.getOrDefault(play.date)
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -975,7 +1031,11 @@ private fun PlayDetailsDialog(
                 item {
                     DetailSection(
                         rows = buildList {
-                            add("Date" to play.date)
+                            val formattedDate = runCatching {
+                                LocalDate.parse(play.date)
+                                    .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                            }.getOrDefault(play.date)
+                            add("Date" to formattedDate)
                             if (play.durationMinutes > 0) add("Duration" to "${play.durationMinutes} min")
                             if (play.location.isNotBlank()) add("Location" to play.location)
                             if (play.quantity > 1) add("Quantity" to "×${play.quantity}")

@@ -89,8 +89,6 @@ fun ratingStats(game: GameItem): List<SectionStat> {
     return listOfNotNull(
         game.rating?.let { SectionStat("BGG rating", formatDecimal(it)) },
         game.bayesAverage?.let { SectionStat("Bayes rating", formatDecimal(it)) },
-        game.rank?.let { SectionStat("Rank", "#$it") },
-        game.numPlays?.takeIf { it > 0 }?.let { SectionStat("Plays", it.toString()) }
     )
 }
 

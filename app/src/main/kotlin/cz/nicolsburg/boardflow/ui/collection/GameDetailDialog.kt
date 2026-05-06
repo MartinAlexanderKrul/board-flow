@@ -171,6 +171,17 @@ fun GameDetailsDialog(
                     }
                 }
 
+            if (playerPreferenceStats.isNotEmpty()) {
+                item {
+                    SectionBlock(title = "Players") {
+                        DetailGrid(
+                            stats = playerPreferenceStats,
+                            emphasizeSurface = false
+                        )
+                    }
+                }
+            }
+
                 if (ratingStats.isNotEmpty()) {
                     item {
                         SectionBlock(title = "Ratings & Stats") {
@@ -185,19 +196,34 @@ fun GameDetailsDialog(
 
                 if (myStats != null) {
                     item {
-                        SectionBlock(title = "Your Stats") {
-                            YourStatsGrid(myStats)
-                        }
-                    }
-                }
-
-                if (playerPreferenceStats.isNotEmpty()) {
-                    item {
-                        SectionBlock(title = "Players") {
-                            DetailGrid(
-                                stats = playerPreferenceStats,
-                                emphasizeSurface = false
-                            )
+                        var expanded by remember { mutableStateOf(false) }
+                        Column(
+                            modifier = Modifier.padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expanded = !expanded },
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Your Stats",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Icon(
+                                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = if (expanded) "Collapse your stats" else "Expand your stats",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            BoardFlowAnimatedVisibility(visible = expanded) {
+                                YourStatsGrid(myStats)
+                            }
                         }
                     }
                 }
@@ -288,7 +314,7 @@ fun GameDetailsDialog(
 @Composable
 private fun YourStatsGrid(stats: GameHistoryStats) {
     val rows = buildList {
-        add(SectionStat("Plays logged", "${stats.plays}"))
+        add(SectionStat("Plays", "${stats.plays}"))
         stats.lastPlayedDate?.let { add(SectionStat("Last played", it)) }
         stats.avgDurationMinutes?.let { avg ->
             val label = if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"
@@ -297,7 +323,7 @@ private fun YourStatsGrid(stats: GameHistoryStats) {
         stats.bestScore?.let { (name, score) -> add(SectionStat("Best score", "$score by $name")) }
         stats.mostWins?.let { (name, wins) -> add(SectionStat("Most wins", "$name ($wins)")) }
         if (stats.commonPlayers.isNotEmpty()) {
-            add(SectionStat("Common players", stats.commonPlayers.joinToString(", ")))
+            add(SectionStat("Frequent partners", stats.commonPlayers.joinToString(", ")))
         }
     }
     DetailGrid(stats = rows, emphasizeSurface = false)

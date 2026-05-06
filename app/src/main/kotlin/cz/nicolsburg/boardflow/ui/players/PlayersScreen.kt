@@ -185,8 +185,8 @@ internal fun PlayerListItem(player: Player, stats: PlayerStats, onTap: () -> Uni
                     buildList {
                         add("${stats.totalPlays} plays")
                         add("${stats.wins} wins (${stats.winRate}%)")
-                        stats.lastPlayedDate?.let { add("Last: $it") }
-                    }.joinToString("  -  ")
+                        stats.lastPlayedDate?.let { add("Last played $it") }
+                    }.joinToString("  ·  ")
                 } else {
                     "No plays yet"
                 }
@@ -487,16 +487,23 @@ private fun PlayerDetailDialog(
                             PlayerStatCell("Win rate", "${stats.winRate}%", Modifier.weight(1f))
                         }
                         if (stats.currentWinStreak >= 2) {
-                            DetailRow("Win streak", "${stats.currentWinStreak} in a row 🔥",
+                            DetailRow("Current streak", "${stats.currentWinStreak} in a row 🔥",
                                 valueColor = MaterialTheme.colorScheme.primary)
                         }
                         stats.lastPlayedDate?.let { DetailRow("Last played", it) }
                         stats.favoriteGame?.let {
-                            DetailRow("Favourite game", it,
+                            DetailRow("Most played", it,
                                 valueColor = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
+            } else {
+                Text(
+                    "No plays recorded yet",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
             }
 
             if (rivalries.isNotEmpty()) {
