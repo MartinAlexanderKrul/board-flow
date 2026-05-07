@@ -110,8 +110,10 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowMotion
 import cz.nicolsburg.boardflow.ui.history.playInsights
 import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
+import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
 import cz.nicolsburg.boardflow.ui.common.boardFlowTween
@@ -152,6 +154,7 @@ fun HistoryScreen(
     onPlayAgain: (cz.nicolsburg.boardflow.model.LoggedPlay) -> Unit = {}
 ) {
     val historyPlays by viewModel.historyPlays.collectAsState()
+    val collection by viewModel.collection.collectAsState()
     val bggPlays by viewModel.bggPlays.collectAsState()
     val bggLoading by viewModel.bggPlaysLoading.collectAsState()
     val bggError by viewModel.bggPlaysError.collectAsState()
@@ -168,6 +171,12 @@ fun HistoryScreen(
     var searchQuery by remember { mutableStateOf("") }
     var filterGameId by remember { mutableStateOf<Int?>(null) }
     var filterGameName by remember { mutableStateOf<String?>(null) }
+    val backdropUrl by remember(filterGameId, collection) {
+        derivedStateOf { filterGameId?.let { id -> collection.firstOrNull { it.id == id }?.thumbnailUrl } }
+    }
+    val selectedPlayThumbnail by remember(selectedPlay, collection) {
+        derivedStateOf { selectedPlay?.gameId?.let { id -> collection.firstOrNull { it.id == id }?.thumbnailUrl } }
+    }
     var sortMode by remember { mutableStateOf(HistorySortMode.DATE_DESC) }
     var filterDateRange by remember { mutableStateOf(HistoryDateRange.ALL) }
     var filterPlayer by remember { mutableStateOf<String?>(null) }
@@ -303,6 +312,7 @@ fun HistoryScreen(
     selectedPlay?.let { play ->
         PlayDetailsDialog(
             play = play,
+            thumbnailUrl = selectedPlayThumbnail,
             players = players,
             historyPlays = historyPlays,
             isDeleting = deletingPlayId == play.id,
@@ -376,10 +386,11 @@ fun HistoryScreen(
             }
         }
     ) { padding ->
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        GameBackdrop(imageUrl = backdropUrl, height = 220.dp)
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .swipeToNavigateTabs(
                     tabCount = HistoryTab.entries.size,
                     selectedIndex = activeTab.ordinal,
@@ -547,6 +558,7 @@ fun HistoryScreen(
                 )
             }
         }
+        } // Box
     }
 }
 
@@ -943,6 +955,7 @@ private fun PlayerRow(player: PlayerResult, displayName: String) {
 @Composable
 private fun PlayDetailsDialog(
     play: LoggedPlay,
+    thumbnailUrl: String? = null,
     players: List<Player>,
     historyPlays: List<LoggedPlay> = emptyList(),
     isDeleting: Boolean,
@@ -953,6 +966,8 @@ private fun PlayDetailsDialog(
 ) {
     val insights = remember(play, historyPlays) { historyPlays.playInsights(play) }
     AnimatedDialog(onDismissRequest = onDismiss) {
+        Box(modifier = Modifier.fillMaxSize()) {
+        GameBackdrop(imageUrl = thumbnailUrl, height = 200.dp)
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -1121,6 +1136,7 @@ private fun PlayDetailsDialog(
                 }
             }
         }
+        } // Box
     }
 
 @Composable
