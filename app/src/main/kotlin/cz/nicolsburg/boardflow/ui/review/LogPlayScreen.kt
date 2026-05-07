@@ -34,11 +34,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -49,13 +46,13 @@ import cz.nicolsburg.boardflow.model.GameRelations
 import cz.nicolsburg.boardflow.model.RecordMoment
 import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.model.Player as BggPlayer
-import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.PlayerResultEditorCard
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -79,6 +76,7 @@ fun LogPlayScreen(
     val extractedPlay   by viewModel.extractedPlay.collectAsState()
     val gameRelations   by viewModel.gameRelations.collectAsState()
     val additionalGames by viewModel.additionalGames.collectAsState()
+    val rosterPlayers   by viewModel.players.collectAsState()
 
     // Read prefill once on first composition (consumed from ViewModel).
     val prefill = remember { viewModel.takePrefill() }
@@ -545,11 +543,11 @@ fun LogPlayScreen(
 
             // Player rows
             itemsIndexed(players) { index, player ->
-                PlayerRow(
+                PlayerResultEditorCard(
                     player           = player,
+                    rosterPlayers    = rosterPlayers,
                     onUpdate         = { viewModel.updatePlayer(index, it) },
                     onRemove         = { viewModel.removePlayer(index) },
-                    suggestions      = remember(player.name) { viewModel.getPlayerSuggestions(player.name) },
                     requestScoreFocus = index == 0 && focusFirstScore,
                     onFocusDone      = { focusFirstScore = false }
                 )
@@ -941,144 +939,5 @@ private fun RelatedGamesBanner(
                 )
             }
         }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Player row (unchanged)
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun PlayerRow(
-    player: PlayerResult,
-    onUpdate: (PlayerResult) -> Unit,
-    onRemove: () -> Unit,
-    suggestions: List<BggPlayer> = emptyList(),
-    requestScoreFocus: Boolean = false,
-    onFocusDone: () -> Unit = {}
-) {
-    val activeSuggestions: List<BggPlayer> = remember(suggestions, player.name) {
-        suggestions.filter { it.displayName.lowercase() != player.name.lowercase().trim() }
-    }
-    val scoreFocusRequester = remember { FocusRequester() }
-    LaunchedEffect(requestScoreFocus) {
-        if (requestScoreFocus) {
-            delay(150)
-            runCatching { scoreFocusRequester.requestFocus() }
-            onFocusDone()
-        }
-    }
-
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            FieldBlock(label = "Name") {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = player.name,
-                        onValueChange = { onUpdate(player.copy(name = it)) },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    BoardFlowIconButton(onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) }) {
-                        Icon(
-                            Icons.Default.EmojiEvents,
-                            contentDescription = "Toggle winner",
-                            tint = if (player.isWinner) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
-                        )
-                    }
-                }
-            }
-
-            if (activeSuggestions.isNotEmpty()) {
-                Row(
-                    modifier = Modifier.padding(start = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        "Match:",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    activeSuggestions.forEach { p ->
-                        SuggestionChip(
-                            onClick = { onUpdate(player.copy(name = p.displayName)) },
-                            label = { Text(p.displayName, style = MaterialTheme.typography.labelMedium) }
-                        )
-                    }
-                }
-            }
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                FieldBlock(label = "Score", modifier = Modifier.width(100.dp)) {
-                    OutlinedTextField(
-                        value = player.score,
-                        onValueChange = { onUpdate(player.copy(score = it)) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth().focusRequester(scoreFocusRequester)
-                    )
-                }
-                FieldBlock(label = "Team / color", modifier = Modifier.weight(1f)) {
-                    OutlinedTextField(
-                        value = player.color,
-                        onValueChange = { onUpdate(player.copy(color = it)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Checkbox(
-                        checked = player.isNew,
-                        onCheckedChange = { onUpdate(player.copy(isNew = it)) }
-                    )
-                    Text(
-                        "First play",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                BoardFlowIconButton(onClick = onRemove) {
-                    Icon(
-                        BoardFlowIcons.Delete,
-                        contentDescription = "Remove",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FieldBlock(
-    label: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        content()
     }
 }

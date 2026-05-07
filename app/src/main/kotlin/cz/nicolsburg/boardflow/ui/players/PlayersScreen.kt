@@ -62,6 +62,19 @@ internal fun List<LoggedPlay>.statsForPlayer(player: Player): PlayerStats {
         favoriteGame = favGame, currentWinStreak = streak)
 }
 
+private fun List<LoggedPlay>.lastPlayedDateForPlayer(player: Player): LocalDate? {
+    val names = (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() }
+    return filter { play -> play.players.any { it.name.lowercase().trim() in names } }
+        .mapNotNull { play -> runCatching { LocalDate.parse(play.date) }.getOrNull() }
+        .maxOrNull()
+}
+
+private fun List<Player>.sortedByRecentActivity(sourcePlays: List<LoggedPlay>): List<Player> =
+    sortedWith(
+        compareByDescending<Player> { sourcePlays.lastPlayedDateForPlayer(it) ?: LocalDate.MIN }
+            .thenBy { it.displayName.lowercase() }
+    )
+
 internal fun formatPlayDate(yyyyMMdd: String): String = try {
     LocalDate.parse(yyyyMMdd).format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
 } catch (_: Exception) { yyyyMMdd }
@@ -71,6 +84,7 @@ internal fun formatPlayDate(yyyyMMdd: String): String = try {
 fun PlayersScreen(viewModel: AppViewModel) {
     val players    by viewModel.players.collectAsState()
     val sourcePlays by viewModel.historyPlays.collectAsState()
+    val sortedPlayers = remember(players, sourcePlays) { players.sortedByRecentActivity(sourcePlays) }
 
     var showAddDialog  by remember { mutableStateOf(false) }
     var editingPlayer  by remember { mutableStateOf<Player?>(null) }
@@ -146,7 +160,7 @@ fun PlayersScreen(viewModel: AppViewModel) {
                 LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(vertical = 8.dp)) {
-                    items(players, key = { it.id }) { player ->
+                    items(sortedPlayers, key = { it.id }) { player ->
                         val stats = remember(sourcePlays, player) { sourcePlays.statsForPlayer(player) }
                         PlayerListItem(player = player, stats = stats,
                             onTap = { viewingPlayer = player },
@@ -386,6 +400,7 @@ fun PlayersTabContent(
     modifier: Modifier = Modifier
 ) {
     var viewingPlayer by remember { mutableStateOf<Player?>(null) }
+    val sortedPlayers = remember(players, sourcePlays) { players.sortedByRecentActivity(sourcePlays) }
 
     viewingPlayer?.let { vp ->
         val livePlayer = players.find { it.id == vp.id }
@@ -434,7 +449,7 @@ fun PlayersTabContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            items(players, key = { it.id }) { player ->
+            items(sortedPlayers, key = { it.id }) { player ->
                 val stats = remember(sourcePlays, player) { sourcePlays.statsForPlayer(player) }
                 PlayerListItem(player = player, stats = stats,
                     onTap = { viewingPlayer = player },

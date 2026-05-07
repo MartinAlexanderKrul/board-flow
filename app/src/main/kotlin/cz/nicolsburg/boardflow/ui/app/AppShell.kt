@@ -30,8 +30,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -96,6 +98,7 @@ fun BoardFlowApp(
     onRequestCsvPick: () -> Unit
 ) {
     val navController = rememberNavController()
+    val scope = rememberCoroutineScope()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val account by syncViewModel.account.collectAsState()
@@ -335,11 +338,42 @@ fun BoardFlowApp(
                     players = players,
                     onLogPlay = { gameId, gameName, thumbnailUrl ->
                         appViewModel.setupLogPlayById(gameId, gameName, thumbnailUrl)
-                        navController.navigate(AppRoutes.LOG_PLAY)
+                        if (appViewModel.isOnline()) {
+                            navController.navigate(AppRoutes.scan(gameId, gameName))
+                        } else {
+                            appViewModel.setExtractedPlayManual()
+                            navController.navigate(AppRoutes.LOG_PLAY)
+                        }
                     },
                     onViewHistory = { gameId ->
-                        appViewModel.setPendingHistoryFilter(gameId)
-                        navController.navigate(AppRoutes.HISTORY)
+                        appViewModel.setPendingHistoryFilter(gameId = gameId)
+                        scope.launch {
+                            navController.navigate(AppRoutes.HISTORY) {
+                                popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
+                    onViewHistoryPlayer = { gameId, playerName ->
+                        appViewModel.setPendingHistoryFilter(gameId = gameId, playerFilter = playerName)
+                        scope.launch {
+                            navController.navigate(AppRoutes.HISTORY) {
+                                popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
+                    onViewPlayers = { playerName ->
+                        appViewModel.setPendingHistoryFilter(playerFilter = playerName, showPlayersTab = true)
+                        scope.launch {
+                            navController.navigate(AppRoutes.HISTORY) {
+                                popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     },
                     onHeaderFilterStateChange = { visible, hasActiveFilters, onClick ->
                         collectionHeaderFilterVisible = visible

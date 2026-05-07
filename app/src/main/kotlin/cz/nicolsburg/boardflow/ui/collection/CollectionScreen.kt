@@ -119,6 +119,8 @@ fun CollectionScreen(
     players: List<Player> = emptyList(),
     onLogPlay: (gameId: Int, gameName: String, thumbnailUrl: String?) -> Unit = { _, _, _ -> },
     onViewHistory: (Int) -> Unit = {},
+    onViewHistoryPlayer: (gameId: Int, playerName: String) -> Unit = { _, _ -> },
+    onViewPlayers: (playerName: String) -> Unit = {},
     onHeaderFilterStateChange: (visible: Boolean, hasActiveFilters: Boolean, onClick: (() -> Unit)?) -> Unit = { _, _, _ -> },
     onActiveTabChange: (String?) -> Unit = {}
 ) {
@@ -244,6 +246,14 @@ fun CollectionScreen(
             onViewHistory = { gameId ->
                 selectedGame = null
                 onViewHistory(gameId)
+            },
+            onViewHistoryPlayer = { gameId, playerName ->
+                selectedGame = null
+                onViewHistoryPlayer(gameId, playerName)
+            },
+            onViewPlayers = { playerName ->
+                selectedGame = null
+                onViewPlayers(playerName)
             }
         )
     }

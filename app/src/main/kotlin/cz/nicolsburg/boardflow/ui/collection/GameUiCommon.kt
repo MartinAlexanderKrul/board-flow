@@ -5,9 +5,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Grade
+import androidx.compose.material.icons.filled.HourglassBottom
+import androidx.compose.material.icons.filled.HourglassFull
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.SentimentNeutral
+import androidx.compose.material.icons.filled.SentimentSatisfied
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,7 +39,8 @@ import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 
 data class SectionStat(
     val label: String,
-    val value: String
+    val value: String,
+    val icon: ImageVector? = null
 )
 
 data class HeaderChip(
@@ -87,8 +105,8 @@ fun gameWeightLabel(weight: Double): String = when {
 
 fun overviewStats(game: GameItem): List<SectionStat> {
     val stats = mutableListOf<SectionStat>()
+    game.weight?.let { stats += SectionStat("Difficulty", gameWeightLabel(it)) }
     game.yearPublished?.toString()?.let { stats += SectionStat("Year", it) }
-    playerLabel(game)?.let { stats += SectionStat("Players", it) }
     compactPlayTime(game)?.let { stats += SectionStat("Play time", it) }
     game.recommendedAge?.takeIf { it.isNotBlank() }?.let { stats += SectionStat("Age", it) }
     return stats
@@ -98,7 +116,6 @@ fun ratingStats(game: GameItem): List<SectionStat> {
     return listOfNotNull(
         game.rating?.let { SectionStat("BGG rating", formatDecimal(it)) },
         game.bayesAverage?.let { SectionStat("Bayes rating", formatDecimal(it)) },
-        game.weight?.let { SectionStat("Weight", gameWeightLabel(it)) },
     )
 }
 
@@ -256,4 +273,37 @@ fun headerStatusChips(
             add(HeaderChip("Wishlist", Icons.Default.Bookmark, secondary))
         }
     }
+}
+
+// ── Category icon mappings ────────────────────────────────────────────────
+
+fun gameWeightIcon(weight: Double): ImageVector = when {
+    weight < 1.5 -> Icons.Default.Spa          // Light – beginner friendly
+    weight < 2.0 -> Icons.Default.LocalCafe    // Casual – learning strategy
+    weight < 2.5 -> Icons.Default.Build        // Medium-Light – building tactical skills
+    weight < 3.0 -> Icons.Default.Psychology   // Medium – proper strategic gaming
+    weight < 3.5 -> Icons.Default.Shield       // Medium-Heavy – experienced players
+    weight < 4.0 -> Icons.Default.Whatshot     // Heavy – hardcore strategy
+    else         -> Icons.Default.EmojiEvents  // Expert – legendary brain burner
+}
+
+fun playTimeIcon(minutes: Int): ImageVector = when {
+    minutes < 20  -> Icons.Default.Bolt             // Lightning quick
+    minutes < 45  -> Icons.Default.Timer             // Short
+    minutes < 90  -> Icons.Default.Schedule          // Medium
+    minutes < 180 -> Icons.Default.HourglassBottom   // Long
+    else          -> Icons.Default.HourglassFull     // Marathon
+}
+
+fun gamePlayTimeIcon(game: GameItem): ImageVector? {
+    val minutes = game.playingTime ?: game.minPlayTime ?: game.maxPlayTime ?: return null
+    return playTimeIcon(minutes)
+}
+
+fun ratingIcon(rating: Double): ImageVector = when {
+    rating < 5.5 -> Icons.Default.SentimentNeutral   // Below average
+    rating < 6.5 -> Icons.Default.SentimentSatisfied // Decent
+    rating < 7.5 -> Icons.Default.Star               // Good
+    rating < 8.5 -> Icons.Default.Grade              // Great
+    else         -> Icons.Default.EmojiEvents         // Exceptional
 }

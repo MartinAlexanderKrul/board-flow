@@ -250,19 +250,15 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun recordPlayerName(name: String) {
         if (name.isBlank()) return
-        val lower = name.lowercase().trim(); val threshold = maxOf(2, lower.length / 3)
+        val lower = name.lowercase().trim()
         val list = _players.value.toMutableList()
-        val match = list.firstOrNull { p -> (listOf(p.displayName) + p.aliases).any { levenshtein(lower, it.lowercase()) <= threshold } }
-        if (match != null) {
-            val alreadyKnown = (listOf(match.displayName) + match.aliases).any { it.lowercase() == lower }
-            if (!alreadyKnown) {
-                val idx = list.indexOfFirst { it.id == match.id }
-                list[idx] = match.copy(aliases = match.aliases + name.trim())
-                _players.value = list; prefs.savePlayers(list)
-            }
-        } else {
+        val alreadyKnown = list.any { p ->
+            (listOf(p.displayName) + p.aliases).any { it.lowercase().trim() == lower }
+        }
+        if (!alreadyKnown) {
             list.add(Player(UUID.randomUUID().toString(), name.trim(), emptyList()))
-            _players.value = list; prefs.savePlayers(list)
+            _players.value = list
+            prefs.savePlayers(list)
         }
     }
 
@@ -925,11 +921,19 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     // ── Pending cross-tab navigation ─────────────────────────────────────────
-    private val _pendingHistoryGameId = MutableStateFlow<Int?>(null)
-    val pendingHistoryGameId: StateFlow<Int?> = _pendingHistoryGameId.asStateFlow()
+    data class PendingHistoryNavigation(
+        val gameId: Int? = null,
+        val playerFilter: String? = null,
+        val showPlayersTab: Boolean = false
+    )
 
-    fun setPendingHistoryFilter(gameId: Int) { _pendingHistoryGameId.value = gameId }
-    fun consumePendingHistoryFilter() { _pendingHistoryGameId.value = null }
+    private val _pendingHistoryNavigation = MutableStateFlow<PendingHistoryNavigation?>(null)
+    val pendingHistoryNavigation: StateFlow<PendingHistoryNavigation?> = _pendingHistoryNavigation.asStateFlow()
+
+    fun setPendingHistoryFilter(gameId: Int? = null, playerFilter: String? = null, showPlayersTab: Boolean = false) {
+        _pendingHistoryNavigation.value = PendingHistoryNavigation(gameId, playerFilter, showPlayersTab)
+    }
+    fun consumePendingHistoryFilter() { _pendingHistoryNavigation.value = null }
 
     fun addPlayerFromRoster(player: Player) {
         _editablePlayers.value = _editablePlayers.value + PlayerResult(player.displayName, "0", false)
@@ -1040,20 +1044,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val trimmed = name.trim()
         if (trimmed.isBlank()) return null
         val lower = trimmed.lowercase()
-        _players.value.firstOrNull { player ->
+        return _players.value.firstOrNull { player ->
             (listOf(player.displayName) + player.aliases).any { it.lowercase().trim() == lower }
-        }?.let { return it }
-
-        val threshold = maxOf(2, lower.length / 3)
-        return _players.value
-            .map { player ->
-                val bestDistance = (listOf(player.displayName) + player.aliases)
-                    .minOf { alias -> levenshtein(lower, alias.lowercase().trim()) }
-                player to bestDistance
-            }
-            .filter { (_, distance) -> distance <= threshold }
-            .minByOrNull { (_, distance) -> distance }
-            ?.first
+        }
     }
 
 }

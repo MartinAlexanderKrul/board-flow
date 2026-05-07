@@ -65,12 +65,12 @@ private fun InsightStripCard(
     modifier: Modifier = Modifier
 ) {
     val background = if (ambient) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f)
     } else {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
     }
     val border = if (ambient) {
-        BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.10f))
+        BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.07f))
     } else {
         null
     }
@@ -81,22 +81,22 @@ private fun InsightStripCard(
         border = border
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = if (ambient) 7.dp else 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(if (ambient) 7.dp else 8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = if (ambient) 5.dp else 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (ambient) 6.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 icon,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(if (ambient) 13.dp else 14.dp)
-                    .alpha(if (ambient) 0.82f else 1f),
+                    .size(if (ambient) 12.dp else 14.dp)
+                    .alpha(if (ambient) 0.68f else 1f),
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = if (ambient) 0.88f else 1f),
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = if (ambient) 0.78f else 1f),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )

@@ -1,4 +1,4 @@
-﻿package cz.nicolsburg.boardflow.ui.collection
+package cz.nicolsburg.boardflow.ui.collection
 
 import android.content.Intent
 import android.net.Uri
@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -99,7 +100,9 @@ fun GameDetailsDialog(
     historyPlays: List<LoggedPlay> = emptyList(),
     players: List<Player> = emptyList(),
     onLogPlay: () -> Unit = {},
-    onViewHistory: (Int) -> Unit = {}
+    onViewHistory: (Int) -> Unit = {},
+    onViewHistoryPlayer: (gameId: Int, playerName: String) -> Unit = { _, _ -> },
+    onViewPlayers: (playerName: String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val securePreferences = remember(context) { SecurePreferences(context.applicationContext) }
@@ -124,22 +127,36 @@ fun GameDetailsDialog(
         headerStatusChips(game, primaryColor, secondaryColor)
     }
     val compactChips = headerChips.size > 2 || LocalConfiguration.current.screenWidthDp < 380
-    val infoSections = remember(playerStats, overviewStats, ratingStats) {
+    val infoSections = remember(overviewStats, ratingStats, game) {
         buildList {
-            if (playerStats.isNotEmpty()) add(InfoSection("Players", playerStats.map(::polishGameDetailStat)))
-            if (overviewStats.isNotEmpty()) add(InfoSection("Overview", overviewStats.map(::polishGameDetailStat)))
+            if (overviewStats.isNotEmpty()) {
+                add(InfoSection("Overview", overviewStats.map { stat ->
+                    when (stat.label) {
+                        "Difficulty" -> stat.copy(icon = game.weight?.let { gameWeightIcon(it) })
+                        "Play time"  -> stat.copy(icon = gamePlayTimeIcon(game))
+                        else         -> stat
+                    }
+                }))
+            }
             if (ratingStats.isNotEmpty()) {
-                add(InfoSection("Ratings", ratingStats.map(::polishGameDetailStat), setOf("Rank"), columns = 3))
+                add(InfoSection("Ratings", ratingStats.map { stat ->
+                    when (stat.label) {
+                        "BGG rating"   -> stat.copy(icon = game.rating?.let { ratingIcon(it) })
+                        "Bayes rating" -> stat.copy(icon = game.bayesAverage?.let { ratingIcon(it) })
+                        else           -> stat
+                    }
+                }, setOf("Rank")))
             }
         }
     }
+    val hasPlayerSection = playerStats.isNotEmpty() || playerLabel(game) != null
     val hasSleeves = game.sleeveStatus != GameItem.SleeveStatus.UNKNOWN || game.sleeveCardSets.isNotEmpty()
     val listState = rememberLazyListState()
     val headerCollapse by remember {
         derivedStateOf {
             when {
                 listState.firstVisibleItemIndex > 0 -> 1f
-                else -> (listState.firstVisibleItemScrollOffset / 200f).coerceIn(0f, 1f)
+                else -> (listState.firstVisibleItemScrollOffset / 280f).coerceIn(0f, 1f)
             }
         }
     }
@@ -188,13 +205,25 @@ fun GameDetailsDialog(
                         ContextualInsightStrip(
                             insight = contextualInsight,
                             ambient = true,
-                            modifier = Modifier.alpha(1f - 0.18f * headerCollapse)
+                            modifier = Modifier.alpha(1f - 0.22f * headerCollapse)
                         )
                     }
                 }
 
                 if (myStats != null) {
-                    item { YourStatsCard(stats = myStats) }
+                    item {
+                        YourStatsCard(
+                            stats = myStats,
+                            onViewHistoryPlayer = { playerName ->
+                                gameObjectId?.let { onViewHistoryPlayer(it, playerName) }
+                            },
+                            onViewPlayers = onViewPlayers
+                        )
+                    }
+                }
+
+                if (hasPlayerSection) {
+                    item { PlayerPreferenceBlock(game) }
                 }
 
                 if (infoSections.isNotEmpty()) {
@@ -263,10 +292,10 @@ private fun HeaderSection(
     onViewHistory: (Int) -> Unit = {}
 ) {
     val hasBackdrop = !game.thumbnailUrl.isNullOrBlank()
-    val expandedThumb = 84.dp
-    val collapsedThumb = 46.dp
-    val thumbSize = expandedThumb - (expandedThumb - collapsedThumb) * collapse
-    val chipAlpha = (1f - collapse * 1.15f).coerceIn(0f, 1f)
+    val thumbSize = 80.dp
+    val thumbScale = 1f - 0.08f * collapse
+    val thumbAlpha = (1f - 0.15f * collapse).coerceAtLeast(0.85f)
+    val chipAlpha = (1f - collapse * 0.28f).coerceAtLeast(0.72f)
 
     Row(
         modifier = Modifier
@@ -283,12 +312,15 @@ private fun HeaderSection(
                 modifier = Modifier
                     .size(thumbSize)
                     .clip(MaterialTheme.shapes.medium)
-                    .alpha(1f - 0.22f * collapse)
+                    .scale(thumbScale)
+                    .alpha(thumbAlpha)
             )
         } else {
             Box(
                 modifier = Modifier
                     .size(thumbSize)
+                    .scale(thumbScale)
+                    .alpha(thumbAlpha)
                     .clip(MaterialTheme.shapes.medium)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
@@ -305,7 +337,8 @@ private fun HeaderSection(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .alpha(1f - 0.08f * collapse),
+                .offset(y = (-4).dp * collapse)
+                .alpha((1f - 0.06f * collapse).coerceAtLeast(0.94f)),
             verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             Text(
@@ -371,12 +404,14 @@ private fun HeaderSection(
     }
 }
 
-// â”€â”€ Your Stats card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Your Stats card â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun YourStatsCard(
-    stats: GameHistoryStats
+    stats: GameHistoryStats,
+    onViewHistoryPlayer: (playerName: String) -> Unit = {},
+    onViewPlayers: (playerName: String) -> Unit = {}
 ) {
     val primary          = MaterialTheme.colorScheme.primary
     val onSurface        = MaterialTheme.colorScheme.onSurface
@@ -384,9 +419,9 @@ private fun YourStatsCard(
     val outlineVariant   = MaterialTheme.colorScheme.outlineVariant
 
     Surface(
-        color = primary.copy(alpha = GameDetailTokens.FeaturedCardAlpha),
+        color = primary.copy(alpha = 0.08f),
         shape = GameDetailTokens.CardCorner,
-        border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = GameDetailTokens.CardBorderAlpha)),
+        border = BorderStroke(1.dp, outlineVariant.copy(alpha = 0.20f)),
         tonalElevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -394,7 +429,7 @@ private fun YourStatsCard(
             modifier = Modifier.padding(horizontal = GameDetailTokens.CardPadding, vertical = 13.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Section label with icon
+            // Title
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -413,16 +448,13 @@ private fun YourStatsCard(
                 )
             }
 
-            // Primary â€” plays count (brightest) + secondary â€” last played date
+            // Row 1: Total plays | Last played | Avg time
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(1.dp)
-                ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Text(
                         text = "${stats.plays}",
                         style = MaterialTheme.typography.displaySmall,
@@ -437,7 +469,7 @@ private fun YourStatsCard(
                 }
                 stats.lastPlayedDate?.let { date ->
                     Column(
-                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         Text(
@@ -447,27 +479,149 @@ private fun YourStatsCard(
                         )
                         Text(
                             text = date,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = onSurface.copy(alpha = 0.84f)
                         )
                     }
                 }
-            }
-
-            // Tertiary stats grid
-            val secondary = buildList {
                 stats.avgDurationMinutes?.let { avg ->
-                    add(SectionStat("Avg duration", if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"))
+                    val durationText = if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "Avg time",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = onSurfaceVariant.copy(alpha = 0.55f)
+                        )
+                        Surface(
+                            shape = CircleShape,
+                            color = onSurface.copy(alpha = 0.045f),
+                            border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.14f))
+                        ) {
+                            Text(
+                                text = durationText,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = onSurface.copy(alpha = 0.82f),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
                 }
-                stats.bestScore?.let { (name, score) -> add(SectionStat("Best score", "$score by $name")) }
-                stats.mostWins?.let { (name, wins) -> add(SectionStat("Most wins", "$name ($wins)")) }
-            }
-            if (secondary.isNotEmpty()) {
-                DetailGrid(stats = secondary, emphasizeSurface = false)
             }
 
-            // Frequent partners â€” pill chips
+            // Row 2: Best score | Most wins
+            if (stats.bestScore != null || stats.mostWins != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    stats.bestScore?.let { (name, score) ->
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Text(
+                                text = "Best score",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = onSurfaceVariant.copy(alpha = 0.55f)
+                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = primary.copy(alpha = 0.10f),
+                                    border = BorderStroke(0.5.dp, primary.copy(alpha = 0.14f)),
+                                    modifier = Modifier.clip(CircleShape).clickable { onViewHistoryPlayer(name) }
+                                ) {
+                                    Text(
+                                        text = "$score",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = primary,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "by",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = onSurfaceVariant.copy(alpha = 0.50f)
+                                )
+                                Surface(
+                                    shape = CircleShape,
+                                    color = onSurface.copy(alpha = 0.045f),
+                                    border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.14f)),
+                                    modifier = Modifier.clip(CircleShape).clickable { onViewPlayers(name) }
+                                ) {
+                                    Text(
+                                        text = compactPartnerName(name),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = onSurface.copy(alpha = 0.82f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    stats.mostWins?.let { (name, wins) ->
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Text(
+                                text = "Most wins",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = onSurfaceVariant.copy(alpha = 0.55f)
+                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = onSurface.copy(alpha = 0.045f),
+                                    border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.14f)),
+                                    modifier = Modifier.clip(CircleShape).clickable { onViewHistoryPlayer(name) }
+                                ) {
+                                    Text(
+                                        text = "$wins",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = onSurface.copy(alpha = 0.82f),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "wins",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = onSurfaceVariant.copy(alpha = 0.50f)
+                                )
+                                Surface(
+                                    shape = CircleShape,
+                                    color = onSurface.copy(alpha = 0.045f),
+                                    border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.14f)),
+                                    modifier = Modifier.clip(CircleShape).clickable { onViewPlayers(name) }
+                                ) {
+                                    Text(
+                                        text = compactPartnerName(name),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = onSurface.copy(alpha = 0.82f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Frequent partners – pill chips
             if (stats.commonPlayers.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -483,7 +637,8 @@ private fun YourStatsCard(
                             Surface(
                                 shape = CircleShape,
                                 color = onSurface.copy(alpha = 0.045f),
-                                border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.14f))
+                                border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.14f)),
+                                modifier = Modifier.clip(CircleShape).clickable { onViewPlayers(name) }
                             ) {
                                 Text(
                                     text = "${compactPartnerName(name)}  $count",
@@ -502,7 +657,7 @@ private fun YourStatsCard(
     }
 }
 
-// â”€â”€ Grouped info block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Grouped info block â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
 private fun InfoGroupBlock(sections: List<InfoSection>) {
@@ -543,16 +698,16 @@ private fun InfoGroupBlock(sections: List<InfoSection>) {
     }
 }
 
-// â”€â”€ Sleeves block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Sleeves block â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
 private fun SleevesBlock(game: GameItem) {
     var expanded by remember { mutableStateOf(false) }
 
     Surface(
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = GameDetailTokens.NeutralCardAlpha),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.025f),
         shape = GameDetailTokens.CardCorner,
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = GameDetailTokens.CardBorderAlpha)),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.07f)),
         tonalElevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -634,7 +789,7 @@ private fun SleevesBlock(game: GameItem) {
     }
 }
 
-// â”€â”€ Status chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Status chip â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
 private fun StatusChip(
@@ -666,7 +821,7 @@ private fun StatusChip(
     }
 }
 
-// â”€â”€ Detail grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Detail grid â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
 private fun DetailGrid(
@@ -685,6 +840,7 @@ private fun DetailGrid(
                     DetailCell(
                         label = stat.label,
                         value = stat.value,
+                        icon = stat.icon,
                         emphasizeSurface = emphasizeSurface,
                         secondary = stat.label in secondaryLabels,
                         modifier = Modifier.weight(1f)
@@ -700,6 +856,7 @@ private fun DetailGrid(
 private fun DetailCell(
     label: String,
     value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     emphasizeSurface: Boolean,
     secondary: Boolean,
     modifier: Modifier = Modifier
@@ -721,17 +878,42 @@ private fun DetailCell(
                     alpha = if (secondary) 0.5f else 0.58f
                 )
             )
-            Text(
-                text = value,
-                style = if (secondary) {
-                    MaterialTheme.typography.labelMedium.withTabularNumbers()
-                } else {
-                    MaterialTheme.typography.bodyMedium.withTabularNumbers()
-                },
-                color = MaterialTheme.colorScheme.onSurface.copy(
-                    alpha = if (secondary) 0.76f else 0.84f
+            if (icon != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+                    )
+                    Text(
+                        text = value,
+                        style = if (secondary) {
+                            MaterialTheme.typography.labelMedium.withTabularNumbers()
+                        } else {
+                            MaterialTheme.typography.bodyMedium.withTabularNumbers()
+                        },
+                        color = MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = if (secondary) 0.76f else 0.84f
+                        )
+                    )
+                }
+            } else {
+                Text(
+                    text = value,
+                    style = if (secondary) {
+                        MaterialTheme.typography.labelMedium.withTabularNumbers()
+                    } else {
+                        MaterialTheme.typography.bodyMedium.withTabularNumbers()
+                    },
+                    color = MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = if (secondary) 0.76f else 0.84f
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -746,7 +928,7 @@ private fun DetailCell(
     }
 }
 
-// â”€â”€ Sleeves expanded content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Sleeves expanded content â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
 private fun SleevesSection(game: GameItem) {
@@ -828,6 +1010,138 @@ private fun compactPartnerName(name: String): String {
     return trimmed.take(15) + "..."
 }
 
+private fun parsePlayerRange(s: String): List<Int> {
+    val trimmed = s.trim()
+    val rangeMatch = Regex("""(\d+)\s*[-–]\s*(\d+)""").find(trimmed)
+    if (rangeMatch != null) {
+        val from = rangeMatch.groupValues[1].toIntOrNull() ?: return emptyList()
+        val to   = rangeMatch.groupValues[2].toIntOrNull() ?: return emptyList()
+        return if (to - from <= 8) (from..to).toList() else emptyList()
+    }
+    if (trimmed.contains(",")) {
+        return trimmed.split(",").mapNotNull { it.trim().toIntOrNull() }
+    }
+    return trimmed.toIntOrNull()?.let { listOf(it) } ?: emptyList()
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PlayerCountBubbles(value: String, tint: Color) {
+    val numbers = remember(value) { parsePlayerRange(value) }
+    if (numbers.isEmpty()) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.84f)
+        )
+        return
+    }
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        numbers.forEach { n ->
+            Surface(shape = CircleShape, color = tint.copy(alpha = 0.13f)) {
+                Box(
+                    modifier = Modifier.size(22.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "$n",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = tint
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerPreferenceBlock(game: GameItem) {
+    val primary          = MaterialTheme.colorScheme.primary
+    val onSurface        = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val outlineVariant   = MaterialTheme.colorScheme.outlineVariant
+
+    val bestFor     = game.bestPlayers?.takeIf { it.isNotBlank() }
+    val recFor      = game.recommendedPlayers?.takeIf { it.isNotBlank() }
+    val playerCount = playerLabel(game)
+
+    Surface(
+        color = onSurface.copy(alpha = 0.03f),
+        shape = GameDetailTokens.CardCorner,
+        border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.1f)),
+        tonalElevation = 0.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = GameDetailTokens.CardPadding, vertical = 9.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            Text(
+                text = "Players",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = onSurfaceVariant.copy(alpha = 0.65f)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    if (bestFor != null) {
+                        Text(
+                            text = "Best for",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = onSurfaceVariant.copy(alpha = 0.58f)
+                        )
+                        PlayerCountBubbles(value = bestFor, tint = primary)
+                    }
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    if (recFor != null) {
+                        Text(
+                            text = "Great with",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = onSurfaceVariant.copy(alpha = 0.58f)
+                        )
+                        PlayerCountBubbles(value = recFor, tint = onSurface.copy(alpha = 0.60f))
+                    }
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    if (playerCount != null) {
+                        Text(
+                            text = "Players",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = onSurfaceVariant.copy(alpha = 0.58f)
+                        )
+                        Text(
+                            text = playerCount,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = onSurface.copy(alpha = 0.84f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun CompactStickyHeader(
     game: GameItem,
@@ -870,11 +1184,7 @@ private fun CompactStickyHeader(
     }
 }
 
-private fun polishGameDetailStat(stat: SectionStat): SectionStat = when (stat.label) {
-    "Best for" -> SectionStat(stat.label, "Excellent at ${stat.value}")
-    "Recommended for" -> SectionStat(stat.label, "Great with ${stat.value}")
-    else -> stat
-}
+private fun polishGameDetailStat(stat: SectionStat): SectionStat = stat
 
 @Composable
 private fun DialogPrimaryActionButton(
@@ -887,7 +1197,7 @@ private fun DialogPrimaryActionButton(
         modifier = modifier.heightIn(min = 32.dp),
         shape = RoundedCornerShape(20.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.52f),
+            containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
         ),
         contentPadding = PaddingValues(horizontal = 11.dp, vertical = 5.dp)
@@ -912,7 +1222,7 @@ private fun DialogSecondaryActionButton(
         shape = RoundedCornerShape(20.dp),
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.Transparent,
+            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.11f),
             contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f)
         ),
         contentPadding = PaddingValues(horizontal = 11.dp, vertical = 5.dp)
@@ -933,14 +1243,14 @@ private fun DialogUtilityActionButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 36.dp),
+        modifier = modifier.heightIn(min = 32.dp),
         shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.08f)),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f)
         ),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp)
+        contentPadding = PaddingValues(horizontal = 11.dp, vertical = 5.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,

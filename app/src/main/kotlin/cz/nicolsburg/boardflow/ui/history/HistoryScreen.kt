@@ -5,7 +5,6 @@ package cz.nicolsburg.boardflow.ui.history
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -31,18 +30,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -51,11 +45,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -113,7 +105,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowMotion
 import cz.nicolsburg.boardflow.ui.history.playInsights
 import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
-import cz.nicolsburg.boardflow.model.BggGame
+import cz.nicolsburg.boardflow.ui.common.PlayerResultEditorCard
 import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameBackdrop
@@ -164,7 +156,7 @@ fun HistoryScreen(
     val players by viewModel.players.collectAsState()
     val deletingPlayId by viewModel.deletingBggPlayId.collectAsState()
     val editPlayLoading by viewModel.editPlayLoading.collectAsState()
-    val pendingHistoryGameId by viewModel.pendingHistoryGameId.collectAsState()
+    val pendingHistoryNavigation by viewModel.pendingHistoryNavigation.collectAsState()
     var playToDelete by remember { mutableStateOf<LoggedPlay?>(null) }
     var selectedPlay by remember { mutableStateOf<LoggedPlay?>(null) }
     var editingPlay by remember { mutableStateOf<LoggedPlay?>(null) }
@@ -225,13 +217,19 @@ fun HistoryScreen(
         }
 
         filterPlayer?.let { playerDisplayName ->
-            val player = players.find { it.displayName == playerDisplayName }
-            val names = if (player != null) {
-                (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() }
+            if (playerDisplayName == "Unknown") {
+                result = result.filter { play ->
+                    play.players.any { it.name.isNotBlank() && !it.name.matchesSavedPlayer(players) }
+                }
             } else {
-                listOf(playerDisplayName.lowercase().trim())
+                val player = players.find { it.displayName == playerDisplayName }
+                val names = if (player != null) {
+                    (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() }
+                } else {
+                    listOf(playerDisplayName.lowercase().trim())
+                }
+                result = result.filter { play -> play.players.any { it.name.lowercase().trim() in names } }
             }
-            result = result.filter { play -> play.players.any { it.name.lowercase().trim() in names } }
         }
 
         when (sortMode) {
@@ -280,11 +278,18 @@ fun HistoryScreen(
         viewModel.loadCachedBggPlays()
     }
 
-    LaunchedEffect(pendingHistoryGameId) {
-        val id = pendingHistoryGameId ?: return@LaunchedEffect
-        activeTab = HistoryTab.PLAYS
-        filterGameId = id
-        filterGameName = historyPlays.firstOrNull { it.gameId == id }?.gameName
+    LaunchedEffect(pendingHistoryNavigation) {
+        val nav = pendingHistoryNavigation ?: return@LaunchedEffect
+        if (nav.showPlayersTab) {
+            activeTab = HistoryTab.PLAYERS
+        } else {
+            activeTab = HistoryTab.PLAYS
+            nav.gameId?.let { id ->
+                filterGameId = id
+                filterGameName = historyPlays.firstOrNull { it.gameId == id }?.gameName
+            }
+            nav.playerFilter?.let { filterPlayer = it }
+        }
         viewModel.consumePendingHistoryFilter()
     }
 
@@ -1165,7 +1170,7 @@ private fun EditPlayDialog(
     var duration by remember(play.id) { mutableStateOf(if (play.durationMinutes > 0) play.durationMinutes.toString() else "") }
     var location by remember(play.id) { mutableStateOf(play.location) }
     var comments by remember(play.id) { mutableStateOf(play.comments) }
-    val editPlayers = remember(play.id, rosterPlayers) { play.players.collapsedByName(rosterPlayers).toMutableStateList() }
+    val editPlayers = remember(play.id) { play.players.toMutableStateList() }
     var showDatePicker by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState(
@@ -1255,13 +1260,10 @@ private fun EditPlayDialog(
                             }
                         }
                         editPlayers.forEachIndexed { index, player ->
-                            EditPlayerRow(
+                            PlayerResultEditorCard(
                                 player = player,
-                                onNameChange = { editPlayers[index] = player.copy(name = it) },
-                                onScoreChange = { editPlayers[index] = player.copy(score = it) },
-                                onColorChange = { editPlayers[index] = player.copy(color = it) },
-                                onToggleWinner = { editPlayers[index] = player.copy(isWinner = !player.isWinner) },
-                                onFirstPlayChange = { editPlayers[index] = player.copy(isNew = it) },
+                                rosterPlayers = rosterPlayers,
+                                onUpdate = { editPlayers[index] = it },
                                 onRemove = { editPlayers.removeAt(index) }
                             )
                         }
@@ -1276,7 +1278,7 @@ private fun EditPlayDialog(
                                 duration.toIntOrNull() ?: 0,
                                 location,
                                 comments,
-                                editPlayers.toList().collapsedByName(rosterPlayers)
+                                editPlayers.toList()
                             )
                         },
                         enabled = !isLoading,
@@ -1293,190 +1295,6 @@ private fun EditPlayDialog(
     }
 }
 
-
-private fun List<PlayerResult>.collapsedByName(rosterPlayers: List<Player>): List<PlayerResult> {
-    val collapsed = linkedMapOf<String, PlayerResult>()
-    val blankNamePlayers = mutableListOf<PlayerResult>()
-
-    forEach { player ->
-        val trimmedName = player.name.trim()
-        if (trimmedName.isBlank()) {
-            blankNamePlayers += player.copy(name = trimmedName)
-            return@forEach
-        }
-
-        val displayName = resolveDisplayName(trimmedName, rosterPlayers).trim()
-        val key = displayName.lowercase()
-        val normalized = player.copy(name = displayName)
-        collapsed[key] = collapsed[key]?.mergeSameNamePlayer(normalized) ?: normalized
-    }
-
-    return (collapsed.values + blankNamePlayers).sortedWith(
-        compareBy<PlayerResult> { it.name.trim().lowercase() }
-            .thenBy { it.color.trim().lowercase() }
-            .thenBy { it.score.trim() }
-    )
-}
-
-private fun PlayerResult.mergeSameNamePlayer(other: PlayerResult): PlayerResult {
-    return copy(
-        score = score.meaningfulPlayerValueOr(other.score, treatZeroAsEmpty = true),
-        isWinner = isWinner || other.isWinner,
-        color = color.meaningfulPlayerValueOr(other.color),
-        rating = rating.meaningfulPlayerValueOr(other.rating),
-        isNew = isNew || other.isNew
-    )
-}
-
-private fun String.meaningfulPlayerValueOr(fallback: String, treatZeroAsEmpty: Boolean = false): String {
-    val value = trim()
-    val fallbackValue = fallback.trim()
-    val emptyValue = value.isBlank() ||
-        value.equals("N/A", ignoreCase = true) ||
-        (treatZeroAsEmpty && (value == "0" || value == "0.0"))
-    return if (emptyValue) fallbackValue else value
-}
-
-@Composable
-private fun EditPlayerRow(
-    player: PlayerResult,
-    onNameChange: (String) -> Unit,
-    onScoreChange: (String) -> Unit,
-    onColorChange: (String) -> Unit,
-    onToggleWinner: () -> Unit,
-    onFirstPlayChange: (Boolean) -> Unit,
-    onRemove: () -> Unit = {}
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val label = player.name.ifBlank { "Unnamed player" }
-    val scoreText = player.score.takeUnless {
-        val normalized = it.trim()
-        normalized.isEmpty() || normalized == "0" || normalized == "0.0"
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(BoardFlowSurfaceTokens.Shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded },
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (player.color.isNotBlank()) {
-                PlayerColorDot(player.color)
-            }
-            Text(
-                label,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
-            if (scoreText != null) {
-                Text(
-                    scoreText,
-                    style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            if (player.isWinner) {
-                Icon(
-                    Icons.Default.EmojiEvents,
-                    contentDescription = "Winner",
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-            Icon(
-                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Collapse player" else "Expand player",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        if (expanded) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (player.color.isNotBlank()) {
-                    PlayerColorDot(player.color)
-                }
-                OutlinedTextField(
-                    value = player.name,
-                    onValueChange = onNameChange,
-                    label = { Text("Name") },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1.6f)
-                )
-                OutlinedTextField(
-                    value = player.score,
-                    onValueChange = onScoreChange,
-                    label = { Text("Score") },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(0.8f)
-                )
-                BoardFlowIconButton(onClick = onToggleWinner) {
-                    Icon(
-                        Icons.Default.EmojiEvents,
-                        contentDescription = "Toggle winner",
-                        tint = if (player.isWinner) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                BoardFlowIconButton(onClick = onRemove) {
-                    Icon(
-                        BoardFlowIcons.Delete,
-                        contentDescription = "Remove player",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = player.color,
-                    onValueChange = onColorChange,
-                    label = { Text("Team / color") },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f)
-                )
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Checkbox(
-                        checked = player.isNew,
-                        onCheckedChange = onFirstPlayChange
-                    )
-                    Text(
-                        "First play",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-        }
-    }
-}
-
-}
 
 @Composable
 private fun DetailSection(rows: List<Pair<String, String>>) {
@@ -1508,6 +1326,14 @@ private fun resolveDisplayName(name: String, players: List<Player>): String {
     return players.firstOrNull { player ->
         (listOf(player.displayName) + player.aliases).any { it.lowercase().trim() == lower }
     }?.displayName ?: name
+}
+
+private fun String.matchesSavedPlayer(players: List<Player>): Boolean {
+    val lower = trim().lowercase()
+    if (lower.isBlank()) return false
+    return players.any { player ->
+        (listOf(player.displayName) + player.aliases).any { it.lowercase().trim() == lower }
+    }
 }
 
 

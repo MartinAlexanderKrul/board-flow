@@ -7,8 +7,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,7 +51,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,13 +69,55 @@ import kotlin.math.roundToInt
 
 // ── Data holders ─────────────────────────────────────────────────────────────
 
-private data class MonthBucket(val label: String, val yearMonth: Int, val count: Int)
+private data class ActivityBucket(
+    val label: String,
+    val peakLabel: String,
+    val count: Int,
+    val highlight: Boolean = false
+)
 private data class GameStat(val gameId: Int, val name: String, val plays: Int)
 private data class PlayerStat(val displayName: String, val plays: Int, val wins: Int)
+private data class StatsInsight(
+    val icon: ImageVector,
+    val value: String,
+    val label: String,
+    val detail: String? = null
+)
 
 // ── Pure computations ─────────────────────────────────────────────────────────
 
-private fun buildMonthBuckets(plays: List<LoggedPlay>, range: StatsTimeRange): List<MonthBucket> {
+private fun buildActivityBuckets(plays: List<LoggedPlay>, range: StatsTimeRange): List<ActivityBucket> {
+    val now = LocalDate.now()
+
+    fun dailyBuckets(start: LocalDate, end: LocalDate): List<ActivityBucket> {
+        val byDay = plays
+            .mapNotNull { play ->
+                runCatching { LocalDate.parse(play.date) }.getOrNull()
+                    ?.let { day -> day to play.quantity.coerceAtLeast(1) }
+            }
+            .groupBy({ it.first }) { it.second }
+            .mapValues { it.value.sum() }
+        val days = (end.toEpochDay() - start.toEpochDay()).coerceAtLeast(0).toInt()
+        return (0..days).map { offset ->
+            val day = start.plusDays(offset.toLong())
+            ActivityBucket(
+                label = day.dayOfMonth.toString(),
+                peakLabel = day.format(DateTimeFormatter.ofPattern("MMM d")),
+                count = byDay[day] ?: 0,
+                highlight = day == now
+            )
+        }
+    }
+
+    when (range) {
+        StatsTimeRange.THIS_MONTH -> {
+            val start = LocalDate.of(now.year, now.monthValue, 1)
+            return dailyBuckets(start, now)
+        }
+        StatsTimeRange.LAST_30 -> return dailyBuckets(now.minusDays(29), now)
+        else -> Unit
+    }
+
     val byMonth = plays
         .mapNotNull { play ->
             runCatching { LocalDate.parse(play.date) }.getOrNull()
@@ -86,19 +125,18 @@ private fun buildMonthBuckets(plays: List<LoggedPlay>, range: StatsTimeRange): L
         }
         .groupBy({ it.first }) { it.second }
         .mapValues { it.value.sum() }
-    val now = LocalDate.now()
     val currentYM = now.year * 100 + now.monthValue
 
     return when (range) {
         StatsTimeRange.THIS_YEAR -> {
-            // Jan 1 of current year through current month
             (1..now.monthValue).map { m ->
                 val d = LocalDate.of(now.year, m, 1)
                 val ym = d.year * 100 + d.monthValue
-                MonthBucket(
+                ActivityBucket(
                     label = d.format(DateTimeFormatter.ofPattern("MMM")),
-                    yearMonth = ym,
-                    count = byMonth[ym] ?: 0
+                    peakLabel = d.format(DateTimeFormatter.ofPattern("MMM yyyy")),
+                    count = byMonth[ym] ?: 0,
+                    highlight = ym == currentYM
                 )
             }
         }
@@ -108,39 +146,32 @@ private fun buildMonthBuckets(plays: List<LoggedPlay>, range: StatsTimeRange): L
             val earliestMonth = earliestYM % 100
             val monthSpan = (now.year - earliestYear) * 12 + (now.monthValue - earliestMonth) + 1
             if (monthSpan > 18) {
-                // Group by year so the chart is readable
                 (earliestYear..now.year).map { year ->
                     val yearCount = byMonth.entries
                         .filter { it.key / 100 == year }
                         .sumOf { it.value }
-                    MonthBucket(label = year.toString(), yearMonth = year * 100, count = yearCount)
+                    ActivityBucket(
+                        label = year.toString(),
+                        peakLabel = year.toString(),
+                        count = yearCount,
+                        highlight = year == now.year
+                    )
                 }
             } else {
-                // Show every month from earliest to now
                 val start = LocalDate.of(earliestYear, earliestMonth, 1)
                 (0 until monthSpan).map { m ->
                     val d = start.plusMonths(m.toLong())
                     val ym = d.year * 100 + d.monthValue
-                    MonthBucket(
+                    ActivityBucket(
                         label = d.format(DateTimeFormatter.ofPattern("MMM ''yy")),
-                        yearMonth = ym,
-                        count = byMonth[ym] ?: 0
+                        peakLabel = d.format(DateTimeFormatter.ofPattern("MMM yyyy")),
+                        count = byMonth[ym] ?: 0,
+                        highlight = ym == currentYM
                     )
                 }
             }
         }
-        else -> {
-            // Rolling 12-month window for THIS_MONTH and LAST_30
-            (11 downTo 0).map { back ->
-                val d = now.minusMonths(back.toLong())
-                val ym = d.year * 100 + d.monthValue
-                MonthBucket(
-                    label = d.format(DateTimeFormatter.ofPattern("MMM")),
-                    yearMonth = ym,
-                    count = byMonth[ym] ?: 0
-                )
-            }
-        }
+        else -> emptyList()
     }
 }
 
@@ -167,7 +198,7 @@ private fun buildTopPlayers(
         return roster.firstOrNull { p ->
             p.displayName.lowercase().trim() == lower ||
                 p.aliases.any { a -> a.lowercase().trim() == lower }
-        }?.displayName ?: raw
+        }?.displayName ?: "Unknown"
     }
     val map = mutableMapOf<String, Pair<Int, Int>>() // displayName → (plays, wins)
     plays.forEach { play ->
@@ -228,6 +259,119 @@ private fun buildDayOfWeekDist(plays: List<LoggedPlay>): List<Pair<String, Int>>
 
 // ── Main composable ───────────────────────────────────────────────────────────
 
+private fun formatDuration(minutes: Int): String = when {
+    minutes >= 60 && minutes % 60 == 0 -> "${minutes / 60}h"
+    minutes >= 60 -> "${minutes / 60}h ${minutes % 60}m"
+    else -> "${minutes}m"
+}
+
+private fun formatOneDecimal(value: Double): String {
+    val rounded = (value * 10).roundToInt() / 10.0
+    return if (rounded % 1.0 == 0.0) rounded.toInt().toString() else rounded.toString()
+}
+
+private fun countRecentPlays(plays: List<LoggedPlay>, days: Long): Int {
+    val cutoff = LocalDate.now().minusDays(days - 1)
+    return plays.sumOf { play ->
+        val date = runCatching { LocalDate.parse(play.date) }.getOrNull()
+        if (date != null && !date.isBefore(cutoff)) play.quantity.coerceAtLeast(1) else 0
+    }
+}
+
+private fun buildInsights(
+    totalPlays: Int,
+    uniqueGames: Int,
+    totalMinutes: Int,
+    plays: List<LoggedPlay>,
+    topGames: List<GameStat>,
+    topPlayers: List<PlayerStat>,
+    dayDist: List<Pair<String, Int>>,
+    hIndex: Int,
+    currentStreak: Int,
+    bestStreak: Int,
+    avgDuration: Int?,
+    longestSession: Pair<String, Int>?,
+    hotPlayerStreak: Pair<String, Int>?,
+    mostThisMonth: Pair<String, Int>?
+): List<StatsInsight> {
+    val activeDays = plays
+        .mapNotNull { runCatching { LocalDate.parse(it.date) }.getOrNull() }
+        .toSet()
+        .size
+    val avgPlayers = plays
+        .takeIf { it.isNotEmpty() }
+        ?.let { list -> list.sumOf { it.players.count { player -> player.name.isNotBlank() } }.toDouble() / list.size }
+    val depth = if (uniqueGames > 0) totalPlays.toDouble() / uniqueGames else null
+    val recent7 = countRecentPlays(plays, 7)
+    val busiestDay = dayDist.maxByOrNull { it.second }?.takeIf { it.second > 0 }
+    val completeRate = plays
+        .takeIf { it.isNotEmpty() }
+        ?.let { list -> (list.count { !it.incomplete } * 100.0 / list.size).roundToInt() }
+
+    return buildList {
+        add(
+            StatsInsight(
+                icon = Icons.AutoMirrored.Filled.TrendingUp,
+                value = "H-$hIndex",
+                label = "H-index",
+                detail = if (hIndex > 0) "Played $hIndex games at least $hIndex times" else "Grow this by replaying favorites"
+            )
+        )
+        if (bestStreak > 1) {
+            add(
+                StatsInsight(
+                    icon = Icons.Default.LocalFireDepartment,
+                    value = "${bestStreak}d",
+                    label = "Best streak",
+                    detail = if (currentStreak > 1) "Current streak: ${currentStreak}d" else null
+                )
+            )
+        }
+        if (currentStreak > 1) {
+            add(StatsInsight(Icons.Default.History, "${currentStreak}d", "Current streak", "You are on a roll"))
+        }
+        avgDuration?.let { avg ->
+            add(StatsInsight(Icons.Default.Schedule, formatDuration(avg), "Avg duration"))
+        }
+        longestSession?.let { (name, minutes) ->
+            add(StatsInsight(Icons.Default.EmojiEvents, formatDuration(minutes), "Longest session", name))
+        }
+        topGames.firstOrNull()?.let { game ->
+            add(StatsInsight(Icons.Default.Star, "${game.plays}", "Most played", game.name))
+        }
+        topPlayers.firstOrNull()?.let { player ->
+            add(StatsInsight(Icons.Default.Group, "${player.plays}", "Most active", player.displayName))
+        }
+        hotPlayerStreak?.let { (name, streak) ->
+            add(StatsInsight(Icons.Default.LocalFireDepartment, "${streak}W", "Hot streak", name))
+        }
+        busiestDay?.let { (day, count) ->
+            add(StatsInsight(Icons.Default.History, day, "Busiest day", "$count ${if (count == 1) "play" else "plays"}"))
+        }
+        depth?.let {
+            add(StatsInsight(Icons.Default.Star, formatOneDecimal(it), "Depth", "plays per game"))
+        }
+        avgPlayers?.let {
+            add(StatsInsight(Icons.Default.Group, formatOneDecimal(it), "Table size", "players per play"))
+        }
+        if (recent7 > 0) {
+            add(StatsInsight(Icons.Default.LocalFireDepartment, "$recent7", "Last 7 days", if (recent7 == 1) "1 play" else "$recent7 plays"))
+        }
+        if (activeDays > 0) {
+            add(StatsInsight(Icons.Default.History, "$activeDays", "Active days", "days with plays"))
+        }
+        if (totalMinutes > 0 && activeDays > 0) {
+            add(StatsInsight(Icons.Default.Schedule, formatDuration(totalMinutes / activeDays), "Time per active day"))
+        }
+        completeRate?.let {
+            add(StatsInsight(Icons.Default.EmojiEvents, "$it%", "Complete plays"))
+        }
+        mostThisMonth?.let { (name, count) ->
+            add(StatsInsight(Icons.Default.Star, "${count}x", "This month", name))
+        }
+    }
+}
+
 @Composable
 internal fun StatsContent(
     plays: List<LoggedPlay>,
@@ -275,7 +419,7 @@ internal fun StatsContent(
     val totalPlays    = remember(statPlays) { statPlays.sumOf { it.quantity.coerceAtLeast(1) } }
     val uniqueGames   = remember(statPlays) { statPlays.map { it.gameName }.toSet().size }
     val totalMinutes  = remember(statPlays) { statPlays.filter { it.durationMinutes > 0 }.sumOf { it.durationMinutes } }
-    val months       = remember(statPlays, timeRange) { buildMonthBuckets(statPlays, timeRange) }
+    val activity     = remember(statPlays, timeRange) { buildActivityBuckets(statPlays, timeRange) }
     val topGames     = remember(statPlays) { buildTopGames(statPlays) }
     val topPlayers   = remember(statPlays, players) { buildTopPlayers(statPlays, players) }
     val hIndex       = remember(statPlays) { computeHIndex(statPlays) }
@@ -292,6 +436,39 @@ internal fun StatsContent(
     val hotStreak      = remember(statPlays, players) { statPlays.hotPlayerStreak(players) }
     val mostThisMonth  = remember(statPlays) {
         if (timeRange == StatsTimeRange.ALL) statPlays.mostPlayedThisMonth() else null
+    }
+    val insights = remember(
+        totalPlays,
+        uniqueGames,
+        totalMinutes,
+        statPlays,
+        topGames,
+        topPlayers,
+        dayDist,
+        hIndex,
+        curStreak,
+        bestStreak,
+        avgDuration,
+        longestSession,
+        hotStreak,
+        mostThisMonth
+    ) {
+        buildInsights(
+            totalPlays = totalPlays,
+            uniqueGames = uniqueGames,
+            totalMinutes = totalMinutes,
+            plays = statPlays,
+            topGames = topGames,
+            topPlayers = topPlayers,
+            dayDist = dayDist,
+            hIndex = hIndex,
+            currentStreak = curStreak,
+            bestStreak = bestStreak,
+            avgDuration = avgDuration,
+            longestSession = longestSession,
+            hotPlayerStreak = hotStreak,
+            mostThisMonth = mostThisMonth
+        )
     }
 
     LazyColumn(
@@ -352,8 +529,8 @@ internal fun StatsContent(
 
         item { SummarySection(totalPlays, uniqueGames, totalMinutes, players.size) }
 
-        if (months.any { it.count > 0 }) {
-            item { ActivitySection(months, rangeLabel = timeRange.subtitle) }
+        if (activity.any { it.count > 0 }) {
+            item { ActivitySection(activity, rangeLabel = timeRange.subtitle) }
         }
 
         if (topGames.isNotEmpty()) {
@@ -370,13 +547,7 @@ internal fun StatsContent(
 
         item {
             InsightsSection(
-                hIndex = hIndex,
-                currentStreak = curStreak,
-                bestStreak = bestStreak,
-                avgDuration = avgDuration,
-                longestSession = longestSession,
-                hotPlayerStreak = hotStreak,
-                mostThisMonth = mostThisMonth,
+                insights = insights,
                 rangeLabel = timeRange.subtitle
             )
         }
@@ -483,10 +654,10 @@ private fun BigStatCard(
 // ── Activity bar chart ────────────────────────────────────────────────────────
 
 @Composable
-private fun ActivitySection(months: List<MonthBucket>, rangeLabel: String = "All time") {
-    val totalInWindow = months.sumOf { it.count }
-    val peakMonth = months.maxByOrNull { it.count }
-    val subtitle = "$rangeLabel  ·  $totalInWindow ${if (totalInWindow == 1) "play" else "plays"}"
+private fun ActivitySection(activity: List<ActivityBucket>, rangeLabel: String = "All time") {
+    val totalInWindow = activity.sumOf { it.count }
+    val peakBucket = activity.maxByOrNull { it.count }
+    val subtitle = "$rangeLabel - $totalInWindow ${if (totalInWindow == 1) "play" else "plays"}"
 
     SectionCard {
         StatsCardHeader(
@@ -495,23 +666,16 @@ private fun ActivitySection(months: List<MonthBucket>, rangeLabel: String = "All
         )
         Spacer(Modifier.height(12.dp))
 
-        val now = LocalDate.now()
-        val currentYM = now.year * 100 + now.monthValue
-        val isYearMode = months.all { it.yearMonth % 100 == 0 }
-        val highlightIndex = if (isYearMode)
-            months.indexOfFirst { it.yearMonth / 100 == now.year }
-        else
-            months.indexOfFirst { it.yearMonth == currentYM }
         BucketBarChart(
-            values = months.map { it.count },
-            labels = months.map { it.label },
-            highlightIndex = highlightIndex
+            values = activity.map { it.count },
+            labels = activity.map { it.label },
+            highlightIndex = activity.indexOfFirst { it.highlight }
         )
 
-        peakMonth?.takeIf { it.count > 0 }?.let { peak ->
+        peakBucket?.takeIf { it.count > 0 }?.let { peak ->
             Spacer(Modifier.height(8.dp))
             Text(
-                "Peak: ${peak.label} — ${peak.count} ${if (peak.count == 1) "play" else "plays"}",
+                "Peak: ${peak.peakLabel} - ${peak.count} ${if (peak.count == 1) "play" else "plays"}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
@@ -852,79 +1016,33 @@ private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int, onClick: 
 
 // ── Insights ──────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun InsightsSection(
-    hIndex: Int,
-    currentStreak: Int,
-    bestStreak: Int,
-    avgDuration: Int?,
-    longestSession: Pair<String, Int>?,
-    hotPlayerStreak: Pair<String, Int>? = null,
-    mostThisMonth: Pair<String, Int>? = null,
+    insights: List<StatsInsight>,
     rangeLabel: String = "All time"
 ) {
     SectionCard {
         StatsCardHeader(title = "Insights", subtitle = rangeLabel)
         Spacer(Modifier.height(12.dp))
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            InsightChip(
-                icon = Icons.AutoMirrored.Filled.TrendingUp,
-                value = "H-$hIndex",
-                label = "H-index",
-                detail = if (hIndex > 0)
-                    "Played $hIndex games\nat least $hIndex times"
-                else
-                    "Play the same game\nmultiple times to grow this",
-                modifier = Modifier.weight(1f)
-            )
-            if (bestStreak > 1) {
-                InsightChip(
-                    icon = Icons.Default.LocalFireDepartment,
-                    value = "${bestStreak}d",
-                    label = "Best streak",
-                    detail = if (currentStreak > 1) "Current: ${currentStreak}d 🔥" else null,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            avgDuration?.let { avg ->
-                InsightChip(
-                    icon = Icons.Default.Schedule,
-                    value = if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m",
-                    label = "Avg duration",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            longestSession?.let { (name, minutes) ->
-                InsightChip(
-                    icon = Icons.Default.EmojiEvents,
-                    value = if (minutes >= 60) "${minutes / 60}h ${minutes % 60}m" else "${minutes}m",
-                    label = "Longest session",
-                    detail = name,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            hotPlayerStreak?.let { (name, streak) ->
-                InsightChip(
-                    icon = Icons.Default.LocalFireDepartment,
-                    value = "${streak}W",
-                    label = "Hot streak",
-                    detail = "$name on a ${streak}-win streak 🔥",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            mostThisMonth?.let { (name, count) ->
-                InsightChip(
-                    icon = Icons.Default.Star,
-                    value = "${count}×",
-                    label = "This month",
-                    detail = name,
-                    modifier = Modifier.weight(1f)
-                )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            insights.chunked(3).forEach { rowInsights ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowInsights.forEach { insight ->
+                        InsightChip(
+                            icon = insight.icon,
+                            value = insight.value,
+                            label = insight.label,
+                            detail = insight.detail,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    repeat(3 - rowInsights.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }

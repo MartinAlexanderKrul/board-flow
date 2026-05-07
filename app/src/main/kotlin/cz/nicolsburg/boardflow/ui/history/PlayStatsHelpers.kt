@@ -57,12 +57,11 @@ private data class InsightCandidate(
 )
 
 private fun resolveDisplayName(raw: String, roster: List<Player>): String {
-    if (roster.isEmpty()) return raw.trim()
     val lower = raw.lowercase().trim()
     return roster.firstOrNull { player ->
         player.displayName.lowercase().trim() == lower ||
             player.aliases.any { alias -> alias.lowercase().trim() == lower }
-    }?.displayName ?: raw.trim()
+    }?.displayName ?: "Unknown"
 }
 
 private fun computeGameHistoryStats(gamePlays: List<LoggedPlay>, roster: List<Player>): GameHistoryStats? {
