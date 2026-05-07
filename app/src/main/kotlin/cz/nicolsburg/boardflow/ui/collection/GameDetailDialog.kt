@@ -3,11 +3,14 @@ package cz.nicolsburg.boardflow.ui.collection
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,28 +19,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Style
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -50,8 +61,8 @@ import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
-import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import cz.nicolsburg.boardflow.ui.history.ContextualInsight
 import cz.nicolsburg.boardflow.ui.history.GameHistoryStats
@@ -110,6 +121,17 @@ fun GameDetailsDialog(
     val hasSleeves = game.sleeveStatus != GameItem.SleeveStatus.UNKNOWN ||
             game.sleeveCardSets.isNotEmpty()
 
+    // Scroll-driven header collapse for cinematic parallax effect
+    val listState = rememberLazyListState()
+    val headerCollapse by remember {
+        derivedStateOf {
+            when {
+                listState.firstVisibleItemIndex > 0 -> 1f
+                else -> (listState.firstVisibleItemScrollOffset / 200f).coerceIn(0f, 1f)
+            }
+        }
+    }
+
     fun open(url: String) {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
@@ -119,16 +141,17 @@ fun GameDetailsDialog(
         backdrop = { GameBackdrop(imageUrl = game.thumbnailUrl, height = 200.dp) }
     ) {
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
-            // ── Header with atmospheric backdrop ──────────────────────────────
+            // ── Header ────────────────────────────────────────────────────────
             item {
-                HeaderSection(game, headerChips, compactChips)
+                HeaderSection(game, headerChips, compactChips, headerCollapse)
             }
 
-            // ── Action row: Log Play (always) + History (only with plays) ─────
+            // ── Action row ────────────────────────────────────────────────────
             if (gameObjectId != null) {
                 item {
                     val hasHistory = myStats != null
@@ -139,12 +162,23 @@ fun GameDetailsDialog(
                         BoardFlowButton(
                             onClick = onLogPlay,
                             modifier = if (hasHistory) Modifier.weight(1f) else Modifier.fillMaxWidth()
-                        ) { Text("Log Play") }
+                        ) {
+                            Icon(
+                                Icons.Default.Casino,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text("Log Play")
+                        }
 
                         if (hasHistory) {
                             BoardFlowOutlinedButton(
                                 onClick = { onViewHistory(gameObjectId) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
                             ) {
                                 Icon(
                                     Icons.Default.History,
@@ -159,7 +193,7 @@ fun GameDetailsDialog(
                 }
             }
 
-            // ── Your Stats hero card ──────────────────────────────────────────
+            // ── Your Stats card ───────────────────────────────────────────────
             if (myStats != null) {
                 item {
                     YourStatsCard(stats = myStats, insight = contextualInsight)
@@ -175,7 +209,7 @@ fun GameDetailsDialog(
                 }
             }
 
-            // ── Grouped info block (Players · Overview · Ratings) ─────────────
+            // ── Grouped info block ────────────────────────────────────────────
             if (infoSections.isNotEmpty()) {
                 item { InfoGroupBlock(infoSections) }
             }
@@ -185,7 +219,7 @@ fun GameDetailsDialog(
                 item { SleevesBlock(game) }
             }
 
-            // ── More (custom spreadsheet rows) ────────────────────────────────
+            // ── More ──────────────────────────────────────────────────────────
             if (customRows.isNotEmpty()) {
                 item { InfoGroupBlock(listOf(InfoSection("More", customRows))) }
             }
@@ -222,13 +256,14 @@ fun GameDetailsDialog(
     }
 }
 
-// ── Header content (GameBackdrop behind dialog handles the artwork) ───────────
+// ── Header ────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun HeaderSection(
     game: GameItem,
     headerChips: List<HeaderChip>,
-    compactChips: Boolean
+    compactChips: Boolean,
+    collapse: Float = 0f
 ) {
     val hasBackdrop = !game.thumbnailUrl.isNullOrBlank()
 
@@ -247,6 +282,8 @@ private fun HeaderSection(
                 modifier = Modifier
                     .size(84.dp)
                     .clip(MaterialTheme.shapes.medium)
+                    .scale(1f - 0.12f * collapse)
+                    .alpha(1f - 0.45f * collapse)
             )
         } else {
             Box(
@@ -266,7 +303,9 @@ private fun HeaderSection(
         }
 
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .alpha(1f - 0.25f * collapse),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
@@ -301,33 +340,49 @@ private fun HeaderSection(
     }
 }
 
-// ── Your Stats hero card ──────────────────────────────────────────────────────
+// ── Your Stats card ───────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun YourStatsCard(
     stats: GameHistoryStats,
     insight: ContextualInsight?
 ) {
     val primary          = MaterialTheme.colorScheme.primary
+    val onSurface        = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val outlineVariant   = MaterialTheme.colorScheme.outlineVariant
 
     Surface(
         color = primary.copy(alpha = 0.04f),
         shape = MaterialTheme.shapes.large,
+        border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.12f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Your Stats",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = primary.copy(alpha = 0.75f)
-            )
+            // Section label with icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Default.QueryStats,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = primary.copy(alpha = 0.75f)
+                )
+                Text(
+                    text = "Your Stats",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = primary.copy(alpha = 0.75f)
+                )
+            }
 
-            // Hero row — plays count + last played date
+            // Primary — plays count (brightest) + secondary — last played date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Bottom,
@@ -352,7 +407,7 @@ private fun YourStatsCard(
                             text = date,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = onSurface.copy(alpha = 0.85f)
                         )
                         Text(
                             text = "last played",
@@ -363,7 +418,7 @@ private fun YourStatsCard(
                 }
             }
 
-            // Secondary stats grid
+            // Tertiary stats grid
             val secondary = buildList {
                 stats.avgDurationMinutes?.let { avg ->
                     add(SectionStat("Avg duration", if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"))
@@ -375,19 +430,33 @@ private fun YourStatsCard(
                 DetailGrid(stats = secondary, emphasizeSurface = false)
             }
 
-            // Frequent partners
+            // Frequent partners — pill chips
             if (stats.commonPlayers.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = "Frequent partners",
                         style = MaterialTheme.typography.labelSmall,
                         color = onSurfaceVariant.copy(alpha = 0.55f)
                     )
-                    Text(
-                        text = stats.commonPlayers.joinToString(" · ") { "${it.first} (${it.second})" },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
-                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        stats.commonPlayers.forEach { (name, count) ->
+                            Surface(
+                                shape = CircleShape,
+                                color = onSurface.copy(alpha = 0.06f),
+                                border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.20f))
+                            ) {
+                                Text(
+                                    text = "$name  $count",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = onSurface.copy(alpha = 0.82f),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -415,6 +484,7 @@ private fun InfoGroupBlock(sections: List<InfoSection>) {
     Surface(
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
         shape = MaterialTheme.shapes.large,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
@@ -456,6 +526,7 @@ private fun SleevesBlock(game: GameItem) {
     Surface(
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
         shape = MaterialTheme.shapes.large,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
@@ -468,12 +539,23 @@ private fun SleevesBlock(game: GameItem) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Sleeves",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Style,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                        )
+                        Text(
+                            text = "Sleeves",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                        )
+                    }
                     if (!expanded) {
                         val groups = game.sleeveCardSets
                             .filter { it.size != null || it.count != null }
@@ -507,7 +589,7 @@ private fun SleevesBlock(game: GameItem) {
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f),
                         modifier = Modifier.padding(horizontal = 14.dp)
                     )
-                    Box(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+                    Box(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                         SleevesSection(game)
                     }
                 }
@@ -606,7 +688,7 @@ private fun DetailCell(
                     MaterialTheme.typography.bodyMedium.withTabularNumbers()
                 },
                 color = MaterialTheme.colorScheme.onSurface.copy(
-                    alpha = if (secondary) 0.72f else 1f
+                    alpha = if (secondary) 0.72f else 0.88f
                 )
             )
         }

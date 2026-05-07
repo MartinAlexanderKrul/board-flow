@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
@@ -78,8 +79,10 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import coil.compose.AsyncImage
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
@@ -974,21 +977,45 @@ private fun PlayDetailsDialog(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
                 item {
+                    val hasThumb = !thumbnailUrl.isNullOrBlank()
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp, bottom = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.Top
                     ) {
+                        if (hasThumb) {
+                            AsyncImage(
+                                model = thumbnailUrl,
+                                contentDescription = play.gameName,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(84.dp)
+                                    .clip(MaterialTheme.shapes.medium)
+                            )
+                        }
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text(
-                                play.gameName,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    play.gameName,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (hasThumb) Color.White.copy(alpha = 0.95f)
+                                            else MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                                )
+                                if (isDeleting) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                }
+                            }
                             Text(
                                 remember(play.date) {
                                     runCatching {
@@ -997,26 +1024,33 @@ private fun PlayDetailsDialog(
                                     }.getOrDefault(play.date)
                                 },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (hasThumb) Color.White.copy(alpha = 0.65f)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                SuggestionChip(onClick = {}, label = { Text("${play.players.size} players", style = MaterialTheme.typography.labelSmall) })
-                                if (play.durationMinutes > 0) {
-                                    SuggestionChip(onClick = {}, label = { Text("${play.durationMinutes} min", style = MaterialTheme.typography.labelSmall) })
+                                val chipBg = if (hasThumb) Color.Black.copy(alpha = 0.45f)
+                                             else MaterialTheme.colorScheme.surfaceVariant
+                                val chipFg = if (hasThumb) Color.White.copy(alpha = 0.90f)
+                                             else MaterialTheme.colorScheme.onSurfaceVariant
+                                @Composable fun Chip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {
+                                    Surface(shape = CircleShape, color = chipBg) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        ) {
+                                            Icon(icon, contentDescription = null, modifier = Modifier.size(12.dp), tint = chipFg)
+                                            Text(label, style = MaterialTheme.typography.labelSmall, color = chipFg)
+                                        }
+                                    }
                                 }
-                                if (play.quantity > 1) {
-                                    SuggestionChip(onClick = {}, label = { Text("×${play.quantity}", style = MaterialTheme.typography.labelSmall) })
-                                }
-                                if (play.incomplete) {
-                                    SuggestionChip(onClick = {}, label = { Text("partial", style = MaterialTheme.typography.labelSmall) })
-                                }
+                                Chip(Icons.Default.Group, "${play.players.size}")
+                                if (play.durationMinutes > 0) Chip(Icons.Default.Schedule, "${play.durationMinutes} min")
+                                if (play.location.isNotBlank()) Chip(Icons.Default.LocationOn, play.location)
                             }
-                        }
-                        if (isDeleting) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         }
                     }
                 }
@@ -1056,16 +1090,8 @@ private fun PlayDetailsDialog(
                 item {
                     DetailSection(
                         rows = buildList {
-                            val formattedDate = runCatching {
-                                LocalDate.parse(play.date)
-                                    .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
-                            }.getOrDefault(play.date)
-                            add("Date" to formattedDate)
-                            if (play.durationMinutes > 0) add("Duration" to "${play.durationMinutes} min")
-                            if (play.location.isNotBlank()) add("Location" to play.location)
-                            if (play.quantity > 1) add("Quantity" to "×${play.quantity}")
+                            if (play.quantity > 1) add("Played" to "${play.quantity} times")
                             if (play.incomplete) add("Status" to "Incomplete play")
-                            if (!play.nowInStats) add("Stats" to "Excluded from stats")
                             if (play.comments.isNotBlank()) add("Comment" to play.comments)
                         }
                     )
