@@ -158,6 +158,7 @@ fun HistoryScreen(
     val players by viewModel.players.collectAsState()
     val deletingPlayId by viewModel.deletingBggPlayId.collectAsState()
     val editPlayLoading by viewModel.editPlayLoading.collectAsState()
+    val pendingHistoryGameId by viewModel.pendingHistoryGameId.collectAsState()
     var playToDelete by remember { mutableStateOf<LoggedPlay?>(null) }
     var selectedPlay by remember { mutableStateOf<LoggedPlay?>(null) }
     var editingPlay by remember { mutableStateOf<LoggedPlay?>(null) }
@@ -257,6 +258,14 @@ fun HistoryScreen(
         viewModel.loadPlayers()
         viewModel.loadPlayHistory()
         viewModel.loadCachedBggPlays()
+    }
+
+    LaunchedEffect(pendingHistoryGameId) {
+        val id = pendingHistoryGameId ?: return@LaunchedEffect
+        activeTab = HistoryTab.PLAYS
+        filterGameId = id
+        filterGameName = historyPlays.firstOrNull { it.gameId == id }?.gameName
+        viewModel.consumePendingHistoryFilter()
     }
 
     LaunchedEffect(controlsVisible, activeTab) {

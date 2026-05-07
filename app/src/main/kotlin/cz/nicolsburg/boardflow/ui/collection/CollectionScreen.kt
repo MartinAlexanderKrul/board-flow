@@ -79,6 +79,7 @@ import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
+import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
@@ -115,6 +116,10 @@ private enum class TabMode(val label: String) {
 fun CollectionScreen(
     syncViewModel: SyncViewModel,
     historyPlays: List<LoggedPlay> = emptyList(),
+    players: List<Player> = emptyList(),
+    onLogPlay: (gameId: Int, gameName: String, thumbnailUrl: String?) -> Unit = { _, _, _ -> },
+    onPlayAgain: (LoggedPlay) -> Unit = {},
+    onViewHistory: (Int) -> Unit = {},
     onHeaderFilterStateChange: (visible: Boolean, hasActiveFilters: Boolean, onClick: (() -> Unit)?) -> Unit = { _, _, _ -> },
     onActiveTabChange: (String?) -> Unit = {}
 ) {
@@ -231,7 +236,20 @@ fun CollectionScreen(
         GameDetailsDialog(
             game = game,
             onDismiss = { selectedGame = null },
-            historyPlays = historyPlays
+            historyPlays = historyPlays,
+            players = players,
+            onLogPlay = {
+                selectedGame = null
+                onLogPlay(game.objectId.toIntOrNull() ?: 0, game.name, game.thumbnailUrl)
+            },
+            onPlayAgain = { play ->
+                selectedGame = null
+                onPlayAgain(play)
+            },
+            onViewHistory = { gameId ->
+                selectedGame = null
+                onViewHistory(gameId)
+            }
         )
     }
 
