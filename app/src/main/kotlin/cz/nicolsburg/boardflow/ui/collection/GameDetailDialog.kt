@@ -168,49 +168,19 @@ fun GameDetailsDialog(
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
-                    HeaderSection(game, headerChips, compactChips, headerCollapse)
-                }
-
-                if (gameObjectId != null) {
-                    item {
-                        val hasHistory = myStats != null
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            if (hasHistory) {
-                                DialogPrimaryActionButton(
-                                    onClick = onLogPlay,
-                                    modifier = Modifier.weight(1.08f)
-                                ) {
-                                    Icon(Icons.Default.Casino, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Log Play")
-                                }
-                                DialogSecondaryActionButton(
-                                    onClick = { onViewHistory(gameObjectId) },
-                                    modifier = Modifier.weight(0.92f)
-                                ) {
-                                    Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("History")
-                                }
-                            } else {
-                                DialogPrimaryActionButton(
-                                    onClick = onLogPlay,
-                                    modifier = if (hasExternalButtons) Modifier.weight(0.62f) else Modifier.fillMaxWidth()
-                                ) {
-                                    Icon(Icons.Default.Casino, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Log Play")
-                                }
-                                if (hasExternalButtons) Spacer(Modifier.weight(0.38f))
-                            }
-                        }
-                    }
+                    HeaderSection(
+                        game = game,
+                        headerChips = headerChips,
+                        compactChips = compactChips,
+                        collapse = headerCollapse,
+                        gameObjectId = gameObjectId,
+                        hasHistory = myStats != null,
+                        onLogPlay = onLogPlay,
+                        onViewHistory = onViewHistory
+                    )
                 }
 
                 if (myStats != null && contextualInsight != null) {
@@ -250,8 +220,8 @@ fun GameDetailsDialog(
                                     onClick = { open(bggUrl) },
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
+                                    Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp).alpha(0.65f))
+                                    Spacer(Modifier.width(5.dp))
                                     Text("Open BGG")
                                 }
                             }
@@ -260,8 +230,8 @@ fun GameDetailsDialog(
                                     onClick = { open(driveUrl) },
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
+                                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp).alpha(0.65f))
+                                    Spacer(Modifier.width(5.dp))
                                     Text("Drive")
                                 }
                             }
@@ -286,7 +256,11 @@ private fun HeaderSection(
     game: GameItem,
     headerChips: List<HeaderChip>,
     compactChips: Boolean,
-    collapse: Float = 0f
+    collapse: Float = 0f,
+    gameObjectId: Int? = null,
+    hasHistory: Boolean = false,
+    onLogPlay: () -> Unit = {},
+    onViewHistory: (Int) -> Unit = {}
 ) {
     val hasBackdrop = !game.thumbnailUrl.isNullOrBlank()
     val expandedThumb = 84.dp
@@ -361,6 +335,36 @@ private fun HeaderSection(
                         tint = chip.tint,
                         iconOnly = compactChips
                     )
+                }
+            }
+            if (gameObjectId != null) {
+                Row(
+                    modifier = Modifier
+                        .alpha(chipAlpha)
+                        .padding(top = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    DialogPrimaryActionButton(onClick = onLogPlay) {
+                        Icon(
+                            Icons.Default.Casino,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp).alpha(0.70f)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text("Log Play", style = MaterialTheme.typography.labelMedium)
+                    }
+                    if (hasHistory) {
+                        DialogSecondaryActionButton(onClick = { onViewHistory(gameObjectId) }) {
+                            Icon(
+                                Icons.Default.History,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp).alpha(0.70f)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("History", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
                 }
             }
         }
@@ -869,19 +873,7 @@ private fun CompactStickyHeader(
 private fun polishGameDetailStat(stat: SectionStat): SectionStat = when (stat.label) {
     "Best for" -> SectionStat(stat.label, "Excellent at ${stat.value}")
     "Recommended for" -> SectionStat(stat.label, "Great with ${stat.value}")
-    "Weight" -> SectionStat(stat.label, strategyWeightLabel(stat.value))
     else -> stat
-}
-
-private fun strategyWeightLabel(raw: String): String {
-    val value = raw.toDoubleOrNull() ?: return raw
-    return when {
-        value < 1.8 -> "Light strategy"
-        value < 2.5 -> "Medium-light strategy"
-        value < 3.2 -> "Medium-heavy strategy"
-        value < 4.0 -> "Heavy strategy"
-        else -> "Very heavy strategy"
-    }
 }
 
 @Composable
@@ -892,13 +884,13 @@ private fun DialogPrimaryActionButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 52.dp),
-        shape = RoundedCornerShape(14.dp),
+        modifier = modifier.heightIn(min = 32.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f),
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.52f),
             contentColor = MaterialTheme.colorScheme.onPrimary
         ),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+        contentPadding = PaddingValues(horizontal = 11.dp, vertical = 5.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -916,14 +908,14 @@ private fun DialogSecondaryActionButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 52.dp),
-        shape = RoundedCornerShape(14.dp),
-        border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)),
+        modifier = modifier.heightIn(min = 32.dp),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
-            contentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.88f)
+            containerColor = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f)
         ),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+        contentPadding = PaddingValues(horizontal = 11.dp, vertical = 5.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -941,14 +933,14 @@ private fun DialogUtilityActionButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 48.dp),
-        shape = RoundedCornerShape(13.dp),
-        border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
+        modifier = modifier.heightIn(min = 36.dp),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.08f)),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.84f)
+            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f)
         ),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 9.dp)
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,

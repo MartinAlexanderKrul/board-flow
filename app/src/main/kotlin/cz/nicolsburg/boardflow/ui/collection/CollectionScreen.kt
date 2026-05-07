@@ -632,7 +632,7 @@ private fun GameCard(
                         InlineStat(icon = Icons.Default.CalendarToday, label = it.toString())
                     }
                     game.weight?.let {
-                        InlineStat(icon = Icons.Default.Scale, label = formatDecimal(it))
+                        InlineStat(icon = Icons.Default.Scale, label = gameWeightLabel(it))
                     }
                     game.playingTime?.let {
                         InlineStat(icon = Icons.Default.Schedule, label = "${it}m")

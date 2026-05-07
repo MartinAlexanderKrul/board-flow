@@ -75,6 +75,16 @@ fun playerLabel(game: GameItem): String? {
 
 fun formatDecimal(value: Double): String = String.format("%.1f", value)
 
+fun gameWeightLabel(weight: Double): String = when {
+    weight < 1.5 -> "Light"
+    weight < 2.0 -> "Casual"
+    weight < 2.5 -> "Medium-Light"
+    weight < 3.0 -> "Medium"
+    weight < 3.5 -> "Medium-Heavy"
+    weight < 4.0 -> "Heavy"
+    else         -> "Expert"
+}
+
 fun overviewStats(game: GameItem): List<SectionStat> {
     val stats = mutableListOf<SectionStat>()
     game.yearPublished?.toString()?.let { stats += SectionStat("Year", it) }
@@ -88,7 +98,7 @@ fun ratingStats(game: GameItem): List<SectionStat> {
     return listOfNotNull(
         game.rating?.let { SectionStat("BGG rating", formatDecimal(it)) },
         game.bayesAverage?.let { SectionStat("Bayes rating", formatDecimal(it)) },
-        game.weight?.let { SectionStat("Weight", formatDecimal(it)) },
+        game.weight?.let { SectionStat("Weight", gameWeightLabel(it)) },
     )
 }
 
