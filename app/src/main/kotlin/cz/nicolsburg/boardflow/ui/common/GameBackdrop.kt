@@ -40,15 +40,17 @@ fun GameBackdrop(
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        // Dark top overlay for text readability, fades to surface at the bottom
+        // Cinematic gradient: crisp art at top, progressively darker toward content
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colorStops = arrayOf(
-                            0f    to Color.Black.copy(alpha = 0.62f),
-                            0.50f to Color.Black.copy(alpha = 0.45f),
+                            0f    to Color.Transparent,
+                            0.28f to Color.Black.copy(alpha = 0.22f),
+                            0.62f to Color.Black.copy(alpha = 0.55f),
+                            0.86f to Color.Black.copy(alpha = 0.72f),
                             1f    to surfaceColor
                         )
                     )
