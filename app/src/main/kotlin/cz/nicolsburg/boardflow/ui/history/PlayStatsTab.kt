@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -230,6 +232,7 @@ private fun buildDayOfWeekDist(plays: List<LoggedPlay>): List<Pair<String, Int>>
 internal fun StatsContent(
     plays: List<LoggedPlay>,
     players: List<Player>,
+    listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
     onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
     onPlayerTapped: (String) -> Unit = {}
@@ -292,6 +295,7 @@ internal fun StatsContent(
     }
 
     LazyColumn(
+        state = listState,
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)

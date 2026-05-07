@@ -2,7 +2,9 @@
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -380,6 +382,7 @@ fun PlayersTabContent(
     players: List<Player>,
     sourcePlays: List<LoggedPlay>,
     onEditPlayer: (Player) -> Unit,
+    listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier
 ) {
     var viewingPlayer by remember { mutableStateOf<Player?>(null) }
@@ -426,6 +429,7 @@ fun PlayersTabContent(
         }
     } else {
         LazyColumn(
+            state = listState,
             modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(vertical = 8.dp)

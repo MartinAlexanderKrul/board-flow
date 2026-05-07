@@ -185,7 +185,9 @@ fun HistoryScreen(
     var filterPlayer by remember { mutableStateOf<String?>(null) }
     var showFilters by remember { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(true) }
-    val listState = rememberLazyListState()
+    val playsListState = rememberLazyListState()
+    val statsListState = rememberLazyListState()
+    val playersListState = rememberLazyListState()
 
     val hasActiveFilters = sortMode != HistorySortMode.DATE_DESC ||
         filterDateRange != HistoryDateRange.ALL ||
@@ -246,13 +248,19 @@ fun HistoryScreen(
 
     LaunchedEffect(activeTab) {
         controlsVisible = true
-        if (activeTab == HistoryTab.PLAYS) listState.scrollToItem(0)
+        if (activeTab == HistoryTab.PLAYS) playsListState.scrollToItem(0)
     }
 
-    LaunchedEffect(listState) {
+    LaunchedEffect(activeTab, playsListState, statsListState, playersListState) {
         var lastIndex = 0
         var lastOffset = 0
-        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+        snapshotFlow {
+            when (activeTab) {
+                HistoryTab.PLAYS -> playsListState.firstVisibleItemIndex to playsListState.firstVisibleItemScrollOffset
+                HistoryTab.STATS -> statsListState.firstVisibleItemIndex to statsListState.firstVisibleItemScrollOffset
+                HistoryTab.PLAYERS -> playersListState.firstVisibleItemIndex to playersListState.firstVisibleItemScrollOffset
+            }
+        }
             .collect { (index, offset) ->
                 val scrollingDown = index > lastIndex || (index == lastIndex && offset > lastOffset)
                 val atTop = index == 0 && offset < 8
@@ -263,7 +271,7 @@ fun HistoryScreen(
     }
 
     LaunchedEffect(searchQuery, filterGameId, sortMode, filterDateRange, filterPlayer) {
-        listState.scrollToItem(0)
+        playsListState.scrollToItem(0)
     }
 
     LaunchedEffect(Unit) {
@@ -525,7 +533,7 @@ fun HistoryScreen(
                         hasBggUsername = viewModel.prefs.bggUsername.isNotBlank(),
                         onOpenPlay = { selectedPlay = it },
                         onRefresh = viewModel::fetchBggPlays,
-                        listState = listState,
+                        listState = playsListState,
                         hasActiveFilters = hasActiveFilters,
                         onResetFilters = {
                             sortMode = HistorySortMode.DATE_DESC
@@ -541,6 +549,7 @@ fun HistoryScreen(
                 HistoryTab.STATS -> StatsContent(
                     plays = historyPlays,
                     players = players,
+                    listState = statsListState,
                     modifier = Modifier.fillMaxSize(),
                     onGameTapped = { gameId, gameName ->
                         activeTab = HistoryTab.PLAYS
@@ -556,6 +565,7 @@ fun HistoryScreen(
                 HistoryTab.PLAYERS -> PlayersTabContent(
                     players = players,
                     sourcePlays = historyPlays,
+                    listState = playersListState,
                     onEditPlayer = { editingPlayer = it },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -1059,29 +1069,7 @@ private fun PlayDetailsDialog(
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             insights.forEach { insight ->
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Star,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(14.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            insight,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                    }
-                                }
+                                PlayInsightStrip(text = insight)
                             }
                         }
                     }

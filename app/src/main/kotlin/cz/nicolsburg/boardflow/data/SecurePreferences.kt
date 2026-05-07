@@ -235,6 +235,13 @@ class SecurePreferences(context: Context) {
         prefs.edit().putString(KEY_SLEEVES_EXCLUDED, json.toString()).apply()
     }
 
+    fun getLastGameInsightKey(gameId: Int): String? =
+        prefs.getString("$KEY_GAME_INSIGHT_PREFIX$gameId", null)?.takeIf { it.isNotBlank() }
+
+    fun setLastGameInsightKey(gameId: Int, key: String) {
+        prefs.edit().putString("$KEY_GAME_INSIGHT_PREFIX$gameId", key).apply()
+    }
+
     // --- Legacy BGG history cache compatibility ---
     fun clearLegacyBggPlayCacheArtifacts() {
         prefs.edit().remove(KEY_BGG_PLAYS_CACHE).remove(KEY_BGG_PLAYS_CACHE_TS).apply()
@@ -341,5 +348,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_COLLECTION_SNAPSHOT_PREFIX = "collection_snapshot_"
         private const val KEY_SLEEVES_EXCLUDED = "sleeves_excluded_game_ids"
         private const val KEY_SESSION_CONTEXT  = "log_play_session_context"
+        private const val KEY_GAME_INSIGHT_PREFIX = "game_insight_last_"
     }
 }

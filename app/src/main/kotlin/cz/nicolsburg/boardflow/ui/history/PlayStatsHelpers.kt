@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import java.time.LocalDate
@@ -16,10 +17,10 @@ fun List<LoggedPlay>.filterByTimeRange(range: StatsTimeRange): List<LoggedPlay> 
     if (range == StatsTimeRange.ALL) return this
     val now = LocalDate.now()
     val cutoff = when (range) {
-        StatsTimeRange.THIS_YEAR  -> LocalDate.of(now.year, 1, 1)
+        StatsTimeRange.THIS_YEAR -> LocalDate.of(now.year, 1, 1)
         StatsTimeRange.THIS_MONTH -> LocalDate.of(now.year, now.monthValue, 1)
-        StatsTimeRange.LAST_30    -> now.minusDays(30)
-        StatsTimeRange.ALL        -> return this
+        StatsTimeRange.LAST_30 -> now.minusDays(30)
+        StatsTimeRange.ALL -> return this
     }
     return filter { play ->
         runCatching { LocalDate.parse(play.date) >= cutoff }.getOrDefault(false)
@@ -32,25 +33,35 @@ data class GameHistoryStats(
     val avgDurationMinutes: Int?,
     val bestScore: Pair<String, Int>?,
     val mostWins: Pair<String, Int>?,
-    val commonPlayers: List<Pair<String, Int>>  // (name, sharedPlayCount), sorted desc, max 3
+    val commonPlayers: List<Pair<String, Int>>
 )
 
-data class ContextualInsight(val text: String, val key: String, val positive: Boolean = true)
-
-private data class InsightCandidate(val key: String, val text: String, val positive: Boolean = true)
-
-internal object InsightRotationCache {
-    private val lastKey = mutableMapOf<Int, String>()
-    fun getLast(gameId: Int): String? = lastKey[gameId]
-    fun setLast(gameId: Int, key: String) { lastKey[gameId] = key }
+enum class InsightType(val priority: Int) {
+    Milestone(1),
+    RecentActivity(2),
+    Rivalry(3),
+    Session(4),
+    Dormant(5)
 }
+
+data class ContextualInsight(
+    val key: String,
+    val text: String,
+    val type: InsightType
+)
+
+private data class InsightCandidate(
+    val key: String,
+    val text: String,
+    val type: InsightType
+)
 
 private fun resolveDisplayName(raw: String, roster: List<Player>): String {
     if (roster.isEmpty()) return raw.trim()
     val lower = raw.lowercase().trim()
-    return roster.firstOrNull { p ->
-        p.displayName.lowercase().trim() == lower ||
-            p.aliases.any { a -> a.lowercase().trim() == lower }
+    return roster.firstOrNull { player ->
+        player.displayName.lowercase().trim() == lower ||
+            player.aliases.any { alias -> alias.lowercase().trim() == lower }
     }?.displayName ?: raw.trim()
 }
 
@@ -65,15 +76,14 @@ private fun computeGameHistoryStats(gamePlays: List<LoggedPlay>, roster: List<Pl
     }
 
     val withDuration = gamePlays.filter { it.durationMinutes > 0 }
-    val avgDuration = if (withDuration.isEmpty()) null
-        else withDuration.sumOf { it.durationMinutes } / withDuration.size
+    val avgDuration = if (withDuration.isEmpty()) null else withDuration.sumOf { it.durationMinutes } / withDuration.size
 
     var bestScore: Pair<String, Int>? = null
     gamePlays.forEach { play ->
-        play.players.forEach { pr ->
-            val score = pr.score.trim().toIntOrNull()
-            if (score != null && pr.name.isNotBlank()) {
-                val displayName = resolveDisplayName(pr.name, roster)
+        play.players.forEach { player ->
+            val score = player.score.trim().toIntOrNull()
+            if (score != null && player.name.isNotBlank()) {
+                val displayName = resolveDisplayName(player.name, roster)
                 if (bestScore == null || score > bestScore!!.second) {
                     bestScore = displayName to score
                 }
@@ -83,8 +93,8 @@ private fun computeGameHistoryStats(gamePlays: List<LoggedPlay>, roster: List<Pl
 
     val winCounts = mutableMapOf<String, Int>()
     gamePlays.forEach { play ->
-        play.players.filter { it.isWinner && it.name.isNotBlank() }.forEach { pr ->
-            val name = resolveDisplayName(pr.name, roster)
+        play.players.filter { it.isWinner && it.name.isNotBlank() }.forEach { player ->
+            val name = resolveDisplayName(player.name, roster)
             winCounts[name] = (winCounts[name] ?: 0) + 1
         }
     }
@@ -92,8 +102,8 @@ private fun computeGameHistoryStats(gamePlays: List<LoggedPlay>, roster: List<Pl
 
     val playerCounts = mutableMapOf<String, Int>()
     gamePlays.forEach { play ->
-        play.players.filter { it.name.isNotBlank() }.forEach { pr ->
-            val name = resolveDisplayName(pr.name, roster)
+        play.players.filter { it.name.isNotBlank() }.forEach { player ->
+            val name = resolveDisplayName(player.name, roster)
             playerCounts[name] = (playerCounts[name] ?: 0) + 1
         }
     }
@@ -115,7 +125,6 @@ fun List<LoggedPlay>.gameHistoryStats(gameId: Int, roster: List<Player> = emptyL
     return computeGameHistoryStats(gamePlays, roster)
 }
 
-/** Returns (text, isPositive) where isPositive == amber tint. */
 fun List<LoggedPlay>.gameHealthSignal(gameId: Int): Pair<String, Boolean>? {
     val gamePlays = filter { it.gameId == gameId }
     if (gamePlays.isEmpty()) return "No plays logged yet" to false
@@ -128,7 +137,7 @@ fun List<LoggedPlay>.gameHealthSignal(gameId: Int): Pair<String, Boolean>? {
     val recentCount = gamePlays.count {
         runCatching { LocalDate.parse(it.date) >= cutoff30 }.getOrDefault(false)
     }
-    if (recentCount >= 2) return "Played ${recentCount}× in the last 30 days" to true
+    if (recentCount >= 2) return "Played ${recentCount}x in the last 30 days" to true
 
     val lastDate = gamePlays
         .mapNotNull { runCatching { LocalDate.parse(it.date) }.getOrNull() }
@@ -136,23 +145,22 @@ fun List<LoggedPlay>.gameHealthSignal(gameId: Int): Pair<String, Boolean>? {
 
     val days = now.toEpochDay() - lastDate.toEpochDay()
     return when {
-        days <= 0  -> "Played today" to true
+        days <= 0 -> "Played today" to true
         days == 1L -> "Last played yesterday" to true
         days <= 14 -> "Last played $days days ago" to true
         days <= 60 -> "Last played $days days ago" to false
-        else       -> "Last played ${days / 30} months ago" to false
+        else -> "Last played ${days / 30} months ago" to false
     }
 }
 
-/** One personal insight line, or null if not enough data. */
 fun List<LoggedPlay>.gameInsight(gameId: Int, roster: List<Player> = emptyList()): String? {
     val gamePlays = filter { it.gameId == gameId }
     if (gamePlays.size < 3) return null
 
     val winCounts = mutableMapOf<String, Int>()
     gamePlays.forEach { play ->
-        play.players.filter { it.isWinner && it.name.isNotBlank() }.forEach { pr ->
-            val name = resolveDisplayName(pr.name, roster)
+        play.players.filter { it.isWinner && it.name.isNotBlank() }.forEach { player ->
+            val name = resolveDisplayName(player.name, roster)
             winCounts[name] = (winCounts[name] ?: 0) + 1
         }
     }
@@ -160,111 +168,146 @@ fun List<LoggedPlay>.gameInsight(gameId: Int, roster: List<Player> = emptyList()
     return if (topWinner.value >= 2) "${topWinner.key} leads with ${topWinner.value} wins" else null
 }
 
-// ── Contextual insight system ─────────────────────────────────────────────────
-
 private fun buildInsightCandidates(
     gamePlays: List<LoggedPlay>,
     roster: List<Player>,
     currentPlayerName: String?
 ): List<InsightCandidate> {
-    val result = mutableListOf<InsightCandidate>()
-    if (gamePlays.isEmpty()) return result
+    if (gamePlays.isEmpty()) return emptyList()
 
+    val candidates = mutableListOf<InsightCandidate>()
     val now = LocalDate.now()
     val totalPlays = gamePlays.sumOf { it.quantity.coerceAtLeast(1) }
     val lastDate = gamePlays.mapNotNull { runCatching { LocalDate.parse(it.date) }.getOrNull() }.maxOrNull()
     val daysSinceLast = lastDate?.let { now.toEpochDay() - it.toEpochDay() }
 
-    // A — Recent activity
+    when (totalPlays) {
+        1 -> candidates += InsightCandidate("milestone_first_play", "First play logged", InsightType.Milestone)
+        5, 10, 25, 50, 100 -> candidates += InsightCandidate(
+            key = "milestone_$totalPlays",
+            text = "$totalPlays plays logged",
+            type = InsightType.Milestone
+        )
+    }
+
     val last7 = now.minusDays(7)
     val last30 = now.minusDays(30)
     val recent7 = gamePlays.sumOf { play ->
-        if (runCatching { LocalDate.parse(play.date) >= last7 }.getOrDefault(false))
-            play.quantity.coerceAtLeast(1) else 0
+        if (runCatching { LocalDate.parse(play.date) >= last7 }.getOrDefault(false)) play.quantity.coerceAtLeast(1) else 0
     }
     val recent30 = gamePlays.sumOf { play ->
-        if (runCatching { LocalDate.parse(play.date) >= last30 }.getOrDefault(false))
-            play.quantity.coerceAtLeast(1) else 0
+        if (runCatching { LocalDate.parse(play.date) >= last30 }.getOrDefault(false)) play.quantity.coerceAtLeast(1) else 0
     }
     when {
-        recent7 >= 2 ->
-            result += InsightCandidate("recent_week_$recent7", "Played ${recent7}× this week")
-        recent30 >= 2 ->
-            result += InsightCandidate("recent_30_$recent30", "Played ${recent30}× in the last 30 days")
         daysSinceLast == 0L ->
-            result += InsightCandidate("today", "Played today")
+            candidates += InsightCandidate("recent_today", "Played today", InsightType.RecentActivity)
+        recent7 >= 2 ->
+            candidates += InsightCandidate("recent_week_$recent7", "Played ${recent7}x this week", InsightType.RecentActivity)
+        recent30 >= 2 ->
+            candidates += InsightCandidate("recent_30_$recent30", "Played ${recent30}x in the last 30 days", InsightType.RecentActivity)
         daysSinceLast == 1L ->
-            result += InsightCandidate("yesterday", "Last played yesterday")
+            candidates += InsightCandidate("recent_yesterday", "Last played yesterday", InsightType.RecentActivity)
         daysSinceLast != null && daysSinceLast in 2..14 ->
-            result += InsightCandidate("recent_${daysSinceLast}d", "Last played $daysSinceLast days ago")
+            candidates += InsightCandidate("recent_${daysSinceLast}d", "Last played $daysSinceLast days ago", InsightType.RecentActivity)
     }
 
-    // B — Dominance (3+ plays, clear winner, no tie at the top)
     if (totalPlays >= 3) {
         val winCounts = mutableMapOf<String, Int>()
         gamePlays.forEach { play ->
-            play.players.filter { it.isWinner && it.name.isNotBlank() }.forEach { pr ->
-                val name = resolveDisplayName(pr.name, roster)
+            play.players.filter { it.isWinner && it.name.isNotBlank() }.forEach { player ->
+                val name = resolveDisplayName(player.name, roster)
                 winCounts[name] = (winCounts[name] ?: 0) + 1
             }
         }
         val sorted = winCounts.entries.sortedByDescending { it.value }
         val top = sorted.firstOrNull()
         val second = sorted.getOrNull(1)
-        if (top != null && top.value >= 2 && (second == null || top.value > second.value)) {
-            val isMe = currentPlayerName != null &&
+        val totalWins = sorted.sumOf { it.value }
+        val hasClearLeader = top != null &&
+            top.value >= 2 &&
+            (second == null || top.value > second.value) &&
+            (totalWins == 0 || top.value * 2 >= totalWins + 1)
+        if (hasClearLeader) {
+            val isCurrentPlayerLeader = currentPlayerName != null &&
                 top.key.lowercase().trim() == currentPlayerName.lowercase().trim()
-            val text = if (isMe) "You lead with ${top.value} wins"
-                       else "${top.key} leads with ${top.value} wins"
-            result += InsightCandidate("dominance_${top.key}_${top.value}", text)
+            val text = if (isCurrentPlayerLeader) {
+                "You lead with ${top.value} wins"
+            } else {
+                "${top.key} leads with ${top.value} wins"
+            }
+            candidates += InsightCandidate("rivalry_${top.key}_${top.value}", text, InsightType.Rivalry)
         }
     }
 
-    // C — Session insight (needs duration data)
     val withDuration = gamePlays.filter { it.durationMinutes > 0 }
     if (withDuration.isNotEmpty()) {
-        fun fmt(min: Int) = when {
-            min >= 60 && min % 60 == 0 -> "${min / 60}h"
-            min >= 60 -> "${min / 60}h ${min % 60}m"
-            else -> "${min}m"
+        fun formatDuration(minutes: Int) = when {
+            minutes >= 60 && minutes % 60 == 0 -> "${minutes / 60}h"
+            minutes >= 60 -> "${minutes / 60}h ${minutes % 60}m"
+            else -> "${minutes}m"
         }
-        val maxDur = withDuration.maxOf { it.durationMinutes }
+
+        val longestDuration = withDuration.maxOf { it.durationMinutes }
         if (withDuration.size >= 3) {
-            val avgDur = withDuration.sumOf { it.durationMinutes } / withDuration.size
-            result += InsightCandidate("avg_dur_$avgDur", "Average session is ${fmt(avgDur)}")
+            val averageDuration = withDuration.sumOf { it.durationMinutes } / withDuration.size
+            candidates += InsightCandidate(
+                key = "session_avg_$averageDuration",
+                text = "Average session length is ${formatDuration(averageDuration)}",
+                type = InsightType.Session
+            )
         }
-        result += InsightCandidate("max_dur_$maxDur", "Longest session lasted ${fmt(maxDur)}")
+        candidates += InsightCandidate(
+            key = "session_longest_$longestDuration",
+            text = "Longest session lasted ${formatDuration(longestDuration)}",
+            type = InsightType.Session
+        )
     }
 
-    // D — Dormant / low plays (only when no recent-activity candidate was added above)
-    if (result.none { it.key.startsWith("recent_") || it.key == "today" || it.key == "yesterday" }) {
+    if (candidates.none { it.type == InsightType.RecentActivity }) {
         when {
             totalPlays == 1 ->
-                result += InsightCandidate("only_once", "Only played once so far", positive = false)
-            daysSinceLast != null && daysSinceLast > 14 -> {
-                val months = daysSinceLast / 30
-                val text = if (months >= 2) "Haven't played in $months months"
-                           else "Haven't played in $daysSinceLast days"
-                result += InsightCandidate("dormant_$daysSinceLast", text, positive = false)
-            }
+                candidates += InsightCandidate("dormant_once", "Only played once so far", InsightType.Dormant)
+            daysSinceLast != null && daysSinceLast > 14 ->
+                candidates += InsightCandidate("dormant_$daysSinceLast", "Last played $daysSinceLast days ago", InsightType.Dormant)
         }
     }
 
-    return result
+    return candidates.sortedWith(
+        compareBy<InsightCandidate> { it.type.priority }
+            .thenBy { it.key }
+    )
 }
 
 fun List<LoggedPlay>.gameContextualInsight(
     gameId: Int,
     roster: List<Player> = emptyList(),
-    currentPlayerName: String? = null
+    currentPlayerName: String? = null,
+    prefs: SecurePreferences? = null
 ): ContextualInsight? {
-    val gamePlays = filter { it.gameId == gameId }
-    val candidates = buildInsightCandidates(gamePlays, roster, currentPlayerName)
+    val candidates = buildInsightCandidates(
+        gamePlays = filter { it.gameId == gameId },
+        roster = roster,
+        currentPlayerName = currentPlayerName
+    )
     if (candidates.isEmpty()) return null
-    val lastKey = InsightRotationCache.getLast(gameId)
-    val chosen = candidates.firstOrNull { it.key != lastKey } ?: candidates.first()
-    InsightRotationCache.setLast(gameId, chosen.key)
-    return ContextualInsight(chosen.text, chosen.key, chosen.positive)
+
+    val topCandidate = candidates.first()
+    val lastShownKey = prefs?.getLastGameInsightKey(gameId)
+    val neighboringCandidate = candidates.firstOrNull { candidate ->
+        candidate.key != topCandidate.key && candidate.type.priority <= topCandidate.type.priority + 1
+    }
+    val chosen = if (topCandidate.key == lastShownKey && neighboringCandidate != null) {
+        neighboringCandidate
+    } else {
+        topCandidate
+    }
+
+    prefs?.setLastGameInsightKey(gameId, chosen.key)
+    return ContextualInsight(
+        key = chosen.key,
+        text = chosen.text,
+        type = chosen.type
+    )
 }
 
 data class RivalryStat(
@@ -282,14 +325,14 @@ fun List<LoggedPlay>.rivalriesForPlayer(player: Player, limit: Int = 4): List<Ri
     myPlays.forEach { play ->
         val iWon = play.players.any { it.name.lowercase().trim() in playerNames && it.isWinner }
         play.players
-            .filter { pr -> pr.name.isNotBlank() && pr.name.lowercase().trim() !in playerNames }
-            .forEach { opp ->
-                val key = opp.name.trim()
-                val (together, myW, theirW) = opponentMap[key] ?: Triple(0, 0, 0)
+            .filter { playerResult -> playerResult.name.isNotBlank() && playerResult.name.lowercase().trim() !in playerNames }
+            .forEach { opponent ->
+                val key = opponent.name.trim()
+                val (together, myWins, theirWins) = opponentMap[key] ?: Triple(0, 0, 0)
                 opponentMap[key] = Triple(
                     together + 1,
-                    myW + if (iWon) 1 else 0,
-                    theirW + if (opp.isWinner) 1 else 0
+                    myWins + if (iWon) 1 else 0,
+                    theirWins + if (opponent.isWinner) 1 else 0
                 )
             }
     }
@@ -297,10 +340,9 @@ fun List<LoggedPlay>.rivalriesForPlayer(player: Player, limit: Int = 4): List<Ri
     return opponentMap.entries
         .sortedByDescending { it.value.first }
         .take(limit)
-        .map { (name, t) -> RivalryStat(name, t.first, t.second, t.third) }
+        .map { (name, stats) -> RivalryStat(name, stats.first, stats.second, stats.third) }
 }
 
-/** Current consecutive-win streak for a player across all games, ordered by date desc. */
 fun List<LoggedPlay>.playerCurrentWinStreak(playerNames: List<String>): Int {
     val lowerNames = playerNames.map { it.lowercase().trim() }
     val myPlays = filter { play ->
@@ -314,14 +356,12 @@ fun List<LoggedPlay>.playerCurrentWinStreak(playerNames: List<String>): Int {
     return streak
 }
 
-/** Name + streak for the player currently on the hottest win streak (≥2), or null. */
 fun List<LoggedPlay>.hotPlayerStreak(roster: List<Player>): Pair<String, Int>? =
     roster.map { player ->
         val names = (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() }
         player.displayName to playerCurrentWinStreak(names)
     }.filter { it.second >= 2 }.maxByOrNull { it.second }
 
-/** The most-played game this calendar month and its play count, or null if no plays this month. */
 fun List<LoggedPlay>.mostPlayedThisMonth(): Pair<String, Int>? {
     val now = LocalDate.now()
     val thisMonth = now.year * 100 + now.monthValue
@@ -330,7 +370,7 @@ fun List<LoggedPlay>.mostPlayedThisMonth(): Pair<String, Int>? {
             LocalDate.parse(play.date).let { it.year * 100 + it.monthValue } == thisMonth
         }.getOrDefault(false)
     }.groupBy { it.gameName }
-        .mapValues { (_, g) -> g.sumOf { it.quantity.coerceAtLeast(1) } }
+        .mapValues { (_, plays) -> plays.sumOf { it.quantity.coerceAtLeast(1) } }
         .maxByOrNull { it.value }
         ?.let { it.key to it.value }
 }
@@ -349,37 +389,39 @@ fun List<LoggedPlay>.playInsights(play: LoggedPlay): List<String> {
     play.players.filter { it.isWinner }.forEach { winner ->
         if (result.size >= 2) return result
         val name = winner.name.trim().ifBlank { return@forEach }
-        val hadPrevWin = gamePlays.any { p ->
-            p.id != play.id &&
-            p.players.any { it.name.trim().equals(name, ignoreCase = true) && it.isWinner }
+        val hadPreviousWin = gamePlays.any { loggedPlay ->
+            loggedPlay.id != play.id &&
+                loggedPlay.players.any { it.name.trim().equals(name, ignoreCase = true) && it.isWinner }
         }
-        if (!hadPrevWin) result.add("First win for $name in ${play.gameName}!")
+        if (!hadPreviousWin) result.add("First win for $name in ${play.gameName}!")
     }
 
     if (result.size < 2) {
-        play.players.forEach { pr ->
+        play.players.forEach { player ->
             if (result.size >= 2) return result
-            val name = pr.name.trim().ifBlank { return@forEach }
-            val score = pr.score.trim().toIntOrNull() ?: return@forEach
-            val prevBest = gamePlays
+            val name = player.name.trim().ifBlank { return@forEach }
+            val score = player.score.trim().toIntOrNull() ?: return@forEach
+            val previousBest = gamePlays
                 .filter { it.id != play.id }
                 .flatMap { it.players }
                 .filter { it.name.trim().equals(name, ignoreCase = true) }
                 .mapNotNull { it.score.trim().toIntOrNull() }
                 .maxOrNull()
-            if (prevBest == null || score > prevBest) {
+            if (previousBest == null || score > previousBest) {
                 result.add("New high score for $name: $score pts!")
             }
         }
     }
 
     if (result.size < 2 && play.durationMinutes > 0) {
-        val prevMax = gamePlays.filter { it.id != play.id && it.durationMinutes > 0 }
+        val previousMax = gamePlays.filter { it.id != play.id && it.durationMinutes > 0 }
             .maxOfOrNull { it.durationMinutes }
-        if (prevMax == null || play.durationMinutes > prevMax) {
-            val label = if (play.durationMinutes >= 60)
+        if (previousMax == null || play.durationMinutes > previousMax) {
+            val label = if (play.durationMinutes >= 60) {
                 "${play.durationMinutes / 60}h ${play.durationMinutes % 60}m"
-            else "${play.durationMinutes}m"
+            } else {
+                "${play.durationMinutes}m"
+            }
             result.add("Longest session of ${play.gameName} ($label)!")
         }
     }
