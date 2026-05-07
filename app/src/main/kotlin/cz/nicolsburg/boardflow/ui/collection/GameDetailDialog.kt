@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -115,9 +114,10 @@ fun GameDetailsDialog(
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
 
-    AnimatedDialog(onDismissRequest = onDismiss) {
-        Box(modifier = Modifier.fillMaxSize()) {
-        GameBackdrop(imageUrl = game.thumbnailUrl)
+    AnimatedDialog(
+        onDismissRequest = onDismiss,
+        backdrop = { GameBackdrop(imageUrl = game.thumbnailUrl, height = 200.dp) }
+    ) {
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -219,11 +219,10 @@ fun GameDetailsDialog(
                 }
             }
         }
-        } // Box
     }
 }
 
-// ── Header section ────────────────────────────────────────────────────────────
+// ── Header content (GameBackdrop behind dialog handles the artwork) ───────────
 
 @Composable
 private fun HeaderSection(
@@ -231,10 +230,7 @@ private fun HeaderSection(
     headerChips: List<HeaderChip>,
     compactChips: Boolean
 ) {
-    // GameBackdrop behind the dialog handles atmosphere; use light title text when it's active
     val hasBackdrop = !game.thumbnailUrl.isNullOrBlank()
-    val titleColor = if (hasBackdrop) Color.White.copy(alpha = 0.95f)
-                     else MaterialTheme.colorScheme.onSurface
 
     Row(
         modifier = Modifier
@@ -277,7 +273,8 @@ private fun HeaderSection(
                 text = game.name,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = titleColor,
+                color = if (hasBackdrop) Color.White.copy(alpha = 0.95f)
+                        else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(end = 20.dp)
             )
             Row(
