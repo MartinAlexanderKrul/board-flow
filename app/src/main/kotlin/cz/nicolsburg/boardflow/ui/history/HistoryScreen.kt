@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
@@ -78,8 +79,10 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import coil.compose.AsyncImage
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
@@ -107,10 +110,13 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowMotion
+import cz.nicolsburg.boardflow.ui.history.playInsights
 import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
+import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
 import cz.nicolsburg.boardflow.ui.common.boardFlowTween
@@ -151,11 +157,14 @@ fun HistoryScreen(
     onPlayAgain: (cz.nicolsburg.boardflow.model.LoggedPlay) -> Unit = {}
 ) {
     val historyPlays by viewModel.historyPlays.collectAsState()
+    val collection by viewModel.collection.collectAsState()
+    val bggPlays by viewModel.bggPlays.collectAsState()
     val bggLoading by viewModel.bggPlaysLoading.collectAsState()
     val bggError by viewModel.bggPlaysError.collectAsState()
     val players by viewModel.players.collectAsState()
     val deletingPlayId by viewModel.deletingBggPlayId.collectAsState()
     val editPlayLoading by viewModel.editPlayLoading.collectAsState()
+    val pendingHistoryGameId by viewModel.pendingHistoryGameId.collectAsState()
     var playToDelete by remember { mutableStateOf<LoggedPlay?>(null) }
     var selectedPlay by remember { mutableStateOf<LoggedPlay?>(null) }
     var editingPlay by remember { mutableStateOf<LoggedPlay?>(null) }
@@ -163,6 +172,14 @@ fun HistoryScreen(
     var editError by remember { mutableStateOf<String?>(null) }
 
     var searchQuery by remember { mutableStateOf("") }
+    var filterGameId by remember { mutableStateOf<Int?>(null) }
+    var filterGameName by remember { mutableStateOf<String?>(null) }
+    val backdropUrl by remember(filterGameId, collection) {
+        derivedStateOf { filterGameId?.let { id -> collection.firstOrNull { it.id == id }?.thumbnailUrl } }
+    }
+    val selectedPlayThumbnail by remember(selectedPlay, collection) {
+        derivedStateOf { selectedPlay?.gameId?.let { id -> collection.firstOrNull { it.id == id }?.thumbnailUrl } }
+    }
     var sortMode by remember { mutableStateOf(HistorySortMode.DATE_DESC) }
     var filterDateRange by remember { mutableStateOf(HistoryDateRange.ALL) }
     var filterPlayer by remember { mutableStateOf<String?>(null) }
@@ -172,12 +189,15 @@ fun HistoryScreen(
 
     val hasActiveFilters = sortMode != HistorySortMode.DATE_DESC ||
         filterDateRange != HistoryDateRange.ALL ||
-        filterPlayer != null
+        filterPlayer != null ||
+        filterGameId != null
 
-    val filteredPlays = remember(historyPlays, searchQuery, sortMode, filterDateRange, filterPlayer, players) {
+    val filteredPlays = remember(historyPlays, searchQuery, filterGameId, sortMode, filterDateRange, filterPlayer, players) {
         var result = historyPlays
 
-        if (searchQuery.isNotBlank()) {
+        filterGameId?.let { id -> result = result.filter { it.gameId == id } }
+
+        if (searchQuery.isNotBlank() && filterGameId == null) {
             val query = searchQuery.trim().lowercase()
             result = result.filter {
                 it.gameName.lowercase().contains(query) ||
@@ -242,7 +262,7 @@ fun HistoryScreen(
             }
     }
 
-    LaunchedEffect(searchQuery, sortMode, filterDateRange, filterPlayer) {
+    LaunchedEffect(searchQuery, filterGameId, sortMode, filterDateRange, filterPlayer) {
         listState.scrollToItem(0)
     }
 
@@ -250,6 +270,14 @@ fun HistoryScreen(
         viewModel.loadPlayers()
         viewModel.loadPlayHistory()
         viewModel.loadCachedBggPlays()
+    }
+
+    LaunchedEffect(pendingHistoryGameId) {
+        val id = pendingHistoryGameId ?: return@LaunchedEffect
+        activeTab = HistoryTab.PLAYS
+        filterGameId = id
+        filterGameName = historyPlays.firstOrNull { it.gameId == id }?.gameName
+        viewModel.consumePendingHistoryFilter()
     }
 
     LaunchedEffect(controlsVisible, activeTab) {
@@ -287,7 +315,9 @@ fun HistoryScreen(
     selectedPlay?.let { play ->
         PlayDetailsDialog(
             play = play,
+            thumbnailUrl = selectedPlayThumbnail,
             players = players,
+            historyPlays = historyPlays,
             isDeleting = deletingPlayId == play.id,
             onDismiss = { selectedPlay = null },
             onEdit = { editingPlay = play; selectedPlay = null },
@@ -359,10 +389,11 @@ fun HistoryScreen(
             }
         }
     ) { padding ->
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        GameBackdrop(imageUrl = backdropUrl, height = 220.dp)
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .swipeToNavigateTabs(
                     tabCount = HistoryTab.entries.size,
                     selectedIndex = activeTab.ordinal,
@@ -448,10 +479,43 @@ fun HistoryScreen(
                             sortMode = HistorySortMode.DATE_DESC
                             filterDateRange = HistoryDateRange.ALL
                             filterPlayer = null
+                            filterGameId = null
+                            filterGameName = null
                         }
                     )
                 }
             }
+
+                    AnimatedVisibility(visible = filterGameId != null || (filterPlayer != null && searchQuery.isBlank())) {
+                        val label = filterGameName ?: filterPlayer ?: ""
+                        Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    "Filtered by: $label",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(onClick = {
+                                    filterGameId = null
+                                    filterGameName = null
+                                    filterPlayer = null
+                                }) {
+                                    Text(
+                                        "Clear",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     PlaysContent(
                         plays = filteredPlays,
@@ -467,6 +531,8 @@ fun HistoryScreen(
                             sortMode = HistorySortMode.DATE_DESC
                             filterDateRange = HistoryDateRange.ALL
                             filterPlayer = null
+                            filterGameId = null
+                            filterGameName = null
                             searchQuery = ""
                         },
                         modifier = Modifier.fillMaxSize()
@@ -475,7 +541,17 @@ fun HistoryScreen(
                 HistoryTab.STATS -> StatsContent(
                     plays = historyPlays,
                     players = players,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    onGameTapped = { gameId, gameName ->
+                        activeTab = HistoryTab.PLAYS
+                        filterGameId = gameId
+                        filterGameName = gameName
+                        searchQuery = ""
+                    },
+                    onPlayerTapped = { playerName ->
+                        activeTab = HistoryTab.PLAYS
+                        filterPlayer = playerName
+                    }
                 )
                 HistoryTab.PLAYERS -> PlayersTabContent(
                     players = players,
@@ -485,6 +561,7 @@ fun HistoryScreen(
                 )
             }
         }
+        } // Box
     }
 }
 
@@ -881,57 +958,131 @@ private fun PlayerRow(player: PlayerResult, displayName: String) {
 @Composable
 private fun PlayDetailsDialog(
     play: LoggedPlay,
+    thumbnailUrl: String? = null,
     players: List<Player>,
+    historyPlays: List<LoggedPlay> = emptyList(),
     isDeleting: Boolean,
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
     onDeletePlay: () -> Unit,
     onPlayAgain: () -> Unit = {}
 ) {
-    AnimatedDialog(onDismissRequest = onDismiss) {
+    val insights = remember(play, historyPlays) { historyPlays.playInsights(play) }
+    AnimatedDialog(
+        onDismissRequest = onDismiss,
+        backdrop = { GameBackdrop(imageUrl = thumbnailUrl, height = 200.dp) }
+    ) {
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
                 item {
+                    val hasThumb = !thumbnailUrl.isNullOrBlank()
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp, bottom = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.Top
                     ) {
+                        if (hasThumb) {
+                            AsyncImage(
+                                model = thumbnailUrl,
+                                contentDescription = play.gameName,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(84.dp)
+                                    .clip(MaterialTheme.shapes.medium)
+                            )
+                        }
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    play.gameName,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (hasThumb) Color.White.copy(alpha = 0.95f)
+                                            else MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                                )
+                                if (isDeleting) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                }
+                            }
                             Text(
-                                play.gameName,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                play.date,
+                                remember(play.date) {
+                                    runCatching {
+                                        LocalDate.parse(play.date)
+                                            .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                                    }.getOrDefault(play.date)
+                                },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (hasThumb) Color.White.copy(alpha = 0.65f)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                SuggestionChip(onClick = {}, label = { Text("${play.players.size} players", style = MaterialTheme.typography.labelSmall) })
-                                if (play.durationMinutes > 0) {
-                                    SuggestionChip(onClick = {}, label = { Text("${play.durationMinutes} min", style = MaterialTheme.typography.labelSmall) })
+                                val chipBg = if (hasThumb) Color.Black.copy(alpha = 0.45f)
+                                             else MaterialTheme.colorScheme.surfaceVariant
+                                val chipFg = if (hasThumb) Color.White.copy(alpha = 0.90f)
+                                             else MaterialTheme.colorScheme.onSurfaceVariant
+                                @Composable fun Chip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {
+                                    Surface(shape = CircleShape, color = chipBg) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        ) {
+                                            Icon(icon, contentDescription = null, modifier = Modifier.size(12.dp), tint = chipFg)
+                                            Text(label, style = MaterialTheme.typography.labelSmall, color = chipFg)
+                                        }
+                                    }
                                 }
-                                if (play.quantity > 1) {
-                                    SuggestionChip(onClick = {}, label = { Text("×${play.quantity}", style = MaterialTheme.typography.labelSmall) })
-                                }
-                                if (play.incomplete) {
-                                    SuggestionChip(onClick = {}, label = { Text("partial", style = MaterialTheme.typography.labelSmall) })
-                                }
+                                Chip(Icons.Default.Group, "${play.players.size}")
+                                if (play.durationMinutes > 0) Chip(Icons.Default.Schedule, "${play.durationMinutes} min")
+                                if (play.location.isNotBlank()) Chip(Icons.Default.LocationOn, play.location)
                             }
                         }
-                        if (isDeleting) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    }
+                }
+
+                if (insights.isNotEmpty()) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            insights.forEach { insight ->
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Star,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            insight,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -939,12 +1090,8 @@ private fun PlayDetailsDialog(
                 item {
                     DetailSection(
                         rows = buildList {
-                            add("Date" to play.date)
-                            if (play.durationMinutes > 0) add("Duration" to "${play.durationMinutes} min")
-                            if (play.location.isNotBlank()) add("Location" to play.location)
-                            if (play.quantity > 1) add("Quantity" to "×${play.quantity}")
+                            if (play.quantity > 1) add("Played" to "${play.quantity} times")
                             if (play.incomplete) add("Status" to "Incomplete play")
-                            if (!play.nowInStats) add("Stats" to "Excluded from stats")
                             if (play.comments.isNotBlank()) add("Comment" to play.comments)
                         }
                     )

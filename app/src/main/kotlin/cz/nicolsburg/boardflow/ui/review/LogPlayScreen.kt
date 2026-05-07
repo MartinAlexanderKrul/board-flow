@@ -5,9 +5,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -19,7 +21,10 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -81,6 +87,10 @@ fun LogPlayScreen(
     var duration       by remember { mutableStateOf(prefill?.durationSuggestion ?: "") }
     var location       by remember { mutableStateOf(prefill?.location ?: "") }
     var comments       by remember { mutableStateOf("") }
+    var quantity       by remember { mutableStateOf(1) }
+    var incomplete     by remember { mutableStateOf(false) }
+    var nowInStats     by remember { mutableStateOf(true) }
+    var showAdvanced   by remember { mutableStateOf(false) }
     var errorMsg          by remember { mutableStateOf<String?>(null) }
     var showAiOutput      by remember { mutableStateOf(false) }
     var showDatePicker    by remember { mutableStateOf(false) }
@@ -173,8 +183,9 @@ fun LogPlayScreen(
         else                  -> "Log Play to BGG"
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0),
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -191,6 +202,9 @@ fun LogPlayScreen(
                             durationMinutes = durationMin,
                             location        = location,
                             comments        = comments,
+                            quantity        = quantity,
+                            incomplete      = incomplete,
+                            nowInStats      = nowInStats,
                             onSuccess       = {
                                 val game = viewModel.selectedGame
                                 if (game != null) {
@@ -319,6 +333,121 @@ fun LogPlayScreen(
                                 maxLines = 3,
                                 modifier = Modifier.fillMaxWidth()
                             )
+                        }
+
+                        // Advanced options toggle
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showAdvanced = !showAdvanced }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Advanced options",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Icon(
+                                imageVector = if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (showAdvanced) "Collapse" else "Expand",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        AnimatedVisibility(
+                            visible = showAdvanced,
+                            enter = expandVertically() + fadeIn(tween(150)),
+                            exit = shrinkVertically() + fadeOut(tween(150))
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                // Quantity stepper
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text(
+                                            "Quantity",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            "Log multiple identical plays at once",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        BoardFlowIconButton(
+                                            onClick = { if (quantity > 1) quantity-- }
+                                        ) {
+                                            Icon(Icons.Default.Remove, contentDescription = "Decrease")
+                                        }
+                                        Text(
+                                            "$quantity",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.width(24.dp),
+                                            textAlign = TextAlign.Center
+                                        )
+                                        BoardFlowIconButton(
+                                            onClick = { quantity++ }
+                                        ) {
+                                            Icon(BoardFlowIcons.Add, contentDescription = "Increase")
+                                        }
+                                    }
+                                }
+
+                                // Incomplete toggle
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            "Incomplete play",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            "Game wasn't finished",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                    Switch(checked = incomplete, onCheckedChange = { incomplete = it })
+                                }
+
+                                // Exclude from stats toggle
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            "Count in stats",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            "Include this play in BGG statistics",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                    Switch(checked = nowInStats, onCheckedChange = { nowInStats = it })
+                                }
+                            }
                         }
                     }
                 }

@@ -56,6 +56,7 @@ import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.R
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.core.navigation.AppRoutes
+import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.ui.collection.CollectionScreen
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
@@ -100,6 +101,8 @@ fun BoardFlowApp(
     val account by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
     val hasBggCredentials by syncViewModel.hasBggCredentials.collectAsState()
+    val historyPlays by appViewModel.historyPlays.collectAsState()
+    val players by appViewModel.players.collectAsState()
     val logPlayHasUnsavedChanges by appViewModel.logPlayHasUnsavedChanges.collectAsState()
     var startupSilentSyncRequested by rememberSaveable { mutableStateOf(false) }
     var showDiscardLogPlayConfirm by rememberSaveable { mutableStateOf(false) }
@@ -328,6 +331,16 @@ fun BoardFlowApp(
             composable(AppRoutes.COLLECTION) {
                 CollectionScreen(
                     syncViewModel = syncViewModel,
+                    historyPlays = historyPlays,
+                    players = players,
+                    onLogPlay = { gameId, gameName, thumbnailUrl ->
+                        appViewModel.setupLogPlayById(gameId, gameName, thumbnailUrl)
+                        navController.navigate(AppRoutes.LOG_PLAY)
+                    },
+                    onViewHistory = { gameId ->
+                        appViewModel.setPendingHistoryFilter(gameId)
+                        navController.navigate(AppRoutes.HISTORY)
+                    },
                     onHeaderFilterStateChange = { visible, hasActiveFilters, onClick ->
                         collectionHeaderFilterVisible = visible
                         collectionHeaderHasActiveFilters = hasActiveFilters

@@ -484,13 +484,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _postResult = MutableStateFlow<String?>(null)
     val postResult: StateFlow<String?> = _postResult.asStateFlow()
 
-    fun postPlay(date: LocalDate, durationMinutes: Int, location: String, comments: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun postPlay(date: LocalDate, durationMinutes: Int, location: String, comments: String, quantity: Int = 1, incomplete: Boolean = false, nowInStats: Boolean = true, onSuccess: () -> Unit, onError: (String) -> Unit) {
         val game = selectedGame ?: run { onError("No game selected"); return }
         val normalizedPlayers = normalizePlayersForPosting(_editablePlayers.value)
         if (!isOnline()) {
             val playersSnapshot = normalizedPlayers
             playersSnapshot.forEach { recordPlayerName(it.name) }
-            val mainPlay = LoggedPlay(id = UUID.randomUUID().toString(), gameId = game.id, gameName = game.name, date = date.toString(), players = playersSnapshot, durationMinutes = durationMinutes, location = location, postedToBgg = false, comments = comments)
+            val mainPlay = LoggedPlay(id = UUID.randomUUID().toString(), gameId = game.id, gameName = game.name, date = date.toString(), players = playersSnapshot, durationMinutes = durationMinutes, location = location, postedToBgg = false, comments = comments, quantity = quantity, incomplete = incomplete, nowInStats = nowInStats)
             viewModelScope.launch {
                 container.canonicalCollectionStore.saveLoggedPlay(mainPlay)
                 val extras = _additionalGames.value; _additionalGames.value = emptyList()
@@ -505,7 +505,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                             durationMinutes = durationMinutes,
                             location = location,
                             postedToBgg = false,
-                            comments = comments
+                            comments = comments,
+                            quantity = quantity,
+                            incomplete = incomplete,
+                            nowInStats = nowInStats
                         )
                     )
                 }
@@ -521,7 +524,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             _postLoading.value = true
             container.bggRepository.login(creds).onFailure { _postLoading.value = false; onError(it.message ?: "Login failed"); return@launch }
             val playerBggUsernames = buildBggUsernameMap(normalizedPlayers)
-            container.bggRepository.logPlay(gameId = game.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments)
+            container.bggRepository.logPlay(gameId = game.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments, quantity = quantity, incomplete = incomplete, nowInStats = nowInStats)
                 .onSuccess { savedPlayId ->
                     normalizedPlayers.forEach { recordPlayerName(it.name) }
                     val postedPlays = mutableListOf<LoggedPlay>()
@@ -535,13 +538,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         durationMinutes = durationMinutes,
                         location = location,
                         postedToBgg = true,
-                        comments = comments
+                        comments = comments,
+                        quantity = quantity,
+                        incomplete = incomplete,
+                        nowInStats = nowInStats
                     )
                     container.canonicalCollectionStore.saveLoggedPlay(mainPlay)
                     postedPlays += mainPlay
                     val extras = _additionalGames.value
                     extras.forEach { extra ->
-                        container.bggRepository.logPlay(gameId = extra.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments)
+                        container.bggRepository.logPlay(gameId = extra.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments, quantity = quantity, incomplete = incomplete, nowInStats = nowInStats)
                             .onSuccess { extraPlayId ->
                                 val extraPlay = LoggedPlay(
                                     id = extraPlayId ?: UUID.randomUUID().toString(),
@@ -552,7 +558,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                                     durationMinutes = durationMinutes,
                                     location = location,
                                     postedToBgg = true,
-                                    comments = comments
+                                    comments = comments,
+                                    quantity = quantity,
+                                    incomplete = incomplete,
+                                    nowInStats = nowInStats
                                 )
                                 container.canonicalCollectionStore.saveLoggedPlay(extraPlay)
                                 postedPlays += extraPlay
@@ -567,7 +576,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                                     durationMinutes = durationMinutes,
                                     location = location,
                                     postedToBgg = false,
-                                    comments = comments
+                                    comments = comments,
+                                    quantity = quantity,
+                                    incomplete = incomplete,
+                                    nowInStats = nowInStats
                                 )
                                 container.canonicalCollectionStore.saveLoggedPlay(localExtraPlay)
                                 locallySavedExtras += localExtraPlay
@@ -900,6 +912,24 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _logPlayPrefill = LogPlayPrefill(location = play.location)
         _logPlayHasUnsavedChanges.value = false
     }
+
+    fun setupLogPlayById(gameId: Int, gameName: String, thumbnailUrl: String?) {
+        val game = BggGame(gameId, gameName, null, thumbnailUrl)
+        selectedGame = game
+        _editablePlayers.value = emptyList()
+        _extractedPlay.value = null
+        _additionalGames.value = emptyList()
+        _gameRelations.value = findRelatedGames(game, _allGames.value)
+        _logPlayPrefill = null
+        _logPlayHasUnsavedChanges.value = false
+    }
+
+    // ── Pending cross-tab navigation ─────────────────────────────────────────
+    private val _pendingHistoryGameId = MutableStateFlow<Int?>(null)
+    val pendingHistoryGameId: StateFlow<Int?> = _pendingHistoryGameId.asStateFlow()
+
+    fun setPendingHistoryFilter(gameId: Int) { _pendingHistoryGameId.value = gameId }
+    fun consumePendingHistoryFilter() { _pendingHistoryGameId.value = null }
 
     fun addPlayerFromRoster(player: Player) {
         _editablePlayers.value = _editablePlayers.value + PlayerResult(player.displayName, "0", false)

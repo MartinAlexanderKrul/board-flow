@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(xargs wc *)",
-      "Bash(./gradlew :app:compileDebugKotlin)"
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(./gradlew :app:compileDebugKotlin --daemon -q)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(./gradlew assembleDebug)"
     ]
   }
 }

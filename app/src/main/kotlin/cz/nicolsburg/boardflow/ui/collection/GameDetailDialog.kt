@@ -3,39 +3,52 @@ package cz.nicolsburg.boardflow.ui.collection
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Style
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -44,196 +57,175 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.model.GameItem
+import cz.nicolsburg.boardflow.model.LoggedPlay
+import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
-import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
+import cz.nicolsburg.boardflow.ui.history.ContextualInsight
+import cz.nicolsburg.boardflow.ui.history.GameHistoryStats
+import cz.nicolsburg.boardflow.ui.history.gameContextualInsight
+import cz.nicolsburg.boardflow.ui.history.gameHistoryStats
+
+private data class InfoSection(
+    val title: String,
+    val stats: List<SectionStat>,
+    val secondaryLabels: Set<String> = emptySet(),
+    val columns: Int = 2
+)
 
 @Composable
 fun GameDetailsDialog(
     game: GameItem,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    historyPlays: List<LoggedPlay> = emptyList(),
+    players: List<Player> = emptyList(),
+    onLogPlay: () -> Unit = {},
+    onViewHistory: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     val bggUrl = bggSleevesUrl(game)
     val driveUrl = game.shareUrl?.takeIf { it.isNotBlank() }
 
-    val overviewStats = remember(game) { overviewStats(game) }
-    val ratingStats = remember(game) { ratingStats(game) }
-    val playerPreferenceStats = remember(game) { playerPreferenceStats(game) }
-    val customRows = remember(game) { customDetailRows(game) }
+    val gameObjectId = remember(game) { game.objectId.toIntOrNull()?.takeIf { it > 0 } }
 
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val overviewStats  = remember(game) { overviewStats(game) }
+    val ratingStats    = remember(game) { ratingStats(game) }
+    val playerStats    = remember(game) { playerPreferenceStats(game) }
+    val customRows     = remember(game) { customDetailRows(game) }
+
+    val myStats = remember(game, historyPlays, players) {
+        if (gameObjectId != null) historyPlays.gameHistoryStats(gameObjectId, players)
+        else historyPlays.gameHistoryStats(game.identity.name, players)
+    }
+    val contextualInsight = remember(game, historyPlays, players) {
+        gameObjectId?.let { historyPlays.gameContextualInsight(it, players) }
+    }
+
+    val primaryColor   = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
-    val headerChips = remember(game, primaryColor, secondaryColor) {
+    val headerChips    = remember(game, primaryColor, secondaryColor) {
         headerStatusChips(game, primaryColor, secondaryColor)
     }
-    val compactHeaderChips = headerChips.size > 2 || LocalConfiguration.current.screenWidthDp < 380
+    val compactChips = headerChips.size > 2 || LocalConfiguration.current.screenWidthDp < 380
+
+    val infoSections = remember(playerStats, overviewStats, ratingStats) {
+        buildList {
+            if (playerStats.isNotEmpty())   add(InfoSection("Players", playerStats))
+            if (overviewStats.isNotEmpty()) add(InfoSection("Overview", overviewStats))
+            if (ratingStats.isNotEmpty())   add(InfoSection("Ratings", ratingStats, setOf("Rank"), columns = 3))
+        }
+    }
+    val hasSleeves = game.sleeveStatus != GameItem.SleeveStatus.UNKNOWN ||
+            game.sleeveCardSets.isNotEmpty()
+
+    // Scroll-driven header collapse for cinematic parallax effect
+    val listState = rememberLazyListState()
+    val headerCollapse by remember {
+        derivedStateOf {
+            when {
+                listState.firstVisibleItemIndex > 0 -> 1f
+                else -> (listState.firstVisibleItemScrollOffset / 200f).coerceIn(0f, 1f)
+            }
+        }
+    }
 
     fun open(url: String) {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
 
-    AnimatedDialog(onDismissRequest = onDismiss) {
+    AnimatedDialog(
+        onDismissRequest = onDismiss,
+        backdrop = { GameBackdrop(imageUrl = game.thumbnailUrl, height = 200.dp) }
+    ) {
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+
+            // ── Header ────────────────────────────────────────────────────────
+            item {
+                HeaderSection(game, headerChips, compactChips, headerCollapse)
+            }
+
+            // ── Action row ────────────────────────────────────────────────────
+            if (gameObjectId != null) {
                 item {
+                    val hasHistory = myStats != null
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.Top
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if (!game.thumbnailUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = game.thumbnailUrl,
-                                contentDescription = game.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(92.dp)
-                                    .clip(MaterialTheme.shapes.medium)
+                        BoardFlowButton(
+                            onClick = onLogPlay,
+                            modifier = if (hasHistory) Modifier.weight(1f) else Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                Icons.Default.Casino,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
                             )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(92.dp)
-                                    .clip(MaterialTheme.shapes.medium)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                                contentAlignment = Alignment.Center
+                            Spacer(Modifier.width(6.dp))
+                            Text("Log Play")
+                        }
+
+                        if (hasHistory) {
+                            BoardFlowOutlinedButton(
+                                onClick = { onViewHistory(gameObjectId) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
                             ) {
                                 Icon(
-                                    Icons.Default.GridView,
+                                    Icons.Default.History,
                                     contentDescription = null,
-                                    modifier = Modifier.size(36.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                                    modifier = Modifier.size(14.dp)
                                 )
-                            }
-                        }
-
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text(
-                                    text = game.name,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(end = 20.dp)
-                                )
-                            }
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                game.rating?.let {
-                                    InlineStat(
-                                        icon = Icons.Default.Star,
-                                        label = formatDecimal(it),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-
-                                headerChips.forEach { chip ->
-                                    StatusChip(
-                                        label = chip.label,
-                                        icon = chip.icon,
-                                        tint = chip.tint,
-                                        iconOnly = compactHeaderChips
-                                    )
-                                }
+                                Spacer(Modifier.width(4.dp))
+                                Text("History")
                             }
                         }
                     }
                 }
+            }
 
-                if (overviewStats.isNotEmpty()) {
-                    item {
-                        SectionBlock(title = "Overview") {
-                            DetailGrid(
-                                stats = overviewStats,
-                                emphasizeSurface = false
-                            )
-                        }
-                    }
+            // ── Your Stats card ───────────────────────────────────────────────
+            if (myStats != null) {
+                item {
+                    YourStatsCard(stats = myStats, insight = contextualInsight)
                 }
-
-                if (ratingStats.isNotEmpty()) {
-                    item {
-                        SectionBlock(title = "Ratings & Stats") {
-                            DetailGrid(
-                                stats = ratingStats,
-                                emphasizeSurface = false,
-                                secondaryLabels = setOf("Rank")
-                            )
-                        }
-                    }
+            } else if (contextualInsight != null) {
+                item {
+                    Text(
+                        text = contextualInsight.text,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    )
                 }
+            }
 
-                if (playerPreferenceStats.isNotEmpty()) {
-                    item {
-                        SectionBlock(title = "Players") {
-                            DetailGrid(
-                                stats = playerPreferenceStats,
-                                emphasizeSurface = false
-                            )
-                        }
-                    }
-                }
+            // ── Grouped info block ────────────────────────────────────────────
+            if (infoSections.isNotEmpty()) {
+                item { InfoGroupBlock(infoSections) }
+            }
 
-                if (game.sleeveStatus != GameItem.SleeveStatus.UNKNOWN || game.sleeveCardSets.isNotEmpty()) {
-                    item {
-                        var expanded by remember { mutableStateOf(false) }
-                        Column(
-                            modifier = Modifier.padding(top = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { expanded = !expanded },
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Sleeves",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Icon(
-                                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    contentDescription = if (expanded) "Collapse sleeves" else "Expand sleeves",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            BoardFlowAnimatedVisibility(visible = expanded) {
-                                SleevesSection(game)
-                            }
-                        }
-                    }
-                }
+            // ── Sleeves ───────────────────────────────────────────────────────
+            if (hasSleeves) {
+                item { SleevesBlock(game) }
+            }
 
-                if (customRows.isNotEmpty()) {
-                    item {
-                        SectionBlock(title = "More") {
-                            DetailGrid(
-                                stats = customRows,
-                                emphasizeSurface = false
-                            )
-                        }
-                    }
-                }
+            // ── More ──────────────────────────────────────────────────────────
+            if (customRows.isNotEmpty()) {
+                item { InfoGroupBlock(listOf(InfoSection("More", customRows))) }
+            }
 
+            // ── External links ────────────────────────────────────────────────
+            if (bggUrl != null || driveUrl != null) {
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -244,33 +236,369 @@ fun GameDetailsDialog(
                                 onClick = { open(bggUrl) },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Icon(
-                                    Icons.Default.Language,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Text("  Open BGG")
                             }
                         }
-
                         if (driveUrl != null) {
                             BoardFlowOutlinedButton(
                                 onClick = { open(driveUrl) },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Icon(
-                                    Icons.Default.FolderOpen,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Text("  Drive")
                             }
                         }
                     }
                 }
+            }
         }
     }
 }
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun HeaderSection(
+    game: GameItem,
+    headerChips: List<HeaderChip>,
+    compactChips: Boolean,
+    collapse: Float = 0f
+) {
+    val hasBackdrop = !game.thumbnailUrl.isNullOrBlank()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        if (hasBackdrop) {
+            AsyncImage(
+                model = game.thumbnailUrl,
+                contentDescription = game.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(84.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .scale(1f - 0.12f * collapse)
+                    .alpha(1f - 0.45f * collapse)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(84.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.GridView,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .alpha(1f - 0.25f * collapse),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = game.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = if (hasBackdrop) Color.White.copy(alpha = 0.95f)
+                        else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(end = 20.dp)
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                game.rating?.let {
+                    InlineStat(
+                        icon = Icons.Default.Star,
+                        label = formatDecimal(it),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                headerChips.forEach { chip ->
+                    StatusChip(
+                        label = chip.label,
+                        icon = chip.icon,
+                        tint = chip.tint,
+                        iconOnly = compactChips
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Your Stats card ───────────────────────────────────────────────────────────
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun YourStatsCard(
+    stats: GameHistoryStats,
+    insight: ContextualInsight?
+) {
+    val primary          = MaterialTheme.colorScheme.primary
+    val onSurface        = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val outlineVariant   = MaterialTheme.colorScheme.outlineVariant
+
+    Surface(
+        color = primary.copy(alpha = 0.04f),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.12f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Section label with icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Default.QueryStats,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = primary.copy(alpha = 0.75f)
+                )
+                Text(
+                    text = "Your Stats",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = primary.copy(alpha = 0.75f)
+                )
+            }
+
+            // Primary — plays count (brightest) + secondary — last played date
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                    Text(
+                        text = "${stats.plays}",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = primary
+                    )
+                    Text(
+                        text = "plays",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                }
+                stats.lastPlayedDate?.let { date ->
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text(
+                            text = date,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = onSurface.copy(alpha = 0.85f)
+                        )
+                        Text(
+                            text = "last played",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+            }
+
+            // Tertiary stats grid
+            val secondary = buildList {
+                stats.avgDurationMinutes?.let { avg ->
+                    add(SectionStat("Avg duration", if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"))
+                }
+                stats.bestScore?.let { (name, score) -> add(SectionStat("Best score", "$score by $name")) }
+                stats.mostWins?.let { (name, wins) -> add(SectionStat("Most wins", "$name ($wins)")) }
+            }
+            if (secondary.isNotEmpty()) {
+                DetailGrid(stats = secondary, emphasizeSurface = false)
+            }
+
+            // Frequent partners — pill chips
+            if (stats.commonPlayers.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Frequent partners",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = onSurfaceVariant.copy(alpha = 0.55f)
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        stats.commonPlayers.forEach { (name, count) ->
+                            Surface(
+                                shape = CircleShape,
+                                color = onSurface.copy(alpha = 0.06f),
+                                border = BorderStroke(0.5.dp, outlineVariant.copy(alpha = 0.20f))
+                            ) {
+                                Text(
+                                    text = "$name  $count",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = onSurface.copy(alpha = 0.82f),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Contextual insight — single rotating line
+            insight?.let {
+                Text(
+                    text = it.text,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = if (it.positive) primary.copy(alpha = 0.85f)
+                            else onSurfaceVariant.copy(alpha = 0.65f),
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+        }
+    }
+}
+
+// ── Grouped info block ────────────────────────────────────────────────────────
+
+@Composable
+private fun InfoGroupBlock(sections: List<InfoSection>) {
+    Surface(
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column {
+            sections.forEachIndexed { i, section ->
+                if (i > 0) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f),
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    Text(
+                        text = section.title,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                    )
+                    DetailGrid(
+                        stats = section.stats,
+                        emphasizeSurface = false,
+                        secondaryLabels = section.secondaryLabels,
+                        columns = section.columns
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Sleeves block ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun SleevesBlock(game: GameItem) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Surface(
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(horizontal = 14.dp, vertical = 11.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Style,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                        )
+                        Text(
+                            text = "Sleeves",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                        )
+                    }
+                    if (!expanded) {
+                        val groups = game.sleeveCardSets
+                            .filter { it.size != null || it.count != null }
+                            .groupBy { it.size?.trim().orEmpty() }
+                        val totalCards = game.sleeveCardSets.mapNotNull { it.count }.sum()
+                        when {
+                            groups.isNotEmpty() && totalCards > 0 -> Text(
+                                text = "${groups.size} ${if (groups.size == 1) "size" else "sizes"} · $totalCards cards",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                            game.sleeveStatus == GameItem.SleeveStatus.MISSING -> Text(
+                                text = "No data on BGG yet",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+                            )
+                        }
+                    }
+                }
+                Icon(
+                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            AnimatedVisibility(visible = expanded) {
+                Column {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f),
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    )
+                    Box(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                        SleevesSection(game)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Status chip ───────────────────────────────────────────────────────────────
 
 @Composable
 private fun StatusChip(
@@ -279,21 +607,13 @@ private fun StatusChip(
     tint: Color,
     iconOnly: Boolean = false
 ) {
-    Surface(
-        color = tint.copy(alpha = 0.08f),
-        shape = CircleShape
-    ) {
+    Surface(color = tint.copy(alpha = 0.08f), shape = CircleShape) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(11.dp),
-                tint = tint
-            )
+            Icon(icon, contentDescription = null, modifier = Modifier.size(11.dp), tint = tint)
             if (!iconOnly) {
                 Text(
                     text = label,
@@ -305,33 +625,17 @@ private fun StatusChip(
     }
 }
 
-@Composable
-private fun SectionBlock(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = Modifier.padding(top = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        content()
-    }
-}
+// ── Detail grid ───────────────────────────────────────────────────────────────
 
 @Composable
 private fun DetailGrid(
     stats: List<SectionStat>,
     emphasizeSurface: Boolean = true,
-    secondaryLabels: Set<String> = emptySet()
+    secondaryLabels: Set<String> = emptySet(),
+    columns: Int = 2
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        stats.chunked(2).forEach { row ->
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        stats.chunked(columns).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -345,9 +649,7 @@ private fun DetailGrid(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                if (row.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+                repeat(columns - row.size) { Spacer(modifier = Modifier.weight(1f)) }
             }
         }
     }
@@ -367,7 +669,7 @@ private fun DetailCell(
                 .fillMaxWidth()
                 .padding(
                     horizontal = if (emphasizeSurface) 10.dp else 2.dp,
-                    vertical = if (emphasizeSurface) 9.dp else 4.dp
+                    vertical = if (emphasizeSurface) 9.dp else 3.dp
                 ),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
@@ -375,7 +677,7 @@ private fun DetailCell(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                    alpha = if (secondary) 0.55f else 0.8f
+                    alpha = if (secondary) 0.5f else 0.58f
                 )
             )
             Text(
@@ -386,7 +688,7 @@ private fun DetailCell(
                     MaterialTheme.typography.bodyMedium.withTabularNumbers()
                 },
                 color = MaterialTheme.colorScheme.onSurface.copy(
-                    alpha = if (secondary) 0.75f else 1f
+                    alpha = if (secondary) 0.72f else 0.88f
                 )
             )
         }
@@ -397,15 +699,13 @@ private fun DetailCell(
             modifier = modifier,
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
             shape = MaterialTheme.shapes.medium
-        ) {
-            content()
-        }
+        ) { content() }
     } else {
-        Box(modifier = modifier) {
-            content()
-        }
+        Box(modifier = modifier) { content() }
     }
 }
+
+// ── Sleeves expanded content ──────────────────────────────────────────────────
 
 @Composable
 private fun SleevesSection(game: GameItem) {
@@ -413,66 +713,52 @@ private fun SleevesSection(game: GameItem) {
         game.sleeveCardSets
             .filter { it.size != null || it.count != null }
             .groupBy { it.size?.trim().orEmpty() }
-            .entries
-            .sortedBy { it.key }
+            .entries.sortedBy { it.key }
     }
 
     when {
-        game.sleeveStatus == GameItem.SleeveStatus.MISSING -> {
+        game.sleeveStatus == GameItem.SleeveStatus.MISSING ->
             Text(
                 text = "No sleeve data on BGG yet",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
-        }
 
-        game.sleeveStatus == GameItem.SleeveStatus.ERROR -> {
+        game.sleeveStatus == GameItem.SleeveStatus.ERROR ->
             Text(
                 text = game.sleeveNote ?: "Could not load sleeve data",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
             )
-        }
 
         grouped.isEmpty() -> Unit
 
-        else -> {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                grouped.forEach { (size, sets) ->
-                    val total = sets.mapNotNull { it.count }.sum()
-
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp)
-                                .padding(horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+        else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            grouped.forEach { (size, sets) ->
+                val total = sets.mapNotNull { it.count }.sum()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = size.ifBlank { "Unknown size" },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (total > 0) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            shape = CircleShape
                         ) {
                             Text(
-                                text = size.ifBlank { "Unknown size" },
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
+                                text = "$total",
+                                style = MaterialTheme.typography.labelSmall.withTabularNumbers(),
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
-
-                            if (total > 0) {
-                                Surface(
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-                                    shape = CircleShape
-                                ) {
-                                    Text(
-                                        text = "$total",
-                                        style = MaterialTheme.typography.labelMedium.withTabularNumbers(),
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
                         }
                     }
                 }

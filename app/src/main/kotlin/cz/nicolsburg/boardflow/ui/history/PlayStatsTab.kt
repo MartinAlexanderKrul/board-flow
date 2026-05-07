@@ -3,6 +3,7 @@ package cz.nicolsburg.boardflow.ui.history
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,15 +20,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilterChip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +41,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,12 +71,12 @@ import kotlin.math.roundToInt
 // ── Data holders ─────────────────────────────────────────────────────────────
 
 private data class MonthBucket(val label: String, val yearMonth: Int, val count: Int)
-private data class GameStat(val name: String, val plays: Int)
+private data class GameStat(val gameId: Int, val name: String, val plays: Int)
 private data class PlayerStat(val displayName: String, val plays: Int, val wins: Int)
 
 // ── Pure computations ─────────────────────────────────────────────────────────
 
-private fun buildMonthBuckets(plays: List<LoggedPlay>): List<MonthBucket> {
+private fun buildMonthBuckets(plays: List<LoggedPlay>, range: StatsTimeRange): List<MonthBucket> {
     val byMonth = plays
         .mapNotNull { play ->
             runCatching { LocalDate.parse(play.date) }.getOrNull()
@@ -78,25 +85,75 @@ private fun buildMonthBuckets(plays: List<LoggedPlay>): List<MonthBucket> {
         .groupBy({ it.first }) { it.second }
         .mapValues { it.value.sum() }
     val now = LocalDate.now()
-    return (11 downTo 0).map { back ->
-        val d = now.minusMonths(back.toLong())
-        val ym = d.year * 100 + d.monthValue
-        MonthBucket(
-            label = d.format(DateTimeFormatter.ofPattern("MMM")),
-            yearMonth = ym,
-            count = byMonth[ym] ?: 0
-        )
+    val currentYM = now.year * 100 + now.monthValue
+
+    return when (range) {
+        StatsTimeRange.THIS_YEAR -> {
+            // Jan 1 of current year through current month
+            (1..now.monthValue).map { m ->
+                val d = LocalDate.of(now.year, m, 1)
+                val ym = d.year * 100 + d.monthValue
+                MonthBucket(
+                    label = d.format(DateTimeFormatter.ofPattern("MMM")),
+                    yearMonth = ym,
+                    count = byMonth[ym] ?: 0
+                )
+            }
+        }
+        StatsTimeRange.ALL -> {
+            val earliestYM = byMonth.keys.minOrNull() ?: currentYM
+            val earliestYear = earliestYM / 100
+            val earliestMonth = earliestYM % 100
+            val monthSpan = (now.year - earliestYear) * 12 + (now.monthValue - earliestMonth) + 1
+            if (monthSpan > 18) {
+                // Group by year so the chart is readable
+                (earliestYear..now.year).map { year ->
+                    val yearCount = byMonth.entries
+                        .filter { it.key / 100 == year }
+                        .sumOf { it.value }
+                    MonthBucket(label = year.toString(), yearMonth = year * 100, count = yearCount)
+                }
+            } else {
+                // Show every month from earliest to now
+                val start = LocalDate.of(earliestYear, earliestMonth, 1)
+                (0 until monthSpan).map { m ->
+                    val d = start.plusMonths(m.toLong())
+                    val ym = d.year * 100 + d.monthValue
+                    MonthBucket(
+                        label = d.format(DateTimeFormatter.ofPattern("MMM ''yy")),
+                        yearMonth = ym,
+                        count = byMonth[ym] ?: 0
+                    )
+                }
+            }
+        }
+        else -> {
+            // Rolling 12-month window for THIS_MONTH and LAST_30
+            (11 downTo 0).map { back ->
+                val d = now.minusMonths(back.toLong())
+                val ym = d.year * 100 + d.monthValue
+                MonthBucket(
+                    label = d.format(DateTimeFormatter.ofPattern("MMM")),
+                    yearMonth = ym,
+                    count = byMonth[ym] ?: 0
+                )
+            }
+        }
     }
 }
 
 private fun buildTopGames(plays: List<LoggedPlay>, limit: Int = 10): List<GameStat> =
     plays
-        .groupBy { it.gameName }
-        .mapValues { (_, g) -> g.sumOf { it.quantity.coerceAtLeast(1) } }
+        .filter { it.gameName.isNotBlank() }
+        .groupBy { it.gameId }
+        .mapValues { (_, g) ->
+            val name = g.maxByOrNull { it.date }?.gameName ?: g.first().gameName
+            name to g.sumOf { it.quantity.coerceAtLeast(1) }
+        }
         .entries
-        .sortedByDescending { it.value }
+        .sortedByDescending { it.value.second }
         .take(limit)
-        .map { GameStat(it.key, it.value) }
+        .map { (gameId, pair) -> GameStat(gameId, pair.first, pair.second) }
 
 private fun buildTopPlayers(
     plays: List<LoggedPlay>,
@@ -173,11 +230,16 @@ private fun buildDayOfWeekDist(plays: List<LoggedPlay>): List<Pair<String, Int>>
 internal fun StatsContent(
     plays: List<LoggedPlay>,
     players: List<Player>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
+    onPlayerTapped: (String) -> Unit = {}
 ) {
-    val statPlays = remember(plays) { plays.filter { it.nowInStats } }
+    var timeRange by remember { mutableStateOf(StatsTimeRange.ALL) }
+    val statPlays = remember(plays, timeRange) {
+        plays.filterByTimeRange(timeRange)
+    }
 
-    if (statPlays.isEmpty()) {
+    if (plays.isEmpty()) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -210,12 +272,7 @@ internal fun StatsContent(
     val totalPlays    = remember(statPlays) { statPlays.sumOf { it.quantity.coerceAtLeast(1) } }
     val uniqueGames   = remember(statPlays) { statPlays.map { it.gameName }.toSet().size }
     val totalMinutes  = remember(statPlays) { statPlays.filter { it.durationMinutes > 0 }.sumOf { it.durationMinutes } }
-    val playsThisYear = remember(statPlays) {
-        val y = LocalDate.now().year
-        statPlays.filter { runCatching { LocalDate.parse(it.date).year == y }.getOrDefault(false) }
-            .sumOf { it.quantity.coerceAtLeast(1) }
-    }
-    val months       = remember(statPlays) { buildMonthBuckets(statPlays) }
+    val months       = remember(statPlays, timeRange) { buildMonthBuckets(statPlays, timeRange) }
     val topGames     = remember(statPlays) { buildTopGames(statPlays) }
     val topPlayers   = remember(statPlays, players) { buildTopPlayers(statPlays, players) }
     val hIndex       = remember(statPlays) { computeHIndex(statPlays) }
@@ -229,28 +286,82 @@ internal fun StatsContent(
         statPlays.filter { it.durationMinutes > 0 }.maxByOrNull { it.durationMinutes }
             ?.let { it.gameName to it.durationMinutes }
     }
+    val hotStreak      = remember(statPlays, players) { statPlays.hotPlayerStreak(players) }
+    val mostThisMonth  = remember(statPlays) {
+        if (timeRange == StatsTimeRange.ALL) statPlays.mostPlayedThisMonth() else null
+    }
 
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item { SummarySection(totalPlays, uniqueGames, totalMinutes, players.size, playsThisYear) }
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatsTimeRange.entries.forEach { range ->
+                    FilterChip(
+                        selected = timeRange == range,
+                        onClick = { timeRange = range },
+                        label = { Text(range.label, style = MaterialTheme.typography.labelMedium) }
+                    )
+                }
+            }
+        }
+
+        if (statPlays.isEmpty()) {
+            item {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.History,
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                        )
+                        Text(
+                            "No plays in this period",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "Try a different time range",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+        } else {
+
+        item { SummarySection(totalPlays, uniqueGames, totalMinutes, players.size) }
 
         if (months.any { it.count > 0 }) {
-            item { ActivitySection(months) }
+            item { ActivitySection(months, rangeLabel = timeRange.subtitle) }
         }
 
         if (topGames.isNotEmpty()) {
-            item { TopGamesSection(topGames) }
+            item { TopGamesSection(topGames, rangeLabel = timeRange.subtitle, onGameTapped = onGameTapped) }
         }
 
         if (dayDist.any { it.second > 0 }) {
-            item { DayOfWeekSection(dayDist) }
+            item { DayOfWeekSection(dayDist, rangeLabel = timeRange.subtitle) }
         }
 
         if (topPlayers.isNotEmpty()) {
-            item { TopPlayersSection(topPlayers) }
+            item { TopPlayersSection(topPlayers, rangeLabel = timeRange.subtitle, onPlayerTapped = onPlayerTapped) }
         }
 
         item {
@@ -259,9 +370,14 @@ internal fun StatsContent(
                 currentStreak = curStreak,
                 bestStreak = bestStreak,
                 avgDuration = avgDuration,
-                longestSession = longestSession
+                longestSession = longestSession,
+                hotPlayerStreak = hotStreak,
+                mostThisMonth = mostThisMonth,
+                rangeLabel = timeRange.subtitle
             )
         }
+
+        } // end else (statPlays not empty)
     }
 }
 
@@ -272,8 +388,7 @@ private fun SummarySection(
     totalPlays: Int,
     uniqueGames: Int,
     totalMinutes: Int,
-    playerCount: Int,
-    playsThisYear: Int
+    playerCount: Int
 ) {
     val totalHours = totalMinutes / 60
     val remainingMinutes = totalMinutes % 60
@@ -285,13 +400,14 @@ private fun SummarySection(
         ) {
             BigStatCard(
                 value = "$totalPlays",
-                label = "Total Plays",
+                label = "Plays",
                 icon = Icons.Default.History,
+                hero = true,
                 modifier = Modifier.weight(1f)
             )
             BigStatCard(
                 value = "$uniqueGames",
-                label = "Unique Games",
+                label = "Unique games",
                 icon = Icons.Default.Star,
                 modifier = Modifier.weight(1f)
             )
@@ -302,43 +418,16 @@ private fun SummarySection(
         ) {
             BigStatCard(
                 value = if (totalMinutes > 0) "${totalHours}h ${remainingMinutes}m" else "—",
-                label = "Time Played",
+                label = "Time played",
                 icon = Icons.Default.Schedule,
                 modifier = Modifier.weight(1f)
             )
             BigStatCard(
                 value = "$playerCount",
                 label = "Players",
-                icon = Icons.Default.EmojiEvents,
+                icon = Icons.Default.Group,
                 modifier = Modifier.weight(1f)
             )
-        }
-        if (playsThisYear > 0) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "This year",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        "$playsThisYear ${if (playsThisYear == 1) "play" else "plays"}",
-                        style = MaterialTheme.typography.labelLarge.withTabularNumbers(),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
         }
     }
 }
@@ -348,14 +437,16 @@ private fun BigStatCard(
     value: String,
     label: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hero: Boolean = false
 ) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = if (hero) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                else MaterialTheme.colorScheme.surface,
         shadowElevation = 0.dp,
-        tonalElevation = 1.dp
+        tonalElevation = if (hero) 0.dp else 1.dp
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
@@ -365,13 +456,14 @@ private fun BigStatCard(
                 icon,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = if (hero) 1f else 0.7f)
             )
             Text(
                 value,
                 style = MaterialTheme.typography.headlineSmall.withTabularNumbers(),
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = if (hero) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -387,22 +479,29 @@ private fun BigStatCard(
 // ── Activity bar chart ────────────────────────────────────────────────────────
 
 @Composable
-private fun ActivitySection(months: List<MonthBucket>) {
+private fun ActivitySection(months: List<MonthBucket>, rangeLabel: String = "All time") {
     val totalInWindow = months.sumOf { it.count }
     val peakMonth = months.maxByOrNull { it.count }
+    val subtitle = "$rangeLabel  ·  $totalInWindow ${if (totalInWindow == 1) "play" else "plays"}"
 
     SectionCard {
         StatsCardHeader(
             title = "Play Activity",
-            subtitle = "Last 12 months  ·  $totalInWindow ${if (totalInWindow == 1) "play" else "plays"}"
+            subtitle = subtitle
         )
         Spacer(Modifier.height(12.dp))
 
-        val currentYM = LocalDate.now().let { it.year * 100 + it.monthValue }
+        val now = LocalDate.now()
+        val currentYM = now.year * 100 + now.monthValue
+        val isYearMode = months.all { it.yearMonth % 100 == 0 }
+        val highlightIndex = if (isYearMode)
+            months.indexOfFirst { it.yearMonth / 100 == now.year }
+        else
+            months.indexOfFirst { it.yearMonth == currentYM }
         BucketBarChart(
             values = months.map { it.count },
             labels = months.map { it.label },
-            highlightIndex = months.indexOfFirst { it.yearMonth == currentYM }
+            highlightIndex = highlightIndex
         )
 
         peakMonth?.takeIf { it.count > 0 }?.let { peak ->
@@ -494,24 +593,26 @@ private fun BucketBarChart(
 // ── Top games ─────────────────────────────────────────────────────────────────
 
 @Composable
-private fun TopGamesSection(games: List<GameStat>) {
+private fun TopGamesSection(
+    games: List<GameStat>,
+    rangeLabel: String = "All time",
+    onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> }
+) {
     SectionCard {
-        StatsCardHeader(
-            title = "Top Games",
-            subtitle = "Most played of all time"
-        )
+        StatsCardHeader(title = "Top Games", subtitle = rangeLabel)
         Spacer(Modifier.height(12.dp))
         val maxPlays = games.firstOrNull()?.plays ?: 1
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             games.forEachIndexed { i, game ->
-                TopGameRow(game = game, rank = i + 1, maxPlays = maxPlays)
+                TopGameRow(game = game, rank = i + 1, maxPlays = maxPlays,
+                    onClick = { onGameTapped(game.gameId, game.name) })
             }
         }
     }
 }
 
 @Composable
-private fun TopGameRow(game: GameStat, rank: Int, maxPlays: Int) {
+private fun TopGameRow(game: GameStat, rank: Int, maxPlays: Int, onClick: () -> Unit = {}) {
     val fraction by animateFloatAsState(
         targetValue = if (maxPlays > 0) game.plays.toFloat() / maxPlays else 0f,
         animationSpec = boardFlowTween(BoardFlowMotion.ChartRowDuration + rank * BoardFlowMotion.ChartRowStagger),
@@ -536,7 +637,9 @@ private fun TopGameRow(game: GameStat, rank: Int, maxPlays: Int) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier
@@ -594,12 +697,14 @@ private fun TopGameRow(game: GameStat, rank: Int, maxPlays: Int) {
 // ── Day of week ───────────────────────────────────────────────────────────────
 
 @Composable
-private fun DayOfWeekSection(dist: List<Pair<String, Int>>) {
+private fun DayOfWeekSection(dist: List<Pair<String, Int>>, rangeLabel: String = "All time") {
     val peak = dist.maxByOrNull { it.second }
+    val subtitle = peak?.takeIf { it.second > 0 }
+        ?.let { "${it.first} · $rangeLabel" }
     SectionCard {
         StatsCardHeader(
             title = "Favourite Day",
-            subtitle = peak?.takeIf { it.second > 0 }?.let { "Most plays on ${it.first}" }
+            subtitle = subtitle
         )
         Spacer(Modifier.height(12.dp))
         BucketBarChart(
@@ -613,24 +718,29 @@ private fun DayOfWeekSection(dist: List<Pair<String, Int>>) {
 // ── Top players ───────────────────────────────────────────────────────────────
 
 @Composable
-private fun TopPlayersSection(topPlayers: List<PlayerStat>) {
+private fun TopPlayersSection(
+    topPlayers: List<PlayerStat>,
+    rangeLabel: String = "All time",
+    onPlayerTapped: (String) -> Unit = {}
+) {
     SectionCard {
         StatsCardHeader(
             title = "Top Players",
-            subtitle = "By number of recorded plays"
+            subtitle = rangeLabel
         )
         Spacer(Modifier.height(12.dp))
         val maxPlays = topPlayers.firstOrNull()?.plays ?: 1
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             topPlayers.forEachIndexed { i, player ->
-                TopPlayerRow(player = player, rank = i + 1, maxPlays = maxPlays)
+                TopPlayerRow(player = player, rank = i + 1, maxPlays = maxPlays,
+                    onClick = { onPlayerTapped(player.displayName) })
             }
         }
     }
 }
 
 @Composable
-private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int) {
+private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int, onClick: () -> Unit = {}) {
     val fraction by animateFloatAsState(
         targetValue = if (maxPlays > 0) player.plays.toFloat() / maxPlays else 0f,
         animationSpec = boardFlowTween(BoardFlowMotion.PlayerChartRowDuration + rank * BoardFlowMotion.PlayerChartRowStagger),
@@ -642,7 +752,9 @@ private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         // Avatar circle with initials
         Box(
@@ -743,10 +855,13 @@ private fun InsightsSection(
     currentStreak: Int,
     bestStreak: Int,
     avgDuration: Int?,
-    longestSession: Pair<String, Int>?
+    longestSession: Pair<String, Int>?,
+    hotPlayerStreak: Pair<String, Int>? = null,
+    mostThisMonth: Pair<String, Int>? = null,
+    rangeLabel: String = "All time"
 ) {
     SectionCard {
-        StatsCardHeader(title = "Insights")
+        StatsCardHeader(title = "Insights", subtitle = rangeLabel)
         Spacer(Modifier.height(12.dp))
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
@@ -785,6 +900,24 @@ private fun InsightsSection(
                     icon = Icons.Default.EmojiEvents,
                     value = if (minutes >= 60) "${minutes / 60}h ${minutes % 60}m" else "${minutes}m",
                     label = "Longest session",
+                    detail = name,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            hotPlayerStreak?.let { (name, streak) ->
+                InsightChip(
+                    icon = Icons.Default.LocalFireDepartment,
+                    value = "${streak}W",
+                    label = "Hot streak",
+                    detail = "$name on a ${streak}-win streak 🔥",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            mostThisMonth?.let { (name, count) ->
+                InsightChip(
+                    icon = Icons.Default.Star,
+                    value = "${count}×",
+                    label = "This month",
                     detail = name,
                     modifier = Modifier.weight(1f)
                 )
