@@ -233,6 +233,7 @@ object BoardFlowModalTokens {
 fun AnimatedDialog(
     onDismissRequest: () -> Unit,
     properties: DialogProperties = DialogProperties(usePlatformDefaultWidth = false),
+    backdrop: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     Dialog(onDismissRequest = onDismissRequest, properties = properties) {
@@ -321,13 +322,16 @@ fun AnimatedDialog(
                     },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    BoardFlowDismissDragHandle()
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    backdrop?.invoke()
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        BoardFlowDismissDragHandle()
 
-                    // Content weight(fill=false) gives it bounded height so inner
-                    // LazyColumns scroll correctly, while short dialogs stay compact.
-                    Box(modifier = Modifier.weight(1f, fill = false)) {
-                        content()
+                        // Content weight(fill=false) gives it bounded height so inner
+                        // LazyColumns scroll correctly, while short dialogs stay compact.
+                        Box(modifier = Modifier.weight(1f, fill = false)) {
+                            content()
+                        }
                     }
                 }
             }

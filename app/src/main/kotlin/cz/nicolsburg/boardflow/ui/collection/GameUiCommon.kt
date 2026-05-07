@@ -81,7 +81,6 @@ fun overviewStats(game: GameItem): List<SectionStat> {
     playerLabel(game)?.let { stats += SectionStat("Players", it) }
     compactPlayTime(game)?.let { stats += SectionStat("Play time", it) }
     game.recommendedAge?.takeIf { it.isNotBlank() }?.let { stats += SectionStat("Age", it) }
-    game.weight?.let { stats += SectionStat("Weight", formatDecimal(it)) }
     return stats
 }
 
@@ -89,6 +88,7 @@ fun ratingStats(game: GameItem): List<SectionStat> {
     return listOfNotNull(
         game.rating?.let { SectionStat("BGG rating", formatDecimal(it)) },
         game.bayesAverage?.let { SectionStat("Bayes rating", formatDecimal(it)) },
+        game.weight?.let { SectionStat("Weight", formatDecimal(it)) },
     )
 }
 

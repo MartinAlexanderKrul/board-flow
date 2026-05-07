@@ -965,9 +965,10 @@ private fun PlayDetailsDialog(
     onPlayAgain: () -> Unit = {}
 ) {
     val insights = remember(play, historyPlays) { historyPlays.playInsights(play) }
-    AnimatedDialog(onDismissRequest = onDismiss) {
-        Box(modifier = Modifier.fillMaxSize()) {
-        GameBackdrop(imageUrl = thumbnailUrl, height = 200.dp)
+    AnimatedDialog(
+        onDismissRequest = onDismiss,
+        backdrop = { GameBackdrop(imageUrl = thumbnailUrl, height = 200.dp) }
+    ) {
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -1136,7 +1137,6 @@ private fun PlayDetailsDialog(
                 }
             }
         }
-        } // Box
     }
 
 @Composable

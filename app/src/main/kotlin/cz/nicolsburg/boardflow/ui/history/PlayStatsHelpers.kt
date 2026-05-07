@@ -35,6 +35,16 @@ data class GameHistoryStats(
     val commonPlayers: List<Pair<String, Int>>  // (name, sharedPlayCount), sorted desc, max 3
 )
 
+data class ContextualInsight(val text: String, val key: String, val positive: Boolean = true)
+
+private data class InsightCandidate(val key: String, val text: String, val positive: Boolean = true)
+
+internal object InsightRotationCache {
+    private val lastKey = mutableMapOf<Int, String>()
+    fun getLast(gameId: Int): String? = lastKey[gameId]
+    fun setLast(gameId: Int, key: String) { lastKey[gameId] = key }
+}
+
 private fun resolveDisplayName(raw: String, roster: List<Player>): String {
     if (roster.isEmpty()) return raw.trim()
     val lower = raw.lowercase().trim()
@@ -148,6 +158,113 @@ fun List<LoggedPlay>.gameInsight(gameId: Int, roster: List<Player> = emptyList()
     }
     val topWinner = winCounts.maxByOrNull { it.value } ?: return null
     return if (topWinner.value >= 2) "${topWinner.key} leads with ${topWinner.value} wins" else null
+}
+
+// ── Contextual insight system ─────────────────────────────────────────────────
+
+private fun buildInsightCandidates(
+    gamePlays: List<LoggedPlay>,
+    roster: List<Player>,
+    currentPlayerName: String?
+): List<InsightCandidate> {
+    val result = mutableListOf<InsightCandidate>()
+    if (gamePlays.isEmpty()) return result
+
+    val now = LocalDate.now()
+    val totalPlays = gamePlays.sumOf { it.quantity.coerceAtLeast(1) }
+    val lastDate = gamePlays.mapNotNull { runCatching { LocalDate.parse(it.date) }.getOrNull() }.maxOrNull()
+    val daysSinceLast = lastDate?.let { now.toEpochDay() - it.toEpochDay() }
+
+    // A — Recent activity
+    val last7 = now.minusDays(7)
+    val last30 = now.minusDays(30)
+    val recent7 = gamePlays.sumOf { play ->
+        if (runCatching { LocalDate.parse(play.date) >= last7 }.getOrDefault(false))
+            play.quantity.coerceAtLeast(1) else 0
+    }
+    val recent30 = gamePlays.sumOf { play ->
+        if (runCatching { LocalDate.parse(play.date) >= last30 }.getOrDefault(false))
+            play.quantity.coerceAtLeast(1) else 0
+    }
+    when {
+        recent7 >= 2 ->
+            result += InsightCandidate("recent_week_$recent7", "Played ${recent7}× this week")
+        recent30 >= 2 ->
+            result += InsightCandidate("recent_30_$recent30", "Played ${recent30}× in the last 30 days")
+        daysSinceLast == 0L ->
+            result += InsightCandidate("today", "Played today")
+        daysSinceLast == 1L ->
+            result += InsightCandidate("yesterday", "Last played yesterday")
+        daysSinceLast != null && daysSinceLast in 2..14 ->
+            result += InsightCandidate("recent_${daysSinceLast}d", "Last played $daysSinceLast days ago")
+    }
+
+    // B — Dominance (3+ plays, clear winner, no tie at the top)
+    if (totalPlays >= 3) {
+        val winCounts = mutableMapOf<String, Int>()
+        gamePlays.forEach { play ->
+            play.players.filter { it.isWinner && it.name.isNotBlank() }.forEach { pr ->
+                val name = resolveDisplayName(pr.name, roster)
+                winCounts[name] = (winCounts[name] ?: 0) + 1
+            }
+        }
+        val sorted = winCounts.entries.sortedByDescending { it.value }
+        val top = sorted.firstOrNull()
+        val second = sorted.getOrNull(1)
+        if (top != null && top.value >= 2 && (second == null || top.value > second.value)) {
+            val isMe = currentPlayerName != null &&
+                top.key.lowercase().trim() == currentPlayerName.lowercase().trim()
+            val text = if (isMe) "You lead with ${top.value} wins"
+                       else "${top.key} leads with ${top.value} wins"
+            result += InsightCandidate("dominance_${top.key}_${top.value}", text)
+        }
+    }
+
+    // C — Session insight (needs duration data)
+    val withDuration = gamePlays.filter { it.durationMinutes > 0 }
+    if (withDuration.isNotEmpty()) {
+        fun fmt(min: Int) = when {
+            min >= 60 && min % 60 == 0 -> "${min / 60}h"
+            min >= 60 -> "${min / 60}h ${min % 60}m"
+            else -> "${min}m"
+        }
+        val maxDur = withDuration.maxOf { it.durationMinutes }
+        if (withDuration.size >= 3) {
+            val avgDur = withDuration.sumOf { it.durationMinutes } / withDuration.size
+            result += InsightCandidate("avg_dur_$avgDur", "Average session is ${fmt(avgDur)}")
+        }
+        result += InsightCandidate("max_dur_$maxDur", "Longest session lasted ${fmt(maxDur)}")
+    }
+
+    // D — Dormant / low plays (only when no recent-activity candidate was added above)
+    if (result.none { it.key.startsWith("recent_") || it.key == "today" || it.key == "yesterday" }) {
+        when {
+            totalPlays == 1 ->
+                result += InsightCandidate("only_once", "Only played once so far", positive = false)
+            daysSinceLast != null && daysSinceLast > 14 -> {
+                val months = daysSinceLast / 30
+                val text = if (months >= 2) "Haven't played in $months months"
+                           else "Haven't played in $daysSinceLast days"
+                result += InsightCandidate("dormant_$daysSinceLast", text, positive = false)
+            }
+        }
+    }
+
+    return result
+}
+
+fun List<LoggedPlay>.gameContextualInsight(
+    gameId: Int,
+    roster: List<Player> = emptyList(),
+    currentPlayerName: String? = null
+): ContextualInsight? {
+    val gamePlays = filter { it.gameId == gameId }
+    val candidates = buildInsightCandidates(gamePlays, roster, currentPlayerName)
+    if (candidates.isEmpty()) return null
+    val lastKey = InsightRotationCache.getLast(gameId)
+    val chosen = candidates.firstOrNull { it.key != lastKey } ?: candidates.first()
+    InsightRotationCache.setLast(gameId, chosen.key)
+    return ContextualInsight(chosen.text, chosen.key, chosen.positive)
 }
 
 data class RivalryStat(

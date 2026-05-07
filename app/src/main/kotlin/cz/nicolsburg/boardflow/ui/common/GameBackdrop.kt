@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -18,8 +16,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
 /**
- * Atmospheric blurred backdrop pinned at the top of a screen or dialog.
- * Renders behind content — content should overlay this in a Box.
+ * Crisp full-bleed game artwork pinned at the top of a screen or dialog.
+ * Renders behind content — place content in a sibling Box over this.
  * Returns early (renders nothing) when imageUrl is null or blank.
  */
 @Composable
@@ -40,21 +38,17 @@ fun GameBackdrop(
             model = imageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(38.dp)
-                .alpha(0.26f)
+            modifier = Modifier.fillMaxSize()
         )
-        // Layered gradient: strong top darkening for text readability → fade to surface
+        // Dark top overlay for text readability, fades to surface at the bottom
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colorStops = arrayOf(
-                            0f    to Color.Black.copy(alpha = 0.48f),
-                            0.30f to Color.Black.copy(alpha = 0.22f),
-                            0.62f to surfaceColor.copy(alpha = 0.55f),
+                            0f    to Color.Black.copy(alpha = 0.62f),
+                            0.50f to Color.Black.copy(alpha = 0.45f),
                             1f    to surfaceColor
                         )
                     )
