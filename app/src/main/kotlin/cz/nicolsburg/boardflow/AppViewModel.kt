@@ -913,6 +913,24 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _logPlayHasUnsavedChanges.value = false
     }
 
+    fun setupLogPlayById(gameId: Int, gameName: String, thumbnailUrl: String?) {
+        val game = BggGame(gameId, gameName, null, thumbnailUrl)
+        selectedGame = game
+        _editablePlayers.value = emptyList()
+        _extractedPlay.value = null
+        _additionalGames.value = emptyList()
+        _gameRelations.value = findRelatedGames(game, _allGames.value)
+        _logPlayPrefill = null
+        _logPlayHasUnsavedChanges.value = false
+    }
+
+    // ── Pending cross-tab navigation ─────────────────────────────────────────
+    private val _pendingHistoryGameId = MutableStateFlow<Int?>(null)
+    val pendingHistoryGameId: StateFlow<Int?> = _pendingHistoryGameId.asStateFlow()
+
+    fun setPendingHistoryFilter(gameId: Int) { _pendingHistoryGameId.value = gameId }
+    fun consumePendingHistoryFilter() { _pendingHistoryGameId.value = null }
+
     fun addPlayerFromRoster(player: Player) {
         _editablePlayers.value = _editablePlayers.value + PlayerResult(player.displayName, "0", false)
     }

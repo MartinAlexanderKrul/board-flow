@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -22,7 +23,9 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,29 +48,53 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
+import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import cz.nicolsburg.boardflow.ui.history.GameHistoryStats
+import cz.nicolsburg.boardflow.ui.history.gameHealthSignal
 import cz.nicolsburg.boardflow.ui.history.gameHistoryStats
+import cz.nicolsburg.boardflow.ui.history.gameInsight
 
 @Composable
 fun GameDetailsDialog(
     game: GameItem,
     onDismiss: () -> Unit,
-    historyPlays: List<LoggedPlay> = emptyList()
+    historyPlays: List<LoggedPlay> = emptyList(),
+    players: List<Player> = emptyList(),
+    onLogPlay: () -> Unit = {},
+    onPlayAgain: (LoggedPlay) -> Unit = {},
+    onViewHistory: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     val bggUrl = bggSleevesUrl(game)
     val driveUrl = game.shareUrl?.takeIf { it.isNotBlank() }
 
+    val gameObjectId = remember(game) { game.objectId.toIntOrNull()?.takeIf { it > 0 } }
+
     val overviewStats = remember(game) { overviewStats(game) }
     val ratingStats = remember(game) { ratingStats(game) }
     val playerPreferenceStats = remember(game) { playerPreferenceStats(game) }
     val customRows = remember(game) { customDetailRows(game) }
-    val myStats = remember(game, historyPlays) { historyPlays.gameHistoryStats(game.identity.name) }
+
+    val myStats = remember(game, historyPlays, players) {
+        if (gameObjectId != null) historyPlays.gameHistoryStats(gameObjectId, players)
+        else historyPlays.gameHistoryStats(game.identity.name, players)
+    }
+    val healthSignal = remember(game, historyPlays) {
+        gameObjectId?.let { historyPlays.gameHealthSignal(it) }
+    }
+    val insight = remember(game, historyPlays, players) {
+        gameObjectId?.let { historyPlays.gameInsight(it, players) }
+    }
+    val lastPlay = remember(game, historyPlays) {
+        if (gameObjectId != null)
+            historyPlays.filter { it.gameId == gameObjectId }.maxByOrNull { it.date }
+        else null
+    }
 
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
@@ -85,249 +112,370 @@ fun GameDetailsDialog(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // ── Header ───────────────────────────────────────────────────────
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    if (!game.thumbnailUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = game.thumbnailUrl,
+                            contentDescription = game.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(92.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(92.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.GridView,
+                                contentDescription = null,
+                                modifier = Modifier.size(36.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                            )
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Text(
+                                text = game.name,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 20.dp)
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            game.rating?.let {
+                                InlineStat(
+                                    icon = Icons.Default.Star,
+                                    label = formatDecimal(it),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            headerChips.forEach { chip ->
+                                StatusChip(
+                                    label = chip.label,
+                                    icon = chip.icon,
+                                    tint = chip.tint,
+                                    iconOnly = compactHeaderChips
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Action row (only when game has a valid BGG ID) ───────────────
+            if (gameObjectId != null) {
                 item {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.Top
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if (!game.thumbnailUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = game.thumbnailUrl,
-                                contentDescription = game.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(92.dp)
-                                    .clip(MaterialTheme.shapes.medium)
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(92.dp)
-                                    .clip(MaterialTheme.shapes.medium)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                                contentAlignment = Alignment.Center
+                        BoardFlowButton(
+                            onClick = onLogPlay,
+                            modifier = Modifier.weight(1f)
+                        ) { Text("Log Play") }
+
+                        if (lastPlay != null) {
+                            BoardFlowOutlinedButton(
+                                onClick = { onPlayAgain(lastPlay) },
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Icon(
-                                    Icons.Default.GridView,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(36.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
-                                )
+                                Icon(Icons.Default.Replay, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Play Again")
                             }
                         }
 
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        BoardFlowOutlinedButton(
+                            onClick = { onViewHistory(gameObjectId) },
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text(
-                                    text = game.name,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(end = 20.dp)
-                                )
-                            }
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                game.rating?.let {
-                                    InlineStat(
-                                        icon = Icons.Default.Star,
-                                        label = formatDecimal(it),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-
-                                headerChips.forEach { chip ->
-                                    StatusChip(
-                                        label = chip.label,
-                                        icon = chip.icon,
-                                        tint = chip.tint,
-                                        iconOnly = compactHeaderChips
-                                    )
-                                }
-                            }
+                            Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("History")
                         }
                     }
                 }
+            }
 
-                if (overviewStats.isNotEmpty()) {
-                    item {
-                        SectionBlock(title = "Overview") {
-                            DetailGrid(
-                                stats = overviewStats,
-                                emphasizeSurface = false
-                            )
-                        }
-                    }
-                }
-
-            if (playerPreferenceStats.isNotEmpty()) {
+            // ── Your Stats card ──────────────────────────────────────────────
+            if (myStats != null) {
                 item {
-                    SectionBlock(title = "Players") {
-                        DetailGrid(
-                            stats = playerPreferenceStats,
-                            emphasizeSurface = false
+                    YourStatsCard(stats = myStats, healthSignal = healthSignal, insight = insight)
+                }
+            } else {
+                // Health signal fallback when no plays
+                val signal = healthSignal
+                if (signal != null) {
+                    item {
+                        Text(
+                            text = signal.first,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                            modifier = Modifier.padding(horizontal = 2.dp)
                         )
                     }
                 }
             }
 
-                if (ratingStats.isNotEmpty()) {
-                    item {
-                        SectionBlock(title = "Ratings & Stats") {
-                            DetailGrid(
-                                stats = ratingStats,
-                                emphasizeSurface = false,
-                                secondaryLabels = setOf("Rank")
-                            )
-                        }
+            // ── Players ──────────────────────────────────────────────────────
+            if (playerPreferenceStats.isNotEmpty()) {
+                item {
+                    SectionBlock(title = "Players") {
+                        DetailGrid(stats = playerPreferenceStats, emphasizeSurface = false)
                     }
                 }
+            }
 
-                if (myStats != null) {
-                    item {
-                        var expanded by remember { mutableStateOf(false) }
-                        Column(
-                            modifier = Modifier.padding(top = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { expanded = !expanded },
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Your Stats",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Icon(
-                                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    contentDescription = if (expanded) "Collapse your stats" else "Expand your stats",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            BoardFlowAnimatedVisibility(visible = expanded) {
-                                YourStatsGrid(myStats)
-                            }
-                        }
+            // ── Overview ─────────────────────────────────────────────────────
+            if (overviewStats.isNotEmpty()) {
+                item {
+                    SectionBlock(title = "Overview") {
+                        DetailGrid(stats = overviewStats, emphasizeSurface = false)
                     }
                 }
+            }
 
-                if (game.sleeveStatus != GameItem.SleeveStatus.UNKNOWN || game.sleeveCardSets.isNotEmpty()) {
-                    item {
-                        var expanded by remember { mutableStateOf(false) }
-                        Column(
-                            modifier = Modifier.padding(top = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+            // ── Ratings & Stats ───────────────────────────────────────────────
+            if (ratingStats.isNotEmpty()) {
+                item {
+                    SectionBlock(title = "Ratings & Stats") {
+                        DetailGrid(
+                            stats = ratingStats,
+                            emphasizeSurface = false,
+                            secondaryLabels = setOf("Rank")
+                        )
+                    }
+                }
+            }
+
+            // ── Sleeves (collapsed by default, summary visible) ───────────────
+            if (game.sleeveStatus != GameItem.SleeveStatus.UNKNOWN || game.sleeveCardSets.isNotEmpty()) {
+                item {
+                    var expanded by remember { mutableStateOf(false) }
+                    Column(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { expanded = !expanded },
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { expanded = !expanded },
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                 Text(
                                     text = "Sleeves",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
-                                Icon(
-                                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    contentDescription = if (expanded) "Collapse sleeves" else "Expand sleeves",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                if (!expanded) {
+                                    val sleeveGroups = game.sleeveCardSets
+                                        .filter { it.size != null || it.count != null }
+                                        .groupBy { it.size?.trim().orEmpty() }
+                                    val totalCards = game.sleeveCardSets.mapNotNull { it.count }.sum()
+                                    if (sleeveGroups.isNotEmpty() && totalCards > 0) {
+                                        Text(
+                                            text = "${sleeveGroups.size} ${if (sleeveGroups.size == 1) "size" else "sizes"} · $totalCards cards",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                                        )
+                                    }
+                                }
                             }
-                            BoardFlowAnimatedVisibility(visible = expanded) {
-                                SleevesSection(game)
-                            }
-                        }
-                    }
-                }
-
-                if (customRows.isNotEmpty()) {
-                    item {
-                        SectionBlock(title = "More") {
-                            DetailGrid(
-                                stats = customRows,
-                                emphasizeSurface = false
+                            Icon(
+                                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (expanded) "Collapse sleeves" else "Expand sleeves",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
+                        BoardFlowAnimatedVisibility(visible = expanded) {
+                            SleevesSection(game)
+                        }
                     }
                 }
+            }
 
+            // ── More ─────────────────────────────────────────────────────────
+            if (customRows.isNotEmpty()) {
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (bggUrl != null) {
-                            BoardFlowButton(
-                                onClick = { open(bggUrl) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(
-                                    Icons.Default.Language,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text("  Open BGG")
-                            }
-                        }
+                    SectionBlock(title = "More") {
+                        DetailGrid(stats = customRows, emphasizeSurface = false)
+                    }
+                }
+            }
 
-                        if (driveUrl != null) {
-                            BoardFlowOutlinedButton(
-                                onClick = { open(driveUrl) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(
-                                    Icons.Default.FolderOpen,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text("  Drive")
-                            }
+            // ── External links ────────────────────────────────────────────────
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (bggUrl != null) {
+                        BoardFlowButton(
+                            onClick = { open(bggUrl) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Text("  Open BGG")
+                        }
+                    }
+                    if (driveUrl != null) {
+                        BoardFlowOutlinedButton(
+                            onClick = { open(driveUrl) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Text("  Drive")
                         }
                     }
                 }
+            }
         }
     }
 }
+
+// ── Your Stats card ───────────────────────────────────────────────────────────
 
 @Composable
-private fun YourStatsGrid(stats: GameHistoryStats) {
-    val rows = buildList {
-        add(SectionStat("Plays", "${stats.plays}"))
-        stats.lastPlayedDate?.let { add(SectionStat("Last played", it)) }
-        stats.avgDurationMinutes?.let { avg ->
-            val label = if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"
-            add(SectionStat("Avg duration", label))
-        }
-        stats.bestScore?.let { (name, score) -> add(SectionStat("Best score", "$score by $name")) }
-        stats.mostWins?.let { (name, wins) -> add(SectionStat("Most wins", "$name ($wins)")) }
-        if (stats.commonPlayers.isNotEmpty()) {
-            add(SectionStat("Frequent partners", stats.commonPlayers.joinToString(", ")))
+private fun YourStatsCard(
+    stats: GameHistoryStats,
+    healthSignal: Pair<String, Boolean>?,
+    insight: String?
+) {
+    val primary = MaterialTheme.colorScheme.primary
+    Surface(
+        color = primary.copy(alpha = 0.07f),
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "Your Stats",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = primary
+            )
+
+            // Hero row: plays + last played
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "${stats.plays}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = primary
+                    )
+                    Text(
+                        text = "Plays",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                stats.lastPlayedDate?.let { date ->
+                    Column {
+                        Text(
+                            text = date,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "Last played",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            // Health signal
+            healthSignal?.let { (text, positive) ->
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (positive) primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                )
+            }
+
+            // Secondary stats
+            val secondary = buildList {
+                stats.avgDurationMinutes?.let { avg ->
+                    add(SectionStat("Avg duration", if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"))
+                }
+                stats.bestScore?.let { (name, score) ->
+                    add(SectionStat("Best score", "$score by $name"))
+                }
+                stats.mostWins?.let { (name, wins) ->
+                    add(SectionStat("Most wins", "$name ($wins)"))
+                }
+            }
+            if (secondary.isNotEmpty()) {
+                DetailGrid(stats = secondary, emphasizeSurface = false)
+            }
+
+            // Frequent partners
+            if (stats.commonPlayers.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "Frequent partners",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = stats.commonPlayers.joinToString(" · ") { "${it.first} (${it.second})" },
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            // Dynamic insight
+            insight?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = primary.copy(alpha = 0.75f)
+                )
+            }
         }
     }
-    DetailGrid(stats = rows, emphasizeSurface = false)
 }
+
+// ── Supporting composables ────────────────────────────────────────────────────
 
 @Composable
 private fun StatusChip(

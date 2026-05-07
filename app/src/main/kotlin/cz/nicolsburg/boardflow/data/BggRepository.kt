@@ -346,7 +346,7 @@ class BggRepository {
     suspend fun getPlays(username: String): Result<List<LoggedPlay>> = withContext(Dispatchers.IO) {
         runCatching {
             val allPlays = mutableListOf<LoggedPlay>()
-            var page = 1; val maxPages = 10
+            var page = 1; val maxPages = 150
             while (page <= maxPages) {
                 val url = "https://boardgamegeek.com/xmlapi2/plays?username=${
                     java.net.URLEncoder.encode(username, "UTF-8")

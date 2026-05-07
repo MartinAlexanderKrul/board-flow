@@ -76,7 +76,7 @@ private data class PlayerStat(val displayName: String, val plays: Int, val wins:
 
 // ── Pure computations ─────────────────────────────────────────────────────────
 
-private fun buildMonthBuckets(plays: List<LoggedPlay>): List<MonthBucket> {
+private fun buildMonthBuckets(plays: List<LoggedPlay>, range: StatsTimeRange): List<MonthBucket> {
     val byMonth = plays
         .mapNotNull { play ->
             runCatching { LocalDate.parse(play.date) }.getOrNull()
@@ -85,14 +85,60 @@ private fun buildMonthBuckets(plays: List<LoggedPlay>): List<MonthBucket> {
         .groupBy({ it.first }) { it.second }
         .mapValues { it.value.sum() }
     val now = LocalDate.now()
-    return (11 downTo 0).map { back ->
-        val d = now.minusMonths(back.toLong())
-        val ym = d.year * 100 + d.monthValue
-        MonthBucket(
-            label = d.format(DateTimeFormatter.ofPattern("MMM")),
-            yearMonth = ym,
-            count = byMonth[ym] ?: 0
-        )
+    val currentYM = now.year * 100 + now.monthValue
+
+    return when (range) {
+        StatsTimeRange.THIS_YEAR -> {
+            // Jan 1 of current year through current month
+            (1..now.monthValue).map { m ->
+                val d = LocalDate.of(now.year, m, 1)
+                val ym = d.year * 100 + d.monthValue
+                MonthBucket(
+                    label = d.format(DateTimeFormatter.ofPattern("MMM")),
+                    yearMonth = ym,
+                    count = byMonth[ym] ?: 0
+                )
+            }
+        }
+        StatsTimeRange.ALL -> {
+            val earliestYM = byMonth.keys.minOrNull() ?: currentYM
+            val earliestYear = earliestYM / 100
+            val earliestMonth = earliestYM % 100
+            val monthSpan = (now.year - earliestYear) * 12 + (now.monthValue - earliestMonth) + 1
+            if (monthSpan > 18) {
+                // Group by year so the chart is readable
+                (earliestYear..now.year).map { year ->
+                    val yearCount = byMonth.entries
+                        .filter { it.key / 100 == year }
+                        .sumOf { it.value }
+                    MonthBucket(label = year.toString(), yearMonth = year * 100, count = yearCount)
+                }
+            } else {
+                // Show every month from earliest to now
+                val start = LocalDate.of(earliestYear, earliestMonth, 1)
+                (0 until monthSpan).map { m ->
+                    val d = start.plusMonths(m.toLong())
+                    val ym = d.year * 100 + d.monthValue
+                    MonthBucket(
+                        label = d.format(DateTimeFormatter.ofPattern("MMM ''yy")),
+                        yearMonth = ym,
+                        count = byMonth[ym] ?: 0
+                    )
+                }
+            }
+        }
+        else -> {
+            // Rolling 12-month window for THIS_MONTH and LAST_30
+            (11 downTo 0).map { back ->
+                val d = now.minusMonths(back.toLong())
+                val ym = d.year * 100 + d.monthValue
+                MonthBucket(
+                    label = d.format(DateTimeFormatter.ofPattern("MMM")),
+                    yearMonth = ym,
+                    count = byMonth[ym] ?: 0
+                )
+            }
+        }
     }
 }
 
@@ -190,10 +236,10 @@ internal fun StatsContent(
 ) {
     var timeRange by remember { mutableStateOf(StatsTimeRange.ALL) }
     val statPlays = remember(plays, timeRange) {
-        plays.filter { it.nowInStats }.filterByTimeRange(timeRange)
+        plays.filterByTimeRange(timeRange)
     }
 
-    if (plays.none { it.nowInStats }) {
+    if (plays.isEmpty()) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -226,7 +272,7 @@ internal fun StatsContent(
     val totalPlays    = remember(statPlays) { statPlays.sumOf { it.quantity.coerceAtLeast(1) } }
     val uniqueGames   = remember(statPlays) { statPlays.map { it.gameName }.toSet().size }
     val totalMinutes  = remember(statPlays) { statPlays.filter { it.durationMinutes > 0 }.sumOf { it.durationMinutes } }
-    val months       = remember(statPlays) { buildMonthBuckets(statPlays) }
+    val months       = remember(statPlays, timeRange) { buildMonthBuckets(statPlays, timeRange) }
     val topGames     = remember(statPlays) { buildTopGames(statPlays) }
     val topPlayers   = remember(statPlays, players) { buildTopPlayers(statPlays, players) }
     val hIndex       = remember(statPlays) { computeHIndex(statPlays) }
@@ -445,11 +491,17 @@ private fun ActivitySection(months: List<MonthBucket>, rangeLabel: String = "All
         )
         Spacer(Modifier.height(12.dp))
 
-        val currentYM = LocalDate.now().let { it.year * 100 + it.monthValue }
+        val now = LocalDate.now()
+        val currentYM = now.year * 100 + now.monthValue
+        val isYearMode = months.all { it.yearMonth % 100 == 0 }
+        val highlightIndex = if (isYearMode)
+            months.indexOfFirst { it.yearMonth / 100 == now.year }
+        else
+            months.indexOfFirst { it.yearMonth == currentYM }
         BucketBarChart(
             values = months.map { it.count },
             labels = months.map { it.label },
-            highlightIndex = months.indexOfFirst { it.yearMonth == currentYM }
+            highlightIndex = highlightIndex
         )
 
         peakMonth?.takeIf { it.count > 0 }?.let { peak ->
