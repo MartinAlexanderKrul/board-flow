@@ -1,6 +1,8 @@
 package cz.nicolsburg.boardflow.ui.common
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,32 +16,45 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.FiberNew
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
 import kotlinx.coroutines.delay
+
+private val PlayerCardShape = RoundedCornerShape(22.dp)
+private val CompactFieldShape = RoundedCornerShape(14.dp)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -49,15 +64,18 @@ fun PlayerResultEditorCard(
     onUpdate: (PlayerResult) -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
+    collapsed: Boolean = false,
+    onToggleCollapsed: (() -> Unit)? = null,
     requestScoreFocus: Boolean = false,
     onFocusDone: () -> Unit = {}
 ) {
     val scoreFocusRequester = remember { FocusRequester() }
     val exactMatch = remember(rosterPlayers, player.name) { rosterPlayers.exactPlayerMatch(player.name) }
     val suggestedMatches = remember(rosterPlayers, player.name) {
-        rosterPlayers.playerMatchSuggestions(player.name)
-            .filter { it.id != exactMatch?.id }
+        rosterPlayers.playerMatchSuggestions(player.name).filter { it.id != exactMatch?.id }
     }
+    val winnerTint = MaterialTheme.colorScheme.primary
+    val winnerContainer = winnerTint.copy(alpha = 0.12f)
 
     LaunchedEffect(requestScoreFocus) {
         if (requestScoreFocus) {
@@ -67,134 +85,179 @@ fun PlayerResultEditorCard(
         }
     }
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = BoardFlowSurfaceTokens.Shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (collapsed && onToggleCollapsed != null) Modifier.clickable(onClick = onToggleCollapsed)
+                else Modifier
+            ),
+        shape = PlayerCardShape,
+        color = if (player.isWinner) winnerTint.copy(alpha = 0.06f)
+        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        border = BorderStroke(
+            1.dp,
+            if (player.isWinner) winnerTint.copy(alpha = 0.45f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
+        )
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                PlayerField(label = "Name", modifier = Modifier.weight(1f)) {
-                    OutlinedTextField(
+            if (collapsed) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = player.name.ifBlank { "Unnamed player" },
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (onToggleCollapsed != null) {
+                        Icon(
+                            Icons.Default.ExpandMore,
+                            contentDescription = "Expand player",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(start = 8.dp)
+                            .size(18.dp)
+                        )
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    CompactTonalTextField(
                         value = player.name,
                         onValueChange = { onUpdate(player.copy(name = it)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        label = "Name",
+                        modifier = Modifier.weight(1f)
                     )
-                }
-                BoardFlowIconButton(onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) }) {
-                    Icon(
-                        Icons.Default.EmojiEvents,
-                        contentDescription = "Toggle winner",
-                        tint = if (player.isWinner) MaterialTheme.colorScheme.tertiary
-                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
-                    )
-                }
-            }
 
-            if (exactMatch != null || suggestedMatches.isNotEmpty()) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(start = 2.dp)
-                ) {
-                    exactMatch?.let { match ->
-                        SuggestionChip(
-                            onClick = { onUpdate(player.copy(name = match.displayName)) },
-                            label = { Text("Matched ${match.displayName}", style = MaterialTheme.typography.labelMedium) },
-                            icon = {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        )
+                    if (onToggleCollapsed != null) {
+                        BoardFlowIconButton(
+                            onClick = onToggleCollapsed,
+                            modifier = Modifier.padding(top = 4.dp),
+                            colors = androidx.compose.material3.IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+                            )
+                        ) {
+                            Icon(
+                                Icons.Default.ExpandLess,
+                                contentDescription = "Collapse player",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
-                    suggestedMatches.forEach { match ->
-                        SuggestionChip(
-                            onClick = { onUpdate(player.copy(name = match.displayName)) },
-                            label = { Text(match.displayName, style = MaterialTheme.typography.labelMedium) }
+
+                    BoardFlowIconButton(
+                        onClick = onRemove,
+                        modifier = Modifier.padding(top = 4.dp),
+                        colors = androidx.compose.material3.IconButtonDefaults.iconButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.72f)
+                        )
+                    ) {
+                        Icon(
+                            BoardFlowIcons.Delete,
+                            contentDescription = "Remove player",
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
-            }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                PlayerField(label = "Score", modifier = Modifier.width(108.dp)) {
-                    OutlinedTextField(
-                        value = player.score,
-                        onValueChange = { onUpdate(player.copy(score = it)) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(scoreFocusRequester)
-                    )
+                exactMatch?.let { match ->
+                    MatchedPlayerChip(name = match.displayName)
                 }
-                PlayerField(label = "Team / color", modifier = Modifier.weight(1f)) {
-                    OutlinedTextField(
-                        value = player.color,
-                        onValueChange = { onUpdate(player.copy(color = it)) },
-                        singleLine = true,
-                        leadingIcon = {
-                            if (player.color.isNotBlank()) {
-                                PlayerColorDot(colorName = player.color, modifier = Modifier.size(12.dp))
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+
+                if (suggestedMatches.isNotEmpty()) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        suggestedMatches.forEach { match ->
+                            SuggestionChip(
+                                onClick = { onUpdate(player.copy(name = match.displayName)) },
+                                label = { Text(match.displayName, style = MaterialTheme.typography.labelMedium) },
+                                colors = SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.22f)
+                                ),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f))
+                            )
+                        }
+                    }
                 }
-            }
 
-            PlayerField(label = "Rating") {
-                OutlinedTextField(
-                    value = player.rating,
-                    onValueChange = { onUpdate(player.copy(rating = it)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SmallFieldLabel("Score")
+                        CompactTonalTextField(
+                            value = player.score,
+                            onValueChange = { onUpdate(player.copy(score = it)) },
+                            label = "Score",
+                            modifier = Modifier.focusRequester(scoreFocusRequester),
+                            keyboardType = KeyboardType.Number,
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        )
+                    }
+                    WinnerChip(
+                        selected = player.isWinner,
+                        onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) }
+                    )
+                    FirstPlayChip(
                         checked = player.isNew,
                         onCheckedChange = { onUpdate(player.copy(isNew = it)) }
                     )
-                    Text(
-                        "First play",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-                BoardFlowIconButton(onClick = onRemove) {
-                    Icon(
-                        BoardFlowIcons.Delete,
-                        contentDescription = "Remove player",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                    )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SmallFieldLabel("Team")
+                        CompactTonalTextField(
+                            value = player.color,
+                            onValueChange = { onUpdate(player.copy(color = it)) },
+                            label = "Team",
+                            placeholder = "Color / faction",
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.weight(0.52f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SmallFieldLabel("Rating")
+                        CompactTonalTextField(
+                            value = player.rating,
+                            onValueChange = { onUpdate(player.copy(rating = it)) },
+                            label = "Rating",
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardType = KeyboardType.Number,
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
+                        )
+                    }
                 }
             }
         }
@@ -202,20 +265,189 @@ fun PlayerResultEditorCard(
 }
 
 @Composable
-private fun PlayerField(
-    label: String,
+private fun WinnerChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val tint = MaterialTheme.colorScheme.primary
+    TogglePill(
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier,
+        selectedTint = tint
+    ) {
+        Icon(
+            Icons.Default.EmojiEvents,
+            contentDescription = "Winner",
+            modifier = Modifier.size(16.dp),
+            tint = if (selected) tint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+        )
+        Text(
+            "Winner",
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+            color = if (selected) tint else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun MatchedPlayerChip(name: String) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Check,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                "Matched $name",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false
+            )
+        }
+    }
+}
+
+@Composable
+private fun FirstPlayChip(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val tint = MaterialTheme.colorScheme.primary
+    TogglePill(
+        selected = checked,
+        onClick = { onCheckedChange(!checked) },
+        modifier = modifier,
+        selectedTint = tint
+    ) {
+        Icon(
+            Icons.Default.FiberNew,
+            contentDescription = "First play",
+            modifier = Modifier.size(16.dp),
+            tint = if (checked) tint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+        )
+        Text(
+            "First play",
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+            color = if (checked) tint else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun TogglePill(
+    selected: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    selectedTint: Color,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
+    val shape = RoundedCornerShape(18.dp)
+    Surface(
+        modifier = modifier
+            .clip(shape)
+            .clickable(onClick = onClick),
+        shape = shape,
+        color = if (selected) selectedTint.copy(alpha = 0.14f)
+        else MaterialTheme.colorScheme.surface.copy(alpha = 0.2f),
+        border = BorderStroke(
+            1.dp,
+            if (selected) selectedTint.copy(alpha = 0.32f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f)
         )
-        content()
+    ) {
+        Row(
+            modifier = Modifier
+                .height(36.dp)
+                .padding(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) { content() }
     }
+}
+
+@Composable
+private fun CompactTonalTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    textStyle: TextStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+    showLabel: Boolean = false,
+    readOnly: Boolean = false,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = 1,
+    trailingContent: @Composable (() -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        readOnly = readOnly,
+        singleLine = singleLine,
+        minLines = minLines,
+        maxLines = maxLines,
+        shape = CompactFieldShape,
+        textStyle = textStyle,
+        label = if (showLabel) {
+            {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+                )
+            }
+        } else null,
+        placeholder = (placeholder ?: if (showLabel) null else label)?.let {
+            {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (showLabel) 12.sp else 14.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+                )
+            }
+        },
+        trailingIcon = trailingContent,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
+            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f),
+            focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+        ),
+    modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
+    )
+}
+
+@Composable
+private fun SmallFieldLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+    )
 }
 
 @Composable
@@ -240,9 +472,7 @@ private fun PlayerColorDot(colorName: String, modifier: Modifier = Modifier) {
     val parsed = knownColors[colorName.lowercase().trim()]
         ?: runCatching { Color(android.graphics.Color.parseColor(colorName)) }.getOrNull()
     if (parsed != null) {
-        Box(
-            modifier = modifier.background(parsed, CircleShape)
-        )
+        Box(modifier = modifier.background(parsed, CircleShape))
     } else {
         Spacer(modifier = modifier)
     }

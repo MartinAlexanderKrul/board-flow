@@ -33,7 +33,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -62,7 +64,7 @@ private data class PostSaveInfo(
     val record: RecordMoment?
 )
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun LogPlayScreen(
     viewModel: AppViewModel,
@@ -93,6 +95,9 @@ fun LogPlayScreen(
     var showAiOutput      by remember { mutableStateOf(false) }
     var showDatePicker    by remember { mutableStateOf(false) }
     var focusFirstScore   by remember { mutableStateOf(false) }
+    var showNotes         by remember { mutableStateOf(false) }
+    val collapsedPlayers = remember { mutableStateListOf<Boolean>() }
+    val previousCompletion = remember { mutableStateListOf<Boolean>() }
 
     // Post-save card state. Non-null while post-save card is visible.
     var postSaveInfo     by remember { mutableStateOf<PostSaveInfo?>(null) }
@@ -134,6 +139,7 @@ fun LogPlayScreen(
     }
 
     val initialDate = extractedPlay?.date?.takeIf { it.isNotBlank() } ?: LocalDate.now().toString()
+    val notesExpanded = showNotes || comments.isNotBlank()
     val hasUnsavedChanges by remember(date, duration, location, comments, players, additionalGames, extractedPlay) {
         derivedStateOf {
             date != initialDate ||
@@ -150,6 +156,24 @@ fun LogPlayScreen(
         viewModel.setLogPlayHasUnsavedChanges(hasUnsavedChanges)
     }
 
+    LaunchedEffect(players.size) {
+        while (collapsedPlayers.size < players.size) collapsedPlayers.add(false)
+        while (collapsedPlayers.size > players.size) collapsedPlayers.removeAt(collapsedPlayers.lastIndex)
+        while (previousCompletion.size < players.size) previousCompletion.add(false)
+        while (previousCompletion.size > players.size) previousCompletion.removeAt(previousCompletion.lastIndex)
+    }
+
+    LaunchedEffect(players) {
+        players.forEachIndexed { index, player ->
+            val isComplete = player.isReadyToCollapse()
+            val wasComplete = previousCompletion.getOrNull(index) ?: false
+            if (isComplete && !wasComplete) {
+                collapsedPlayers[index] = true
+            }
+            previousCompletion[index] = isComplete
+        }
+    }
+
     BackHandler {
         if (postSaveInfo != null) {
             // Treat back as "Done" from post-save card
@@ -163,6 +187,11 @@ fun LogPlayScreen(
 
     val online = viewModel.isOnline()
     val totalGames = 1 + additionalGames.size
+    val addEditablePlayer: () -> Unit = {
+        collapsedPlayers.add(false)
+        previousCompletion.add(false)
+        viewModel.addPlayer()
+    }
 
     // Compute frequent players in composable scope so remember is valid.
     val gameId = viewModel.selectedGame?.id ?: 0
@@ -181,398 +210,188 @@ fun LogPlayScreen(
         else                  -> "Log Play to BGG"
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0),
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text(fabLabel) },
-                icon = { Icon(Icons.Default.EmojiEvents, null) },
-                onClick = {
-                    if (!posting) {
-                        errorMsg = null
-                        val parsedDate = runCatching { LocalDate.parse(date) }.getOrDefault(LocalDate.now())
-                        val durationMin = duration.toIntOrNull() ?: 0
-                        viewModel.captureHistorySnapshot()
-                        viewModel.postPlay(
-                            date            = parsedDate,
-                            durationMinutes = durationMin,
-                            location        = location,
-                            comments        = comments,
-                            quantity        = quantity,
-                            incomplete      = incomplete,
-                            nowInStats      = nowInStats,
-                            onSuccess       = {
-                                val game = viewModel.selectedGame
-                                if (game != null) {
-                                    val ctx = SessionContext(
-                                        gameId            = game.id,
-                                        gameName          = game.name,
-                                        players           = players,
-                                        location          = location,
-                                        lastPlayTimestamp = System.currentTimeMillis()
-                                    )
-                                    viewModel.saveSession(game, players, location)
-                                    val record = viewModel.detectRecord(game.id, game.name, players)
-                                    postSaveInfo = PostSaveInfo(ctx, record)
-                                } else {
-                                    onPosted()
-                                }
-                            },
-                            onError = { errorMsg = it }
+    fun submitPlay() {
+        if (!posting) {
+            errorMsg = null
+            val parsedDate = runCatching { LocalDate.parse(date) }.getOrDefault(LocalDate.now())
+            val durationMin = duration.toIntOrNull() ?: 0
+            viewModel.captureHistorySnapshot()
+            viewModel.postPlay(
+                date = parsedDate,
+                durationMinutes = durationMin,
+                location = location,
+                comments = comments,
+                quantity = quantity,
+                incomplete = incomplete,
+                nowInStats = nowInStats,
+                onSuccess = {
+                    val game = viewModel.selectedGame
+                    if (game != null) {
+                        val ctx = SessionContext(
+                            gameId = game.id,
+                            gameName = game.name,
+                            players = players,
+                            location = location,
+                            lastPlayTimestamp = System.currentTimeMillis()
                         )
+                        viewModel.saveSession(game, players, location)
+                        val record = viewModel.detectRecord(game.id, game.name, players)
+                        postSaveInfo = PostSaveInfo(ctx, record)
+                    } else {
+                        onPosted()
                     }
-                }
+                },
+                onError = { errorMsg = it }
             )
         }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            // Related games banner
-            gameRelations?.let { relations ->
-                val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
-                if (relatedGames.isNotEmpty()) {
-                    item {
-                        RelatedGamesBanner(
-                            relations       = relations,
-                            additionalGames = additionalGames,
-                            onToggleGame    = { viewModel.toggleAdditionalGame(it) }
-                        )
-                    }
-                }
-            }
+    }
 
-            // Play details card
-            item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0),
+            bottomBar = {
+                Surface(color = MaterialTheme.colorScheme.background.copy(alpha = 0.98f)) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            "Play Details",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                        if (errorMsg != null) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Text(
-                                    "Date",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                OutlinedTextField(
-                                    value = date,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    singleLine = true,
-                                    trailingIcon = {
-                                        BoardFlowIconButton(onClick = { showDatePicker = true }) {
-                                            Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date")
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                            Column(
-                                modifier = Modifier.width(100.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    "Duration (min)",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                OutlinedTextField(
-                                    value = duration,
-                                    onValueChange = { duration = it },
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    modifier = Modifier.fillMaxWidth()
+                                    text = errorMsg.orEmpty(),
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
                                 )
                             }
                         }
-
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                "Location",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            OutlinedTextField(
-                                value = location,
-                                onValueChange = { location = it },
-                                placeholder = { Text("e.g. Game Night HQ") },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                "Notes",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            OutlinedTextField(
-                                value = comments,
-                                onValueChange = { comments = it },
-                                maxLines = 3,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-
-                        // Advanced options toggle
-                        HorizontalDivider()
-                        Row(
+                        BoardFlowButton(
+                            onClick = ::submitPlay,
+                            enabled = !posting,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { showAdvanced = !showAdvanced }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .height(52.dp)
                         ) {
-                            Text(
-                                "Advanced options",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Icon(
-                                imageVector = if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = if (showAdvanced) "Collapse" else "Expand",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-
-                        AnimatedVisibility(
-                            visible = showAdvanced,
-                            enter = expandVertically() + fadeIn(tween(150)),
-                            exit = shrinkVertically() + fadeOut(tween(150))
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                // Quantity stepper
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column {
-                                        Text(
-                                            "Quantity",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            "Log multiple identical plays at once",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                        )
-                                    }
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        BoardFlowIconButton(
-                                            onClick = { if (quantity > 1) quantity-- }
-                                        ) {
-                                            Icon(Icons.Default.Remove, contentDescription = "Decrease")
-                                        }
-                                        Text(
-                                            "$quantity",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.SemiBold,
-                                            modifier = Modifier.width(24.dp),
-                                            textAlign = TextAlign.Center
-                                        )
-                                        BoardFlowIconButton(
-                                            onClick = { quantity++ }
-                                        ) {
-                                            Icon(BoardFlowIcons.Add, contentDescription = "Increase")
-                                        }
-                                    }
-                                }
-
-                                // Incomplete toggle
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            "Incomplete play",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            "Game wasn't finished",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                        )
-                                    }
-                                    Switch(checked = incomplete, onCheckedChange = { incomplete = it })
-                                }
-
-                                // Exclude from stats toggle
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            "Count in stats",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            "Include this play in BGG statistics",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                        )
-                                    }
-                                    Switch(checked = nowInStats, onCheckedChange = { nowInStats = it })
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Players header
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.People,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text("Players", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (extractedPlay != null) {
-                            BoardFlowInlineAction(onClick = { showAiOutput = !showAiOutput }) {
-                                Text(
-                                    if (showAiOutput) "Hide AI output" else "AI output",
-                                    style = MaterialTheme.typography.labelMedium
+                            if (posting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
+                            } else {
+                                Text(fabLabel)
                             }
-                        }
-                        BoardFlowIconButton(onClick = { viewModel.addPlayer() }) {
-                            Icon(BoardFlowIcons.Add, "Add player")
                         }
                     }
                 }
             }
+        ) { padding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(top = 14.dp, bottom = 14.dp)
+            ) {
+                gameRelations?.let { relations ->
+                    val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
+                    if (relatedGames.isNotEmpty()) {
+                        item {
+                            RelatedGamesBanner(
+                                relations = relations,
+                                additionalGames = additionalGames,
+                                onToggleGame = { viewModel.toggleAdditionalGame(it) }
+                            )
+                        }
+                    }
+                }
 
-            // Frequent player chips
-            if (frequentPlayers.isNotEmpty() || recentPlayers.isNotEmpty()) {
                 item {
-                    FrequentPlayerChips(
-                        gameName        = gameName,
-                        frequentPlayers = frequentPlayers,
-                        recentPlayers   = recentPlayers,
-                        onAddPlayer     = { viewModel.addPlayerFromRoster(it) }
+                    SessionDetailsCard(
+                        title = "Log Play",
+                        gameName = gameName,
+                        date = date,
+                        duration = duration,
+                        location = location,
+                        notes = comments,
+                        notesExpanded = notesExpanded,
+                        showAdvanced = showAdvanced,
+                        quantity = quantity,
+                        incomplete = incomplete,
+                        nowInStats = nowInStats,
+                        onDateClick = { showDatePicker = true },
+                        onDurationChange = { duration = it },
+                        onLocationChange = { location = it },
+                        onNotesChange = { comments = it },
+                        onNotesExpand = { showNotes = true },
+                        onAdvancedToggle = { showAdvanced = !showAdvanced },
+                        onQuantityDecrease = { if (quantity > 1) quantity-- },
+                        onQuantityIncrease = { quantity++ },
+                        onIncompleteChange = { incomplete = it },
+                        onNowInStatsChange = { nowInStats = it }
+                    )
+                }
+
+                item {
+                    PlayersHeader(
+                        hasAiOutput = extractedPlay != null,
+                        onToggleAiOutput = { showAiOutput = !showAiOutput },
+                        onAddPlayer = addEditablePlayer
+                    )
+                }
+
+                if (frequentPlayers.isNotEmpty() || recentPlayers.isNotEmpty()) {
+                    item {
+                        FrequentPlayerChips(
+                            gameName = gameName,
+                            frequentPlayers = frequentPlayers,
+                            recentPlayers = recentPlayers,
+                            onAddPlayer = {
+                                collapsedPlayers.add(false)
+                                previousCompletion.add(false)
+                                viewModel.addPlayerFromRoster(it)
+                            }
+                        )
+                    }
+                }
+
+                val extracted = extractedPlay
+                if (showAiOutput && extracted != null) {
+                    item {
+                        AiOutputCard(rawText = extracted.rawText)
+                    }
+                }
+
+                itemsIndexed(players) { index, player ->
+                    PlayerEditCard(
+                        player = player,
+                        rosterPlayers = rosterPlayers,
+                        onUpdate = { viewModel.updatePlayer(index, it) },
+                        onRemove = {
+                            if (index < collapsedPlayers.size) collapsedPlayers.removeAt(index)
+                            if (index < previousCompletion.size) previousCompletion.removeAt(index)
+                            viewModel.removePlayer(index)
+                        },
+                        collapsed = collapsedPlayers.getOrElse(index) { false },
+                        onToggleCollapsed = {
+                            collapsedPlayers[index] = !collapsedPlayers[index]
+                        },
+                        requestScoreFocus = index == 0 && focusFirstScore,
+                        onFocusDone = { focusFirstScore = false }
                     )
                 }
             }
-
-            // AI output debug card
-            val extracted = extractedPlay
-            if (showAiOutput && extracted != null) {
-                item {
-                    val clipboardManager = LocalClipboardManager.current
-                    var copied by remember { mutableStateOf(false) }
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "Raw AI response",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                BoardFlowInlineAction(onClick = {
-                                    clipboardManager.setText(AnnotatedString(extracted.rawText))
-                                    copied = true
-                                }, icon = Icons.Default.ContentCopy) {
-                                    Text(if (copied) "Copied!" else "Copy")
-                                }
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            SelectionContainer {
-                                Text(
-                                    text = extracted.rawText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Player rows
-            itemsIndexed(players) { index, player ->
-                PlayerResultEditorCard(
-                    player           = player,
-                    rosterPlayers    = rosterPlayers,
-                    onUpdate         = { viewModel.updatePlayer(index, it) },
-                    onRemove         = { viewModel.removePlayer(index) },
-                    requestScoreFocus = index == 0 && focusFirstScore,
-                    onFocusDone      = { focusFirstScore = false }
-                )
-            }
-
-            // Error card
-            errorMsg?.let { message ->
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text  = message,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(12.dp)
-                        )
-                    }
-                }
-            }
-
-            item { Spacer(Modifier.height(80.dp)) }
         }
     }
 
@@ -614,7 +433,432 @@ fun LogPlayScreen(
             )
         }
     }
-    } // end outer Box
+}
+
+// ---------------------------------------------------------------------------
+// Compact form composables
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun SessionDetailsCard(
+    title: String,
+    gameName: String,
+    date: String,
+    duration: String,
+    location: String,
+    notes: String,
+    notesExpanded: Boolean,
+    showAdvanced: Boolean,
+    quantity: Int,
+    incomplete: Boolean,
+    nowInStats: Boolean,
+    onDateClick: () -> Unit,
+    onDurationChange: (String) -> Unit,
+    onLocationChange: (String) -> Unit,
+    onNotesChange: (String) -> Unit,
+    onNotesExpand: () -> Unit,
+    onAdvancedToggle: () -> Unit,
+    onQuantityDecrease: () -> Unit,
+    onQuantityIncrease: () -> Unit,
+    onIncompleteChange: (Boolean) -> Unit,
+    onNowInStatsChange: (Boolean) -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            CompactGameHeader(title = title, gameName = gameName)
+            Text(
+                "Session",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CompactTextField(
+                    value = date,
+                    onValueChange = {},
+                    label = "Date",
+                    readOnly = true,
+                    modifier = Modifier.weight(1.3f),
+                    trailingIcon = {
+                        BoardFlowIconButton(onClick = onDateClick, modifier = Modifier.size(36.dp)) {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date", modifier = Modifier.size(18.dp))
+                        }
+                    }
+                )
+                CompactTextField(
+                    value = duration,
+                    onValueChange = onDurationChange,
+                    label = "Duration",
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.weight(0.7f)
+                )
+            }
+            CompactTextField(
+                value = location,
+                onValueChange = onLocationChange,
+                label = "Location",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (notesExpanded) {
+                CompactTextField(
+                    value = notes,
+                    onValueChange = onNotesChange,
+                    label = "Notes",
+                    singleLine = false,
+                    minLines = 3,
+                    maxLines = 4,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                TextButton(
+                    onClick = onNotesExpand,
+                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                ) {
+                    Text("+ Add notes")
+                }
+            }
+
+            TextButton(
+                onClick = onAdvancedToggle,
+                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(if (showAdvanced) "Hide options" else "More options")
+                    Icon(
+                        imageVector = if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showAdvanced,
+                enter = expandVertically() + fadeIn(tween(150)),
+                exit = shrinkVertically() + fadeOut(tween(150))
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    CompactStepperRow(
+                        label = "Quantity",
+                        value = quantity.toString(),
+                        subtitle = "Log multiple identical plays"
+                    ) {
+                        BoardFlowIconButton(onClick = onQuantityDecrease) {
+                            Icon(Icons.Default.Remove, contentDescription = "Decrease")
+                        }
+                        Text(
+                            quantity.toString(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.width(22.dp),
+                            textAlign = TextAlign.Center
+                        )
+                        BoardFlowIconButton(onClick = onQuantityIncrease) {
+                            Icon(BoardFlowIcons.Add, contentDescription = "Increase")
+                        }
+                    }
+                    CompactSwitchRow(
+                        label = "Incomplete play",
+                        subtitle = "Game was not finished",
+                        checked = incomplete,
+                        onCheckedChange = onIncompleteChange
+                    )
+                    CompactSwitchRow(
+                        label = "Count in stats",
+                        subtitle = "Include this play in BGG statistics",
+                        checked = nowInStats,
+                        onCheckedChange = onNowInStatsChange
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompactGameHeader(title: String, gameName: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                gameName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompactTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    readOnly: Boolean = false,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = 1,
+    trailingIcon: @Composable (() -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        readOnly = readOnly,
+        singleLine = singleLine,
+        minLines = minLines,
+        maxLines = maxLines,
+        shape = RoundedCornerShape(14.dp),
+        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+        placeholder = {
+            Text(
+                label,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+            )
+        },
+        trailingIcon = trailingIcon,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
+            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+        ),
+        modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
+    )
+}
+
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun PlayersHeader(
+    hasAiOutput: Boolean,
+    onToggleAiOutput: () -> Unit,
+    onAddPlayer: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 40.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier.then(
+                if (hasAiOutput) {
+                    Modifier.combinedClickable(
+                        onClick = {},
+                        onLongClick = onToggleAiOutput
+                    )
+                } else Modifier
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                Icons.Default.People,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                "Players",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        BoardFlowSecondaryButton(
+            onClick = onAddPlayer,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+            modifier = Modifier.height(40.dp)
+        ) {
+            Text("+")
+        }
+    }
+}
+
+@Composable
+private fun PlayerEditCard(
+    player: cz.nicolsburg.boardflow.model.PlayerResult,
+    rosterPlayers: List<cz.nicolsburg.boardflow.model.Player>,
+    onUpdate: (cz.nicolsburg.boardflow.model.PlayerResult) -> Unit,
+    onRemove: () -> Unit,
+    collapsed: Boolean = false,
+    onToggleCollapsed: (() -> Unit)? = null,
+    requestScoreFocus: Boolean = false,
+    onFocusDone: () -> Unit = {}
+) {
+    PlayerResultEditorCard(
+        player = player,
+        rosterPlayers = rosterPlayers,
+        onUpdate = onUpdate,
+        onRemove = onRemove,
+        collapsed = collapsed,
+        onToggleCollapsed = onToggleCollapsed,
+        requestScoreFocus = requestScoreFocus,
+        onFocusDone = onFocusDone
+    )
+}
+
+private fun cz.nicolsburg.boardflow.model.PlayerResult.isReadyToCollapse(): Boolean =
+    name.isNotBlank() && score.isNotBlank() && color.isNotBlank() && rating.isNotBlank()
+
+@Composable
+private fun AiOutputCard(rawText: String) {
+    val clipboardManager = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Raw AI response",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                BoardFlowInlineAction(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(rawText))
+                        copied = true
+                    },
+                    icon = Icons.Default.ContentCopy
+                ) {
+                    Text(if (copied) "Copied!" else "Copy")
+                }
+            }
+            SelectionContainer {
+                Text(
+                    text = rawText,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompactStepperRow(
+    label: String,
+    value: String,
+    subtitle: String,
+    controls: @Composable RowScope.() -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(label, style = MaterialTheme.typography.labelMedium)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                content = controls
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompactSwitchRow(
+    label: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(label, style = MaterialTheme.typography.labelMedium)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(checked = checked, onCheckedChange = onCheckedChange)
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

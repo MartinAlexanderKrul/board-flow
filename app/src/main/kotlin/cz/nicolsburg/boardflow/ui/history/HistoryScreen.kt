@@ -46,12 +46,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -60,6 +63,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -77,6 +81,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
@@ -1171,7 +1176,9 @@ private fun EditPlayDialog(
     var location by remember(play.id) { mutableStateOf(play.location) }
     var comments by remember(play.id) { mutableStateOf(play.comments) }
     val editPlayers = remember(play.id) { play.players.toMutableStateList() }
+    val collapsedPlayers = remember(play.id) { mutableStateListOf<Boolean>().apply { repeat(play.players.size) { add(true) } } }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showNotes by remember(play.id) { mutableStateOf(play.comments.isNotBlank()) }
 
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = runCatching {
@@ -1199,102 +1206,183 @@ private fun EditPlayDialog(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-                item {
-                    Column(modifier = Modifier.fillMaxWidth()) {
+            item {
+                Surface(
+                    shape = RoundedCornerShape(22.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         Text("Edit Play", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(play.gameName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        OutlinedTextField(
-                            value = date,
-                            onValueChange = {},
-                            label = { Text("Date") },
-                            readOnly = true,
-                            trailingIcon = {
-                                IconButton(onClick = { showDatePicker = true }) {
-                                    Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date", modifier = Modifier.size(18.dp))
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = duration,
-                            onValueChange = { duration = it.filter { c -> c.isDigit() } },
-                            label = { Text("Duration (min)") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = location,
-                            onValueChange = { location = it },
-                            label = { Text("Location") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = comments,
-                            onValueChange = { comments = it },
-                            label = { Text("Comments") },
-                            minLines = 2,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Session", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text("Players", style = MaterialTheme.typography.titleSmall)
-                            BoardFlowIconButton(onClick = {
-                                editPlayers.add(PlayerResult("", "0", false))
-                            }) {
-                                Icon(Icons.Default.Add, contentDescription = "Add player", modifier = Modifier.size(20.dp))
+                            EditCompactTextField(
+                                value = date,
+                                onValueChange = {},
+                                label = "Date",
+                                readOnly = true,
+                                modifier = Modifier.weight(1.3f),
+                                trailingIcon = {
+                                    IconButton(onClick = { showDatePicker = true }) {
+                                        Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date", modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                            )
+                            EditCompactTextField(
+                                value = duration,
+                                onValueChange = { duration = it.filter { c -> c.isDigit() } },
+                                label = "Duration",
+                                keyboardType = KeyboardType.Number,
+                                modifier = Modifier.weight(0.7f)
+                            )
+                        }
+                        EditCompactTextField(
+                            value = location,
+                            onValueChange = { location = it },
+                            label = "Location",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (showNotes || comments.isNotBlank()) {
+                            EditCompactTextField(
+                                value = comments,
+                                onValueChange = { comments = it },
+                                label = "Notes",
+                                singleLine = false,
+                                minLines = 3,
+                                maxLines = 4,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            TextButton(onClick = { showNotes = true }, contentPadding = PaddingValues(0.dp)) {
+                                Text("+ Add notes")
                             }
                         }
-                        editPlayers.forEachIndexed { index, player ->
-                            PlayerResultEditorCard(
-                                player = player,
-                                rosterPlayers = rosterPlayers,
-                                onUpdate = { editPlayers[index] = it },
-                                onRemove = { editPlayers.removeAt(index) }
-                            )
-                        }
                     }
                 }
+            }
 
-                item {
-                    BoardFlowButton(
-                        onClick = {
-                            onSave(
-                                date,
-                                duration.toIntOrNull() ?: 0,
-                                location,
-                                comments,
-                                editPlayers.toList()
-                            )
-                        },
-                        enabled = !isLoading,
-                        modifier = Modifier.fillMaxWidth()
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                        } else {
-                            Text("Save")
-                        }
+                        Icon(Icons.Default.Group, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                        Text("Players", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    }
+                    BoardFlowSecondaryButton(
+                        onClick = {
+                            editPlayers.add(PlayerResult("", "0", false))
+                            collapsedPlayers.add(false)
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier.height(40.dp)
+                    ) {
+                        Text("+")
                     }
                 }
+            }
+
+            items(editPlayers.size) { index ->
+                val player = editPlayers[index]
+                PlayerResultEditorCard(
+                    player = player,
+                    rosterPlayers = rosterPlayers,
+                    onUpdate = { editPlayers[index] = it },
+                    onRemove = {
+                        editPlayers.removeAt(index)
+                        collapsedPlayers.removeAt(index)
+                    },
+                    collapsed = collapsedPlayers.getOrElse(index) { false },
+                    onToggleCollapsed = { collapsedPlayers[index] = !collapsedPlayers[index] }
+                )
+            }
+
+            item {
+                BoardFlowButton(
+                    onClick = {
+                        onSave(
+                            date,
+                            duration.toIntOrNull() ?: 0,
+                            location,
+                            comments,
+                            editPlayers.toList()
+                        )
+                    },
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text("Save")
+                    }
+                }
+            }
         }
     }
 }
 
+
+@Composable
+private fun EditCompactTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = 1,
+    trailingIcon: @Composable (() -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        readOnly = readOnly,
+        singleLine = singleLine,
+        minLines = minLines,
+        maxLines = maxLines,
+        shape = RoundedCornerShape(14.dp),
+        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+        placeholder = {
+            Text(
+                label,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+            )
+        },
+        trailingIcon = trailingIcon,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
+            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+        ),
+        modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
+    )
+}
 
 @Composable
 private fun DetailSection(rows: List<Pair<String, String>>) {
