@@ -164,7 +164,7 @@ fun GameDetailsDialog(
             )
         }
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -241,37 +241,28 @@ fun GameDetailsDialog(
 
                 if (bggUrl != null || driveUrl != null) {
                     item {
-                        Surface(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.025f),
-                            shape = RoundedCornerShape(16.dp),
-                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.08f)),
-                            modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                if (bggUrl != null) {
-                                    DialogUtilityActionButton(
-                                        onClick = { open(bggUrl) },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(6.dp))
-                                        Text("Open BGG")
-                                    }
+                            if (bggUrl != null) {
+                                DialogUtilityActionButton(
+                                    onClick = { open(bggUrl) },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Open BGG")
                                 }
-                                if (driveUrl != null) {
-                                    DialogUtilityActionButton(
-                                        onClick = { open(driveUrl) },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(6.dp))
-                                        Text("Drive")
-                                    }
+                            }
+                            if (driveUrl != null) {
+                                DialogUtilityActionButton(
+                                    onClick = { open(driveUrl) },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Drive")
                                 }
                             }
                         }
@@ -954,7 +945,7 @@ private fun DialogUtilityActionButton(
         shape = RoundedCornerShape(13.dp),
         border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
+            containerColor = Color.Transparent,
             contentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.84f)
         ),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 9.dp)
