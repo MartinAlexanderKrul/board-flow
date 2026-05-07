@@ -118,7 +118,6 @@ fun CollectionScreen(
     historyPlays: List<LoggedPlay> = emptyList(),
     players: List<Player> = emptyList(),
     onLogPlay: (gameId: Int, gameName: String, thumbnailUrl: String?) -> Unit = { _, _, _ -> },
-    onPlayAgain: (LoggedPlay) -> Unit = {},
     onViewHistory: (Int) -> Unit = {},
     onHeaderFilterStateChange: (visible: Boolean, hasActiveFilters: Boolean, onClick: (() -> Unit)?) -> Unit = { _, _, _ -> },
     onActiveTabChange: (String?) -> Unit = {}
@@ -241,10 +240,6 @@ fun CollectionScreen(
             onLogPlay = {
                 selectedGame = null
                 onLogPlay(game.objectId.toIntOrNull() ?: 0, game.name, game.thumbnailUrl)
-            },
-            onPlayAgain = { play ->
-                selectedGame = null
-                onPlayAgain(play)
             },
             onViewHistory = { gameId ->
                 selectedGame = null

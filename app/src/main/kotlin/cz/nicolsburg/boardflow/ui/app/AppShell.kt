@@ -337,10 +337,6 @@ fun BoardFlowApp(
                         appViewModel.setupLogPlayById(gameId, gameName, thumbnailUrl)
                         navController.navigate(AppRoutes.LOG_PLAY)
                     },
-                    onPlayAgain = { play: LoggedPlay ->
-                        appViewModel.setupPlayAgainFromPlay(play)
-                        navController.navigate(AppRoutes.LOG_PLAY)
-                    },
                     onViewHistory = { gameId ->
                         appViewModel.setPendingHistoryFilter(gameId)
                         navController.navigate(AppRoutes.HISTORY)
