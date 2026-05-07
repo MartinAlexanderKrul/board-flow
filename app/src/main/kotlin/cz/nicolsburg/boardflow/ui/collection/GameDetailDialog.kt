@@ -39,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -52,17 +51,19 @@ import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
+import cz.nicolsburg.boardflow.ui.history.ContextualInsight
 import cz.nicolsburg.boardflow.ui.history.GameHistoryStats
-import cz.nicolsburg.boardflow.ui.history.gameHealthSignal
+import cz.nicolsburg.boardflow.ui.history.gameContextualInsight
 import cz.nicolsburg.boardflow.ui.history.gameHistoryStats
-import cz.nicolsburg.boardflow.ui.history.gameInsight
 
 private data class InfoSection(
     val title: String,
     val stats: List<SectionStat>,
-    val secondaryLabels: Set<String> = emptySet()
+    val secondaryLabels: Set<String> = emptySet(),
+    val columns: Int = 2
 )
 
 @Composable
@@ -89,11 +90,8 @@ fun GameDetailsDialog(
         if (gameObjectId != null) historyPlays.gameHistoryStats(gameObjectId, players)
         else historyPlays.gameHistoryStats(game.identity.name, players)
     }
-    val healthSignal = remember(game, historyPlays) {
-        gameObjectId?.let { historyPlays.gameHealthSignal(it) }
-    }
-    val insight = remember(game, historyPlays, players) {
-        gameObjectId?.let { historyPlays.gameInsight(it, players) }
+    val contextualInsight = remember(game, historyPlays, players) {
+        gameObjectId?.let { historyPlays.gameContextualInsight(it, players) }
     }
 
     val primaryColor   = MaterialTheme.colorScheme.primary
@@ -107,7 +105,7 @@ fun GameDetailsDialog(
         buildList {
             if (playerStats.isNotEmpty())   add(InfoSection("Players", playerStats))
             if (overviewStats.isNotEmpty()) add(InfoSection("Overview", overviewStats))
-            if (ratingStats.isNotEmpty())   add(InfoSection("Ratings & Stats", ratingStats, setOf("Rank")))
+            if (ratingStats.isNotEmpty())   add(InfoSection("Ratings", ratingStats, setOf("Rank"), columns = 3))
         }
     }
     val hasSleeves = game.sleeveStatus != GameItem.SleeveStatus.UNKNOWN ||
@@ -118,6 +116,8 @@ fun GameDetailsDialog(
     }
 
     AnimatedDialog(onDismissRequest = onDismiss) {
+        Box(modifier = Modifier.fillMaxSize()) {
+        GameBackdrop(imageUrl = game.thumbnailUrl)
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -162,12 +162,12 @@ fun GameDetailsDialog(
             // ── Your Stats hero card ──────────────────────────────────────────
             if (myStats != null) {
                 item {
-                    YourStatsCard(stats = myStats, healthSignal = healthSignal, insight = insight)
+                    YourStatsCard(stats = myStats, insight = contextualInsight)
                 }
-            } else if (healthSignal != null) {
+            } else if (contextualInsight != null) {
                 item {
                     Text(
-                        text = healthSignal.first,
+                        text = contextualInsight.text,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.padding(horizontal = 2.dp)
@@ -219,10 +219,11 @@ fun GameDetailsDialog(
                 }
             }
         }
+        } // Box
     }
 }
 
-// ── Header with artwork backdrop ─────────────────────────────────────────────
+// ── Header section ────────────────────────────────────────────────────────────
 
 @Composable
 private fun HeaderSection(
@@ -230,99 +231,73 @@ private fun HeaderSection(
     headerChips: List<HeaderChip>,
     compactChips: Boolean
 ) {
-    val surfaceColor = MaterialTheme.colorScheme.surface
+    // GameBackdrop behind the dialog handles atmosphere; use light title text when it's active
+    val hasBackdrop = !game.thumbnailUrl.isNullOrBlank()
+    val titleColor = if (hasBackdrop) Color.White.copy(alpha = 0.95f)
+                     else MaterialTheme.colorScheme.onSurface
 
-    Box(modifier = Modifier.fillMaxWidth()) {
-        // Atmospheric backdrop — thumbnail blurred into a gradient
-        if (!game.thumbnailUrl.isNullOrBlank()) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        if (hasBackdrop) {
             AsyncImage(
                 model = game.thumbnailUrl,
-                contentDescription = null,
+                contentDescription = game.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .matchParentSize()
-                    .clip(MaterialTheme.shapes.large)
+                    .size(84.dp)
+                    .clip(MaterialTheme.shapes.medium)
             )
-            // Darken + fade gradient: opaque-dark at top, full surface at bottom
+        } else {
             Box(
                 modifier = Modifier
-                    .matchParentSize()
-                    .clip(MaterialTheme.shapes.large)
-                    .background(
-                        Brush.verticalGradient(
-                            colorStops = arrayOf(
-                                0f   to Color.Black.copy(alpha = 0.62f),
-                                0.55f to Color.Black.copy(alpha = 0.50f),
-                                1f   to surfaceColor
-                            )
-                        )
-                    )
-            )
+                    .size(84.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.GridView,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                )
+            }
         }
 
-        // Header content sits on top of backdrop
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            if (!game.thumbnailUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = game.thumbnailUrl,
-                    contentDescription = game.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(84.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(84.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.GridView,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+            Text(
+                text = game.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = titleColor,
+                modifier = Modifier.padding(end = 20.dp)
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                game.rating?.let {
+                    InlineStat(
+                        icon = Icons.Default.Star,
+                        label = formatDecimal(it),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
-            }
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = game.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(end = 20.dp)
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    game.rating?.let {
-                        InlineStat(
-                            icon = Icons.Default.Star,
-                            label = formatDecimal(it),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    headerChips.forEach { chip ->
-                        StatusChip(
-                            label = chip.label,
-                            icon = chip.icon,
-                            tint = chip.tint,
-                            iconOnly = compactChips
-                        )
-                    }
+                headerChips.forEach { chip ->
+                    StatusChip(
+                        label = chip.label,
+                        icon = chip.icon,
+                        tint = chip.tint,
+                        iconOnly = compactChips
+                    )
                 }
             }
         }
@@ -334,8 +309,7 @@ private fun HeaderSection(
 @Composable
 private fun YourStatsCard(
     stats: GameHistoryStats,
-    healthSignal: Pair<String, Boolean>?,
-    insight: String?
+    insight: ContextualInsight?
 ) {
     val primary          = MaterialTheme.colorScheme.primary
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
@@ -392,16 +366,6 @@ private fun YourStatsCard(
                 }
             }
 
-            // Health signal
-            healthSignal?.let { (text, positive) ->
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (positive) primary.copy(alpha = 0.85f)
-                            else onSurfaceVariant.copy(alpha = 0.6f)
-                )
-            }
-
             // Secondary stats grid
             val secondary = buildList {
                 stats.avgDurationMinutes?.let { avg ->
@@ -430,12 +394,17 @@ private fun YourStatsCard(
                 }
             }
 
-            // Dynamic insight
+            // Contextual insight — single rotating line
             insight?.let {
                 Text(
-                    text = it,
+                    text = it.text,
                     style = MaterialTheme.typography.bodySmall,
-                    color = primary.copy(alpha = 0.7f)
+                    fontWeight = FontWeight.Medium,
+                    color = if (it.positive) primary.copy(alpha = 0.85f)
+                            else onSurfaceVariant.copy(alpha = 0.65f),
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }
@@ -460,8 +429,8 @@ private fun InfoGroupBlock(sections: List<InfoSection>) {
                     )
                 }
                 Column(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
                     Text(
                         text = section.title,
@@ -472,7 +441,8 @@ private fun InfoGroupBlock(sections: List<InfoSection>) {
                     DetailGrid(
                         stats = section.stats,
                         emphasizeSurface = false,
-                        secondaryLabels = section.secondaryLabels
+                        secondaryLabels = section.secondaryLabels,
+                        columns = section.columns
                     )
                 }
             }
@@ -582,10 +552,11 @@ private fun StatusChip(
 private fun DetailGrid(
     stats: List<SectionStat>,
     emphasizeSurface: Boolean = true,
-    secondaryLabels: Set<String> = emptySet()
+    secondaryLabels: Set<String> = emptySet(),
+    columns: Int = 2
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        stats.chunked(2).forEach { row ->
+        stats.chunked(columns).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -599,7 +570,7 @@ private fun DetailGrid(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
+                repeat(columns - row.size) { Spacer(modifier = Modifier.weight(1f)) }
             }
         }
     }

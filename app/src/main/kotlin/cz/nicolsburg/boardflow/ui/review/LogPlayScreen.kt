@@ -51,6 +51,7 @@ import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.model.Player as BggPlayer
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
@@ -183,8 +184,10 @@ fun LogPlayScreen(
         else                  -> "Log Play to BGG"
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    GameBackdrop(imageUrl = viewModel.selectedGame?.thumbnailUrl)
     Scaffold(
+        containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0),
         floatingActionButton = {
             ExtendedFloatingActionButton(
