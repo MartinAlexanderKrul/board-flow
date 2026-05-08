@@ -104,7 +104,12 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun updateFromCollection(games: List<GameItem>) {
-        if (games.isEmpty()) return
+        if (games.isEmpty()) {
+            _allGames.value = emptyList()
+            _searchResults.value = _recentGames.value
+            _collectionLoaded.value = false
+            return
+        }
         val bggGames = games.mapNotNull { item ->
             val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
             BggGame(
@@ -464,6 +469,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun deleteLocalPlay(playId: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            runCatching {
+                container.canonicalCollectionStore.deleteLoggedPlay(playId)
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            }.onSuccess { onSuccess() }
+                .onFailure { onError(it.message ?: "Failed to delete local play") }
+        }
+    }
+
     private suspend fun removeLocalCopyOfDeletedBggPlay(playId: String, deletedPlay: LoggedPlay?) {
         val deletedSignature = deletedPlay?.signatureKey()
         container.canonicalCollectionStore.getLoggedPlays()
@@ -727,6 +742,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // --- Sync unposted plays ---
     private val _postingPlayId = MutableStateFlow<String?>(null)
     val postingPlayId: StateFlow<String?> = _postingPlayId.asStateFlow()
+    private val _syncingUnpostedPlays = MutableStateFlow(false)
+    val syncingUnpostedPlays: StateFlow<Boolean> = _syncingUnpostedPlays.asStateFlow()
 
     fun postSinglePlay(playId: String) {
         if (!isOnline()) return
@@ -760,20 +777,25 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         if (!isOnline()) return
         val creds = prefs.getCredentials() ?: return
         viewModelScope.launch {
+            _syncingUnpostedPlays.value = true
             val unposted = container.canonicalCollectionStore.getLoggedPlays().filter { !it.postedToBgg }
-            if (unposted.isEmpty()) return@launch
-            container.bggRepository.login(creds).onFailure { return@launch }
-            val postedPlays = mutableListOf<LoggedPlay>()
-            for (play in unposted) {
-                val normalizedPlayers = normalizePlayersForPosting(play.players)
-                container.bggRepository.logPlay(gameId = play.gameId, date = LocalDate.parse(play.date), players = normalizedPlayers, playerBggUsernames = buildBggUsernameMap(normalizedPlayers), durationMinutes = play.durationMinutes, location = play.location, comments = play.comments, quantity = play.quantity, incomplete = play.incomplete, nowInStats = play.nowInStats)
-                    .onSuccess { savedPlayId ->
-                        container.canonicalCollectionStore.updateLoggedPlay(play.id) { it.copy(postedToBgg = true, players = normalizedPlayers) }
-                        postedPlays += play.copy(id = savedPlayId ?: play.id, players = normalizedPlayers, postedToBgg = true)
-                    }
+            try {
+                if (unposted.isEmpty()) return@launch
+                container.bggRepository.login(creds).onFailure { return@launch }
+                val postedPlays = mutableListOf<LoggedPlay>()
+                for (play in unposted) {
+                    val normalizedPlayers = normalizePlayersForPosting(play.players)
+                    container.bggRepository.logPlay(gameId = play.gameId, date = LocalDate.parse(play.date), players = normalizedPlayers, playerBggUsernames = buildBggUsernameMap(normalizedPlayers), durationMinutes = play.durationMinutes, location = play.location, comments = play.comments, quantity = play.quantity, incomplete = play.incomplete, nowInStats = play.nowInStats)
+                        .onSuccess { savedPlayId ->
+                            container.canonicalCollectionStore.updateLoggedPlay(play.id) { it.copy(postedToBgg = true, players = normalizedPlayers) }
+                            postedPlays += play.copy(id = savedPlayId ?: play.id, players = normalizedPlayers, postedToBgg = true)
+                        }
+                }
+                addOptimisticBggPlays(postedPlays)
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            } finally {
+                _syncingUnpostedPlays.value = false
             }
-            addOptimisticBggPlays(postedPlays)
-            _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
         }
     }
 
@@ -1052,8 +1074,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 }
 
 private fun mergeHistorySources(local: List<LoggedPlay>, remote: List<LoggedPlay>): List<LoggedPlay> {
-    val remoteSignatures = remote.mapTo(hashSetOf()) { it.signatureKey() }
-    val localOnly = local.filter { it.signatureKey() !in remoteSignatures }
+    val remoteIds = remote.mapTo(hashSetOf()) { it.id }
+    val remoteCorrelationKeys = remote.mapTo(hashSetOf()) { it.historyCorrelationKey() }
+    val localOnly = local.filterNot { play ->
+        play.id in remoteIds || (play.id.isLikelyLocalUuid() && play.historyCorrelationKey() in remoteCorrelationKeys)
+    }
     val combined = (localOnly + remote).sortedByDescending { it.date }
     // Guarantee unique IDs — LazyColumn keys must not repeat
     val seenIds = hashSetOf<String>()
@@ -1120,6 +1145,26 @@ private fun LoggedPlay.signatureKey(): String {
         quantity.toString(),
         incomplete.toString(),
         nowInStats.toString(),
+        normalizedPlayers
+    ).joinToString("||")
+}
+
+private fun LoggedPlay.historyCorrelationKey(): String {
+    val normalizedPlayers = players.joinToString("|") { player ->
+        listOf(
+            player.name.trim().lowercase(),
+            player.score.trim(),
+            player.isWinner.toString(),
+            player.color.trim().lowercase()
+        ).joinToString("~")
+    }
+    return listOf(
+        gameId.toString(),
+        date,
+        durationMinutes.toString(),
+        quantity.toString(),
+        incomplete.toString(),
+        location.trim().lowercase(),
         normalizedPlayers
     ).joinToString("||")
 }

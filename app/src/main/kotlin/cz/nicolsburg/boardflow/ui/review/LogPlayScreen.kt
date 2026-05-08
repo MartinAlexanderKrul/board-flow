@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -83,21 +84,22 @@ fun LogPlayScreen(
     // Read prefill once on first composition (consumed from ViewModel).
     val prefill = remember { viewModel.takePrefill() }
 
-    var date           by remember { mutableStateOf(LocalDate.now().toString()) }
-    var duration       by remember { mutableStateOf(prefill?.durationSuggestion ?: "") }
-    var location       by remember { mutableStateOf(prefill?.location ?: "") }
-    var comments       by remember { mutableStateOf("") }
-    var quantity       by remember { mutableStateOf(1) }
-    var incomplete     by remember { mutableStateOf(false) }
-    var nowInStats     by remember { mutableStateOf(true) }
-    var showAdvanced   by remember { mutableStateOf(false) }
+    var date           by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
+    var duration       by rememberSaveable { mutableStateOf(prefill?.durationSuggestion ?: "") }
+    var location       by rememberSaveable { mutableStateOf(prefill?.location ?: "") }
+    var comments       by rememberSaveable { mutableStateOf("") }
+    var quantity       by rememberSaveable { mutableStateOf(1) }
+    var incomplete     by rememberSaveable { mutableStateOf(false) }
+    var nowInStats     by rememberSaveable { mutableStateOf(true) }
+    var showAdvanced   by rememberSaveable { mutableStateOf(false) }
     var errorMsg          by remember { mutableStateOf<String?>(null) }
-    var showAiOutput      by remember { mutableStateOf(false) }
-    var showDatePicker    by remember { mutableStateOf(false) }
+    var showAiOutput      by rememberSaveable { mutableStateOf(false) }
+    var showDatePicker    by rememberSaveable { mutableStateOf(false) }
     var focusFirstScore   by remember { mutableStateOf(false) }
-    var showNotes         by remember { mutableStateOf(false) }
-    val collapsedPlayers = remember { mutableStateListOf<Boolean>() }
-    val previousCompletion = remember { mutableStateListOf<Boolean>() }
+    var showNotes         by rememberSaveable { mutableStateOf(false) }
+    var collapsedPlayers by rememberSaveable { mutableStateOf<List<Boolean>>(emptyList()) }
+    var previousCompletion by rememberSaveable { mutableStateOf<List<Boolean>>(emptyList()) }
+    var playerRowKeys by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
 
     // Post-save card state. Non-null while post-save card is visible.
     var postSaveInfo     by remember { mutableStateOf<PostSaveInfo?>(null) }
@@ -140,12 +142,26 @@ fun LogPlayScreen(
 
     val initialDate = extractedPlay?.date?.takeIf { it.isNotBlank() } ?: LocalDate.now().toString()
     val notesExpanded = showNotes || comments.isNotBlank()
-    val hasUnsavedChanges by remember(date, duration, location, comments, players, additionalGames, extractedPlay) {
+    val hasUnsavedChanges by remember(
+        date,
+        duration,
+        location,
+        comments,
+        quantity,
+        incomplete,
+        nowInStats,
+        players,
+        additionalGames,
+        extractedPlay
+    ) {
         derivedStateOf {
             date != initialDate ||
                 duration.isNotBlank() ||
                 location.isNotBlank() ||
                 comments.isNotBlank() ||
+                quantity != 1 ||
+                incomplete ||
+                !nowInStats ||
                 players.isNotEmpty() ||
                 additionalGames.isNotEmpty() ||
                 extractedPlay != null
@@ -157,21 +173,30 @@ fun LogPlayScreen(
     }
 
     LaunchedEffect(players.size) {
-        while (collapsedPlayers.size < players.size) collapsedPlayers.add(false)
-        while (collapsedPlayers.size > players.size) collapsedPlayers.removeAt(collapsedPlayers.lastIndex)
-        while (previousCompletion.size < players.size) previousCompletion.add(false)
-        while (previousCompletion.size > players.size) previousCompletion.removeAt(previousCompletion.lastIndex)
+        if (collapsedPlayers.size != players.size) {
+            collapsedPlayers = List(players.size) { index -> collapsedPlayers.getOrElse(index) { false } }
+        }
+        if (previousCompletion.size != players.size) {
+            previousCompletion = List(players.size) { index -> previousCompletion.getOrElse(index) { false } }
+        }
+        if (playerRowKeys.size != players.size) {
+            playerRowKeys = List(players.size) { index -> playerRowKeys.getOrElse(index) { java.util.UUID.randomUUID().toString() } }
+        }
     }
 
     LaunchedEffect(players) {
+        val nextCollapsed = collapsedPlayers.toMutableList()
+        val nextCompletion = previousCompletion.toMutableList()
         players.forEachIndexed { index, player ->
             val isComplete = player.isReadyToCollapse()
-            val wasComplete = previousCompletion.getOrNull(index) ?: false
+            val wasComplete = nextCompletion.getOrElse(index) { false }
             if (isComplete && !wasComplete) {
-                collapsedPlayers[index] = true
+                nextCollapsed[index] = true
             }
-            previousCompletion[index] = isComplete
+            nextCompletion[index] = isComplete
         }
+        collapsedPlayers = nextCollapsed
+        previousCompletion = nextCompletion
     }
 
     BackHandler {
@@ -188,8 +213,9 @@ fun LogPlayScreen(
     val online = viewModel.isOnline()
     val totalGames = 1 + additionalGames.size
     val addEditablePlayer: () -> Unit = {
-        collapsedPlayers.add(false)
-        previousCompletion.add(false)
+        collapsedPlayers = collapsedPlayers + false
+        previousCompletion = previousCompletion + false
+        playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
         viewModel.addPlayer()
     }
 
@@ -358,8 +384,9 @@ fun LogPlayScreen(
                             frequentPlayers = frequentPlayers,
                             recentPlayers = recentPlayers,
                             onAddPlayer = {
-                                collapsedPlayers.add(false)
-                                previousCompletion.add(false)
+                                collapsedPlayers = collapsedPlayers + false
+                                previousCompletion = previousCompletion + false
+                                playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
                                 viewModel.addPlayerFromRoster(it)
                             }
                         )
@@ -373,19 +400,29 @@ fun LogPlayScreen(
                     }
                 }
 
-                itemsIndexed(players) { index, player ->
+                itemsIndexed(
+                    items = players,
+                    key = { index, _ -> playerRowKeys.getOrElse(index) { "player-$index" } }
+                ) { index, player ->
                     PlayerEditCard(
                         player = player,
                         rosterPlayers = rosterPlayers,
                         onUpdate = { viewModel.updatePlayer(index, it) },
                         onRemove = {
-                            if (index < collapsedPlayers.size) collapsedPlayers.removeAt(index)
-                            if (index < previousCompletion.size) previousCompletion.removeAt(index)
+                            if (index < collapsedPlayers.size) {
+                                collapsedPlayers = collapsedPlayers.toMutableList().also { it.removeAt(index) }
+                            }
+                            if (index < previousCompletion.size) {
+                                previousCompletion = previousCompletion.toMutableList().also { it.removeAt(index) }
+                            }
+                            if (index < playerRowKeys.size) {
+                                playerRowKeys = playerRowKeys.toMutableList().also { it.removeAt(index) }
+                            }
                             viewModel.removePlayer(index)
                         },
                         collapsed = collapsedPlayers.getOrElse(index) { false },
                         onToggleCollapsed = {
-                            collapsedPlayers[index] = !collapsedPlayers[index]
+                            collapsedPlayers = collapsedPlayers.toMutableList().also { it[index] = !it[index] }
                         },
                         requestScoreFocus = index == 0 && focusFirstScore,
                         onFocusDone = { focusFirstScore = false }

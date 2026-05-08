@@ -1,50 +1,240 @@
 # BoardFlow
 
-Android app for BoardGameGeek play logging, collection sync, Google Sheets / Drive sync, and AI-assisted score sheet extraction.
+BoardFlow is an Android app for tracking board game plays with BoardGameGeek, Google Sheets / Drive, local offline history, roster-aware player stats, sleeve data, and AI-assisted score extraction.
 
-## Overview
+It is built with Jetpack Compose and uses Room as the live local source of truth for collection data, local play history, and cached BGG play history.
 
-The app combines a few related workflows into one Compose-based Android client:
+## What The App Does
 
-- Search and load board games from BoardGameGeek
-- Log plays online or save them locally when offline
-- Scan score sheets and extract structured results with Gemini
-- Sync BGG collection data into Google Sheets
-- Create Google Drive folders and QR codes for games
-- Manage players, aliases, and BGG usernames
-- Export and import local app data
+BoardFlow combines several related workflows in one app:
 
-The current UI design and screen layout are intentionally preserved, but the app structure has been refactored for clearer ownership and maintainability.
+- search your collection or BGG for a game to log
+- continue a recent session or use "play again" flows
+- log a play directly to BGG when online
+- save a play locally when offline
+- post saved local plays later from History via an outbox-style "Unposted plays" section
+- scan a score sheet photo and extract players / scores with Gemini
+- manage a saved player roster with aliases and optional BGG usernames
+- review play history, aggregate stats, and saved-player activity
+- edit or delete logged plays
+- browse your collection, wishlist, and sleeve coverage
+- sync your collection to a Google Sheet
+- create or connect a Google spreadsheet
+- create Drive folders / QR-related assets through the Google sync pipeline
+- export and import app data backups
 
-## Tech Stack
+## Main User Flows
 
-- Kotlin
-- Jetpack Compose
-- Material 3
-- AndroidX Navigation Compose
-- Android ViewModel + StateFlow
-- OkHttp
-- Google Identity / Credential Manager
-- Google Drive + Sheets SDKs
-- CameraX
-- Coil
+### 1. Log Play
 
-Build targets:
+Screens involved:
 
-- `compileSdk = 35`
-- `targetSdk = 35`
-- `minSdk = 26`
-- Java 17 / Kotlin JVM target 17
+- `ui/search/NewPlayScreen.kt`
+- `ui/scan/ScanScreen.kt`
+- `ui/review/LogPlayScreen.kt`
 
-## Project Structure
+Flow:
+
+1. Pick a game from recent games, local collection search, or BGG search.
+2. Optionally continue the last session for the same game or use a "play again" flow from History / Collection.
+3. Optionally scan a scoresheet image and let Gemini prefill players and scores.
+4. Review and edit the play in the compact card-based Log Play sheet.
+5. Post to BGG if online and authenticated, or save locally for later if offline / posting fails.
+
+Notable behavior:
+
+- game search prefers the local loaded collection, then falls back to BGG XML search
+- session context can prefill players and location
+- log form tracks unsaved changes
+- player rows are keyed UI items with shared editing UI between log and edit flows
+- matched roster players are explicit; non-exact fuzzy matches require user confirmation
+
+### 2. Edit Existing Play
+
+Screen involved:
+
+- `ui/history/HistoryScreen.kt` (`EditPlayDialog`)
+
+Behavior:
+
+- opens from History play details
+- uses the same compact player editor visual language as Log Play
+- preserves fields on configuration changes with saveable state
+- stays open when save fails so the user can correct and retry
+- updates the local Room record, and updates BGG too when the play is already posted there
+
+### 3. History
+
+Screen involved:
+
+- `ui/history/HistoryScreen.kt`
+
+Tabs:
+
+- `Plays`
+- `Stats`
+- `Players`
+
+Current behavior:
+
+- local plays and cached BGG plays are merged for display
+- local-only plays can be deleted locally
+- BGG-backed plays can be deleted from BGG and pruned from cache
+- an `Unposted plays` card in Plays acts as the manual outbox for local plays not yet posted to BGG
+- stats support date filters and richer insight cards
+- players tab is roster-only and sorts by most recent saved-player activity
+- history rows always show all logged players and do not collapse same/similar names into one row
+- unsaved logged names can still be grouped as `Unknown` in general stats where appropriate
+
+### 4. Collection
+
+Screen involved:
+
+- `ui/collection/CollectionScreen.kt`
+- `ui/collection/GameDetailDialog.kt`
+
+Tabs / areas:
+
+- `Owned`
+- `Wishlist`
+- `Sleeves`
+
+Behavior:
+
+- collection data comes from the canonical Room snapshot managed by sync
+- game detail dialog links collection data with history and player insights
+- collection-to-history and collection-to-player deep links are supported
+- sleeve data is merged from BGG, scraping, and local exclusions
+- the `Owned` tab now strictly means owned games
+
+### 5. Sync
+
+Screen involved:
+
+- `ui/sync/SyncScreen.kt`
+- `ui/sync/SpreadsheetModal.kt`
+
+Behavior:
+
+- manages readiness for BGG, Google account, and spreadsheet connection
+- supports refreshing BGG collection
+- supports refreshing sleeve sizes
+- supports full Google Sheet sync
+- supports creating a spreadsheet from BGG
+- supports connecting an existing spreadsheet
+- shows a sync log with summary + detailed dialog
+- can clear local sync log state
+
+### 6. Settings
+
+Screen involved:
+
+- `ui/settings/SettingsScreen.kt`
+
+Sections:
+
+- `Accounts`
+- `Appearance`
+- `AI`
+- `Data`
+
+Behavior:
+
+- manage BGG username/password
+- manage Google account and spreadsheet connection
+- set Gemini API key and model endpoint
+- switch app theme
+- export backup JSON, optionally including sensitive data
+- import backup JSON
+- clear cached collection data
+
+## Data Model And Storage
+
+### Live Local Source Of Truth
+
+The live runtime store is Room via:
+
+- `data/CanonicalCollectionStore.kt`
+
+It stores:
+
+- canonical merged collection snapshot
+- local logged plays
+- cached BGG play history
+
+### Preferences / Secrets
+
+`data/SecurePreferences.kt` stores:
+
+- BGG credentials
+- Gemini configuration
+- theme and app settings
+- recent games
+- player roster
+- sync-related preferences
+- backup compatibility helpers
+
+### Import / Export
+
+`data/BackupSerializer.kt` handles backup JSON import/export.
+
+Backups can include:
+
+- collection snapshot
+- local logged plays
+- cached BGG plays
+- player roster
+- sleeves exclusions
+- settings
+- optionally sensitive data like credentials / keys
+
+## Architecture
+
+Primary entry points:
+
+- `MainActivity.kt`
+- `ui/app/AppShell.kt`
+
+Core modules:
+
+- `auth/GoogleAuthManager.kt`
+- `core/di/AppContainer.kt`
+- `core/navigation/AppRoutes.kt`
+- `AppViewModel.kt`
+- `SyncViewModel.kt`
+
+High-level ownership:
+
+- `MainActivity`
+  - Android lifecycle and activity-result plumbing
+- `AppShell`
+  - navigation graph, scaffold, header, and bottom tabs
+- `AppViewModel`
+  - game search
+  - log play state
+  - players / roster
+  - local play history
+  - cached BGG play history interaction
+  - local posting / edit / delete flows
+  - import/export
+  - session context
+- `SyncViewModel`
+  - Google account state
+  - spreadsheet connection
+  - collection refresh and canonical collection loading
+  - sleeve refresh
+  - Google sync log and progress
+- `data/`
+  - BGG API, Google APIs, Room persistence, backup serialization, parsing helpers
+
+## Package Layout
 
 Main source root:
 
 ```text
-app/src/main/kotlin/com/bgg/combined/
+app/src/main/kotlin/cz/nicolsburg/boardflow/
   AppViewModel.kt
   MainActivity.kt
-  SyncConfig.kt
   SyncViewModel.kt
   auth/
     GoogleAuthManager.kt
@@ -54,24 +244,23 @@ app/src/main/kotlin/com/bgg/combined/
     navigation/
       AppRoutes.kt
   data/
-    BggApiClient.kt
-    BggCache.kt
-    BggImageCache.kt
+    BackupSerializer.kt
+    BggPlaySync.kt
     BggRepository.kt
-    CsvParser.kt
+    CanonicalCollectionStore.kt
     GeminiRepository.kt
     GoogleApiClient.kt
-    QrGenerator.kt
     SecurePreferences.kt
   model/
-    Models.kt
+    ...
   ui/
     app/
       AppShell.kt
     collection/
       CollectionScreen.kt
+      GameDetailDialog.kt
     common/
-      ModifierExtensions.kt
+      ...
     history/
       HistoryScreen.kt
     players/
@@ -85,27 +274,67 @@ app/src/main/kotlin/com/bgg/combined/
     settings/
       SettingsScreen.kt
     sync/
+      SpreadsheetModal.kt
       SyncScreen.kt
     theme/
-      Theme.kt
+      ...
 ```
 
-### Architecture Notes
+## External Integrations
 
-- `MainActivity` is intentionally thin.
-  It owns Android lifecycle integration, activity result launchers, and wires the app shell.
-- `ui/app/AppShell.kt` owns top-level navigation, scaffold, header, and tab layout.
-- `auth/GoogleAuthManager.kt` owns Google account selection and authorization flow.
-- `core/di/AppContainer.kt` provides lightweight manual dependency wiring.
-- `AppViewModel` owns gameplay, history, settings, and local collection state.
-- `SyncViewModel` owns Google sync, sheet state, sync logs, and remote collection loading.
-- `data/` contains remote/local service code and persistence helpers.
-- `CanonicalCollectionStore` uses Room as the live store for canonical collection data, local logged plays, and cached BGG play history.
-- `BackupSerializer` handles import/export JSON, while `SecurePreferences` now stores settings and legacy compatibility helpers rather than the live collection cache.
+### BoardGameGeek
+
+Used for:
+
+- collection refresh
+- BGG XML game search outside the loaded collection
+- play history fetch / refresh
+- play logging and editing
+- sleeve-related metadata inputs
+
+Notes:
+
+- authenticated and unauthenticated BGG collection flows both exist
+- play posting/editing uses authenticated flows
+- BGG XML search outside the local collection requires `BGG_XML_API_TOKEN`
+- when token-backed search is unavailable, the app should fail quietly to an empty result state
+
+### Google Identity / Sheets / Drive
+
+Used for:
+
+- account selection
+- Drive / Sheets authorization
+- spreadsheet creation / connection
+- pushing collection data to Sheets
+- Drive-related sync helpers and asset generation
+
+### Gemini
+
+Used for:
+
+- AI-assisted score extraction from images
+
+The app supports:
+
+- user-provided Gemini API key
+- configurable model endpoint
+- model discovery / fallback behavior
+
+## UX / Product Notes
+
+Current app behavior intentionally includes:
+
+- manual user-controlled posting of saved local plays from History instead of silent auto-post on startup
+- roster-aware but explicit player matching
+- preserved local history even when offline
+- shared compact player editing UI between log and edit flows
+- history navigation from Collection and player-centric screens
+- stats and players views that are based on saved roster entities where appropriate
 
 ## Build
 
-From the repository root:
+From repo root:
 
 ```sh
 ./gradlew.bat :app:compileDebugKotlin
@@ -118,82 +347,48 @@ Debug APK output:
 app/build/outputs/apk/debug/board-flow-debug.apk
 ```
 
-Install on a connected emulator/device:
+Install on a connected device/emulator:
 
 ```sh
 ./gradlew.bat :app:installDebug
 ```
 
-## Text Encoding
-
-- Keep source and docs in UTF-8.
-- Be careful with bulk PowerShell text rewrites; they can introduce mojibake if a file is re-saved with the wrong encoding.
-- Prefer plain ASCII punctuation in UI strings and comments when possible, especially for separators like `-` instead of decorative bullets or dashes.
-- If you see text like `Â·`, `â€¦`, or `Ã¢â‚¬Â¦`, treat it as an encoding regression and fix it before committing.
-
 ## Configuration
 
-### BoardGameGeek
+### Required / common app settings
 
-Set in Settings:
+Set in Settings as needed:
 
 - BGG username
 - BGG password
-
-Notes:
-
-- Collection loading uses BGG XML endpoints and the canonical merged collection is cached locally in Room
-- Local/offline plays are also stored in Room and later reconciled with cached BGG play history
-- Searching for games outside your loaded collection uses the BGG XML API search endpoint and requires app-level configuration provided by `BGG_XML_API_TOKEN` from the environment or `local.properties` at build time
-- Play posting uses the unofficial BGG play logging endpoint
-
-### Gemini
-
-Set in Settings:
-
 - Gemini API key
 - Gemini model endpoint
 
-Get an API key from [Google AI Studio](https://aistudio.google.com).
+Google sign-in / Sheets / Drive also require valid Firebase / Google Cloud OAuth setup:
 
-### Google Sign-In / Sheets / Drive
+- `google-services.json`
+- Android + Web OAuth clients
+- correct SHA fingerprints for debug/release
 
-The app uses:
-
-- Credential Manager for Google account selection
-- Google Identity authorization for Drive / Sheets scopes
-
-Requirements:
-
-- valid `google-services.json`
-- working Firebase / Google Auth configuration
-- Android and Web OAuth clients configured correctly
-- correct debug/release SHA fingerprints registered in Firebase / Google Cloud
-
-If Google sign-in fails at runtime, check the Google Auth / Firebase configuration first.
-
-## What Changed In The Recent Refactor
-
-- Extracted app shell and navigation from `MainActivity`
-- Added dedicated Google auth manager
-- Moved DI and routes into `core/`
-- Removed unused Retrofit / Moshi dependencies
-- Updated build target to Java 17
-- Simplified several screen-level APIs
-- Removed obsolete UI helpers and unsafe state access patterns
+Compile success does not guarantee runtime Google auth success if that external setup is wrong.
 
 ## Verification
 
-Latest verified local command:
+Recommended local verification after meaningful changes:
 
 ```sh
 ./gradlew.bat :app:compileDebugKotlin
 ```
 
-Status:
+Use this too when startup/resources/packaging changed:
 
-- passes successfully after the current refactor
+```sh
+./gradlew.bat :app:assembleDebug
+```
 
-## Known Runtime Caveat
+## Text Encoding
 
-Compile-time verification is passing, but Google sign-in still depends on correct Firebase / Google Cloud project setup outside the repo. If sign-in closes immediately or Credential Manager reports provider/framework errors, verify the OAuth client configuration and registered SHA fingerprints.
+- keep source and docs in UTF-8
+- be careful with PowerShell bulk rewrites
+- prefer plain ASCII punctuation where practical
+- if you see mojibake like `Ã‚Â·` or `Ã¢â‚¬Â¦`, fix it before committing

@@ -2,104 +2,245 @@
 
 ## Purpose
 
-This repository contains the BoardFlow Android app. Agents working here should preserve the current user-facing UI design while improving architecture, correctness, and maintainability.
+This repository contains the BoardFlow Android app.
+
+Agents working here should preserve the current user-facing design language while improving correctness, maintainability, and architectural clarity. The app has already accumulated several interconnected flows, so the main job is usually to make the existing product work more coherently rather than to reinvent it.
+
+## Product Snapshot
+
+BoardFlow currently supports all of the following:
+
+- local and online BGG play logging
+- offline-first local play saving
+- manual reposting of unposted local plays from History
+- edit and delete play flows
+- AI score extraction from images with Gemini
+- saved player roster with aliases and optional BGG usernames
+- collection browsing across owned / wishlist / sleeves
+- game detail drill-ins with history and player links
+- history tabs for plays, stats, and players
+- Google Sheets / Drive sync
+- spreadsheet creation / connection
+- backup export / import
+- session continuation / play-again flows
+
+When changing the app, keep those flows in mind. A fix in one area often has consequences for history, roster matching, sync, or backup behavior.
 
 ## Fast Start
 
-If you are a new agent in this repo, do not start by reading everything. Start with:
+If you are new to the repo, do not start with a whole-codebase read. Start here:
 
-- `README.md` for the current product and storage model
-- `app/src/main/kotlin/cz/nicolsburg/boardflow/ui/app/AppShell.kt` for navigation and top-level layout
-- `app/src/main/kotlin/cz/nicolsburg/boardflow/AppViewModel.kt` for gameplay, search, history, and offline flows
-- `app/src/main/kotlin/cz/nicolsburg/boardflow/SyncViewModel.kt` for sync, cache refresh, and sheet/collection loading
-- `app/src/main/kotlin/cz/nicolsburg/boardflow/data/CanonicalCollectionStore.kt` for the live Room-backed source of truth
-- `app/src/main/kotlin/cz/nicolsburg/boardflow/data/BggRepository.kt` for BGG search/log/play history endpoints
-- `app/src/main/kotlin/cz/nicolsburg/boardflow/data/GoogleApiClient.kt` for Sheets/Drive sync
+- `README.md`
+  - current product behavior, runtime storage model, major screen flows
+- `app/src/main/kotlin/cz/nicolsburg/boardflow/ui/app/AppShell.kt`
+  - top-level navigation, scaffold, cross-screen routing
+- `app/src/main/kotlin/cz/nicolsburg/boardflow/AppViewModel.kt`
+  - search, log play, history, roster, local play persistence, outbox posting, import/export
+- `app/src/main/kotlin/cz/nicolsburg/boardflow/SyncViewModel.kt`
+  - Google account/sheet state, collection refresh, sleeve refresh, sync log, canonical collection loading
+- `app/src/main/kotlin/cz/nicolsburg/boardflow/data/CanonicalCollectionStore.kt`
+  - live Room-backed store
+- `app/src/main/kotlin/cz/nicolsburg/boardflow/data/BggRepository.kt`
+  - BGG search, collection, play history, log/edit/delete flows
+- `app/src/main/kotlin/cz/nicolsburg/boardflow/data/GoogleApiClient.kt`
+  - Sheets / Drive sync
 
-Prefer targeted inspection of those files over broad codebase exploration unless the issue clearly spans multiple layers.
+Prefer targeted inspection of those files over broad exploration unless the issue clearly spans multiple layers.
 
 ## Current Architecture
 
 - `MainActivity.kt`
-  Thin Android entry point. Handles lifecycle, activity result launchers, and wires app-level services into Compose.
+  - thin Android entry point
+  - lifecycle hooks
+  - activity-result launchers
+  - auth wiring
 - `ui/app/AppShell.kt`
-  Owns the top-level scaffold, navigation graph, header, and bottom navigation.
+  - app scaffold
+  - header
+  - bottom nav
+  - screen routing
+  - cross-screen deep-link style callbacks between Collection, History, Players, and Log Play
 - `auth/GoogleAuthManager.kt`
-  Owns Google account selection and authorization orchestration.
+  - Google account selection / sign-in orchestration
 - `core/di/AppContainer.kt`
-  Lightweight manual DI container.
+  - lightweight manual DI container
 - `core/navigation/AppRoutes.kt`
-  Single source of truth for app routes.
+  - central route definitions
 - `AppViewModel.kt`
-  Owns gameplay, search, player management, settings-adjacent app state, history, and local/offline flows.
+  - game search and recent games
+  - session continuation / play-again setup
+  - AI extraction handoff into review
+  - editable log state integration
+  - roster and player alias management
+  - local play history and cached BGG history merge behavior
+  - play post/edit/delete flows
+  - local outbox posting for unposted plays
+  - import/export and backup restore
 - `SyncViewModel.kt`
-  Owns Google sync flows, sync logs, spreadsheet state, and synced collection loading.
+  - Google auth state
+  - spreadsheet connection state
+  - collection refresh
+  - sleeve refresh
+  - full Sheets sync
+  - sync log / progress state
 - `data/`
-  API clients, caching, storage, parsing, and persistence helpers.
+  - API clients, parsers, storage, backup serialization, Room adapters, persistence helpers
 - `ui/`
-  Screen composables and shared UI helpers.
+  - screens and shared Compose UI helpers
 
 ## Source Of Truth
 
-- Canonical collection data, local logged plays, and cached BGG play history live in Room via `CanonicalCollectionStore`.
-- `SecurePreferences` now stores settings, credentials, recent games, and backup/compatibility helpers only.
-- `BackupSerializer` owns import/export JSON format.
-- Do not reintroduce JSON blobs as the live runtime cache unless explicitly asked.
+### Live Runtime Data
 
-**Notable integrations and patterns:**
+The live runtime source of truth is Room via `CanonicalCollectionStore`.
 
-- `data/GeminiRepository.kt`: Handles AI-assisted score extraction from images using Gemini API, with model fallback and error handling.
-- `data/GoogleApiClient.kt`: Manages Google Sheets/Drive sync, spreadsheet tab/row/column logic, Drive folder and QR code creation, and applies sheet styles.
-- `data/CanonicalCollectionStore.kt`: Room-backed live store for canonical collection data, local plays, and cached BGG play history.
-- `data/BackupSerializer.kt`: JSON import/export for backups; `SecurePreferences` now stores settings and compatibility helpers rather than the live caches.
-- `ui/sync/SpreadsheetModal.kt`: Implements the modal composable pattern for spreadsheet connection/creation (`SpreadsheetConnectModal`).
-- Sleeve data is merged from BGG API, HTML scraping, and local cache (see `GameItem.Sleeves` in `Models.kt` and related logic in `GoogleApiClient.kt`).
+It stores:
+
+- canonical merged collection snapshot
+- local logged plays
+- cached BGG play history
+
+### Preferences / Settings
+
+`SecurePreferences` stores:
+
+- credentials and tokens
+- app theme and settings
+- player roster
+- recent games
+- sync-related preferences
+- backup compatibility helpers
+
+Do not move live collection/history state back into large JSON blobs in preferences.
+
+### Backup Format
+
+`BackupSerializer` owns import/export JSON.
+
+Backups can contain:
+
+- collection snapshot
+- local logged plays
+- cached BGG plays
+- player roster
+- sleeves exclusions
+- settings
+- optionally sensitive data
+
+## Key Product Flows To Understand
+
+### Search -> Log Play
+
+- `NewPlayScreen` loads recent games and local collection-backed search first
+- if no local collection result matches, search may fall back to BGG XML search
+- selected games move into `LogPlayScreen`
+- session context may prefill players/location
+- AI extraction may prefill players/scores
+
+### Log Play -> Local / BGG
+
+- if online with credentials, the app can post to BGG
+- if offline or posting is unavailable, the play can still be saved locally
+- extra related games may post separately; failures there can leave local follow-up plays
+- local unposted plays are intentionally user-controlled from History rather than silently auto-posted on startup
+
+### History
+
+- History merges local logged plays with cached BGG plays
+- local-only plays can be deleted locally
+- BGG plays can be deleted remotely
+- edit flow updates local state and remote BGG when needed
+- History includes:
+  - `Plays`
+  - `Stats`
+  - `Players`
+- the Plays tab also acts as the outbox surface for unposted local plays
+
+### Collection
+
+- collection data is loaded through sync and propagated from the canonical Room snapshot
+- tabs include:
+  - `Owned`
+  - `Wishlist`
+  - `Sleeves`
+- game detail dialog is a major cross-link hub into History and Players
+
+### Sync
+
+- Sync screen is the user-facing operational hub for:
+  - BGG readiness
+  - Google readiness
+  - sheet connection
+  - refresh collection
+  - refresh sleeve sizes
+  - sync to Sheets
+  - create/connect spreadsheet
+  - review sync log
+
+### Settings
+
+- manages BGG credentials
+- manages Google sheet connection access points
+- manages Gemini configuration
+- manages theme
+- manages import/export
+- can clear cached collection
 
 ## What Usually Matters
 
-- Preserve the current visual hierarchy unless the user explicitly asks for a redesign.
-- Keep merge logic source-aware:
-  - BGG owns identity, stats, players, BGG links, ownership flags, and BGG play count
-  - Google Sheets owns manual/spreadsheet values and sheet links
+- preserve the current visual hierarchy unless the user explicitly asks for a redesign
+- keep merge logic source-aware:
+  - BGG owns identity, stats, BGG links, ownership flags, BGG play count, and remote history
+  - Google Sheets owns spreadsheet-specific/manual sheet values and links
   - sleeve refresh owns sleeves only
-- Full sync should update the canonical merged snapshot once at the end.
-- Local/offline history should not mutate canonical collection state.
-- BGG search outside the loaded collection requires the XML API token and should fail quietly to an empty result state if the token is missing or rejected.
+- full sync should update the canonical merged snapshot once at the end
+- local/offline history should not mutate canonical collection state
+- local unposted plays should remain visible and user-controlled
+- BGG XML search outside the loaded collection requires the XML API token and should fail quietly to an empty result state if missing/rejected
+- player matching should stay explicit unless a match is truly exact
 
 ## Expectations For Changes
 
-- Keep the existing visual layout and design language unless explicitly asked to redesign.
-- Prefer small, structural improvements over broad behavioral rewrites.
-- Keep `MainActivity` thin.
-- Put navigation concerns in `ui/app` or `core/navigation`, not in random screens.
-- Put Android service / identity / auth orchestration into focused helpers or managers.
-- Keep view models focused by domain responsibility.
-- Avoid pushing business logic into composables.
-- Prefer `StateFlow` and unidirectional data flow for screen state.
-- Remove dead dependencies when they are clearly unused.
-- Do not reintroduce deprecated Google sign-in APIs.
-- If a change is only about one feature area, stay in that area first instead of refactoring unrelated modules.
+- keep the existing visual layout and design language unless explicitly asked to redesign
+- prefer small structural fixes over broad rewrites
+- keep `MainActivity` thin
+- keep navigation concerns in `ui/app` or `core/navigation`
+- keep business logic out of composables
+- prefer `StateFlow` and unidirectional data flow
+- avoid introducing new overlapping sources of truth
+- do not reintroduce deprecated Google sign-in APIs
+- if a task is localized, stay within that feature area unless the bug clearly crosses layers
 
-**BGG API flows:**
+## BGG Flow Notes
 
-- Both authenticated and unauthenticated collection/play logging flows are supported (see `BggRepository.kt`).
-- Retry and error handling are implemented for BGG endpoints and login.
-- BGG XML API search outside the loaded collection requires an application token stored in Settings and sent as `Authorization: Bearer ...`.
-- When a search falls back from the local collection to BGG XML search, the app should fail gracefully to an empty result state if the token is missing or rejected.
-- The live source of truth for collection and history data is Room, not the old JSON cache files.
+- both authenticated and unauthenticated collection flows exist
+- play posting/edit/delete is authenticated
+- retry and error handling exist in the repository layer
+- BGG XML search outside the local collection requires `BGG_XML_API_TOKEN`
+- if BGG XML token-based search is unavailable, fail quietly to empty results instead of noisy user-facing errors where possible
+
+## History / Roster Notes
+
+- saved roster players are distinct from arbitrary logged names
+- history rows should show all logged players, even if names are similar
+- general stats may treat unsaved names differently from roster views
+- roster-oriented views should stay roster-based
+- editable player rows should use stable UI identity and survive configuration changes where practical
 
 ## UI Conventions
 
-- Preserve the current screen hierarchy and tab layout.
-- Prefer extracting small reusable helpers when a screen starts carrying framework glue or duplicated UI logic.
-- Avoid unsafe `!!` access in composables when a nullable state can be handled cleanly.
-- Keep screen parameters minimal and explicit.
-- Keep user-facing strings and source files in UTF-8, but prefer plain ASCII punctuation when practical.
-- Be careful with PowerShell bulk text replacements or rewrite scripts; they can cause mojibake like `Â·`, `â€¦`, or `Ã¢â‚¬Â¦` if encoding is mishandled.
-- If encoding corruption appears in uncommitted changes, fix it before doing any further refactors or commits.
+- preserve the current screen hierarchy and tab layout
+- prefer extracting small reusable helpers when a screen starts carrying duplicated framework glue
+- avoid unsafe `!!` access in composables when nullable state can be handled cleanly
+- keep screen parameters minimal and explicit
+- use saveable state for meaningful in-progress screen state
+- keep user-facing strings and docs in UTF-8, but prefer plain ASCII punctuation when practical
+- be careful with PowerShell bulk replacements; they can introduce mojibake like `Ã‚Â·`, `Ã¢â‚¬Â¦`, or `ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦`
+- if encoding corruption appears in working changes, fix it before continuing
 
-**Modal pattern example:**
-```
+### Modal Pattern Example
+
+```kotlin
 @Composable
 fun SpreadsheetConnectModal(
     currentSheetName: String?,
@@ -117,13 +258,13 @@ Before finishing substantial changes, run:
 ./gradlew.bat :app:compileDebugKotlin
 ```
 
-When relevant, also use:
+Also use this when startup behavior, resources, or packaging may be affected:
 
 ```sh
 ./gradlew.bat :app:assembleDebug
 ```
 
-If you only changed docs or small behavior, compile is usually enough. Reach for `assembleDebug` when you touched resources, packaging, or startup behavior.
+If you only changed docs or a very small behavior fix, compile is usually enough.
 
 ## Important Runtime Note
 
@@ -140,15 +281,19 @@ Current notable choices:
 - OkHttp
 - CameraX
 - Coil
+- Room
 
 Avoid adding Retrofit / Moshi back unless there is a clear need; they were removed as unused.
 
 ## Refactor Guidance
 
-If continuing the modernization work:
+If continuing modernization, the most valuable current targets are:
 
-- next best targets are splitting `AppViewModel` and `SyncViewModel` into smaller feature-oriented state holders
-- move model classes out of the catch-all `Models.kt` file into more focused files
-- add clearer UI state models for screens with mixed loading/data/error logic
+- split `AppViewModel` and `SyncViewModel` into smaller feature-oriented state holders
+- move models out of the catch-all `Models.kt` into more focused files
+- replace heuristic history reconciliation with stronger explicit sync identity
+- further reduce duplicated collection state / bridging between view models
+- add clearer UI state models for mixed loading/data/error screens
 - improve Google sign-in diagnostics with device-tested logging if runtime issues continue
-- when in doubt, inspect the targeted feature files first and avoid a whole-repo read unless the bug spans sync, storage, and UI at the same time
+
+When in doubt, inspect the targeted feature files first and avoid a whole-repo read unless the bug really spans sync, storage, and UI together.

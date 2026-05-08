@@ -176,7 +176,7 @@ fun CollectionScreen(
         }
 
         result = when (tabMode) {
-            TabMode.OWNED -> result.filter { it.isOwned || !it.isWishlisted }
+            TabMode.OWNED -> result.filter { it.isOwned }
             TabMode.WISHLIST -> result.filter { it.isWishlisted }
             TabMode.SLEEVES -> emptyList()
         }

@@ -115,7 +115,6 @@ fun BoardFlowApp(
     var activeTabLabel by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        appViewModel.syncUnpostedPlays()
         syncViewModel.refreshCredentialState()
         syncViewModel.loadCachedCollection()
         appViewModel.loadPlayHistory()

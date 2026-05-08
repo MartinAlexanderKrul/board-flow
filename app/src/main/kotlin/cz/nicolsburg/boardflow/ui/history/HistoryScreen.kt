@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -66,6 +67,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.text.input.KeyboardType
@@ -136,7 +138,7 @@ private enum class HistorySortMode(val label: String) {
 
 private enum class HistoryDateRange(val label: String) {
     ALL("All time"),
-    THIS_WEEK("This week"),
+    THIS_WEEK("Last 7 days"),
     THIS_MONTH("This month"),
     THIS_YEAR("This year")
 }
@@ -161,6 +163,8 @@ fun HistoryScreen(
     val players by viewModel.players.collectAsState()
     val deletingPlayId by viewModel.deletingBggPlayId.collectAsState()
     val editPlayLoading by viewModel.editPlayLoading.collectAsState()
+    val postingPlayId by viewModel.postingPlayId.collectAsState()
+    val syncingUnpostedPlays by viewModel.syncingUnpostedPlays.collectAsState()
     val pendingHistoryNavigation by viewModel.pendingHistoryNavigation.collectAsState()
     var playToDelete by remember { mutableStateOf<LoggedPlay?>(null) }
     var selectedPlay by remember { mutableStateOf<LoggedPlay?>(null) }
@@ -168,19 +172,19 @@ fun HistoryScreen(
     var deleteError by remember { mutableStateOf<String?>(null) }
     var editError by remember { mutableStateOf<String?>(null) }
 
-    var searchQuery by remember { mutableStateOf("") }
-    var filterGameId by remember { mutableStateOf<Int?>(null) }
-    var filterGameName by remember { mutableStateOf<String?>(null) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var filterGameId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var filterGameName by rememberSaveable { mutableStateOf<String?>(null) }
     val backdropUrl by remember(filterGameId, collection) {
         derivedStateOf { filterGameId?.let { id -> collection.firstOrNull { it.id == id }?.thumbnailUrl } }
     }
     val selectedPlayThumbnail by remember(selectedPlay, collection) {
         derivedStateOf { selectedPlay?.gameId?.let { id -> collection.firstOrNull { it.id == id }?.thumbnailUrl } }
     }
-    var sortMode by remember { mutableStateOf(HistorySortMode.DATE_DESC) }
-    var filterDateRange by remember { mutableStateOf(HistoryDateRange.ALL) }
-    var filterPlayer by remember { mutableStateOf<String?>(null) }
-    var showFilters by remember { mutableStateOf(false) }
+    var sortMode by rememberSaveable { mutableStateOf(HistorySortMode.DATE_DESC) }
+    var filterDateRange by rememberSaveable { mutableStateOf(HistoryDateRange.ALL) }
+    var filterPlayer by rememberSaveable { mutableStateOf<String?>(null) }
+    var showFilters by rememberSaveable { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(true) }
     val playsListState = rememberLazyListState()
     val statsListState = rememberLazyListState()
@@ -244,9 +248,12 @@ fun HistoryScreen(
             HistorySortMode.DURATION -> result.sortedByDescending { it.durationMinutes }
         }
     }
+    val localPendingPlays by remember(historyPlays) {
+        derivedStateOf { historyPlays.filter { !it.postedToBgg } }
+    }
 
-    var activeTab by remember { mutableStateOf(HistoryTab.PLAYS) }
-    var showAddPlayerDialog by remember { mutableStateOf(false) }
+    var activeTab by rememberSaveable { mutableStateOf(HistoryTab.PLAYS) }
+    var showAddPlayerDialog by rememberSaveable { mutableStateOf(false) }
     var editingPlayer by remember { mutableStateOf<cz.nicolsburg.boardflow.model.Player?>(null) }
 
     LaunchedEffect(activeTab) {
@@ -307,24 +314,43 @@ fun HistoryScreen(
     }
 
     playToDelete?.let { play ->
+        val isRemotePlay = play.postedToBgg && !play.id.isLikelyLocalUuid()
         BoardFlowConfirmationDialog(
             title = "Delete play?",
-            message = "Delete this play from BGG? This also removes it from the local cached history.",
+            message = if (isRemotePlay) {
+                "Delete this play from BGG? This also removes it from the local cached history."
+            } else {
+                "Delete this local play from this device?"
+            },
             confirmLabel = "Delete",
             dismissLabel = "Cancel",
             kind = BoardFlowConfirmationKind.DESTRUCTIVE,
             onConfirm = {
-                viewModel.deleteBggPlay(
-                    playId = play.id,
-                    onSuccess = {
-                        playToDelete = null
-                        deleteError = null
-                    },
-                    onError = { message ->
-                        deleteError = message
-                        playToDelete = null
-                    }
-                )
+                if (isRemotePlay) {
+                    viewModel.deleteBggPlay(
+                        playId = play.id,
+                        onSuccess = {
+                            playToDelete = null
+                            deleteError = null
+                        },
+                        onError = { message ->
+                            deleteError = message
+                            playToDelete = null
+                        }
+                    )
+                } else {
+                    viewModel.deleteLocalPlay(
+                        playId = play.id,
+                        onSuccess = {
+                            playToDelete = null
+                            deleteError = null
+                        },
+                        onError = { message ->
+                            deleteError = message
+                            playToDelete = null
+                        }
+                    )
+                }
             },
             onDismiss = { playToDelete = null }
         )
@@ -357,7 +383,6 @@ fun HistoryScreen(
             isLoading = editPlayLoading,
             onDismiss = { editingPlay = null; editError = null },
             onSave = { date, durationMinutes, location, comments, players ->
-                editingPlay = null
                 editError = null
                 viewModel.editPlay(
                     play = play,
@@ -366,7 +391,10 @@ fun HistoryScreen(
                     location = location,
                     comments = comments,
                     players = players,
-                    onSuccess = { editError = null },
+                    onSuccess = {
+                        editError = null
+                        editingPlay = null
+                    },
                     onError = { editError = it }
                 )
             }
@@ -478,6 +506,15 @@ fun HistoryScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
+
+            PendingPlaysCard(
+                plays = localPendingPlays,
+                postingPlayId = postingPlayId,
+                syncingUnpostedPlays = syncingUnpostedPlays,
+                onPostPlay = viewModel::postSinglePlay,
+                onPostAll = viewModel::syncUnpostedPlays,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
 
             if (showFilters) {
                 BoardFlowModalBottomSheet(
@@ -733,6 +770,123 @@ private fun PlaysContent(
                         onClick = { onOpenPlay(play) }
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PendingPlaysCard(
+    plays: List<LoggedPlay>,
+    postingPlayId: String?,
+    syncingUnpostedPlays: Boolean,
+    onPostPlay: (String) -> Unit,
+    onPostAll: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (plays.isEmpty()) return
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f))
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        "Unposted plays",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        if (plays.size == 1) {
+                            "1 play is saved locally and ready to post to BGG."
+                        } else {
+                            "${plays.size} plays are saved locally and ready to post to BGG."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+                BoardFlowSecondaryButton(
+                    onClick = onPostAll,
+                    enabled = !syncingUnpostedPlays && postingPlayId == null
+                ) {
+                    if (syncingUnpostedPlays) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Post all")
+                    }
+                }
+            }
+
+            plays.take(3).forEach { play ->
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                play.gameName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                "${play.date} • ${play.players.size} players",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        BoardFlowSecondaryButton(
+                            onClick = { onPostPlay(play.id) },
+                            enabled = !syncingUnpostedPlays && postingPlayId == null
+                        ) {
+                            if (postingPlayId == play.id) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Post")
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (plays.size > 3) {
+                Text(
+                    "+${plays.size - 3} more waiting in local history",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                )
             }
         }
     }
@@ -1171,14 +1325,15 @@ private fun EditPlayDialog(
     onDismiss: () -> Unit,
     onSave: (date: String, durationMinutes: Int, location: String, comments: String, players: List<PlayerResult>) -> Unit
 ) {
-    var date by remember(play.id) { mutableStateOf(play.date) }
-    var duration by remember(play.id) { mutableStateOf(if (play.durationMinutes > 0) play.durationMinutes.toString() else "") }
-    var location by remember(play.id) { mutableStateOf(play.location) }
-    var comments by remember(play.id) { mutableStateOf(play.comments) }
-    val editPlayers = remember(play.id) { play.players.toMutableStateList() }
-    val collapsedPlayers = remember(play.id) { mutableStateListOf<Boolean>().apply { repeat(play.players.size) { add(true) } } }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showNotes by remember(play.id) { mutableStateOf(play.comments.isNotBlank()) }
+    var date by rememberSaveable(play.id) { mutableStateOf(play.date) }
+    var duration by rememberSaveable(play.id) { mutableStateOf(if (play.durationMinutes > 0) play.durationMinutes.toString() else "") }
+    var location by rememberSaveable(play.id) { mutableStateOf(play.location) }
+    var comments by rememberSaveable(play.id) { mutableStateOf(play.comments) }
+    var editPlayers by rememberSaveable(play.id, stateSaver = PlayerResultListSaver) { mutableStateOf(play.players) }
+    var collapsedPlayers by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { true }) }
+    var playerRowKeys by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { java.util.UUID.randomUUID().toString() }) }
+    var showDatePicker by rememberSaveable(play.id) { mutableStateOf(false) }
+    var showNotes by rememberSaveable(play.id) { mutableStateOf(play.comments.isNotBlank()) }
 
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = runCatching {
@@ -1283,8 +1438,9 @@ private fun EditPlayDialog(
                     }
                     BoardFlowSecondaryButton(
                         onClick = {
-                            editPlayers.add(PlayerResult("", "0", false))
-                            collapsedPlayers.add(false)
+                            editPlayers = editPlayers + PlayerResult("", "0", false)
+                            collapsedPlayers = collapsedPlayers + false
+                            playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
                         },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.height(40.dp)
@@ -1294,18 +1450,25 @@ private fun EditPlayDialog(
                 }
             }
 
-            items(editPlayers.size) { index ->
-                val player = editPlayers[index]
+            itemsIndexed(
+                items = editPlayers,
+                key = { index, _ -> playerRowKeys.getOrElse(index) { "${play.id}-$index" } }
+            ) { index, player ->
                 PlayerResultEditorCard(
                     player = player,
                     rosterPlayers = rosterPlayers,
-                    onUpdate = { editPlayers[index] = it },
+                    onUpdate = { updated ->
+                        editPlayers = editPlayers.toMutableList().also { it[index] = updated }
+                    },
                     onRemove = {
-                        editPlayers.removeAt(index)
-                        collapsedPlayers.removeAt(index)
+                        editPlayers = editPlayers.toMutableList().also { it.removeAt(index) }
+                        collapsedPlayers = collapsedPlayers.toMutableList().also { it.removeAt(index) }
+                        playerRowKeys = playerRowKeys.toMutableList().also { it.removeAt(index) }
                     },
                     collapsed = collapsedPlayers.getOrElse(index) { false },
-                    onToggleCollapsed = { collapsedPlayers[index] = !collapsedPlayers[index] }
+                    onToggleCollapsed = {
+                        collapsedPlayers = collapsedPlayers.toMutableList().also { it[index] = !it[index] }
+                    }
                 )
             }
 
@@ -1382,6 +1545,40 @@ private fun EditCompactTextField(
         ),
         modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
     )
+}
+
+private val PlayerResultListSaver = androidx.compose.runtime.saveable.listSaver<List<PlayerResult>, List<Any>>(
+    save = { players ->
+        players.map { player ->
+            listOf(
+                player.name,
+                player.score,
+                player.isWinner,
+                player.color,
+                player.rating,
+                player.isNew
+            )
+        }
+    },
+    restore = { saved ->
+        saved.map { item ->
+            @Suppress("UNCHECKED_CAST")
+            val values = item as List<Any>
+            PlayerResult(
+                name = values[0] as String,
+                score = values[1] as String,
+                isWinner = values[2] as Boolean,
+                color = values[3] as String,
+                rating = values[4] as String,
+                isNew = values[5] as Boolean
+            )
+        }
+    }
+)
+
+private fun String.isLikelyLocalUuid(): Boolean {
+    return Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
+        .matches(this)
 }
 
 @Composable
