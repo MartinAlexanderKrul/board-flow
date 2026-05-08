@@ -642,7 +642,7 @@ private fun GameCard(
                         InlineStat(icon = Icons.Default.CalendarToday, label = it.toString())
                     }
                     game.weight?.let {
-                        InlineStat(icon = Icons.Default.Scale, label = gameWeightLabel(it))
+                        InlineStat(icon = Icons.Default.Scale, label = collectionWeightLabel(it))
                     }
                     game.playingTime?.let {
                         InlineStat(icon = Icons.Default.Schedule, label = "${it}m")
@@ -667,6 +667,12 @@ private fun GameCard(
             }
         }
     }
+}
+
+private fun collectionWeightLabel(weight: Double): String = when (gameWeightLabel(weight)) {
+    "Medium-Light" -> "Mid-Light"
+    "Medium-Heavy" -> "Mid-Heavy"
+    else -> gameWeightLabel(weight)
 }
 
 @Composable
