@@ -494,6 +494,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     val postLoading: StateFlow<Boolean> = _postLoading.asStateFlow()
     private val _postResult = MutableStateFlow<String?>(null)
     val postResult: StateFlow<String?> = _postResult.asStateFlow()
+    private val _pendingImportedPlay = MutableStateFlow<LoggedPlay?>(null)
+    val pendingImportedPlay: StateFlow<LoggedPlay?> = _pendingImportedPlay.asStateFlow()
 
     fun postPlay(date: LocalDate, durationMinutes: Int, location: String, comments: String, quantity: Int = 1, incomplete: Boolean = false, nowInStats: Boolean = true, onSuccess: () -> Unit, onError: (String) -> Unit) {
         val game = selectedGame ?: run { onError("No game selected"); return }
@@ -836,6 +838,33 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun clearExtractedPlay() { _extractedPlay.value = null; _editablePlayers.value = emptyList(); _additionalGames.value = emptyList(); _scanError.value = null }
+
+    fun setPendingImportedPlay(play: LoggedPlay) {
+        _pendingImportedPlay.value = play
+    }
+
+    fun clearPendingImportedPlay() {
+        _pendingImportedPlay.value = null
+    }
+
+    fun saveImportedPlay(play: LoggedPlay, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            runCatching {
+                val normalizedPlayers = normalizePlayersForPosting(play.players)
+                normalizedPlayers.forEach { recordPlayerName(it.name) }
+                container.canonicalCollectionStore.saveLoggedPlay(
+                    play.copy(
+                        id = UUID.randomUUID().toString(),
+                        players = normalizedPlayers,
+                        postedToBgg = false
+                    )
+                )
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+                _pendingImportedPlay.value = null
+            }.onSuccess { onSuccess() }
+                .onFailure { onError(it.message ?: "Failed to save imported play") }
+        }
+    }
 
     fun clearLogPlayFlow() {
         selectedGame = null

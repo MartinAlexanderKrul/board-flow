@@ -2,12 +2,17 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -34,7 +39,9 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -55,6 +62,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -84,7 +92,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import cz.nicolsburg.boardflow.AppViewModel
+import cz.nicolsburg.boardflow.data.PlayShareSerializer
+import cz.nicolsburg.boardflow.data.QrGenerator
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
@@ -128,6 +139,7 @@ import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import cz.nicolsburg.boardflow.ui.players.AddPlayerDialog
 import cz.nicolsburg.boardflow.ui.players.EditPlayerDialog
 import cz.nicolsburg.boardflow.ui.players.PlayersTabContent
+import java.io.File
 
 private enum class HistorySortMode(val label: String) {
     DATE_DESC("Newest first"),
@@ -153,7 +165,8 @@ private enum class HistoryTab(val label: String) {
 fun HistoryScreen(
     viewModel: AppViewModel,
     onActiveTabChange: (String?) -> Unit = {},
-    onPlayAgain: (cz.nicolsburg.boardflow.model.LoggedPlay) -> Unit = {}
+    onPlayAgain: (cz.nicolsburg.boardflow.model.LoggedPlay) -> Unit = {},
+    onImportQr: () -> Unit = {}
 ) {
     val historyPlays by viewModel.historyPlays.collectAsState()
     val collection by viewModel.collection.collectAsState()
@@ -169,6 +182,7 @@ fun HistoryScreen(
     var playToDelete by remember { mutableStateOf<LoggedPlay?>(null) }
     var selectedPlay by remember { mutableStateOf<LoggedPlay?>(null) }
     var editingPlay by remember { mutableStateOf<LoggedPlay?>(null) }
+    var playToShare by remember { mutableStateOf<LoggedPlay?>(null) }
     var deleteError by remember { mutableStateOf<String?>(null) }
     var editError by remember { mutableStateOf<String?>(null) }
 
@@ -369,10 +383,21 @@ fun HistoryScreen(
                 selectedPlay = null
                 playToDelete = play
             },
+            onShareQr = {
+                selectedPlay = null
+                playToShare = play
+            },
             onPlayAgain = {
                 selectedPlay = null
                 onPlayAgain(play)
             }
+        )
+    }
+
+    playToShare?.let { play ->
+        SharePlayQrDialog(
+            play = play,
+            onDismiss = { playToShare = null }
         )
     }
 
@@ -486,18 +511,26 @@ fun HistoryScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     trailingAction = {
-                        Box {
-                            SearchFieldActionButton(onClick = { showFilters = true }) {
-                                Icon(BoardFlowIcons.Filter, contentDescription = "Sort & filter")
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            SearchFieldActionButton(onClick = onImportQr) {
+                                Icon(Icons.Default.QrCodeScanner, contentDescription = "Import QR")
                             }
-                            if (hasActiveFilters) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(top = 8.dp, end = 8.dp)
-                                        .size(7.dp)
-                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                                )
+                            Box {
+                                SearchFieldActionButton(onClick = { showFilters = true }) {
+                                    Icon(BoardFlowIcons.Filter, contentDescription = "Sort & filter")
+                                }
+                                if (hasActiveFilters) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(top = 8.dp, end = 8.dp)
+                                            .size(7.dp)
+                                            .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                    )
+                                }
                             }
                         }
                     },
@@ -1139,6 +1172,7 @@ private fun PlayDetailsDialog(
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
     onDeletePlay: () -> Unit,
+    onShareQr: () -> Unit,
     onPlayAgain: () -> Unit = {}
 ) {
     val insights = remember(play, historyPlays) { historyPlays.playInsights(play) }
@@ -1290,8 +1324,17 @@ private fun PlayDetailsDialog(
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
+                            BoardFlowSecondaryButton(
+                                onClick = onShareQr,
+                                enabled = !isDeleting,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Share")
+                            }
                             BoardFlowSecondaryButton(
                                 onClick = onEdit,
                                 enabled = !isDeleting,
@@ -1316,6 +1359,64 @@ private fun PlayDetailsDialog(
             }
         }
     }
+
+@Composable
+private fun SharePlayQrDialog(
+    play: LoggedPlay,
+    onDismiss: () -> Unit
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val payload = remember(play) { PlayShareSerializer.encodeAsLink(play) }
+    val qrPng = remember(payload) { QrGenerator.generatePng(payload, gameName = "", margin = 2) }
+    val qrBitmap = remember(qrPng) { BitmapFactory.decodeByteArray(qrPng, 0, qrPng.size) }
+
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Share play QR", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+            Text(
+                "Another BoardFlow user can scan this to import the play into local history.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            qrBitmap?.let {
+                Image(
+                    bitmap = it.asImageBitmap(),
+                    contentDescription = "QR code for shared play",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                )
+            }
+            Text(play.gameName, style = MaterialTheme.typography.titleSmall)
+            Text(play.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                BoardFlowSecondaryButton(
+                    onClick = { shareQrImage(context, play.gameName, qrPng) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Share image")
+                }
+                BoardFlowButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Done")
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun EditPlayDialog(
@@ -1501,6 +1602,19 @@ private fun EditPlayDialog(
             }
         }
     }
+}
+
+private fun shareQrImage(context: Context, gameName: String, pngBytes: ByteArray) {
+    val fileName = "${QrGenerator.safeName(gameName)}_play_share.png"
+    val file = File(context.cacheDir, fileName)
+    file.writeBytes(pngBytes)
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/png"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(intent, "Share BoardFlow play"))
 }
 
 

@@ -10,8 +10,13 @@ object AppRoutes {
     const val SYNC = "sync"
     const val PLAYERS = "players"
     const val SCAN = "scan/{gameId}/{gameName}"
+    const val QR_IMPORT = "qr_import"
+    const val PLAY_IMPORT = "play_import?data={data}"
     const val LOG_PLAY = "log_play"
 
     fun scan(gameId: Int, gameName: String): String =
         "scan/$gameId/${URLEncoder.encode(gameName, "UTF-8")}"
+
+    fun playImport(data: String): String =
+        "play_import?data=${URLEncoder.encode(data, "UTF-8")}"
 }

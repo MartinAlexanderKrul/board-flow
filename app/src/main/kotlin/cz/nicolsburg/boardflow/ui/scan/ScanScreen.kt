@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Edit
@@ -37,7 +35,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import cz.nicolsburg.boardflow.AppViewModel
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraActionPanel
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraSecondaryAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraPermissionPrompt
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraScene
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import java.io.File
 import java.text.SimpleDateFormat
@@ -235,113 +237,106 @@ fun ScanScreen(
                         }
                     }
 
-                    // Camera preview; tap anywhere to capture
-                    AndroidView(
-                        factory = { ctx ->
-                            PreviewView(ctx).also { previewView ->
-                                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-                                cameraProviderFuture.addListener({
-                                    val cameraProvider = cameraProviderFuture.get()
-                                    val preview = Preview.Builder().build().also {
-                                        it.setSurfaceProvider(previewView.surfaceProvider)
-                                    }
-                                    val capture = ImageCapture.Builder()
-                                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                                        .build()
-                                    imageCapture = capture
+                    BoardFlowCameraScene(
+                        title = gameName,
+                        subtitle = "Line up the scoresheet, then tap anywhere or use the capture button.",
+                        preview = {
+                            AndroidView(
+                                factory = { ctx ->
+                                    PreviewView(ctx).also { previewView ->
+                                        val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                                        cameraProviderFuture.addListener({
+                                            val cameraProvider = cameraProviderFuture.get()
+                                            val preview = Preview.Builder().build().also {
+                                                it.setSurfaceProvider(previewView.surfaceProvider)
+                                            }
+                                            val capture = ImageCapture.Builder()
+                                                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                                                .build()
+                                            imageCapture = capture
 
-                                    try {
-                                        cameraProvider.unbindAll()
-                                        cameraProvider.bindToLifecycle(
-                                            lifecycleOwner,
-                                            CameraSelector.DEFAULT_BACK_CAMERA,
-                                            preview,
-                                            capture
-                                        )
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
+                                            try {
+                                                cameraProvider.unbindAll()
+                                                cameraProvider.bindToLifecycle(
+                                                    lifecycleOwner,
+                                                    CameraSelector.DEFAULT_BACK_CAMERA,
+                                                    preview,
+                                                    capture
+                                                )
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                            }
+                                        }, ContextCompat.getMainExecutor(ctx))
                                     }
-                                }, ContextCompat.getMainExecutor(ctx))
-                            }
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) { capturePhoto() }
+                            )
                         },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null  // no ripple on the full-screen preview
-                            ) { capturePhoto() }
+                        bottomContent = {
+                            BoardFlowCameraActionPanel(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(horizontal = 20.dp, vertical = 24.dp),
+                                status = "Tap anywhere or use Capture",
+                                primaryAction = {
+                                    BoardFlowButton(
+                                        onClick = { capturePhoto() },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Capture")
+                                    }
+                                },
+                                secondaryActions = {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        BoardFlowCameraSecondaryAction(
+                                            icon = Icons.Default.Photo,
+                                            label = "Gallery",
+                                            onClick = { galleryLauncher.launch("image/*") },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        BoardFlowCameraSecondaryAction(
+                                            icon = Icons.Default.Edit,
+                                            label = "Manual",
+                                            onClick = onEnterManually,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+                            )
+                        }
                     )
 
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .fillMaxWidth()
-                            .background(
-                                Brush.verticalGradient(
-                                    0f to Color.Black.copy(alpha = 0.72f),
-                                    1f to Color.Transparent
-                                )
-                            )
-                            .padding(horizontal = 20.dp, vertical = 18.dp)
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(
-                                gameName,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                "Line up the scoresheet, then tap anywhere or use the capture button.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.84f)
-                            )
-                        }
-                    }
+                }
 
-                    // Buttons column: camera on top, gallery + manual below
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        FloatingActionButton(
-                            onClick = { capturePhoto() },
-                            containerColor = MaterialTheme.colorScheme.primary
+                else -> BoardFlowCameraPermissionPrompt(
+                    message = "Camera permission is needed to scan scoresheets.",
+                    actions = {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Icon(Icons.Default.CameraAlt, "Capture")
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                            SmallFloatingActionButton(onClick = { galleryLauncher.launch("image/*") }) {
-                                Icon(Icons.Default.Photo, "Gallery")
+                            BoardFlowButton(onClick = { cameraPermission.launchPermissionRequest() }) {
+                                Text("Grant Permission")
                             }
-                            SmallFloatingActionButton(onClick = onEnterManually) {
-                                Icon(Icons.Default.Edit, "Enter Manually")
+                            BoardFlowOutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
+                                Text("Pick from gallery instead")
+                            }
+                            BoardFlowOutlinedButton(onClick = onEnterManually) {
+                                Text("Enter Manually")
                             }
                         }
                     }
-
-                }
-
-                else -> Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text("Camera permission is needed to scan scoresheets.")
-                    BoardFlowButton(onClick = { cameraPermission.launchPermissionRequest() }) {
-                        Text("Grant Permission")
-                    }
-                    BoardFlowOutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
-                        Text("Pick from gallery instead")
-                    }
-                    BoardFlowOutlinedButton(onClick = onEnterManually) {
-                        Text("Enter Manually")
-                    }
-                }
+                )
             }
             } // end Box
         } // end Column

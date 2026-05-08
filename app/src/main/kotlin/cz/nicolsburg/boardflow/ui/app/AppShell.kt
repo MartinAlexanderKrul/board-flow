@@ -54,6 +54,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.R
 import cz.nicolsburg.boardflow.SyncViewModel
@@ -68,6 +69,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.boardFlowFadeIn
 import cz.nicolsburg.boardflow.ui.common.boardFlowFadeOut
 import cz.nicolsburg.boardflow.ui.history.HistoryScreen
+import cz.nicolsburg.boardflow.ui.history.QrPlayImportScreen
 import cz.nicolsburg.boardflow.ui.review.LogPlayScreen
 import cz.nicolsburg.boardflow.ui.scan.ScanScreen
 import cz.nicolsburg.boardflow.ui.search.NewPlayScreen
@@ -192,6 +194,7 @@ fun BoardFlowApp(
     val headerSubtitle = when {
         currentRoute == AppRoutes.NEW_PLAY -> "Log a New Play"
         currentRoute == AppRoutes.HISTORY -> activeTabLabel ?: "Play History"
+        currentRoute == AppRoutes.QR_IMPORT -> "Import Play"
         currentRoute == AppRoutes.COLLECTION -> activeTabLabel ?: "My Collection"
         currentRoute == AppRoutes.SYNC -> "Sync to Sheets"
         currentRoute == AppRoutes.SETTINGS -> activeTabLabel ?: "Settings"
@@ -326,6 +329,9 @@ fun BoardFlowApp(
                     onPlayAgain = { play ->
                         appViewModel.setupPlayAgainFromPlay(play)
                         navController.navigate(AppRoutes.LOG_PLAY)
+                    },
+                    onImportQr = {
+                        navController.navigate(AppRoutes.QR_IMPORT)
                     }
                 )
             }
@@ -439,6 +445,64 @@ fun BoardFlowApp(
                     onChangeGame = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) },
                     onNavigateBack = { requestLeaveLogPlay() },
                     onDiscard = { requestLeaveLogPlay() }
+                )
+            }
+
+            composable(AppRoutes.QR_IMPORT) {
+                QrPlayImportScreen(
+                    viewModel = appViewModel,
+                    onDone = {
+                        navController.popBackStack(AppRoutes.HISTORY, inclusive = false)
+                    },
+                    onCancel = {
+                        appViewModel.clearPendingImportedPlay()
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = AppRoutes.PLAY_IMPORT,
+                arguments = listOf(
+                    navArgument("data") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = ""
+                    }
+                ),
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "https://krul.cloud/boardflow/play-import?data={data}"
+                    },
+                    navDeepLink {
+                        uriPattern = "boardflow://play-import?data={data}"
+                    }
+                )
+            ) { backStack ->
+                val rawData = backStack.arguments?.getString("data").orEmpty()
+                val rawUrl = "boardflow://play-import?data=$rawData"
+                QrPlayImportScreen(
+                    viewModel = appViewModel,
+                    initialRawData = rawUrl,
+                    onDone = {
+                        if (!navController.popBackStack(AppRoutes.HISTORY, inclusive = false)) {
+                            navController.navigate(AppRoutes.HISTORY) {
+                                popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
+                    onCancel = {
+                        appViewModel.clearPendingImportedPlay()
+                        if (!navController.popBackStack()) {
+                            navController.navigate(AppRoutes.HISTORY) {
+                                popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    }
                 )
             }
         }

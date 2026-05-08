@@ -17,15 +17,15 @@ import java.io.ByteArrayOutputStream
 
 object QrGenerator {
 
-    private const val QR_SIZE   = 300
+    private const val QR_SIZE   = 900
     private const val SUBFOLDER = "BoardgameSync"
 
     fun safeName(gameName: String) = gameName.replace(Regex("[\\\\/:*?\"<>|.']+"), "").trim()
     fun fileName(gameName: String) = "${safeName(gameName)} [QR].png"
 
-    fun generatePng(url: String, gameName: String = ""): ByteArray {
-        val hints  = mapOf(EncodeHintType.MARGIN to 1,
-                           EncodeHintType.ERROR_CORRECTION to com.google.zxing.qrcode.decoder.ErrorCorrectionLevel.H)
+    fun generatePng(url: String, gameName: String = "", margin: Int = 1): ByteArray {
+        val hints  = mapOf(EncodeHintType.MARGIN to margin,
+                           EncodeHintType.ERROR_CORRECTION to com.google.zxing.qrcode.decoder.ErrorCorrectionLevel.M)
         val matrix = QRCodeWriter().encode(url, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE, hints)
         val bmp    = Bitmap.createBitmap(QR_SIZE, QR_SIZE, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
