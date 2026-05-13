@@ -30,11 +30,12 @@ fun GameBackdrop(
     contentFadeAlpha: Float = 0.72f,
     bottomSurfaceBlendStart: Float = 0.86f,
     collapseFraction: Float = 0f,
+    baseBlur: Dp = 0.dp,
 ) {
     if (imageUrl.isNullOrBlank()) return
     val surfaceColor = MaterialTheme.colorScheme.surface
     val collapse = collapseFraction.coerceIn(0f, 1f)
-    val blurRadius = (collapse * 4f).dp
+    val blurRadius = baseBlur + (collapse * 4f).dp
     val dynamicTitleFade = titleFadeAlpha + (0.12f * collapse)
     val dynamicContentFade = contentFadeAlpha + (0.08f * collapse)
 

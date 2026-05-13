@@ -49,7 +49,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,6 +63,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.BorderStroke
@@ -138,7 +141,9 @@ import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
 import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import cz.nicolsburg.boardflow.ui.players.AddPlayerDialog
 import cz.nicolsburg.boardflow.ui.players.EditPlayerDialog
+import cz.nicolsburg.boardflow.ui.players.PlayerDetailDialog
 import cz.nicolsburg.boardflow.ui.players.PlayersTabContent
+import cz.nicolsburg.boardflow.ui.players.statsForPlayer
 import java.io.File
 
 private enum class HistorySortMode(val label: String) {
@@ -344,6 +349,7 @@ fun HistoryScreen(
                     viewModel.deleteBggPlay(
                         playId = play.id,
                         onSuccess = {
+                            selectedPlay = null
                             playToDelete = null
                             deleteError = null
                         },
@@ -356,6 +362,7 @@ fun HistoryScreen(
                     viewModel.deleteLocalPlay(
                         playId = play.id,
                         onSuccess = {
+                            selectedPlay = null
                             playToDelete = null
                             deleteError = null
                         },
@@ -380,11 +387,9 @@ fun HistoryScreen(
             onDismiss = { selectedPlay = null },
             onEdit = { editingPlay = play; selectedPlay = null },
             onDeletePlay = {
-                selectedPlay = null
                 playToDelete = play
             },
             onShareQr = {
-                selectedPlay = null
                 playToShare = play
             },
             onPlayAgain = {
@@ -1027,7 +1032,7 @@ private fun PlayHistoryCard(
             }
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 play.players.forEach { player ->
-                    PlayerRow(player, resolveDisplayName(player.name, players))
+                    HistoryListPlayerRow(player, resolveDisplayName(player.name, players))
                 }
             }
         }
@@ -1078,8 +1083,7 @@ private fun PlayBadge(label: String, containerColor: Color, contentColor: Color)
     }
 }
 
-@Composable
-private fun PlayerColorDot(colorName: String) {
+private fun resolvedPlayerColor(colorName: String): Color? {
     val knownColors = mapOf(
         "red" to Color(0xFFE53935), "blue" to Color(0xFF1E88E5), "green" to Color(0xFF43A047),
         "yellow" to Color(0xFFFDD835), "orange" to Color(0xFFFB8C00), "purple" to Color(0xFF8E24AA),
@@ -1087,34 +1091,51 @@ private fun PlayerColorDot(colorName: String) {
         "brown" to Color(0xFF6D4C41), "gray" to Color(0xFF757575), "grey" to Color(0xFF757575),
         "cyan" to Color(0xFF00ACC1), "teal" to Color(0xFF00897B), "lime" to Color(0xFF7CB342)
     )
-    val parsed = knownColors[colorName.lowercase().trim()]
+    return knownColors[colorName.lowercase().trim()]
         ?: runCatching { Color(android.graphics.Color.parseColor(colorName)) }.getOrNull()
-    if (parsed != null) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(parsed, CircleShape)
-        )
-    }
 }
 
 @Composable
-private fun PlayerRow(player: PlayerResult, displayName: String) {
+private fun PlayerColorDot(color: Color, size: Int = 9) {
+    Box(
+        modifier = Modifier
+            .size(size.dp)
+            .background(color, CircleShape)
+    )
+}
+
+@Composable
+private fun playerMetaText(player: PlayerResult): String? {
+    val meta = buildList {
+        player.color.trim()
+            .takeIf { it.isNotBlank() && resolvedPlayerColor(it) == null }
+            ?.let { add("Team $it") }
+        player.rating
+            .trim()
+            .takeIf { it.isNotBlank() && it != "N/A" }
+            ?.toIntOrNull()
+            ?.takeIf { it > 0 }
+            ?.let { add("rated $it") }
+        if (player.isNew) add("first play")
+    }
+    return meta.takeIf { it.isNotEmpty() }?.joinToString(" · ")
+}
+
+@Composable
+private fun HistoryListPlayerRow(player: PlayerResult, displayName: String) {
     val scoreText = player.score.takeUnless {
         val normalized = it.trim()
         normalized.isEmpty() || normalized == "0" || normalized == "0.0"
     } ?: "—"
-
+    val showScore = !(player.isWinner && scoreText == "—")
+    val inlineColor = player.color.takeIf { it.isNotBlank() }?.let(::resolvedPlayerColor)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 1.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        if (player.color.isNotBlank()) {
-            PlayerColorDot(player.color)
-        }
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
@@ -1123,40 +1144,148 @@ private fun PlayerRow(player: PlayerResult, displayName: String) {
             Text(
                 displayName,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (player.isWinner) FontWeight.Bold else FontWeight.Normal,
+                fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
             if (player.isNew) {
                 Icon(
                     Icons.Default.Star,
-                    contentDescription = "New player",
-                    tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.7f),
-                    modifier = Modifier.size(12.dp)
+                    contentDescription = "First play",
+                    tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.72f),
+                    modifier = Modifier.size(11.dp)
                 )
             }
+            inlineColor?.let { PlayerColorDot(color = it) }
         }
         Row(
-            modifier = Modifier.width(56.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                scoreText,
-                style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
-                color = if (player.isWinner) MaterialTheme.colorScheme.tertiary
-                else if (scoreText == "—") MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f)
-            )
             if (player.isWinner) {
                 Icon(
                     Icons.Default.EmojiEvents,
                     contentDescription = "Winner",
                     tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
-            } else {
-                Spacer(Modifier.size(18.dp))
+            }
+            if (showScore) {
+                Text(
+                    scoreText,
+                    style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
+                    color = if (player.isWinner) MaterialTheme.colorScheme.tertiary
+                    else if (scoreText == "—") MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.End
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayDetailsPlayerRow(
+    player: PlayerResult,
+    displayName: String,
+    rank: Int,
+    matchedPlayer: Player?,
+    onPlayerTap: (Player) -> Unit
+) {
+    val scoreText = player.score.takeUnless {
+        val normalized = it.trim()
+        normalized.isEmpty() || normalized == "0" || normalized == "0.0"
+    } ?: "—"
+    val metaText = playerMetaText(player)
+    val showScore = !(player.isWinner && scoreText == "—")
+    val inlineColor = player.color.takeIf { it.isNotBlank() }?.let(::resolvedPlayerColor)
+
+    val rowBg = if (player.isWinner)
+        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.22f)
+    else
+        Color.Transparent
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        color = rowBg
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                rank.toOrdinal(),
+                style = MaterialTheme.typography.labelSmall,
+                color = if (player.isWinner) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.75f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                modifier = Modifier.width(26.dp),
+                textAlign = TextAlign.Center
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Text(
+                        displayName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (matchedPlayer != null) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        modifier = if (matchedPlayer != null) {
+                            Modifier.clickable { onPlayerTap(matchedPlayer) }
+                        } else Modifier
+                    )
+                    if (player.isNew) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = "First play",
+                            tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.72f),
+                            modifier = Modifier.size(10.dp)
+                        )
+                    }
+                    inlineColor?.let { PlayerColorDot(color = it, size = 8) }
+                }
+                metaText?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.58f),
+                        maxLines = 1
+                    )
+                }
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (player.isWinner) {
+                    Icon(
+                        Icons.Default.EmojiEvents,
+                        contentDescription = "Winner",
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
+                if (showScore) {
+                    Text(
+                        scoreText,
+                        style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
+                        fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (player.isWinner) MaterialTheme.colorScheme.tertiary
+                                else if (scoreText == "—") MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.End
+                    )
+                }
             }
         }
     }
@@ -1175,10 +1304,48 @@ private fun PlayDetailsDialog(
     onShareQr: () -> Unit,
     onPlayAgain: () -> Unit = {}
 ) {
-    val insights = remember(play, historyPlays) { historyPlays.playInsights(play) }
+    var viewingPlayer by remember { mutableStateOf<Player?>(null) }
+
+    val insights = remember(play, historyPlays) {
+        buildList {
+            addAll(historyPlays.playInsights(play))
+            if (isEmpty()) {
+                val firstPlayCount = play.players.count { it.isNew }
+                if (firstPlayCount > 0) {
+                    add(
+                        if (firstPlayCount == 1) "One player marked this as a first play."
+                        else "$firstPlayCount players marked this as a first play."
+                    )
+                }
+                val ratedCount = play.players.count {
+                    it.rating.trim().toIntOrNull()?.let { rating -> rating > 0 } == true
+                }
+                if (ratedCount > 0) {
+                    add(
+                        if (ratedCount == 1) "One player left a rating for this session."
+                        else "$ratedCount players left ratings for this session."
+                    )
+                }
+                if (play.quantity > 1) {
+                    add("Logged as ${play.quantity} sessions.")
+                }
+                if (play.incomplete) {
+                    add("Marked as an incomplete session.")
+                }
+            }
+        }.take(2)
+    }
     AnimatedDialog(
         onDismissRequest = onDismiss,
-        backdrop = { GameBackdrop(imageUrl = thumbnailUrl, height = 200.dp) }
+        backdrop = {
+            GameBackdrop(
+                imageUrl = thumbnailUrl,
+                height = 200.dp,
+                titleFadeAlpha = 0.26f,
+                contentFadeAlpha = 0.78f,
+                baseBlur = 1.5.dp
+            )
+        }
     ) {
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -1220,8 +1387,25 @@ private fun PlayDetailsDialog(
                                             else MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                                 )
-                                if (isDeleting) {
-                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    IconButton(
+                                        onClick = onShareQr,
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Share,
+                                            contentDescription = "Share play",
+                                            modifier = Modifier.size(18.dp),
+                                            tint = if (hasThumb) Color.White.copy(alpha = 0.88f)
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    if (isDeleting) {
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                    }
                                 }
                             }
                             Text(
@@ -1284,81 +1468,206 @@ private fun PlayDetailsDialog(
                 }
 
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("Players", style = MaterialTheme.typography.titleSmall)
-                        play.players.forEach { player ->
-                            Column {
-                                PlayerRow(player, resolveDisplayName(player.name, players))
-                                val meta = buildList {
-                                    if (player.color.isNotBlank()) add(player.color)
-                                    if (player.rating.isNotBlank() && player.rating != "N/A") add("rated ${player.rating}")
-                                    if (player.isNew) add("first play")
-                                }
-                                if (meta.isNotEmpty()) {
-                                    Text(
-                                        meta.joinToString(" · "),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
-                                        modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+                    Column {
+                        // Premium gradient Players header
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .height(1.dp)
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(Color.Transparent, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
+                                        )
                                     )
+                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Group,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(11.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f)
+                                )
+                                Text(
+                                    "Players",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                                )
+                            }
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .height(1.dp)
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f), Color.Transparent)
+                                        )
+                                    )
+                            )
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        val sortedPlayers = remember(play.players) {
+                            play.players.sortedWith(
+                                compareByDescending<PlayerResult> {
+                                    it.score.trim().toFloatOrNull() ?: Float.NEGATIVE_INFINITY
+                                }.thenByDescending { it.isWinner }
+                            )
+                        }
+                        sortedPlayers.forEachIndexed { index, player ->
+                            val displayName = resolveDisplayName(player.name, players)
+                            val matchedPlayer = players.firstOrNull { p ->
+                                (listOf(p.displayName) + p.aliases).any {
+                                    it.lowercase().trim() == player.name.lowercase().trim()
                                 }
+                            }
+                            PlayDetailsPlayerRow(
+                                player = player,
+                                displayName = displayName,
+                                rank = index + 1,
+                                matchedPlayer = matchedPlayer,
+                                onPlayerTap = { viewingPlayer = it }
+                            )
+                            if (index < sortedPlayers.lastIndex) {
+                                PlayerRowDivider()
                             }
                         }
                     }
                 }
 
                 item {
-                    Spacer(Modifier.height(8.dp))
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        BoardFlowButton(
-                            onClick = onPlayAgain,
-                            enabled = !isDeleting,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.EmojiEvents, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Play again")
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            BoardFlowSecondaryButton(
-                                onClick = onShareQr,
-                                enabled = !isDeleting,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Share")
-                            }
-                            BoardFlowSecondaryButton(
-                                onClick = onEdit,
-                                enabled = !isDeleting,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Edit")
-                            }
-                            BoardFlowDestructiveButton(
-                                onClick = onDeletePlay,
-                                enabled = !isDeleting,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(BoardFlowIcons.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Delete")
-                            }
-                        }
-                    }
+                    Spacer(Modifier.height(20.dp))
+                    PlayDetailsActionsRow(
+                        onPlayAgain = onPlayAgain,
+                        onEdit = onEdit,
+                        onDeletePlay = onDeletePlay,
+                        enabled = !isDeleting
+                    )
                 }
             }
         }
+
+    viewingPlayer?.let { vp ->
+        val livePlayer = players.find { it.id == vp.id }
+        if (livePlayer != null) {
+            val stats = remember(historyPlays, livePlayer) { historyPlays.statsForPlayer(livePlayer) }
+            val rivalries = remember(historyPlays, livePlayer) { historyPlays.rivalriesForPlayer(livePlayer) }
+            PlayerDetailDialog(
+                player = livePlayer,
+                stats = stats,
+                rivalries = rivalries,
+                onDismiss = { viewingPlayer = null },
+                onEdit = { viewingPlayer = null }
+            )
+        } else {
+            viewingPlayer = null
+        }
     }
+}
+
+@Composable
+private fun PlayerRowDivider() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(Modifier.weight(1f).height(0.5.dp).background(Color.White.copy(alpha = 0.18f)))
+        Row(
+            modifier = Modifier.padding(horizontal = 7.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(3) {
+                Box(Modifier.size(2.5.dp).background(Color.White.copy(alpha = 0.28f), CircleShape))
+            }
+        }
+        Box(Modifier.weight(1f).height(0.5.dp).background(Color.White.copy(alpha = 0.18f)))
+    }
+}
+
+@Composable
+private fun PlayDetailsActionsRow(
+    onPlayAgain: () -> Unit,
+    onEdit: () -> Unit,
+    onDeletePlay: () -> Unit,
+    enabled: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        FilledTonalButton(
+            onClick = onEdit,
+            enabled = enabled,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.24f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
+            ),
+            modifier = Modifier.height(42.dp)
+        ) {
+            Icon(
+                Icons.Default.Edit,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
+            )
+            Spacer(Modifier.width(5.dp))
+            Text("Edit", style = MaterialTheme.typography.labelLarge)
+        }
+
+        FilledTonalButton(
+            onClick = onPlayAgain,
+            enabled = enabled,
+            contentPadding = PaddingValues(horizontal = 11.dp, vertical = 0.dp),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.24f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
+            ),
+            modifier = Modifier.height(42.dp)
+        ) {
+            Icon(
+                Icons.Default.EmojiEvents,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.92f)
+            )
+            Spacer(Modifier.width(5.dp))
+            Text("Play again", style = MaterialTheme.typography.labelLarge)
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(
+            onClick = onDeletePlay,
+            enabled = enabled,
+            modifier = Modifier
+                .size(40.dp)
+                .padding(end = 2.dp)
+        ) {
+            Icon(
+                BoardFlowIcons.Delete,
+                contentDescription = "Delete play",
+                modifier = Modifier.size(18.dp),
+                tint = if (enabled) MaterialTheme.colorScheme.error.copy(alpha = 0.92f)
+                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
+            )
+        }
+    }
+}
 
 @Composable
 private fun SharePlayQrDialog(
@@ -1725,6 +2034,14 @@ private fun resolveDisplayName(name: String, players: List<Player>): String {
     return players.firstOrNull { player ->
         (listOf(player.displayName) + player.aliases).any { it.lowercase().trim() == lower }
     }?.displayName ?: name
+}
+
+private fun Int.toOrdinal(): String = when {
+    this % 100 in 11..13 -> "${this}th"
+    this % 10 == 1 -> "${this}st"
+    this % 10 == 2 -> "${this}nd"
+    this % 10 == 3 -> "${this}rd"
+    else -> "${this}th"
 }
 
 private fun String.matchesSavedPlayer(players: List<Player>): Boolean {

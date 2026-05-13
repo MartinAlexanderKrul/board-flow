@@ -65,14 +65,14 @@ private fun InsightStripCard(
     modifier: Modifier = Modifier
 ) {
     val background = if (ambient) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
     } else {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f)
     }
     val border = if (ambient) {
-        BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.07f))
+        BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
     } else {
-        null
+        BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
     }
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -81,7 +81,7 @@ private fun InsightStripCard(
         border = border
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = if (ambient) 5.dp else 8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = if (ambient) 5.dp else 7.dp),
             horizontalArrangement = Arrangement.spacedBy(if (ambient) 6.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -90,13 +90,13 @@ private fun InsightStripCard(
                 contentDescription = null,
                 modifier = Modifier
                     .size(if (ambient) 12.dp else 14.dp)
-                    .alpha(if (ambient) 0.68f else 1f),
+                    .alpha(if (ambient) 0.62f else 0.82f),
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = if (ambient) 0.78f else 1f),
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = if (ambient) 0.74f else 0.9f),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )

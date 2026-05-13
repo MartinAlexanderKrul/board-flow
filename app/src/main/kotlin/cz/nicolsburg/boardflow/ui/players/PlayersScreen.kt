@@ -460,7 +460,7 @@ fun PlayersTabContent(
 }
 
 @Composable
-private fun PlayerDetailDialog(
+internal fun PlayerDetailDialog(
     player: Player,
     stats: PlayerStats,
     rivalries: List<RivalryStat>,
