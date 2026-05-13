@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.players
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -11,11 +12,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,6 +48,7 @@ internal data class PlayerStats(
     val wins: Int,
     val lastPlayedDate: String?,
     val favoriteGame: String?,
+    val favoriteGameId: Int? = null,
     val currentWinStreak: Int = 0
 )
 
@@ -56,10 +60,22 @@ internal fun List<LoggedPlay>.statsForPlayer(player: Player): PlayerStats {
     val myPlays = filter { play -> play.players.any { it.name.lowercase().trim() in names } }
     val wins = myPlays.count { play -> play.players.any { it.name.lowercase().trim() in names && it.isWinner } }
     val lastDate = myPlays.maxOfOrNull { it.date }?.let { formatPlayDate(it) }
-    val favGame = myPlays.groupingBy { it.gameName }.eachCount().maxByOrNull { it.value }?.key
+    val favEntry = myPlays
+        .groupBy { it.gameId }
+        .mapValues { (_, plays) ->
+            val name = plays.maxByOrNull { it.date }?.gameName ?: plays.first().gameName
+            name to plays.sumOf { it.quantity.coerceAtLeast(1) }
+        }
+        .maxByOrNull { it.value.second }
     val streak = playerCurrentWinStreak(names)
-    return PlayerStats(totalPlays = myPlays.size, wins = wins, lastPlayedDate = lastDate,
-        favoriteGame = favGame, currentWinStreak = streak)
+    return PlayerStats(
+        totalPlays = myPlays.size,
+        wins = wins,
+        lastPlayedDate = lastDate,
+        favoriteGame = favEntry?.value?.first,
+        favoriteGameId = favEntry?.key,
+        currentWinStreak = streak
+    )
 }
 
 private fun List<LoggedPlay>.lastPlayedDateForPlayer(player: Player): LocalDate? {
@@ -397,9 +413,12 @@ fun PlayersTabContent(
     sourcePlays: List<LoggedPlay>,
     onEditPlayer: (Player) -> Unit,
     listState: LazyListState = rememberLazyListState(),
+    onViewPlayerPlays: (playerName: String) -> Unit = {},
+    onViewPlayerGame: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var viewingPlayer by remember { mutableStateOf<Player?>(null) }
+    var viewingRival by remember { mutableStateOf<Player?>(null) }
     val sortedPlayers = remember(players, sourcePlays) { players.sortedByRecentActivity(sourcePlays) }
 
     viewingPlayer?.let { vp ->
@@ -411,10 +430,33 @@ fun PlayersTabContent(
                 player = livePlayer,
                 stats = stats,
                 rivalries = rivalries,
+                allPlayers = players,
                 onDismiss = { viewingPlayer = null },
-                onEdit = { onEditPlayer(livePlayer); viewingPlayer = null }
+                onEdit = { onEditPlayer(livePlayer); viewingPlayer = null },
+                onViewPlays = { viewingPlayer = null; onViewPlayerPlays(livePlayer.displayName) },
+                onViewGame = { gameId, gameName -> viewingPlayer = null; onViewPlayerGame(gameId, gameName) },
+                onViewRival = { rival -> viewingRival = rival }
             )
         } else { viewingPlayer = null }
+    }
+
+    viewingRival?.let { rv ->
+        val liveRival = players.find { it.id == rv.id }
+        if (liveRival != null) {
+            val stats = remember(sourcePlays, liveRival) { sourcePlays.statsForPlayer(liveRival) }
+            val rivalries = remember(sourcePlays, liveRival) { sourcePlays.rivalriesForPlayer(liveRival) }
+            PlayerDetailDialog(
+                player = liveRival,
+                stats = stats,
+                rivalries = rivalries,
+                allPlayers = players,
+                onDismiss = { viewingRival = null },
+                onEdit = { onEditPlayer(liveRival); viewingRival = null },
+                onViewPlays = { viewingRival = null; onViewPlayerPlays(liveRival.displayName) },
+                onViewGame = { gameId, gameName -> viewingRival = null; onViewPlayerGame(gameId, gameName) },
+                onViewRival = { rival -> viewingRival = rival }
+            )
+        } else { viewingRival = null }
     }
 
     if (players.isEmpty()) {
@@ -464,17 +506,39 @@ internal fun PlayerDetailDialog(
     player: Player,
     stats: PlayerStats,
     rivalries: List<RivalryStat>,
+    allPlayers: List<Player> = emptyList(),
     onDismiss: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onViewPlays: (() -> Unit)? = null,
+    onViewGame: ((gameId: Int, gameName: String) -> Unit)? = null,
+    onViewRival: ((Player) -> Unit)? = null
 ) {
     PlayerDialog(
         onDismissRequest = onDismiss,
         title = player.displayName,
         actions = {
-            BoardFlowSecondaryButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Edit Player")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (onViewPlays != null) {
+                    BoardFlowSecondaryButton(
+                        onClick = onViewPlays,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(Modifier.width(5.dp))
+                        Text("All plays")
+                    }
+                }
+                BoardFlowSecondaryButton(
+                    onClick = onEdit,
+                    modifier = if (onViewPlays != null) Modifier.weight(1f) else Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Edit")
+                }
             }
         }
     ) {
@@ -501,7 +565,8 @@ internal fun PlayerDetailDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            PlayerStatCell("Plays", "${stats.totalPlays}", Modifier.weight(1f))
+                            PlayerStatCell("Plays", "${stats.totalPlays}", Modifier.weight(1f),
+                                onClick = onViewPlays)
                             PlayerStatCell("Wins", "${stats.wins}", Modifier.weight(1f))
                             PlayerStatCell("Win rate", "${stats.winRate}%", Modifier.weight(1f))
                         }
@@ -510,9 +575,15 @@ internal fun PlayerDetailDialog(
                                 valueColor = MaterialTheme.colorScheme.primary)
                         }
                         stats.lastPlayedDate?.let { DetailRow("Last played", it) }
-                        stats.favoriteGame?.let {
-                            DetailRow("Most played", it,
-                                valueColor = MaterialTheme.colorScheme.primary)
+                        stats.favoriteGame?.let { gameName ->
+                            val gameId = stats.favoriteGameId
+                            DetailRow(
+                                "Most played", gameName,
+                                valueColor = MaterialTheme.colorScheme.primary,
+                                onClick = if (onViewGame != null && gameId != null) {
+                                    { onViewGame(gameId, gameName) }
+                                } else null
+                            )
                         }
                     }
                 }
@@ -531,7 +602,17 @@ internal fun PlayerDetailDialog(
                         Text("Rivalries", style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold)
                         rivalries.forEach { rivalry ->
-                            RivalryRow(rivalry = rivalry)
+                            val rivalPlayer = allPlayers.firstOrNull { p ->
+                                (listOf(p.displayName) + p.aliases).any {
+                                    it.equals(rivalry.opponentName, ignoreCase = true)
+                                }
+                            }
+                            RivalryRow(
+                                rivalry = rivalry,
+                                onClick = if (onViewRival != null && rivalPlayer != null) {
+                                    { onViewRival(rivalPlayer) }
+                                } else null
+                            )
                         }
                     }
                 }
@@ -541,11 +622,25 @@ internal fun PlayerDetailDialog(
 }
 
 @Composable
-private fun PlayerStatCell(label: String, value: String, modifier: Modifier = Modifier) {
+private fun PlayerStatCell(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
+    val shape = RoundedCornerShape(8.dp)
     Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        modifier = modifier
+            .clip(shape)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        shape = shape,
+        color = if (onClick != null)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+        else
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = if (onClick != null)
+            androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f))
+        else null
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
@@ -561,29 +656,51 @@ private fun PlayerStatCell(label: String, value: String, modifier: Modifier = Mo
 }
 
 @Composable
-private fun DetailRow(label: String, value: String, valueColor: Color = Color.Unspecified) {
+private fun DetailRow(
+    label: String,
+    value: String,
+    valueColor: Color = Color.Unspecified,
+    onClick: (() -> Unit)? = null
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(vertical = if (onClick != null) 2.dp else 0.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.width(88.dp))
-        Text(value, style = MaterialTheme.typography.bodySmall,
+        Text(
+            value,
+            style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1f),
-            color = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else valueColor)
+            color = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else valueColor
+        )
+        if (onClick != null) {
+            Icon(
+                Icons.Default.History,
+                contentDescription = null,
+                modifier = Modifier.size(12.dp),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+            )
+        }
     }
 }
 
 @Composable
-private fun RivalryRow(rivalry: RivalryStat) {
+private fun RivalryRow(rivalry: RivalryStat, onClick: (() -> Unit)? = null) {
     val initial = rivalry.opponentName.take(1).uppercase()
     val winFraction = if (rivalry.playsTogetherCount > 0)
         rivalry.myWins.toFloat() / rivalry.playsTogetherCount else 0f
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(vertical = if (onClick != null) 2.dp else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {

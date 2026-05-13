@@ -81,7 +81,9 @@ private data class StatsInsight(
     val icon: ImageVector,
     val value: String,
     val label: String,
-    val detail: String? = null
+    val detail: String? = null,
+    val gameFilter: Pair<Int, String>? = null,
+    val playerFilter: String? = null
 )
 
 // ── Pure computations ─────────────────────────────────────────────────────────
@@ -334,16 +336,21 @@ private fun buildInsights(
             add(StatsInsight(Icons.Default.Schedule, formatDuration(avg), "Avg duration"))
         }
         longestSession?.let { (name, minutes) ->
-            add(StatsInsight(Icons.Default.EmojiEvents, formatDuration(minutes), "Longest session", name))
+            val gameId = plays.firstOrNull { it.gameName == name }?.gameId
+            add(StatsInsight(Icons.Default.EmojiEvents, formatDuration(minutes), "Longest session", name,
+                gameFilter = gameId?.let { it to name }))
         }
         topGames.firstOrNull()?.let { game ->
-            add(StatsInsight(Icons.Default.Star, "${game.plays}", "Most played", game.name))
+            add(StatsInsight(Icons.Default.Star, "${game.plays}", "Most played", game.name,
+                gameFilter = game.gameId to game.name))
         }
         topPlayers.firstOrNull()?.let { player ->
-            add(StatsInsight(Icons.Default.Group, "${player.plays}", "Most active", player.displayName))
+            add(StatsInsight(Icons.Default.Group, "${player.plays}", "Most active", player.displayName,
+                playerFilter = player.displayName))
         }
         hotPlayerStreak?.let { (name, streak) ->
-            add(StatsInsight(Icons.Default.LocalFireDepartment, "${streak}W", "Hot streak", name))
+            add(StatsInsight(Icons.Default.LocalFireDepartment, "${streak}W", "Hot streak", name,
+                playerFilter = name))
         }
         busiestDay?.let { (day, count) ->
             add(StatsInsight(Icons.Default.History, day, "Busiest day", "$count ${if (count == 1) "play" else "plays"}"))
@@ -367,7 +374,9 @@ private fun buildInsights(
             add(StatsInsight(Icons.Default.EmojiEvents, "$it%", "Complete plays"))
         }
         mostThisMonth?.let { (name, count) ->
-            add(StatsInsight(Icons.Default.Star, "${count}x", "This month", name))
+            val gameId = plays.firstOrNull { it.gameName == name }?.gameId
+            add(StatsInsight(Icons.Default.Star, "${count}x", "This month", name,
+                gameFilter = gameId?.let { it to name }))
         }
     }
 }
@@ -548,7 +557,9 @@ internal fun StatsContent(
         item {
             InsightsSection(
                 insights = insights,
-                rangeLabel = timeRange.subtitle
+                rangeLabel = timeRange.subtitle,
+                onGameTapped = onGameTapped,
+                onPlayerTapped = onPlayerTapped
             )
         }
 
@@ -1019,7 +1030,9 @@ private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int, onClick: 
 @Composable
 private fun InsightsSection(
     insights: List<StatsInsight>,
-    rangeLabel: String = "All time"
+    rangeLabel: String = "All time",
+    onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
+    onPlayerTapped: (String) -> Unit = {}
 ) {
     SectionCard {
         StatsCardHeader(title = "Insights", subtitle = rangeLabel)
@@ -1031,11 +1044,21 @@ private fun InsightsSection(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     rowInsights.forEach { insight ->
+                        val onClick: (() -> Unit)? = when {
+                            insight.gameFilter != null -> {
+                                { onGameTapped(insight.gameFilter.first, insight.gameFilter.second) }
+                            }
+                            insight.playerFilter != null -> {
+                                { onPlayerTapped(insight.playerFilter) }
+                            }
+                            else -> null
+                        }
                         InsightChip(
                             icon = insight.icon,
                             value = insight.value,
                             label = insight.label,
                             detail = insight.detail,
+                            onClick = onClick,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -1054,12 +1077,17 @@ private fun InsightChip(
     value: String,
     label: String,
     detail: String? = null,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val border = if (onClick != null)
+        androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f))
+    else null
     Surface(
-        modifier = modifier,
+        modifier = modifier.then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        border = border
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -1069,7 +1097,7 @@ private fun InsightChip(
                 icon,
                 contentDescription = null,
                 modifier = Modifier.size(15.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = if (onClick != null) 0.9f else 0.7f)
             )
             Spacer(Modifier.height(2.dp))
             Text(

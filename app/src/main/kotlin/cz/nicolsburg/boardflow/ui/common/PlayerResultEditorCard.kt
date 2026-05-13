@@ -67,15 +67,31 @@ fun PlayerResultEditorCard(
     collapsed: Boolean = false,
     onToggleCollapsed: (() -> Unit)? = null,
     requestScoreFocus: Boolean = false,
-    onFocusDone: () -> Unit = {}
+    onFocusDone: () -> Unit = {},
+    requestNameFocus: Boolean = false,
+    onNameFocusDone: () -> Unit = {}
 ) {
     val scoreFocusRequester = remember { FocusRequester() }
+    val nameFocusRequester = remember { FocusRequester() }
     val exactMatch = remember(rosterPlayers, player.name) { rosterPlayers.exactPlayerMatch(player.name) }
     val suggestedMatches = remember(rosterPlayers, player.name) {
         rosterPlayers.playerMatchSuggestions(player.name).filter { it.id != exactMatch?.id }
     }
-    val winnerTint = MaterialTheme.colorScheme.primary
-    val winnerContainer = winnerTint.copy(alpha = 0.12f)
+
+    LaunchedEffect(requestNameFocus) {
+        if (requestNameFocus) {
+            delay(100)
+            runCatching { nameFocusRequester.requestFocus() }
+            onNameFocusDone()
+        }
+    }
+
+    LaunchedEffect(exactMatch?.id) {
+        val match = exactMatch ?: return@LaunchedEffect
+        if (player.name.trim() != match.displayName) {
+            onUpdate(player.copy(name = match.displayName))
+        }
+    }
 
     LaunchedEffect(requestScoreFocus) {
         if (requestScoreFocus) {
@@ -93,13 +109,8 @@ fun PlayerResultEditorCard(
                 else Modifier
             ),
         shape = PlayerCardShape,
-        color = if (player.isWinner) winnerTint.copy(alpha = 0.06f)
-        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-        border = BorderStroke(
-            1.dp,
-            if (player.isWinner) winnerTint.copy(alpha = 0.45f)
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
-        )
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 15.dp, vertical = 14.dp),
@@ -111,23 +122,51 @@ fun PlayerResultEditorCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = player.name.ifBlank { "Unnamed player" },
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (onToggleCollapsed != null) {
-                        Icon(
-                            Icons.Default.ExpandMore,
-                            contentDescription = "Expand player",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                            .size(18.dp)
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (player.isWinner) {
+                            Icon(
+                                Icons.Default.EmojiEvents,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(13.dp)
+                            )
+                        }
+                        Text(
+                            text = player.name.ifBlank { "Player" },
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = if (player.isWinner) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        if (player.score.isNotBlank()) {
+                            Text(
+                                player.score,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                ),
+                                color = if (player.isWinner) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        if (onToggleCollapsed != null) {
+                            Icon(
+                                Icons.Default.ExpandMore,
+                                contentDescription = "Expand player",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             } else {
@@ -136,12 +175,20 @@ fun PlayerResultEditorCard(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.Top
                 ) {
-                    CompactTonalTextField(
-                        value = player.name,
-                        onValueChange = { onUpdate(player.copy(name = it)) },
-                        label = "Name",
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SmallFieldLabel("Name")
+                        CompactTonalTextField(
+                            value = player.name,
+                            onValueChange = { onUpdate(player.copy(name = it)) },
+                            label = "Name",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(nameFocusRequester)
+                        )
+                    }
 
                     if (onToggleCollapsed != null) {
                         BoardFlowIconButton(
@@ -172,10 +219,6 @@ fun PlayerResultEditorCard(
                             modifier = Modifier.size(18.dp)
                         )
                     }
-                }
-
-                exactMatch?.let { match ->
-                    MatchedPlayerChip(name = match.displayName)
                 }
 
                 if (suggestedMatches.isNotEmpty()) {

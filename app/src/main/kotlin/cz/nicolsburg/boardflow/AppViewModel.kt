@@ -60,6 +60,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _recentGames = MutableStateFlow<List<BggGame>>(emptyList())
     private val _allGames = MutableStateFlow<List<BggGame>>(emptyList())
     val collection: StateFlow<List<BggGame>> = _allGames.asStateFlow()
+    private val _collectionItems = MutableStateFlow<List<GameItem>>(emptyList())
+    val collectionItems: StateFlow<List<GameItem>> = _collectionItems.asStateFlow()
     private val _searchResults = MutableStateFlow<List<BggGame>>(emptyList())
     val searchResults: StateFlow<List<BggGame>> = _searchResults.asStateFlow()
     private val _searchLoading = MutableStateFlow(false)
@@ -104,6 +106,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun updateFromCollection(games: List<GameItem>) {
+        _collectionItems.value = games
         if (games.isEmpty()) {
             _allGames.value = emptyList()
             _searchResults.value = _recentGames.value

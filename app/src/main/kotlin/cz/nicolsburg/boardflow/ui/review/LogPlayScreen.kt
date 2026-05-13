@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -107,14 +108,12 @@ fun LogPlayScreen(
     var lastPostSaveInfo by remember { mutableStateOf<PostSaveInfo?>(null) }
     if (postSaveInfo != null) lastPostSaveInfo = postSaveInfo
 
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = runCatching {
-            LocalDate.parse(LocalDate.now().toString())
-                .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        }.getOrDefault(System.currentTimeMillis())
-    )
-
     if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = runCatching {
+                LocalDate.parse(date).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            }.getOrDefault(System.currentTimeMillis())
+        )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -212,11 +211,15 @@ fun LogPlayScreen(
 
     val online = viewModel.isOnline()
     val totalGames = 1 + additionalGames.size
+    var nameFieldFocusIndex by remember { mutableStateOf(-1) }
+
     val addEditablePlayer: () -> Unit = {
+        val nextIndex = players.size
         collapsedPlayers = collapsedPlayers + false
         previousCompletion = previousCompletion + false
         playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
         viewModel.addPlayer()
+        nameFieldFocusIndex = nextIndex
     }
 
     // Compute frequent players in composable scope so remember is valid.
@@ -357,6 +360,7 @@ fun LogPlayScreen(
                         incomplete = incomplete,
                         nowInStats = nowInStats,
                         onDateClick = { showDatePicker = true },
+                        onDateChange = { date = it },
                         onDurationChange = { duration = it },
                         onLocationChange = { location = it },
                         onNotesChange = { comments = it },
@@ -371,6 +375,7 @@ fun LogPlayScreen(
 
                 item {
                     PlayersHeader(
+                        playerCount = players.size,
                         hasAiOutput = extractedPlay != null,
                         onToggleAiOutput = { showAiOutput = !showAiOutput },
                         onAddPlayer = addEditablePlayer
@@ -425,8 +430,14 @@ fun LogPlayScreen(
                             collapsedPlayers = collapsedPlayers.toMutableList().also { it[index] = !it[index] }
                         },
                         requestScoreFocus = index == 0 && focusFirstScore,
-                        onFocusDone = { focusFirstScore = false }
+                        onFocusDone = { focusFirstScore = false },
+                        requestNameFocus = index == nameFieldFocusIndex,
+                        onNameFocusDone = { nameFieldFocusIndex = -1 }
                     )
+                }
+
+                item {
+                    AddPlayerRow(onClick = addEditablePlayer)
                 }
             }
         }
@@ -490,6 +501,7 @@ private fun SessionDetailsCard(
     incomplete: Boolean,
     nowInStats: Boolean,
     onDateClick: () -> Unit,
+    onDateChange: (String) -> Unit,
     onDurationChange: (String) -> Unit,
     onLocationChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
@@ -513,52 +525,71 @@ private fun SessionDetailsCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             CompactGameHeader(title = title, gameName = gameName)
-            Text(
-                "Session",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Bottom
             ) {
-                CompactTextField(
-                    value = date,
-                    onValueChange = {},
-                    label = "Date",
-                    readOnly = true,
+                Column(
                     modifier = Modifier.weight(1.3f),
-                    trailingIcon = {
-                        BoardFlowIconButton(onClick = onDateClick, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date", modifier = Modifier.size(18.dp))
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    SessionFieldLabel("Date")
+                    CompactTextField(
+                        value = date,
+                        onValueChange = onDateChange,
+                        label = "Date",
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            BoardFlowIconButton(onClick = onDateClick, modifier = Modifier.size(36.dp)) {
+                                Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date", modifier = Modifier.size(18.dp))
+                            }
                         }
-                    }
-                )
-                CompactTextField(
-                    value = duration,
-                    onValueChange = onDurationChange,
-                    label = "Duration",
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.weight(0.7f)
-                )
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(0.7f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    SessionFieldLabel("Duration (min)")
+                    CompactTextField(
+                        value = duration,
+                        onValueChange = onDurationChange,
+                        label = "Duration",
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
-            CompactTextField(
-                value = location,
-                onValueChange = onLocationChange,
-                label = "Location",
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            if (notesExpanded) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                SessionFieldLabel("Location")
                 CompactTextField(
-                    value = notes,
-                    onValueChange = onNotesChange,
-                    label = "Notes",
-                    singleLine = false,
-                    minLines = 3,
-                    maxLines = 4,
+                    value = location,
+                    onValueChange = onLocationChange,
+                    label = "Location",
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            if (notesExpanded) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    SessionFieldLabel("Notes")
+                    CompactTextField(
+                        value = notes,
+                        onValueChange = onNotesChange,
+                        label = "Notes",
+                        singleLine = false,
+                        minLines = 3,
+                        maxLines = 4,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             } else {
                 TextButton(
                     onClick = onNotesExpand,
@@ -629,6 +660,15 @@ private fun SessionDetailsCard(
 }
 
 @Composable
+private fun SessionFieldLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+    )
+}
+
+@Composable
 private fun CompactGameHeader(title: String, gameName: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -679,8 +719,8 @@ private fun CompactTextField(
         placeholder = {
             Text(
                 label,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
             )
         },
         trailingIcon = trailingIcon,
@@ -690,8 +730,8 @@ private fun CompactTextField(
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
             focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
-            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
         ),
         modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
     )
@@ -700,6 +740,7 @@ private fun CompactTextField(
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun PlayersHeader(
+    playerCount: Int,
     hasAiOutput: Boolean,
     onToggleAiOutput: () -> Unit,
     onAddPlayer: () -> Unit
@@ -730,17 +771,13 @@ private fun PlayersHeader(
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                "Players",
+                if (playerCount > 0) "Players ($playerCount)" else "Players",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
         }
-        BoardFlowSecondaryButton(
-            onClick = onAddPlayer,
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-            modifier = Modifier.height(40.dp)
-        ) {
-            Text("+")
+        BoardFlowIconButton(onClick = onAddPlayer) {
+            Icon(Icons.Default.Add, contentDescription = "Add player", modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -754,7 +791,9 @@ private fun PlayerEditCard(
     collapsed: Boolean = false,
     onToggleCollapsed: (() -> Unit)? = null,
     requestScoreFocus: Boolean = false,
-    onFocusDone: () -> Unit = {}
+    onFocusDone: () -> Unit = {},
+    requestNameFocus: Boolean = false,
+    onNameFocusDone: () -> Unit = {}
 ) {
     PlayerResultEditorCard(
         player = player,
@@ -764,12 +803,49 @@ private fun PlayerEditCard(
         collapsed = collapsed,
         onToggleCollapsed = onToggleCollapsed,
         requestScoreFocus = requestScoreFocus,
-        onFocusDone = onFocusDone
+        onFocusDone = onFocusDone,
+        requestNameFocus = requestNameFocus,
+        onNameFocusDone = onNameFocusDone
     )
 }
 
 private fun cz.nicolsburg.boardflow.model.PlayerResult.isReadyToCollapse(): Boolean =
-    name.isNotBlank() && score.isNotBlank() && color.isNotBlank() && rating.isNotBlank()
+    name.isNotBlank() && score.isNotBlank()
+
+@Composable
+private fun AddPlayerRow(onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.10f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.10f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = null,
+                modifier = Modifier.size(15.dp),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "Add player",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+            )
+        }
+    }
+}
 
 @Composable
 private fun AiOutputCard(rawText: String) {
