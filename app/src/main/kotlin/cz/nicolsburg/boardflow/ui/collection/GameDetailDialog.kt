@@ -936,6 +936,7 @@ private fun DetailCell(
 
 @Composable
 private fun SleevesSection(game: GameItem) {
+    val context = LocalContext.current
     val grouped = remember(game) {
         game.sleeveCardSets
             .filter { it.size != null || it.count != null }
@@ -976,6 +977,14 @@ private fun SleevesSection(game: GameItem) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .then(
+                            if (preferred != null) Modifier.clickable {
+                                val query = Uri.encode("${preferred.first} ${preferred.second}")
+                                context.startActivity(
+                                    Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$query"))
+                                )
+                            } else Modifier
+                        )
                         .padding(vertical = 5.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically

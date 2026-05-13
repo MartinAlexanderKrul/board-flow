@@ -2,6 +2,7 @@ package cz.nicolsburg.boardflow.ui.collection
 
 import androidx.compose.animation.AnimatedVisibility
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -165,9 +166,14 @@ internal fun SleevesContent(
     var showAllGames by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val onShare: () -> Unit = remember(allGames) {
+    val onShare: () -> Unit = remember(allGames, excludedGameIds, showAllGames) {
         {
-            val csv = buildSleevesCsv(allGames)
+            val filtered = allGames.filter { game ->
+                game.isOwned &&
+                    (showAllGames || sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE) &&
+                    game.objectId !in excludedGameIds
+            }
+            val csv = buildSleevesCsv(filtered)
             val intent = Intent.createChooser(
                 Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
@@ -439,8 +445,14 @@ private fun SleeveSummaryHeader(
     }
 }
 
+private fun sleeveSearchIntent(brand: String, product: String): Intent {
+    val query = Uri.encode("$brand $product")
+    return Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$query"))
+}
+
 @Composable
 private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
+    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
 
     SectionCard(accented = false, onClick = { expanded = !expanded }) {
@@ -559,7 +571,9 @@ private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
                             )
                             entry.manufacturerOptions.forEach { (brand, product) ->
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { context.startActivity(sleeveSearchIntent(brand, product)) },
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
