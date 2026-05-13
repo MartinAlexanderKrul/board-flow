@@ -14,13 +14,22 @@ BoardFlow currently supports all of the following:
 - offline-first local play saving
 - manual reposting of unposted local plays from History
 - edit and delete play flows
-- AI score extraction from images with Gemini
-- saved player roster with aliases and optional BGG usernames
+- play quantity, incomplete flag, and nowInStats toggle
+- AI score extraction from images with Gemini (with model fallback/cycling)
+- saved player roster with aliases, optional BGG usernames, and Levenshtein fuzzy matching
 - collection browsing across owned / wishlist / sleeves
+- per-game sleeve exclusion (toggle individual games out of sleeve display)
+- configurable sleeve manufacturer priority (Appearance settings)
 - game detail drill-ins with history and player links
+- expansion / sibling title detection and display in log flow
+- record moment detection after logging (first win, new high score, win streak)
 - history tabs for plays, stats, and players
+- signature-based deduplication of local and BGG plays
+- QR code play sharing and import
 - Google Sheets / Drive sync
+- CSV import/merge into a sheet
 - spreadsheet creation / connection
+- Drive folder and QR code creation
 - backup export / import
 - session continuation / play-again flows
 
@@ -35,7 +44,7 @@ If you are new to the repo, do not start with a whole-codebase read. Start here:
 - `app/src/main/kotlin/cz/nicolsburg/boardflow/ui/app/AppShell.kt`
   - top-level navigation, scaffold, cross-screen routing
 - `app/src/main/kotlin/cz/nicolsburg/boardflow/AppViewModel.kt`
-  - search, log play, history, roster, local play persistence, outbox posting, import/export
+  - search, log play, history, roster, local play persistence, outbox posting, import/export, record moments
 - `app/src/main/kotlin/cz/nicolsburg/boardflow/SyncViewModel.kt`
   - Google account/sheet state, collection refresh, sleeve refresh, sync log, canonical collection loading
 - `app/src/main/kotlin/cz/nicolsburg/boardflow/data/CanonicalCollectionStore.kt`
@@ -57,9 +66,10 @@ Prefer targeted inspection of those files over broad exploration unless the issu
 - `ui/app/AppShell.kt`
   - app scaffold
   - header
-  - bottom nav
+  - bottom nav (5 tabs: NewPlay, History, Collection, Players, Settings)
   - screen routing
   - cross-screen deep-link style callbacks between Collection, History, Players, and Log Play
+  - consumes `pendingHistoryNavigation` requests from `AppViewModel`
 - `auth/GoogleAuthManager.kt`
   - Google account selection / sign-in orchestration
 - `core/di/AppContainer.kt`
@@ -69,22 +79,44 @@ Prefer targeted inspection of those files over broad exploration unless the issu
 - `AppViewModel.kt`
   - game search and recent games
   - session continuation / play-again setup
-  - AI extraction handoff into review
-  - editable log state integration
-  - roster and player alias management
-  - local play history and cached BGG history merge behavior
-  - play post/edit/delete flows
-  - local outbox posting for unposted plays
+  - AI extraction handoff into review; Gemini model cycling
+  - editable log state integration (shared between log and edit flows)
+  - roster and player alias management; fuzzy matching with Levenshtein distance
+  - local play history and cached BGG history merge and deduplication (signature-based)
+  - play post/edit/delete flows (local and BGG)
+  - local outbox posting for unposted plays (per-play and bulk)
+  - record moment detection (first win, new high score, win streak)
+  - expansion / sibling title detection (`GameRelations`)
+  - cross-tab navigation requests (`pendingHistoryNavigation`)
   - import/export and backup restore
+  - app theme and sleeve manufacturer preference state (`appTheme`, `sleevePreferredManufacturer`)
 - `SyncViewModel.kt`
   - Google auth state
   - spreadsheet connection state
-  - collection refresh
-  - sleeve refresh
+  - collection refresh (BGG + Sheets + sleeves, with play count backfill from history)
+  - sleeve refresh and per-game exclusion state
+  - CSV import/merge
+  - Drive folder and QR code creation
   - full Sheets sync
   - sync log / progress state
+  - silent startup collection load
 - `data/`
-  - API clients, parsers, storage, backup serialization, Room adapters, persistence helpers
+  - `BggApiClient.kt` -- low-level BGG HTTP/XML client and sleeve scraping
+  - `BggRepository.kt` -- BGG feature layer (collection, search, play CRUD, history)
+  - `GoogleApiClient.kt` -- Sheets / Drive API
+  - `GeminiRepository.kt` -- AI extraction, model discovery, fallback cycling
+  - `CanonicalCollectionStore.kt` -- Room-backed live source of truth
+  - `BackupSerializer.kt` -- backup JSON import/export
+  - `SecurePreferences.kt` -- encrypted preferences (credentials, settings, roster, session)
+  - `QrGenerator.kt` -- QR code PNG generation and gallery save
+  - `PlayShareSerializer.kt` -- play encode/decode for QR sharing
+  - `BggImageCache.kt` -- thumbnail preload after sync
+  - `BggCache.kt` -- file-based BGG collection cache
+  - `BggPlaySync.kt` -- top-level BGG play cache refresh function
+  - `CsvParser.kt` -- CSV row parsing for sync
+- `model/`
+  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, ...)
+  - `SleeveDatabase.kt` -- `SleeveManufacturer` enum, `SleeveEntry`, `SleeveDatabase` object
 - `ui/`
   - screens and shared Compose UI helpers
 
@@ -96,7 +128,7 @@ The live runtime source of truth is Room via `CanonicalCollectionStore`.
 
 It stores:
 
-- canonical merged collection snapshot
+- canonical merged collection snapshot (`GameItem` records)
 - local logged plays
 - cached BGG play history
 
@@ -104,28 +136,35 @@ It stores:
 
 `SecurePreferences` stores:
 
-- credentials and tokens
-- app theme and settings
-- player roster
-- recent games
-- sync-related preferences
-- backup compatibility helpers
+- BGG credentials (username, password)
+- Gemini key, model endpoint, available models cache
+- app theme (`app_theme`, enum name string)
+- sleeve priority manufacturer (`sleeve_preferred_manufacturer`, `SleeveManufacturer` enum name)
+- player roster (display names, aliases, BGG usernames)
+- recent games (last 50)
+- sync preferences (spreadsheet ID, sheet tab name, Google email)
+- session context (active game, players, location, timestamp)
+- sleeve exclusion list (game IDs)
+- per-game insight key cache
 
 Do not move live collection/history state back into large JSON blobs in preferences.
 
 ### Backup Format
 
-`BackupSerializer` owns import/export JSON.
+`BackupSerializer` owns import/export JSON (format version 2).
 
 Backups can contain:
 
-- collection snapshot
+- collection snapshot (full `GameItem` array under `collectionSnapshots.__canonical_collection__`)
 - local logged plays
 - cached BGG plays
 - player roster
-- sleeves exclusions
-- settings
-- optionally sensitive data
+- recent games
+- sleeve exclusions
+- settings (theme, spreadsheet config, sleeve manufacturer preference)
+- optionally sensitive data (BGG password, Gemini API key)
+
+Import is selective: only keys present in the backup JSON are applied; missing keys do not overwrite existing values.
 
 ## Key Product Flows To Understand
 
@@ -136,6 +175,7 @@ Backups can contain:
 - selected games move into `LogPlayScreen`
 - session context may prefill players/location
 - AI extraction may prefill players/scores
+- expansion / sibling titles detected from name patterns and shown alongside base game
 
 ### Log Play -> Local / BGG
 
@@ -143,6 +183,15 @@ Backups can contain:
 - if offline or posting is unavailable, the play can still be saved locally
 - extra related games may post separately; failures there can leave local follow-up plays
 - local unposted plays are intentionally user-controlled from History rather than silently auto-posted on startup
+- after posting, `AppViewModel` detects record moments (first win, new high score, win streak) by comparing against play history snapshot
+
+### Play Deduplication (Merge Logic)
+
+- `AppViewModel.historyPlays` is the merged, deduplicated derived flow
+- two dedup strategies run in sequence:
+  - **signature key**: full play hash (game, date, players with scores/colors, location, comments)
+  - **history correlation key**: lighter hash (game, date, players, colors) used when score info may differ
+- local plays that match a fetched BGG play are marked as posted; truly orphaned local plays that were deleted on BGG are pruned
 
 ### History
 
@@ -164,6 +213,7 @@ Backups can contain:
   - `Wishlist`
   - `Sleeves`
 - game detail dialog is a major cross-link hub into History and Players
+- sleeve display respects per-game exclusion toggles
 
 ### Sync
 
@@ -171,9 +221,11 @@ Backups can contain:
   - BGG readiness
   - Google readiness
   - sheet connection
-  - refresh collection
+  - refresh collection (BGG + Sheets + sleeves; backfills play counts from cached history)
   - refresh sleeve sizes
   - sync to Sheets
+  - CSV import/merge
+  - create Drive folders / QR codes (with optional gallery save)
   - create/connect spreadsheet
   - review sync log
 
@@ -181,10 +233,27 @@ Backups can contain:
 
 - manages BGG credentials
 - manages Google sheet connection access points
-- manages Gemini configuration
-- manages theme
+- manages Gemini configuration (key, model endpoint, model discovery)
+- manages theme (Light, Dark)
+- manages sleeve manufacturer priority (`SleeveManufacturer`; persisted in `SecurePreferences`, exposed via `AppViewModel.sleevePreferredManufacturer`; used in `GameDetailDialog` via `SleeveEntry.preferredFor()`)
 - manages import/export
 - can clear cached collection
+
+### QR Play Sharing
+
+- `PlayShareSerializer` encodes a `LoggedPlay` for QR
+- `QrGenerator` produces a QR PNG and can save to the device gallery
+- `QrPlayImportScreen` lets users scan/paste a QR play and confirm import
+- import lands in `AppViewModel.pendingImportedPlay`; user confirms before saving locally
+
+### Record Moments
+
+- `AppViewModel.captureHistorySnapshot()` snapshots play history before posting
+- `AppViewModel.detectRecord()` compares the new play against the snapshot:
+  - **FirstWin**: first-ever win for this game by this player
+  - **NewHighScore**: score exceeds previous best for this player in this game
+  - **WinStreak**: player has won 2 or more consecutive plays of this game
+- result surfaced in `LogPlayScreen` after a successful post
 
 ## What Usually Matters
 
@@ -198,6 +267,7 @@ Backups can contain:
 - local unposted plays should remain visible and user-controlled
 - BGG XML search outside the loaded collection requires the XML API token and should fail quietly to an empty result state if missing/rejected
 - player matching should stay explicit unless a match is truly exact
+- sleeve exclusions are per-game and stored in `SecurePreferences`; respect them in both display and export
 
 ## Expectations For Changes
 
@@ -214,7 +284,7 @@ Backups can contain:
 ## BGG Flow Notes
 
 - both authenticated and unauthenticated collection flows exist
-- play posting/edit/delete is authenticated
+- play posting/edit/delete is authenticated; uses cookie-based session persistence in `BggApiClient`
 - retry and error handling exist in the repository layer
 - BGG XML search outside the local collection requires `BGG_XML_API_TOKEN`
 - if BGG XML token-based search is unavailable, fail quietly to empty results instead of noisy user-facing errors where possible
@@ -226,6 +296,15 @@ Backups can contain:
 - general stats may treat unsaved names differently from roster views
 - roster-oriented views should stay roster-based
 - editable player rows should use stable UI identity and survive configuration changes where practical
+- fuzzy player matching uses Levenshtein distance (threshold ~1/3 of input length); matches shown as suggestions, not auto-applied
+
+## Sleeve Notes
+
+- `SleeveManufacturer` enum lives in `SleeveDatabase.kt` (7 values: AUTO, TLAMA_DIAMOND, PALADIN, ULTRA_PRO, SAPPHIRE, SLEEVE_KINGS, ARCANE_TINMEN)
+- `SleeveEntry.preferredFor(manufacturer)` returns the (brand, productName) pair for the chosen brand, falling back to the best available if that brand does not carry this size
+- the user-selected manufacturer is read from `SecurePreferences.sleevePreferredManufacturer`, exposed as `AppViewModel.sleevePreferredManufacturer: StateFlow<SleeveManufacturer>`
+- `GameDetailDialog` reads it at composition time and passes it through `SleevesBlock` -> `SleevesSection`
+- per-game exclusions are stored in `SecurePreferences` as a `Set<String>` of game objectIds; managed via `SyncViewModel.toggleSleeveGameExclusion` / `excludeAllSleeveGames` / `includeAllSleeveGames`
 
 ## UI Conventions
 

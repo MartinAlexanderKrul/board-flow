@@ -18,10 +18,14 @@ BoardFlow combines several related workflows in one app:
 - review play history, aggregate stats, and saved-player activity
 - edit or delete logged plays
 - browse your collection, wishlist, and sleeve coverage
+- exclude specific games from sleeve sync and display
+- share a logged play as a QR code; import a play from a QR code
 - sync your collection to a Google Sheet
 - create or connect a Google spreadsheet
-- create Drive folders / QR-related assets through the Google sync pipeline
+- import a CSV file into a sheet
+- create Drive folders and QR-related assets through the Google sync pipeline
 - export and import app data backups
+- detect record moments after a play (first win, new high score, win streak)
 
 ## Main User Flows
 
@@ -44,10 +48,12 @@ Flow:
 Notable behavior:
 
 - game search prefers the local loaded collection, then falls back to BGG XML search
-- session context can prefill players and location
+- session context (game, players, location) is persisted across app restarts for up to 4 hours
 - log form tracks unsaved changes
 - player rows are keyed UI items with shared editing UI between log and edit flows
 - matched roster players are explicit; non-exact fuzzy matches require user confirmation
+- plays support quantity (multi-game sessions), incomplete flag, and nowInStats toggle
+- expansions / sibling titles are detected from name patterns and shown alongside the base game
 
 ### 2. Edit Existing Play
 
@@ -77,14 +83,15 @@ Tabs:
 
 Current behavior:
 
-- local plays and cached BGG plays are merged for display
+- local plays and cached BGG plays are merged for display; deduplication uses a signature-based matching strategy to avoid showing the same play twice
 - local-only plays can be deleted locally
 - BGG-backed plays can be deleted from BGG and pruned from cache
-- an `Unposted plays` card in Plays acts as the manual outbox for local plays not yet posted to BGG
+- an `Unposted plays` card in Plays acts as the manual outbox for local plays not yet posted to BGG; supports per-play posting and bulk sync
 - stats support date filters and richer insight cards
 - players tab is roster-only and sorts by most recent saved-player activity
 - history rows always show all logged players and do not collapse same/similar names into one row
 - unsaved logged names can still be grouped as `Unknown` in general stats where appropriate
+- plays can be shared as QR codes and imported from QR
 
 ### 4. Collection
 
@@ -104,8 +111,8 @@ Behavior:
 - collection data comes from the canonical Room snapshot managed by sync
 - game detail dialog links collection data with history and player insights
 - collection-to-history and collection-to-player deep links are supported
-- sleeve data is merged from BGG, scraping, and local exclusions
-- the `Owned` tab now strictly means owned games
+- sleeve data is merged from BGG, scraping, and local exclusions; individual games can be excluded from sleeve display
+- the `Owned` tab strictly means owned games
 
 ### 5. Sync
 
@@ -122,8 +129,11 @@ Behavior:
 - supports full Google Sheet sync
 - supports creating a spreadsheet from BGG
 - supports connecting an existing spreadsheet
+- supports CSV import/merge into a sheet
+- supports creating Drive folders and uploading / downloading QR codes
 - shows a sync log with summary + detailed dialog
 - can clear local sync log state
+- collection refresh automatically backfills play counts from cached BGG play history when BGG play count is missing
 
 ### 6. Settings
 
@@ -142,8 +152,10 @@ Behavior:
 
 - manage BGG username/password
 - manage Google account and spreadsheet connection
-- set Gemini API key and model endpoint
-- switch app theme
+- set Gemini API key and configurable model endpoint
+- discover and select from available Gemini models
+- switch app theme (Light, Dark)
+- choose priority sleeve manufacturer shown first in sleeve recommendations
 - export backup JSON, optionally including sensitive data
 - import backup JSON
 - clear cached collection data
@@ -158,7 +170,7 @@ The live runtime store is Room via:
 
 It stores:
 
-- canonical merged collection snapshot
+- canonical merged collection snapshot (`GameItem` records)
 - local logged plays
 - cached BGG play history
 
@@ -166,27 +178,32 @@ It stores:
 
 `data/SecurePreferences.kt` stores:
 
-- BGG credentials
-- Gemini configuration
-- theme and app settings
-- recent games
-- player roster
-- sync-related preferences
-- backup compatibility helpers
+- BGG credentials (username, password)
+- Gemini configuration (API key, model endpoint, available models cache)
+- app theme and sleeve manufacturer priority
+- recent games (last 50)
+- player roster (display names, aliases, BGG usernames)
+- sync-related preferences (spreadsheet ID, sheet tab name, Google email)
+- session context (active game, players, location, timestamp)
+- sleeve exclusion list (game IDs excluded from sleeve display)
+- per-game insight key cache
 
 ### Import / Export
 
-`data/BackupSerializer.kt` handles backup JSON import/export.
+`data/BackupSerializer.kt` handles backup JSON import/export (current format version 2).
 
 Backups can include:
 
-- collection snapshot
+- collection snapshot (full `GameItem` array)
 - local logged plays
 - cached BGG plays
 - player roster
-- sleeves exclusions
-- settings
-- optionally sensitive data like credentials / keys
+- recent games
+- sleeve exclusions
+- settings (theme, spreadsheet config, sleeve preference)
+- optionally sensitive data (BGG password, Gemini API key)
+
+Import is selective: only fields present in the backup JSON are applied; missing fields do not overwrite existing values.
 
 ## Architecture
 
@@ -209,23 +226,39 @@ High-level ownership:
   - Android lifecycle and activity-result plumbing
 - `AppShell`
   - navigation graph, scaffold, header, and bottom tabs
+  - cross-screen deep-link routing (Collection -> History filtered by game, Collection -> Players filtered by player, etc.)
 - `AppViewModel`
-  - game search
-  - log play state
-  - players / roster
-  - local play history
-  - cached BGG play history interaction
-  - local posting / edit / delete flows
+  - game search and recent games
+  - log play state, session continuation, play-again flows
+  - editable player state (shared between log and edit)
+  - player roster management (aliases, BGG usernames, fuzzy matching with Levenshtein distance)
+  - local play history and cached BGG play history merge and deduplication
+  - play posting, editing, and deletion (local and BGG)
+  - manual unposted play outbox (per-play and bulk)
+  - AI extraction (Gemini) handoff and result handling
+  - session context persistence (active game / players / location)
+  - record moment detection (first win, new high score, win streak)
+  - expansion / game-relation detection
   - import/export
-  - session context
+  - app theme and sleeve manufacturer preference
 - `SyncViewModel`
   - Google account state
   - spreadsheet connection
-  - collection refresh and canonical collection loading
-  - sleeve refresh
-  - Google sync log and progress
+  - collection refresh (BGG + Sheets + sleeves merge)
+  - sleeve refresh and per-game exclusion management
+  - Google Sheet sync
+  - CSV import
+  - Drive folder and QR code creation
+  - sync log and progress state
+  - silent startup collection load
 - `data/`
-  - BGG API, Google APIs, Room persistence, backup serialization, parsing helpers
+  - BGG API and scraping (`BggApiClient`, `BggRepository`)
+  - Google APIs (`GoogleApiClient`)
+  - AI extraction (`GeminiRepository`)
+  - Room persistence (`CanonicalCollectionStore`)
+  - backup serialization (`BackupSerializer`)
+  - QR code generation and play sharing (`QrGenerator`, `PlayShareSerializer`)
+  - image preloading (`BggImageCache`)
 
 ## Package Layout
 
@@ -235,6 +268,7 @@ Main source root:
 app/src/main/kotlin/cz/nicolsburg/boardflow/
   AppViewModel.kt
   MainActivity.kt
+  SyncConfig.kt
   SyncViewModel.kt
   auth/
     GoogleAuthManager.kt
@@ -245,24 +279,46 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
       AppRoutes.kt
   data/
     BackupSerializer.kt
+    BggApiClient.kt
+    BggCache.kt
+    BggImageCache.kt
     BggPlaySync.kt
     BggRepository.kt
     CanonicalCollectionStore.kt
+    CsvParser.kt
     GeminiRepository.kt
     GoogleApiClient.kt
+    PlayShareSerializer.kt
+    QrGenerator.kt
     SecurePreferences.kt
   model/
-    ...
+    Models.kt          (BggGame, PlayerResult, LoggedPlay, GameItem, Player, ...)
+    SleeveDatabase.kt  (SleeveManufacturer enum, SleeveEntry, SleeveDatabase object)
   ui/
     app/
       AppShell.kt
     collection/
       CollectionScreen.kt
       GameDetailDialog.kt
+      GameUiCommon.kt
+      SleevesScreen.kt
     common/
-      ...
+      BoardFlowCameraUi.kt
+      BoardFlowIcons.kt
+      BoardFlowMotion.kt
+      BoardFlowUi.kt
+      CornerCloseStrip.kt
+      GameBackdrop.kt
+      GameSearchField.kt
+      ModifierExtensions.kt
+      PlayerResultEditorCard.kt
+      ScreenTabRow.kt
     history/
       HistoryScreen.kt
+      InsightStripCard.kt
+      PlayStatsHelpers.kt
+      PlayStatsTab.kt
+      QrPlayImportScreen.kt
     players/
       PlayersScreen.kt
     review/
@@ -277,7 +333,8 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
       SpreadsheetModal.kt
       SyncScreen.kt
     theme/
-      ...
+      Theme.kt
+      Spacing.kt
 ```
 
 ## External Integrations
@@ -286,18 +343,17 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
 
 Used for:
 
-- collection refresh
+- collection refresh (authenticated and unauthenticated flows)
 - BGG XML game search outside the loaded collection
 - play history fetch / refresh
-- play logging and editing
+- play logging, editing, and deletion
 - sleeve-related metadata inputs
 
 Notes:
 
-- authenticated and unauthenticated BGG collection flows both exist
-- play posting/editing uses authenticated flows
+- play posting/editing/deletion uses authenticated flows with cookie-based session persistence
 - BGG XML search outside the local collection requires `BGG_XML_API_TOKEN`
-- when token-backed search is unavailable, the app should fail quietly to an empty result state
+- when token-backed search is unavailable, the app fails quietly to an empty result state
 
 ### Google Identity / Sheets / Drive
 
@@ -306,8 +362,10 @@ Used for:
 - account selection
 - Drive / Sheets authorization
 - spreadsheet creation / connection
-- pushing collection data to Sheets
-- Drive-related sync helpers and asset generation
+- pushing collection data to Sheets (create/update by objectId)
+- CSV import/merge
+- Drive folder creation per game
+- QR code upload/download
 
 ### Gemini
 
@@ -319,18 +377,20 @@ The app supports:
 
 - user-provided Gemini API key
 - configurable model endpoint
-- model discovery / fallback behavior
+- model discovery and automatic fallback/cycling when a model is unavailable
 
 ## UX / Product Notes
 
 Current app behavior intentionally includes:
 
 - manual user-controlled posting of saved local plays from History instead of silent auto-post on startup
-- roster-aware but explicit player matching
+- roster-aware but explicit player matching; fuzzy matches (Levenshtein distance) shown as suggestions, not auto-applied
 - preserved local history even when offline
 - shared compact player editing UI between log and edit flows
 - history navigation from Collection and player-centric screens
 - stats and players views that are based on saved roster entities where appropriate
+- record moment detection (first win, new high score, win streak) surfaced immediately after logging
+- expansion/sibling title grouping driven by name pattern heuristics
 
 ## Build
 

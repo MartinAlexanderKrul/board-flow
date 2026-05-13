@@ -90,6 +90,7 @@ import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import kotlinx.coroutines.flow.collect
 import cz.nicolsburg.boardflow.ui.sync.SpreadsheetConnectModal
 import cz.nicolsburg.boardflow.BuildConfig
+import cz.nicolsburg.boardflow.model.SleeveManufacturer
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import java.time.LocalDate
 
@@ -119,9 +120,11 @@ fun SettingsScreen(
     var showPwd by remember { mutableStateOf(false) }
     var showKey by remember { mutableStateOf(false) }
     var themeExpanded by remember { mutableStateOf(false) }
+    var manufacturerExpanded by remember { mutableStateOf(false) }
     var selectedSection by remember { mutableStateOf(SettingsSection.ACCOUNTS) }
 
     val currentTheme by viewModel.appTheme.collectAsState()
+    val currentManufacturer by viewModel.sleevePreferredManufacturer.collectAsState()
     val googleAccount by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
     val spreadsheetTitle by syncViewModel.spreadsheetTitle.collectAsState()
@@ -433,6 +436,39 @@ fun SettingsScreen(
                                         onClick = {
                                             viewModel.setAppTheme(theme)
                                             themeExpanded = false
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    SettingsCard(
+                        icon = Icons.Default.GridOn,
+                        title = "Sleeve manufacturer",
+                        subtitle = "Priority brand shown for sleeve recommendations."
+                    ) {
+                        ExposedDropdownMenuBox(expanded = manufacturerExpanded, onExpandedChange = { manufacturerExpanded = it }) {
+                            OutlinedTextField(
+                                value = currentManufacturer.label,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Manufacturer") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = manufacturerExpanded) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(expanded = manufacturerExpanded, onDismissRequest = { manufacturerExpanded = false }) {
+                                SleeveManufacturer.entries.forEach { manufacturer ->
+                                    DropdownMenuItem(
+                                        text = { Text(manufacturer.label) },
+                                        onClick = {
+                                            viewModel.setSleevePreferredManufacturer(manufacturer)
+                                            manufacturerExpanded = false
                                         },
                                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                                     )

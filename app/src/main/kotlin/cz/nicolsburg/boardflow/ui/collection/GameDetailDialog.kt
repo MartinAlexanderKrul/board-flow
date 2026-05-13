@@ -74,6 +74,7 @@ import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.SleeveDatabase
+import cz.nicolsburg.boardflow.model.SleeveManufacturer
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
@@ -110,6 +111,10 @@ fun GameDetailsDialog(
 ) {
     val context = LocalContext.current
     val securePreferences = remember(context) { SecurePreferences(context.applicationContext) }
+    val preferredManufacturer = remember(securePreferences) {
+        try { SleeveManufacturer.valueOf(securePreferences.sleevePreferredManufacturer) }
+        catch (_: Exception) { SleeveManufacturer.AUTO }
+    }
     val bggUrl = bggSleevesUrl(game)
     val driveUrl = game.shareUrl?.takeIf { it.isNotBlank() }
     val hasExternalButtons = bggUrl != null || driveUrl != null
@@ -235,7 +240,7 @@ fun GameDetailsDialog(
                 }
 
                 if (hasSleeves) {
-                    item { SleevesBlock(game) }
+                    item { SleevesBlock(game, preferredManufacturer) }
                 }
 
                 if (customRows.isNotEmpty()) {
@@ -705,7 +710,7 @@ private fun InfoGroupBlock(sections: List<InfoSection>) {
 // â"€â"€ Sleeves block â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
-private fun SleevesBlock(game: GameItem) {
+private fun SleevesBlock(game: GameItem, preferredManufacturer: SleeveManufacturer = SleeveManufacturer.AUTO) {
     var expanded by remember { mutableStateOf(false) }
 
     Surface(
@@ -785,7 +790,7 @@ private fun SleevesBlock(game: GameItem) {
                             )
                             .padding(horizontal = GameDetailTokens.CardPadding, vertical = 9.dp)
                     ) {
-                        SleevesSection(game)
+                        SleevesSection(game, preferredManufacturer)
                     }
                 }
             }
@@ -935,7 +940,7 @@ private fun DetailCell(
 // â"€â"€ Sleeves expanded content â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
-private fun SleevesSection(game: GameItem) {
+private fun SleevesSection(game: GameItem, preferredManufacturer: SleeveManufacturer = SleeveManufacturer.AUTO) {
     val context = LocalContext.current
     val grouped = remember(game) {
         game.sleeveCardSets
@@ -972,7 +977,7 @@ private fun SleevesSection(game: GameItem) {
                 val total = sets.mapNotNull { it.count }.sum()
                 val sleeveEntry = SleeveDatabase.findBySize(size)
                 val genericName = sleeveEntry?.genericName
-                val preferred = sleeveEntry?.preferred
+                val preferred = sleeveEntry?.preferredFor(preferredManufacturer)
 
                 Row(
                     modifier = Modifier

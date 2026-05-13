@@ -15,6 +15,7 @@ import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.model.RecordMoment
 import cz.nicolsburg.boardflow.model.SessionContext
+import cz.nicolsburg.boardflow.model.SleeveManufacturer
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +50,18 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     val appTheme: StateFlow<AppTheme> = _appTheme.asStateFlow()
 
     fun setAppTheme(theme: AppTheme) { _appTheme.value = theme; prefs.appTheme = theme.name }
+
+    // --- Sleeve preferred manufacturer ---
+    private val _sleevePreferredManufacturer = MutableStateFlow(
+        try { SleeveManufacturer.valueOf(container.securePreferences.sleevePreferredManufacturer) }
+        catch (_: Exception) { SleeveManufacturer.AUTO }
+    )
+    val sleevePreferredManufacturer: StateFlow<SleeveManufacturer> = _sleevePreferredManufacturer.asStateFlow()
+
+    fun setSleevePreferredManufacturer(manufacturer: SleeveManufacturer) {
+        _sleevePreferredManufacturer.value = manufacturer
+        prefs.sleevePreferredManufacturer = manufacturer.name
+    }
 
     // --- Settings save callback ---
     var settingsSaveCallback: (() -> Unit)? = null

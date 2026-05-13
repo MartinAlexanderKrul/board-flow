@@ -47,6 +47,10 @@ class SecurePreferences(context: Context) {
         get() = prefs.getString(KEY_APP_THEME, "DARK") ?: "DARK"
         set(value) = prefs.edit().putString(KEY_APP_THEME, value).apply()
 
+    var sleevePreferredManufacturer: String
+        get() = prefs.getString(KEY_SLEEVE_PREFERRED_MANUFACTURER, "AUTO") ?: "AUTO"
+        set(value) = prefs.edit().putString(KEY_SLEEVE_PREFERRED_MANUFACTURER, value).apply()
+
     // --- Available Gemini models cache ---
     fun saveAvailableModels(models: List<String>) {
         val json = JSONArray()
@@ -347,6 +351,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_GOOGLE_AUTHORIZED_EMAIL = "google_authorized_email"
         private const val KEY_COLLECTION_SNAPSHOT_PREFIX = "collection_snapshot_"
         private const val KEY_SLEEVES_EXCLUDED = "sleeves_excluded_game_ids"
+        private const val KEY_SLEEVE_PREFERRED_MANUFACTURER = "sleeve_preferred_manufacturer"
         private const val KEY_SESSION_CONTEXT  = "log_play_session_context"
         private const val KEY_GAME_INSIGHT_PREFIX = "game_insight_last_"
     }

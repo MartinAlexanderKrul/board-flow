@@ -5,6 +5,10 @@ import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 enum class StatsTimeRange(val label: String, val subtitle: String = label) {
     ALL("All time"),
@@ -426,4 +430,363 @@ fun List<LoggedPlay>.playInsights(play: LoggedPlay): List<String> {
     }
 
     return result
+}
+
+// ── Shared duration formatter ─────────────────────────────────────────────────
+
+fun formatDuration(minutes: Int): String = when {
+    minutes >= 60 && minutes % 60 == 0 -> "${minutes / 60}h"
+    minutes >= 60 -> "${minutes / 60}h ${minutes % 60}m"
+    else -> "${minutes}m"
+}
+
+// ── Smart observations ────────────────────────────────────────────────────────
+
+data class SmartObservation(val text: String)
+
+fun List<LoggedPlay>.buildSmartObservations(): List<SmartObservation> {
+    if (size < 5) return emptyList()
+    val result = mutableListOf<SmartObservation>()
+    val now = LocalDate.now()
+    val totalPlays = sumOf { it.quantity.coerceAtLeast(1) }
+    val withDuration = filter { it.durationMinutes > 0 }
+    val totalMinutes = withDuration.sumOf { it.durationMinutes }
+    val uniqueGames = map { it.gameName }.toSet().size
+
+    // Total time as days
+    if (totalMinutes >= 180) {
+        val hours = totalMinutes / 60
+        val days = totalMinutes / (60 * 24)
+        if (days >= 2) {
+            result += SmartObservation(
+                "You've spent ${hours}h at the table. That's $days full days living inside cardboard worlds."
+            )
+        } else {
+            result += SmartObservation("You've logged ${hours}h of plays. The stack keeps calling.")
+        }
+    }
+
+    // Dominant game by time share
+    if (withDuration.size >= 5 && totalMinutes > 0) {
+        val gameMinutes = withDuration.groupBy { it.gameName }.mapValues { (_, g) -> g.sumOf { it.durationMinutes } }
+        val top = gameMinutes.maxByOrNull { it.value }
+        if (top != null) {
+            val pct = top.value * 100 / totalMinutes
+            if (pct >= 20) {
+                result += SmartObservation(
+                    "${top.key} accounts for ${pct}% of your table time. Some games just become a home."
+                )
+            }
+        }
+    }
+
+    // Weekend vs weekday session length
+    val weekdayDur = filter { p ->
+        p.durationMinutes > 0 &&
+            runCatching { LocalDate.parse(p.date).dayOfWeek.value in 1..5 }.getOrDefault(false)
+    }
+    val weekendDur = filter { p ->
+        p.durationMinutes > 0 &&
+            runCatching { LocalDate.parse(p.date).dayOfWeek.value in 6..7 }.getOrDefault(false)
+    }
+    if (weekdayDur.size >= 4 && weekendDur.size >= 4) {
+        val wdAvg = weekdayDur.sumOf { it.durationMinutes } / weekdayDur.size
+        val weAvg = weekendDur.sumOf { it.durationMinutes } / weekendDur.size
+        if (weAvg > wdAvg * 1.4) {
+            result += SmartObservation(
+                "Weekend sessions average ${formatDuration(weAvg)}. Weeknights: ${formatDuration(wdAvg)}. " +
+                    "Two different people sit down at this table."
+            )
+        }
+    }
+
+    // Dormant beloved game
+    val dormant = groupBy { it.gameName }
+        .mapNotNull { (name, plays) ->
+            val count = plays.sumOf { it.quantity.coerceAtLeast(1) }
+            val last = plays.mapNotNull { runCatching { LocalDate.parse(it.date) }.getOrNull() }.maxOrNull()
+            val days = last?.let { now.toEpochDay() - it.toEpochDay() }
+            if (count >= 4 && days != null && days > 60) Triple(name, days, count) else null
+        }
+        .maxByOrNull { it.third }
+    if (dormant != null) {
+        val months = (dormant.second / 30).toInt()
+        result += SmartObservation(
+            "${dormant.first} hasn't hit the table in ${months} month${if (months > 1) "s" else ""}. " +
+                "You've played it ${dormant.third} times. Maybe it's waiting."
+        )
+    }
+
+    // New games discovered this year
+    val thisYear = now.year
+    val newThisYear = map { it.gameName }.toSet().count { name ->
+        val first = filter { it.gameName == name }
+            .mapNotNull { runCatching { LocalDate.parse(it.date) }.getOrNull() }.minOrNull()
+        first?.year == thisYear
+    }
+    when {
+        newThisYear >= 5 -> result += SmartObservation(
+            "$newThisYear games played for the first time this year. The search for a new favorite never ends."
+        )
+        newThisYear in 2..4 -> result += SmartObservation(
+            "$newThisYear new games tried so far this year. Still exploring."
+        )
+    }
+
+    // Dominant season
+    val bySeason = IntArray(4)
+    forEach { play ->
+        runCatching {
+            val m = LocalDate.parse(play.date).monthValue
+            val s = when (m) { in 3..5 -> 0; in 6..8 -> 1; in 9..11 -> 2; else -> 3 }
+            bySeason[s] += play.quantity.coerceAtLeast(1)
+        }
+    }
+    val seasonTotal = bySeason.sum()
+    if (seasonTotal > 0) {
+        val peakIdx = bySeason.indices.maxByOrNull { bySeason[it] }!!
+        val pct = bySeason[peakIdx] * 100 / seasonTotal
+        if (pct >= 38) {
+            val names = listOf("spring", "summer", "fall", "winter")
+            result += SmartObservation(
+                "${pct}% of your plays happen in ${names[peakIdx]}. The season brings you to the table."
+            )
+        }
+    }
+
+    // Play pace vs last year
+    val lastYear = thisYear - 1
+    val thisYearCount = filter { runCatching { LocalDate.parse(it.date).year == thisYear }.getOrDefault(false) }
+        .sumOf { it.quantity.coerceAtLeast(1) }
+    val lastYearCount = filter { runCatching { LocalDate.parse(it.date).year == lastYear }.getOrDefault(false) }
+        .sumOf { it.quantity.coerceAtLeast(1) }
+    val monthsIn = now.monthValue
+    if (lastYearCount >= 8 && thisYearCount > 0 && monthsIn >= 2) {
+        val projected = thisYearCount * 12 / monthsIn
+        when {
+            projected > lastYearCount * 1.25 ->
+                result += SmartObservation(
+                    "On pace for $projected plays this year. $lastYear was $lastYearCount. The table is busy."
+                )
+            projected < lastYearCount * 0.65 && monthsIn >= 4 ->
+                result += SmartObservation(
+                    "Quieter than $lastYear so far — $thisYearCount plays in $monthsIn months. Life has its seasons."
+                )
+        }
+    }
+
+    // Consistency vs burstiness
+    val monthCounts = groupBy { p ->
+        runCatching { LocalDate.parse(p.date).let { it.year * 100 + it.monthValue } }.getOrNull()
+    }.filterKeys { it != null }.mapValues { (_, g) -> g.sumOf { it.quantity.coerceAtLeast(1) } }
+    if (monthCounts.size >= 6) {
+        val vals = monthCounts.values.toList()
+        val avg = vals.average()
+        val stdDev = sqrt(vals.map { (it - avg) * (it - avg) }.average())
+        val cv = if (avg > 0) stdDev / avg else 0.0
+        when {
+            cv < 0.35 && avg >= 2 -> result += SmartObservation(
+                "${avg.toInt()} plays a month, give or take. Consistency is its own kind of mastery."
+            )
+            cv > 1.2 -> result += SmartObservation(
+                "You game in bursts — quiet months, then a flurry. The table calls when it calls."
+            )
+        }
+    }
+
+    // Depth vs breadth
+    if (totalPlays >= 20 && uniqueGames >= 3) {
+        val depth = totalPlays.toDouble() / uniqueGames
+        when {
+            depth > 5.0 -> result += SmartObservation(
+                "$uniqueGames games, $totalPlays plays. ${String.format("%.1f", depth)} plays each on average. You go deep."
+            )
+            depth < 1.5 -> result += SmartObservation(
+                "$uniqueGames different games across $totalPlays plays. You keep it wide and fresh."
+            )
+        }
+    }
+
+    return result.distinctBy { it.text }
+}
+
+// ── Contextual narrative header ───────────────────────────────────────────────
+
+fun List<LoggedPlay>.buildContextualHeader(range: StatsTimeRange, currentStreak: Int = 0): String {
+    if (isEmpty()) return "Start your story"
+    val now = LocalDate.now()
+    val monthName = now.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+        .replaceFirstChar { it.uppercase() }
+    return when {
+        currentStreak >= 7 -> "On a $currentStreak-day streak"
+        currentStreak >= 3 -> "You're on a run"
+        range == StatsTimeRange.THIS_MONTH -> "Your $monthName so far"
+        range == StatsTimeRange.THIS_YEAR -> "Your ${now.year} in games"
+        range == StatsTimeRange.LAST_30 -> "The last 30 days"
+        else -> {
+            val recent = any { p ->
+                runCatching { LocalDate.parse(p.date) >= now.minusDays(3) }.getOrDefault(false)
+            }
+            val totalPlays = sumOf { it.quantity.coerceAtLeast(1) }
+            val years = mapNotNull { runCatching { LocalDate.parse(it.date).year }.getOrNull() }.toSet().size
+            when {
+                recent -> "Back at the table"
+                totalPlays < 5 -> "Building your story"
+                years >= 3 -> "$years years of gaming"
+                else -> "Your gaming story"
+            }
+        }
+    }
+}
+
+// ── Gamer archetype ───────────────────────────────────────────────────────────
+
+enum class GamerArchetype(val title: String, val tagline: String) {
+    DEDICANT("The Dedicant", "One game, understood deeply"),
+    LOYALIST("The Loyalist", "Deep commitment to a handful of favorites"),
+    MARATHONER("The Marathoner", "Long sessions. Full commitment."),
+    SOCIALITE("The Socialite", "The more players, the better"),
+    EXPLORER("The Explorer", "Always chasing the next new game"),
+    CURATOR("The Curator", "Wide collection, deliberate exploration")
+}
+
+fun List<LoggedPlay>.computeGamerArchetype(): GamerArchetype? {
+    val total = sumOf { it.quantity.coerceAtLeast(1) }
+    if (total < 10) return null
+    val uniqueGames = map { it.gameName }.toSet().size
+    val gameCounts = groupBy { it.gameName }.mapValues { (_, g) -> g.sumOf { it.quantity.coerceAtLeast(1) } }
+    val top1Share = (gameCounts.values.maxOrNull() ?: 0).toDouble() / total
+    val top3Share = gameCounts.values.sortedDescending().take(3).sum().toDouble() / total
+    val withDuration = filter { it.durationMinutes > 0 }
+    val avgSession = if (withDuration.isNotEmpty()) withDuration.sumOf { it.durationMinutes }.toDouble() / withDuration.size else 0.0
+    val avgPlayers = if (isNotEmpty()) sumOf { it.players.count { p -> p.name.isNotBlank() } }.toDouble() / size else 0.0
+    val diversityRatio = if (total > 0) uniqueGames.toDouble() / total else 0.0
+    return when {
+        top1Share > 0.5 && total >= 15 -> GamerArchetype.DEDICANT
+        top3Share > 0.70 -> GamerArchetype.LOYALIST
+        avgSession > 150 -> GamerArchetype.MARATHONER
+        avgPlayers > 4.0 -> GamerArchetype.SOCIALITE
+        diversityRatio > 0.72 && uniqueGames >= 10 -> GamerArchetype.EXPLORER
+        uniqueGames >= 20 && diversityRatio in 0.35..0.72 -> GamerArchetype.CURATOR
+        else -> GamerArchetype.LOYALIST
+    }
+}
+
+// ── 52-week play heatmap ──────────────────────────────────────────────────────
+
+data class HeatmapDay(val date: LocalDate, val count: Int) // count = -1 for future
+data class HeatmapWeek(val days: List<HeatmapDay>)
+data class HeatmapData(
+    val weeks: List<HeatmapWeek>,
+    val maxCount: Int,
+    val monthLabels: List<Pair<Int, String>> // weekIndex → abbreviated month name
+)
+
+fun List<LoggedPlay>.buildHeatmapData(weekCount: Int = 52): HeatmapData {
+    val now = LocalDate.now()
+    val countsByDate = groupBy { p -> runCatching { LocalDate.parse(p.date) }.getOrNull() }
+        .filterKeys { it != null }
+        .mapValues { (_, g) -> g.sumOf { it.quantity.coerceAtLeast(1) } }
+        .mapKeys { it.key!! }
+
+    val startMonday = now.minusWeeks(weekCount.toLong()).let { d ->
+        d.minusDays((d.dayOfWeek.value - 1).toLong())
+    }
+
+    val allWeeks = mutableListOf<HeatmapWeek>()
+    val monthLabels = mutableListOf<Pair<Int, String>>()
+    var lastMonth = -1
+    var weekStart = startMonday
+
+    while (!weekStart.isAfter(now)) {
+        val days = (0..6).map { d ->
+            val day = weekStart.plusDays(d.toLong())
+            HeatmapDay(day, if (!day.isAfter(now)) (countsByDate[day] ?: 0) else -1)
+        }
+        val weekIdx = allWeeks.size
+        if (weekStart.monthValue != lastMonth) {
+            monthLabels += weekIdx to weekStart.month
+                .getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                .replaceFirstChar { it.uppercase() }
+            lastMonth = weekStart.monthValue
+        }
+        allWeeks += HeatmapWeek(days)
+        weekStart = weekStart.plusWeeks(1)
+    }
+
+    val maxCount = allWeeks.flatMap { it.days }.filter { it.count >= 0 }.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
+    return HeatmapData(allWeeks, maxCount, monthLabels)
+}
+
+// ── On This Day ───────────────────────────────────────────────────────────────
+
+data class OnThisDayEntry(val yearsAgo: Int, val year: Int, val plays: List<LoggedPlay>)
+
+fun List<LoggedPlay>.buildOnThisDay(): List<OnThisDayEntry> {
+    val today = LocalDate.now()
+    return (1..3).mapNotNull { yearsAgo ->
+        val target = runCatching { LocalDate.of(today.year - yearsAgo, today.month, today.dayOfMonth) }.getOrNull()
+            ?: return@mapNotNull null
+        val plays = filter { runCatching { LocalDate.parse(it.date) == target }.getOrDefault(false) }
+        if (plays.isNotEmpty()) OnThisDayEntry(yearsAgo, today.year - yearsAgo, plays) else null
+    }
+}
+
+// ── Rivalry pairs at the table ────────────────────────────────────────────────
+
+data class RivalryPair(
+    val playerA: String,
+    val playerB: String,
+    val playsCount: Int,
+    val aWins: Int,
+    val bWins: Int,
+    val mostPlayedGame: String?,
+    val narrativeLine: String
+)
+
+fun List<LoggedPlay>.buildTopRivalryPairs(limit: Int = 3): List<RivalryPair> {
+    val pairPlays = mutableMapOf<String, Triple<Int, Int, Int>>()
+    val pairGames = mutableMapOf<String, MutableMap<String, Int>>()
+
+    forEach { play ->
+        val active = play.players.filter { it.name.isNotBlank() }
+        if (active.size < 2) return@forEach
+        for (i in active.indices) {
+            for (j in i + 1 until active.size) {
+                val a = active[i]; val b = active[j]
+                val sorted = listOf(a.name.trim(), b.name.trim()).sorted()
+                val key = sorted.joinToString("|")
+                val aIsFirst = a.name.trim() == sorted[0]
+                val (t, aw, bw) = pairPlays[key] ?: Triple(0, 0, 0)
+                pairPlays[key] = Triple(
+                    t + 1,
+                    aw + if (if (aIsFirst) a.isWinner else b.isWinner) 1 else 0,
+                    bw + if (if (aIsFirst) b.isWinner else a.isWinner) 1 else 0
+                )
+                pairGames.getOrPut(key) { mutableMapOf() }
+                    .also { it[play.gameName] = (it[play.gameName] ?: 0) + 1 }
+            }
+        }
+    }
+
+    return pairPlays.entries
+        .filter { it.value.first >= 3 }
+        .sortedByDescending { it.value.first }
+        .take(limit)
+        .map { (key, data) ->
+            val names = key.split("|")
+            val (together, aWins, bWins) = data
+            val tied = aWins == bWins
+            val leader = if (aWins >= bWins) names[0] else names[1]
+            val lead = abs(aWins - bWins)
+            val scoreStr = if (aWins >= bWins) "$aWins–$bWins" else "$bWins–$aWins"
+            val mostGame = pairGames[key]?.maxByOrNull { it.value }?.key
+            val narrative = when {
+                together < 5 -> "${names[0]} vs ${names[1]} — $together games played so far"
+                tied -> "${names[0]} and ${names[1]} are deadlocked — $aWins each after $together games"
+                lead == 1 -> "$leader leads by a single game. $together games in."
+                else -> "$leader leads $scoreStr after $together games together"
+            }
+            RivalryPair(names[0], names[1], together, aWins, bWins, mostGame, narrative)
+        }
 }

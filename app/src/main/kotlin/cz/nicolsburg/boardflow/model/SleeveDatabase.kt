@@ -2,6 +2,16 @@ package cz.nicolsburg.boardflow.model
 
 import kotlin.math.abs
 
+enum class SleeveManufacturer(val label: String) {
+    AUTO("Auto (best available)"),
+    TLAMA_DIAMOND("TLAMA Diamond"),
+    PALADIN("Paladin"),
+    ULTRA_PRO("Ultra Pro"),
+    SAPPHIRE("Sapphire"),
+    SLEEVE_KINGS("Sleeve Kings"),
+    ARCANE_TINMEN("Arcane Tinmen")
+}
+
 data class SleeveEntry(
     val genericName: String,
     val recommendedSize: String,
@@ -25,6 +35,17 @@ data class SleeveEntry(
 
     /** Best available option by priority (TLAMA Diamond → Paladin → Ultra Pro → Sapphire → Sleeve Kings → Arcane Tinmen). */
     val preferred: Pair<String, String>? get() = manufacturerOptions.firstOrNull()
+
+    /** Returns the product for the given preferred manufacturer, falling back to best available if not found. */
+    fun preferredFor(manufacturer: SleeveManufacturer): Pair<String, String>? = when (manufacturer) {
+        SleeveManufacturer.AUTO         -> preferred
+        SleeveManufacturer.TLAMA_DIAMOND -> tlamaDiamond?.let { "TLAMA Diamond" to it } ?: preferred
+        SleeveManufacturer.PALADIN      -> paladin?.let { "Paladin" to it } ?: preferred
+        SleeveManufacturer.ULTRA_PRO    -> ultraPro?.let { "Ultra Pro" to it } ?: preferred
+        SleeveManufacturer.SAPPHIRE     -> sapphire?.let { "Sapphire" to it } ?: preferred
+        SleeveManufacturer.SLEEVE_KINGS -> sleeveKings?.let { "Sleeve Kings" to it } ?: preferred
+        SleeveManufacturer.ARCANE_TINMEN -> arcaneTinmen?.let { "Arcane Tinmen" to it } ?: preferred
+    }
 }
 
 object SleeveDatabase {
