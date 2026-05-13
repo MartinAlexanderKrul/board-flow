@@ -1,4 +1,4 @@
-﻿package cz.nicolsburg.boardflow.data
+package cz.nicolsburg.boardflow.data
 
 import android.content.Context
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
@@ -8,13 +8,31 @@ import java.io.File
 
 class BggCache(context: Context) {
 
+    companion object {
+        private const val TTL_MS = 24 * 60 * 60 * 1000L // 24 hours
+    }
+
     private val filesDir = context.filesDir
     private val mapper = ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT)
 
-    fun exists(username: String): Boolean = cacheFile(username).exists() || legacyCacheFile().exists()
+    fun exists(username: String): Boolean {
+        val scoped = cacheFile(username)
+        val legacy = legacyCacheFile()
+        val file = when {
+            scoped.exists() -> scoped
+            legacy.exists() -> legacy
+            else -> return false
+        }
+        return try {
+            val envelope = mapper.readValue(file, Envelope::class.java)
+            envelope.enriched && System.currentTimeMillis() - envelope.savedAt < TTL_MS
+        } catch (_: Exception) {
+            false
+        }
+    }
 
-    fun save(username: String, games: List<BggApiClient.BggGame>) {
-        mapper.writeValue(cacheFile(username), Envelope(games = games))
+    fun save(username: String, games: List<BggApiClient.BggGame>, enriched: Boolean = true) {
+        mapper.writeValue(cacheFile(username), Envelope(games = games, enriched = enriched, savedAt = System.currentTimeMillis()))
     }
 
     fun load(username: String): List<BggApiClient.BggGame> {
@@ -41,5 +59,9 @@ class BggCache(context: Context) {
     private fun legacyCacheFile(): File = File(filesDir, "bgg_collection.json")
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    data class Envelope(val games: List<BggApiClient.BggGame> = emptyList())
+    data class Envelope(
+        val games: List<BggApiClient.BggGame> = emptyList(),
+        val enriched: Boolean = false,
+        val savedAt: Long = 0L
+    )
 }

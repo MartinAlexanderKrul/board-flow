@@ -6,7 +6,10 @@
       "Bash(./gradlew :app:compileDebugKotlin --daemon -q)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(./gradlew assembleDebug)"
+      "Bash(./gradlew assembleDebug)",
+      "Bash(Get-ChildItem -Recurse -Force)",
+      "Bash(Select-Object -First 50)",
+      "Bash(Format-Table -AutoSize)"
     ]
   }
 }

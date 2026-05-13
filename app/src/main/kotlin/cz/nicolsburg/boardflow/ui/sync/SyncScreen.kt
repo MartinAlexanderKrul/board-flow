@@ -297,63 +297,66 @@ fun SyncScreen(
                     }
                 }
 
-                HorizontalDivider()
+                // ── Step 2 — Google Sheets (only when signed in to Google) ──
+                AnimatedVisibility(visible = googleConnected) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        HorizontalDivider()
 
-                // ── Step 2 — Google Sheets ────────────────────────────────
-                StepSectionHeader(
-                    step = "2",
-                    title = "Google Sheets",
-                    subtitle = "Push your collection to the connected spreadsheet."
-                )
-                SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        BoardFlowButton(
-                            onClick = {
-                                val acc = account ?: return@BoardFlowButton
-                                onSpreadsheetChanged(spreadsheetId)
-                                syncViewModel.syncBgg(acc, forceRefresh = true)
-                            },
-                            enabled = !busy && canSync,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.size(8.dp))
-                            Text("Sync to Google Sheets")
-                        }
-
-                        if (!canSync && syncHint != null) {
-                            InlineHint(
-                                text = syncHint,
-                                onClick = when {
-                                    !googleConnected -> { { showGoogleModal = true } }
-                                    !hasBggCredentials -> { { showBggModal = true } }
-                                    else -> null
+                        StepSectionHeader(
+                            step = "2",
+                            title = "Google Sheets",
+                            subtitle = "Push your collection to the connected spreadsheet."
+                        )
+                        SectionCard {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                BoardFlowButton(
+                                    onClick = {
+                                        val acc = account ?: return@BoardFlowButton
+                                        onSpreadsheetChanged(spreadsheetId)
+                                        syncViewModel.syncBgg(acc, forceRefresh = true)
+                                    },
+                                    enabled = !busy && canSync,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.size(8.dp))
+                                    Text("Sync to Google Sheets")
                                 }
-                            )
+
+                                if (!canSync && syncHint != null) {
+                                    InlineHint(
+                                        text = syncHint,
+                                        onClick = when {
+                                            !hasBggCredentials -> { { showBggModal = true } }
+                                            else -> null
+                                        }
+                                    )
+                                }
+                            }
                         }
+
+                        HorizontalDivider()
+
+                        // ── Advanced (collapsed) ──────────────────────────
+                        AdvancedSection(
+                            busy = busy,
+                            account = account,
+                            hasConfiguredSheet = hasConfiguredSheet,
+                            saveQrToDevice = saveQrToDevice,
+                            onSaveQrChanged = { saveQrToDevice = it },
+                            onPickCsv = {
+                                account ?: return@AdvancedSection
+                                onSpreadsheetChanged(spreadsheetId)
+                                onPickCsv()
+                            },
+                            onCreateFolders = {
+                                val acc = account ?: return@AdvancedSection
+                                onSpreadsheetChanged(spreadsheetId)
+                                syncViewModel.createFolders(acc, saveQrToGallery = saveQrToDevice)
+                            }
+                        )
                     }
                 }
-
-                HorizontalDivider()
-
-                // ── Advanced (collapsed) ──────────────────────────────────
-                AdvancedSection(
-                    busy = busy,
-                    account = account,
-                    hasConfiguredSheet = hasConfiguredSheet,
-                    saveQrToDevice = saveQrToDevice,
-                    onSaveQrChanged = { saveQrToDevice = it },
-                    onPickCsv = {
-                        account ?: return@AdvancedSection
-                        onSpreadsheetChanged(spreadsheetId)
-                        onPickCsv()
-                    },
-                    onCreateFolders = {
-                        val acc = account ?: return@AdvancedSection
-                        onSpreadsheetChanged(spreadsheetId)
-                        syncViewModel.createFolders(acc, saveQrToGallery = saveQrToDevice)
-                    }
-                )
 
                 // ── Controls ──────────────────────────────────────────────
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

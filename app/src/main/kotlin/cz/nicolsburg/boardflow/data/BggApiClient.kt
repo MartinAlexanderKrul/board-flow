@@ -2,19 +2,22 @@
 
 import android.util.Log
 import cz.nicolsburg.boardflow.model.GameItem
+import kotlinx.coroutines.delay
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 import org.w3c.dom.Element
-import java.io.ByteArrayInputStream
+import org.xml.sax.InputSource
+import java.io.StringReader
 import java.util.concurrent.TimeUnit
 import javax.xml.parsers.DocumentBuilderFactory
 
-class BggApiClient {
+class BggApiClient(private val xmlApiToken: String = "") {
     companion object {
         private const val TAG = "BggApiClient"
+        private val xmlFactory: DocumentBuilderFactory = DocumentBuilderFactory.newInstance()
     }
 
     private val http = OkHttpClient.Builder()
@@ -55,6 +58,15 @@ class BggApiClient {
             }
         }
     }
+
+    data class ThingDetail(
+        val objectid: String,
+        val avgweight: String = "",
+        val bggbestplayers: String = "",
+        val bggrecplayers: String = "",
+        val bggrecagerange: String = "",
+        val bgglanguagedependence: String = ""
+    )
 
     data class BggGame(
         val objectid: String,
@@ -108,10 +120,10 @@ class BggApiClient {
         )
     }
 
-    fun fetchWishlistGameItems(username: String, password: String? = null): List<GameItem> {
+    suspend fun fetchWishlistGameItems(username: String, password: String? = null): List<GameItem> {
         password?.let { loginIfNeeded(username, it) }
         val body = fetchWithRetry("https://boardgamegeek.com/xmlapi2/collection?username=$username&wishlist=1&stats=1")
-        val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(ByteArrayInputStream(body.toByteArray()))
+        val doc = xmlFactory.newDocumentBuilder().parse(InputSource(StringReader(body)))
         doc.documentElement.normalize()
         val items = doc.getElementsByTagName("item")
         val result = mutableListOf<GameItem>()
@@ -180,28 +192,11 @@ class BggApiClient {
         return result
     }
 
-    fun fetchOwnedThumbnails(username: String, password: String? = null): Map<String, String> {
-        password?.let { loginIfNeeded(username, it) }
-        val body = fetchWithRetry("https://boardgamegeek.com/xmlapi2/collection?username=$username&own=1")
-        val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(ByteArrayInputStream(body.toByteArray()))
-        doc.documentElement.normalize()
-        val items = doc.getElementsByTagName("item")
-        val result = mutableMapOf<String, String>()
-        for (i in 0 until items.length) {
-            val item = items.item(i) as Element
-            val id = item.getAttribute("objectid")
-            val thumb = item.getElementsByTagName("thumbnail").item(0)?.textContent?.trim()?.ifBlank { null }
-                ?.let { if (it.startsWith("//")) "https:$it" else it }
-            if (id.isNotBlank() && thumb != null) result[id] = thumb
-        }
-        return result
-    }
-
-    fun fetchCollection(username: String, password: String? = null): List<BggGame> {
+suspend fun fetchCollection(username: String, password: String? = null): List<BggGame> {
         password?.let { loginIfNeeded(username, it) }
         val url = "https://boardgamegeek.com/xmlapi2/collection?username=$username&own=1&stats=1"
         val body = fetchWithRetry(url)
-        val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(ByteArrayInputStream(body.toByteArray()))
+        val doc = xmlFactory.newDocumentBuilder().parse(InputSource(StringReader(body)))
         doc.documentElement.normalize()
         val items = doc.getElementsByTagName("item")
         val games = mutableListOf<BggGame>()
@@ -252,6 +247,115 @@ class BggApiClient {
             )
         }
         return games
+    }
+
+    suspend fun fetchThingDetails(ids: List<String>): Map<String, ThingDetail> {
+        if (ids.isEmpty()) return emptyMap()
+        val result = mutableMapOf<String, ThingDetail>()
+        val batches = ids.filter { it.isNotBlank() }.chunked(20)
+        batches.forEachIndexed { index, batch ->
+            if (index > 0) delay(5_000)
+            val url = "https://boardgamegeek.com/xmlapi2/thing?id=${batch.joinToString(",")}&stats=1"
+            val body = fetchWithRetry(url)
+            val doc = xmlFactory.newDocumentBuilder().parse(InputSource(StringReader(body)))
+            doc.documentElement.normalize()
+            val items = doc.getElementsByTagName("item")
+            for (i in 0 until items.length) {
+                val item = items.item(i) as? Element ?: continue
+                val id = item.getAttribute("id").takeIf { it.isNotBlank() } ?: continue
+
+                val statistics = item.getElementsByTagName("statistics").item(0) as? Element
+                val ratings = statistics?.getElementsByTagName("ratings")?.item(0) as? Element
+                val avgweight = (ratings?.getElementsByTagName("averageweight")?.item(0) as? Element)
+                    ?.getAttribute("value")?.takeIf { it.isNotBlank() && it != "0" } ?: ""
+
+                var bggbestplayers = ""
+                var bggrecplayers = ""
+                var bggrecagerange = ""
+                var bgglanguagedependence = ""
+
+                val polls = item.getElementsByTagName("poll")
+                for (j in 0 until polls.length) {
+                    val poll = polls.item(j) as? Element ?: continue
+                    when (poll.getAttribute("name")) {
+                        "suggested_numplayers" -> {
+                            val (best, rec) = parseSuggestedNumPlayers(poll)
+                            bggbestplayers = best
+                            bggrecplayers = rec
+                        }
+                        "suggested_playerage" -> bggrecagerange = parseSuggestedPlayerAge(poll)
+                    }
+                }
+
+                val linkElements = item.getElementsByTagName("link")
+                for (j in 0 until linkElements.length) {
+                    val link = linkElements.item(j) as? Element ?: continue
+                    if (link.getAttribute("type") == "boardgamelanguagedependence") {
+                        bgglanguagedependence = link.getAttribute("value")
+                        break
+                    }
+                }
+
+                result[id] = ThingDetail(
+                    objectid = id,
+                    avgweight = avgweight,
+                    bggbestplayers = bggbestplayers,
+                    bggrecplayers = bggrecplayers,
+                    bggrecagerange = bggrecagerange,
+                    bgglanguagedependence = bgglanguagedependence
+                )
+                Log.i(TAG, "ThingDetail id=$id weight=$avgweight best=$bggbestplayers rec=$bggrecplayers age=$bggrecagerange lang=$bgglanguagedependence")
+            }
+        }
+        return result
+    }
+
+    private fun parseSuggestedNumPlayers(poll: Element): Pair<String, String> {
+        var bestPlayersVotes = 0
+        var bestPlayers = ""
+        val recPlayersList = mutableListOf<String>()
+        val resultGroups = poll.getElementsByTagName("results")
+        for (i in 0 until resultGroups.length) {
+            val results = resultGroups.item(i) as? Element ?: continue
+            val numPlayers = results.getAttribute("numplayers").takeIf { it.isNotBlank() } ?: continue
+            var bestVotes = 0
+            var recVotes = 0
+            var notRecVotes = 0
+            val resultItems = results.getElementsByTagName("result")
+            for (j in 0 until resultItems.length) {
+                val result = resultItems.item(j) as? Element ?: continue
+                val votes = result.getAttribute("numvotes").toIntOrNull() ?: 0
+                when (result.getAttribute("value")) {
+                    "Best" -> bestVotes = votes
+                    "Recommended" -> recVotes = votes
+                    "Not Recommended" -> notRecVotes = votes
+                }
+            }
+            if (bestVotes + recVotes > notRecVotes && bestVotes + recVotes > 0) {
+                recPlayersList.add(numPlayers)
+            }
+            if (bestVotes > bestPlayersVotes) {
+                bestPlayersVotes = bestVotes
+                bestPlayers = numPlayers
+            }
+        }
+        return bestPlayers to recPlayersList.joinToString(", ")
+    }
+
+    private fun parseSuggestedPlayerAge(poll: Element): String {
+        var maxVotes = 0
+        var recommendedAge = ""
+        val results = poll.getElementsByTagName("results").item(0) as? Element ?: return ""
+        val resultItems = results.getElementsByTagName("result")
+        for (i in 0 until resultItems.length) {
+            val result = resultItems.item(i) as? Element ?: continue
+            val votes = result.getAttribute("numvotes").toIntOrNull() ?: 0
+            if (votes > maxVotes) {
+                maxVotes = votes
+                recommendedAge = result.getAttribute("value")
+            }
+        }
+        return recommendedAge
     }
 
     fun fetchSleeveInfo(
@@ -359,15 +463,16 @@ class BggApiClient {
         }
     }
 
-    private fun fetchWithRetry(url: String): String {
+    private suspend fun fetchWithRetry(url: String): String {
         repeat(5) {
             val req = Request.Builder().url(url)
                 .apply { if (sessionCookies.isNotBlank()) header("Cookie", sessionCookies) }
+                .apply { if (xmlApiToken.isNotBlank()) header("Authorization", "Bearer $xmlApiToken") }
                 .build()
             http.newCall(req).execute().use { response ->
                 when {
                     response.code == 200 -> return response.body?.string() ?: ""
-                    response.code == 202 -> Thread.sleep(5_000)
+                    response.code == 202 -> delay(5_000)
                     else -> throw RuntimeException("BGG API HTTP ${response.code}")
                 }
             }

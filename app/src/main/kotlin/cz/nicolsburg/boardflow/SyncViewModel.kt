@@ -6,6 +6,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.data.BggApiClient
 import cz.nicolsburg.boardflow.data.BggCache
 import cz.nicolsburg.boardflow.data.BggImageCache
@@ -330,21 +331,19 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun refreshCollectionSilentlyOnStartup(forceRefresh: Boolean = true) {
+    fun refreshCollectionSilentlyOnStartup(forceRefresh: Boolean = false) {
         if (!refreshMutex.tryLock()) return
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 refreshCredentialState()
-                val account = _account.value ?: return@launch
-                val spreadsheetId = _spreadsheetId.value.ifBlank { securePrefs.syncSpreadsheetId }.trim()
-                if (spreadsheetId.isBlank() || !securePrefs.hasCredentials()) return@launch
+                if (!securePrefs.hasCredentials()) return@launch
 
                 withSuppressedLogging {
                     refreshBggPlayHistory()
                     val merged = buildCanonicalCollectionSnapshot(
                         forceRefresh = forceRefresh,
                         refreshSleeves = true,
-                        preferredAccount = account
+                        preferredAccount = _account.value
                     )
                     replaceCollectionSnapshot(merged)
                     _collectionGames.value = merged
@@ -488,18 +487,36 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         securePrefs.syncSheetTabName = details.firstSheetTitle
     }
 
-    private fun loadBggCollection(forceRefresh: Boolean): List<BggApiClient.BggGame> {
+    private suspend fun loadBggCollection(forceRefresh: Boolean): List<BggApiClient.BggGame> {
         val credentials = requireBggCredentials()
         val cache = BggCache(getApplication())
-        return if (!forceRefresh && cache.exists(credentials.username)) {
+        if (!forceRefresh && cache.exists(credentials.username)) {
             entry("BGG cache", "Loading from local cache", LogEntry.Type.INFO)
-            cache.load(credentials.username)
-        } else {
-            if (forceRefresh) cache.delete(credentials.username)
-            entry("BGG API", "Fetching collection...", LogEntry.Type.INFO)
-            val games = BggApiClient().fetchCollection(credentials.username, credentials.password)
-            cache.save(credentials.username, games)
-            entry("BGG API", "${games.size} games fetched and cached", LogEntry.Type.INFO)
+            return cache.load(credentials.username)
+        }
+        if (forceRefresh) cache.delete(credentials.username)
+        entry("BGG API", "Fetching collection...", LogEntry.Type.INFO)
+        val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
+        val games = client.fetchCollection(credentials.username, credentials.password)
+        entry("BGG API", "${games.size} games fetched, loading full details...", LogEntry.Type.INFO)
+        return try {
+            val thingDetails = client.fetchThingDetails(games.map { it.objectid })
+            val enriched = games.map { game ->
+                val detail = thingDetails[game.objectid] ?: return@map game
+                game.copy(
+                    avgweight = detail.avgweight.ifBlank { game.avgweight },
+                    bggbestplayers = detail.bggbestplayers.ifBlank { game.bggbestplayers },
+                    bggrecplayers = detail.bggrecplayers.ifBlank { game.bggrecplayers },
+                    bggrecagerange = detail.bggrecagerange.ifBlank { game.bggrecagerange },
+                    bgglanguagedependence = detail.bgglanguagedependence.ifBlank { game.bgglanguagedependence }
+                )
+            }
+            cache.save(credentials.username, enriched)
+            entry("BGG API", "${enriched.size} games fetched and cached", LogEntry.Type.INFO)
+            enriched
+        } catch (e: Exception) {
+            entry("BGG API", "Could not fetch game details: ${e.message}", LogEntry.Type.ERROR)
+            // Don't cache — let the next refresh retry enrichment
             games
         }
     }
@@ -720,7 +737,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun buildBggCollection(forceRefresh: Boolean): List<GameItem> {
+    private suspend fun buildBggCollection(forceRefresh: Boolean): List<GameItem> {
+        val credentials = requireBggCredentials()
         val bggGames = loadBggCollection(forceRefresh)
         val ownedGames = bggGames.map { bggGame ->
             GameItem(
@@ -738,15 +756,15 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     minPlayTime = bggGame.minplaytime.toIntOrNull(),
                     maxPlayTime = bggGame.maxplaytime.toIntOrNull(),
                     numOwned = bggGame.numowned.toIntOrNull(),
-                    languageDependence = bggGame.bgglanguagedependence,
+                    languageDependence = bggGame.bgglanguagedependence.ifBlank { null },
                     language = null
                 ),
                 players = GameItem.Players(
                     minPlayers = bggGame.minplayers.toIntOrNull(),
                     maxPlayers = bggGame.maxplayers.toIntOrNull(),
-                    bestPlayers = bggGame.bggbestplayers,
-                    recommendedPlayers = bggGame.bggrecplayers,
-                    recommendedAge = bggGame.bggrecagerange
+                    bestPlayers = bggGame.bggbestplayers.ifBlank { null },
+                    recommendedPlayers = bggGame.bggrecplayers.ifBlank { null },
+                    recommendedAge = bggGame.bggrecagerange.ifBlank { null }
                 ),
                 ownership = GameItem.Ownership(
                     isOwned = bggGame.own.toBoolFlag(),
@@ -754,29 +772,49 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     bggPlayCount = bggGame.numplays.toIntOrNull()
                 ),
                 sleeves = GameItem.Sleeves(),
-                media = GameItem.Media(
-                    thumbnailUrl = bggGame.thumbnailUrl
-                ),
-                links = GameItem.Links(
-                    bggUrl = bggGame.bggurl,
-                    driveUrl = null,
-                    qrImageUrl = null
-                ),
-                sources = GameItem.Sources(
-                    spreadsheetValues = emptyMap(),
-                    bggValues = bggGame.asMap()
-                )
+                media = GameItem.Media(thumbnailUrl = bggGame.thumbnailUrl),
+                links = GameItem.Links(bggUrl = bggGame.bggurl, driveUrl = null, qrImageUrl = null),
+                sources = GameItem.Sources(spreadsheetValues = emptyMap(), bggValues = bggGame.asMap())
             )
         }
-        val credentials = requireBggCredentials()
-        val wishlistGames = try {
-            BggApiClient().fetchWishlistGameItems(credentials.username, credentials.password)
+
+        // Wishlist — single client instance shared for fetch + thing-detail enrichment
+        val wishlistClient = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
+        val wishlistItems = try {
+            wishlistClient.fetchWishlistGameItems(credentials.username, credentials.password)
         } catch (e: Exception) {
             entry("BGG wishlist", e.message ?: "Could not load wishlist", LogEntry.Type.ERROR)
             emptyList()
         }
         val ownedIds = ownedGames.map { it.objectId }.toSet()
-        return ownedGames + wishlistGames.filter { it.objectId !in ownedIds }
+        val newWishlistItems = wishlistItems.filter { it.objectId !in ownedIds }
+
+        val enrichedWishlistItems = if (newWishlistItems.isNotEmpty()) {
+            try {
+                val details = wishlistClient.fetchThingDetails(newWishlistItems.map { it.objectId })
+                newWishlistItems.map { game ->
+                    val d = details[game.objectId] ?: return@map game
+                    game.copy(
+                        stats = game.stats.copy(
+                            weight = d.avgweight.toDoubleOrNull() ?: game.stats.weight,
+                            languageDependence = d.bgglanguagedependence.ifBlank { game.stats.languageDependence }
+                        ),
+                        players = game.players.copy(
+                            bestPlayers = d.bggbestplayers.ifBlank { game.players.bestPlayers },
+                            recommendedPlayers = d.bggrecplayers.ifBlank { game.players.recommendedPlayers },
+                            recommendedAge = d.bggrecagerange.ifBlank { game.players.recommendedAge }
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                entry("BGG wishlist details", e.message ?: "Could not fetch wishlist details", LogEntry.Type.ERROR)
+                newWishlistItems
+            }
+        } else {
+            newWishlistItems
+        }
+
+        return ownedGames + enrichedWishlistItems
     }
 
     private suspend fun buildCanonicalCollectionSnapshot(
@@ -788,6 +826,19 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         var merged = emptyList<GameItem>()
         var sheetLoaded = false
 
+        // BGG is the primary source — always fetch first
+        try {
+            val bggGames = buildBggCollection(forceRefresh)
+            merged = mergeGameItems(merged, bggGames, CollectionUpdateSource.BGG)
+            entry("BGG", "${bggGames.size} games merged", LogEntry.Type.INFO)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.BGG)
+            entry("BGG", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
+        }
+
+        // Google Sheets is secondary — only used when user has Google account and sheet connected
         val account = preferredAccount
         val spreadsheetId = _spreadsheetId.value.ifBlank { securePrefs.syncSpreadsheetId }.trim()
         if (account != null && spreadsheetId.isNotBlank()) {
@@ -801,23 +852,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.SHEET)
-                sheetLoaded = true
                 entry("Google Sheets", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
             }
-        } else {
-            entry("Google Sheets", "Skipping sheet refresh", LogEntry.Type.INFO)
-        }
-
-        try {
-            val bggGames = buildBggCollection(forceRefresh)
-            merged = mergeGameItems(merged, bggGames, CollectionUpdateSource.BGG)
-            entry("BGG", "${bggGames.size} games merged", LogEntry.Type.INFO)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.BGG)
-            entry("BGG", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
         }
 
         if (!sheetLoaded) {
@@ -859,13 +895,13 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     ): Pair<List<GameItem>, Int> {
         if (cachedPlays.isEmpty()) return games to 0
 
-        val countsByGameId = cachedPlays
-            .groupBy { it.gameId }
-            .mapValues { (_, plays) -> plays.sumOf { it.quantity.coerceAtLeast(1) } }
-
-        val countsByName = cachedPlays
-            .groupBy { it.gameName.trim().lowercase() }
-            .mapValues { (_, plays) -> plays.sumOf { it.quantity.coerceAtLeast(1) } }
+        val countsByGameId = mutableMapOf<Int, Int>()
+        val countsByName = mutableMapOf<String, Int>()
+        for (play in cachedPlays) {
+            val qty = play.quantity.coerceAtLeast(1)
+            countsByGameId.merge(play.gameId, qty, Int::plus)
+            countsByName.merge(play.gameName.trim().lowercase(), qty, Int::plus)
+        }
 
         var backfilledCount = 0
         val updatedGames = games.map { game ->
@@ -896,7 +932,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         forceRefresh: Boolean
     ): List<GameItem> {
         val credentials = requireBggCredentials()
-        val client = BggApiClient()
+        val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
         client.loginIfNeeded(credentials.username, credentials.password)
         entry("BGG sleeves", "Checking ${games.size} games", LogEntry.Type.INFO)
 
