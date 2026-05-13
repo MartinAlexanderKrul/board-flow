@@ -124,6 +124,17 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         securePrefs.saveSleevesExcludedGameIds(updated)
     }
 
+    fun excludeAllSleeveGames(ids: Set<String>) {
+        val updated = _sleevesExcludedGameIds.value + ids
+        _sleevesExcludedGameIds.value = updated
+        securePrefs.saveSleevesExcludedGameIds(updated)
+    }
+
+    fun includeAllSleeveGames() {
+        _sleevesExcludedGameIds.value = emptySet()
+        securePrefs.saveSleevesExcludedGameIds(emptySet())
+    }
+
     fun connectExistingSpreadsheet(account: Account, input: String) = runSync("Connect spreadsheet") {
         val resolvedId = extractSheetId(input).trim()
         require(resolvedId.isNotBlank()) { "Paste a Google Sheets URL or spreadsheet ID first." }

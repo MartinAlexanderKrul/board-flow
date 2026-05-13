@@ -1,8 +1,13 @@
 package cz.nicolsburg.boardflow.ui.collection
 
 import androidx.compose.animation.AnimatedVisibility
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +25,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,20 +39,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.model.GameItem
+import cz.nicolsburg.boardflow.model.SleeveDatabase
+import cz.nicolsburg.boardflow.model.SleeveEntry
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 
-private data class GameSleevesEntry(val name: String, val count: Int)
+private data class GameSleevesEntry(val name: String, val count: Int, val exactSize: String)
 
 private data class SleeveSizeGroup(
-    val size: String,
+    val displayName: String,
+    val sleeveEntry: SleeveEntry?,
     val totalCount: Int,
     val games: List<GameSleevesEntry>,
     val isUnknown: Boolean = false
@@ -53,15 +65,17 @@ private data class SleeveSizeGroup(
 
 private fun computeSleeveSummary(
     games: List<GameItem>,
-    excludedGameIds: Set<String>
+    excludedGameIds: Set<String>,
+    showAll: Boolean = false
 ): List<SleeveSizeGroup> {
     val toSleeve = games.filter { game ->
         game.isOwned &&
-            sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE &&
+            (showAll || sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE) &&
             game.objectId !in excludedGameIds
     }
 
-    val sizeGroups = LinkedHashMap<String, Pair<Int, LinkedHashMap<String, Int>>>()
+    // groupKey -> Triple(totalCount, sleeveEntry, Map<gameName, Pair<count, exactSize>>)
+    val sizeGroups = LinkedHashMap<String, Triple<Int, SleeveEntry?, LinkedHashMap<String, Pair<Int, String>>>>()
     val noDataGames = LinkedHashSet<String>()
 
     for (game in toSleeve) {
@@ -71,44 +85,66 @@ private fun computeSleeveSummary(
             continue
         }
 
-        val countsForThisGame = mutableMapOf<String, Int>()
+        // Aggregate per generic sleeve name for this game, preserving the raw size
+        val gameGroups = mutableMapOf<String, Pair<Int, String>>() // groupKey -> (count, firstRawSize)
         for (cs in cardSets) {
-            val size = cs.size?.takeIf { it.isNotBlank() } ?: continue
-            countsForThisGame[size] = (countsForThisGame[size] ?: 0) + (cs.count ?: 0)
+            val rawSize = cs.size?.takeIf { it.isNotBlank() } ?: continue
+            val entry = SleeveDatabase.findBySize(rawSize)
+            val groupKey = entry?.genericName ?: rawSize
+            val existing = gameGroups[groupKey]
+            gameGroups[groupKey] = Pair(
+                (existing?.first ?: 0) + (cs.count ?: 0),
+                existing?.second ?: rawSize
+            )
         }
 
-        if (countsForThisGame.isEmpty()) {
+        if (gameGroups.isEmpty()) {
             noDataGames += game.name
             continue
         }
 
-        for ((size, gameCount) in countsForThisGame) {
-            val existing = sizeGroups[size]
+        for ((groupKey, gamePair) in gameGroups) {
+            val (gameCount, exactSize) = gamePair
+            val sleeveEntry = SleeveDatabase.findBySize(exactSize)
+            val existing = sizeGroups[groupKey]
             if (existing == null) {
-                sizeGroups[size] = gameCount to linkedMapOf(game.name to gameCount)
+                sizeGroups[groupKey] = Triple(
+                    gameCount,
+                    sleeveEntry,
+                    linkedMapOf(game.name to Pair(gameCount, exactSize))
+                )
             } else {
-                sizeGroups[size] = (existing.first + gameCount) to existing.second.also {
-                    it[game.name] = (it[game.name] ?: 0) + gameCount
+                val updatedGames = existing.third.also {
+                    val prev = it[game.name]
+                    it[game.name] = Pair((prev?.first ?: 0) + gameCount, exactSize)
                 }
+                sizeGroups[groupKey] = Triple(
+                    existing.first + gameCount,
+                    existing.second ?: sleeveEntry,
+                    updatedGames
+                )
             }
         }
     }
 
     val knownGroups = sizeGroups.entries
-        .map { (size, pair) ->
+        .map { (displayName, triple) ->
+            val (totalCount, sleeveEntry, gameMap) = triple
             SleeveSizeGroup(
-                size = size,
-                totalCount = pair.first,
-                games = pair.second.map { (name, count) -> GameSleevesEntry(name, count) }
+                displayName = displayName,
+                sleeveEntry = sleeveEntry,
+                totalCount = totalCount,
+                games = gameMap.map { (name, pair) -> GameSleevesEntry(name, pair.first, pair.second) }
             )
         }
         .sortedByDescending { it.totalCount }
 
     return if (noDataGames.isNotEmpty()) {
         knownGroups + SleeveSizeGroup(
-            size = "No size data",
+            displayName = "No size data",
+            sleeveEntry = null,
             totalCount = 0,
-            games = noDataGames.map { GameSleevesEntry(it, 0) },
+            games = noDataGames.map { GameSleevesEntry(it, 0, "") },
             isUnknown = true
         )
     } else {
@@ -122,15 +158,39 @@ internal fun SleevesContent(
     listState: LazyListState = rememberLazyListState(),
     excludedGameIds: Set<String> = emptySet(),
     onToggleExclusion: (String) -> Unit = {},
+    onExcludeAll: (Set<String>) -> Unit = {},
+    onIncludeAll: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val allGamesToSleeve = remember(allGames) {
+    var showAllGames by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val onShare: () -> Unit = remember(allGames) {
+        {
+            val csv = buildSleevesCsv(allGames)
+            val intent = Intent.createChooser(
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, "sleeve-sizes.csv")
+                    putExtra(Intent.EXTRA_TEXT, csv)
+                },
+                null
+            )
+            context.startActivity(intent)
+        }
+    }
+
+    val allGamesToSleeve = remember(allGames, showAllGames) {
         allGames
-            .filter { game -> game.isOwned && sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE }
+            .filter { game ->
+                game.isOwned && (showAllGames || sheetSleeveStatus(game) == SheetSleeveStatus.TO_SLEEVE)
+            }
             .sortedBy { it.name.lowercase() }
     }
 
-    val groups = remember(allGames, excludedGameIds) { computeSleeveSummary(allGames, excludedGameIds) }
+    val groups = remember(allGames, excludedGameIds, showAllGames) {
+        computeSleeveSummary(allGames, excludedGameIds, showAll = showAllGames)
+    }
     val includedCount = remember(allGamesToSleeve, excludedGameIds) {
         allGamesToSleeve.count { it.objectId !in excludedGameIds }
     }
@@ -176,7 +236,12 @@ internal fun SleevesContent(
                 totalCount = allGamesToSleeve.size,
                 sizesCount = groups.count { !it.isUnknown },
                 expanded = showGameSelector,
-                onToggleExpand = { showGameSelector = !showGameSelector }
+                showAllGames = showAllGames,
+                onToggleExpand = { showGameSelector = !showGameSelector },
+                onSwipeLeft = { onExcludeAll(allGamesToSleeve.map { it.objectId }.toSet()) },
+                onSwipeRight = { onIncludeAll() },
+                onLongPress = { showAllGames = !showAllGames },
+                onShare = onShare
             )
         }
 
@@ -227,7 +292,7 @@ internal fun SleevesContent(
             }
         }
 
-        items(groups, key = { it.size }) { group ->
+        items(groups, key = { it.displayName }) { group ->
             SleeveSizeGroupCard(group = group)
         }
     }
@@ -265,15 +330,46 @@ private fun CompactSleeveCheckmark(checked: Boolean) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SleeveSummaryHeader(
     includedCount: Int,
     totalCount: Int,
     sizesCount: Int,
     expanded: Boolean,
-    onToggleExpand: () -> Unit
+    showAllGames: Boolean,
+    onToggleExpand: () -> Unit,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit,
+    onLongPress: () -> Unit,
+    onShare: () -> Unit
 ) {
-    SectionCard(accented = true, onClick = onToggleExpand) {
+    SectionCard(
+        accented = true,
+        modifier = Modifier
+            .combinedClickable(
+                onClick = onToggleExpand,
+                onLongClick = onLongPress
+            )
+            .pointerInput(onSwipeLeft, onSwipeRight) {
+                val threshold = 52.dp.toPx()
+                var accumulated = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { accumulated = 0f },
+                    onDragEnd = {
+                        when {
+                            accumulated < -threshold -> onSwipeLeft()
+                            accumulated > threshold  -> onSwipeRight()
+                        }
+                        accumulated = 0f
+                    },
+                    onHorizontalDrag = { change, dragAmount ->
+                        change.consume()
+                        accumulated += dragAmount
+                    }
+                )
+            }
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -298,24 +394,47 @@ private fun SleeveSummaryHeader(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     val subtitle = buildList {
-                        if (sizesCount > 0) add("$sizesCount ${if (sizesCount == 1) "size" else "sizes"} needed")
-                        if (includedCount < totalCount) add("${totalCount - includedCount} excluded")
+                        if (showAllGames) {
+                            add("all owned")
+                        } else {
+                            if (sizesCount > 0) add("$sizesCount ${if (sizesCount == 1) "size" else "sizes"} needed")
+                            if (includedCount < totalCount) add("${totalCount - includedCount} excluded")
+                        }
                     }.joinToString("  ·  ")
                     if (subtitle.isNotBlank()) {
                         Text(
                             subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (showAllGames)
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
-            Icon(
-                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Collapse" else "Expand game list",
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                IconButton(
+                    onClick = onShare,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Share,
+                        contentDescription = "Export sleeve data",
+                        modifier = Modifier.size(15.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f)
+                    )
+                }
+                Icon(
+                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Collapse" else "Expand game list",
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -335,7 +454,7 @@ private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
-                    group.size,
+                    group.displayName,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -346,6 +465,13 @@ private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
                         MaterialTheme.colorScheme.onSurface
                     }
                 )
+                group.sleeveEntry?.let {
+                    Text(
+                        it.recommendedSize,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                    )
+                }
                 Text(
                     "${group.games.size} ${if (group.games.size == 1) "game" else "games"}",
                     style = MaterialTheme.typography.labelSmall,
@@ -387,16 +513,25 @@ private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 4.dp, top = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "· ${entry.name}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "· ${entry.name}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (entry.exactSize.isNotBlank()) {
+                                Text(
+                                    entry.exactSize,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f)
+                                )
+                            }
+                        }
                         if (!group.isUnknown && entry.count > 0) {
                             Text(
                                 "×${entry.count}",
@@ -406,7 +541,80 @@ private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
                         }
                     }
                 }
+                group.sleeveEntry?.let { entry ->
+                    if (entry.manufacturerOptions.isNotEmpty()) {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                        Column(
+                            modifier = Modifier.padding(top = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                "Where to buy",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f),
+                                modifier = Modifier.padding(bottom = 1.dp)
+                            )
+                            entry.manufacturerOptions.forEach { (brand, product) ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                        border = BorderStroke(
+                                            0.5.dp,
+                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)
+                                        )
+                                    ) {
+                                        Text(
+                                            brand,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                    Text(
+                                        product,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+private fun csvEscape(value: String): String =
+    if (value.any { it == ',' || it == '"' || it == '\n' || it == '\r' })
+        "\"${value.replace("\"", "\"\"")}\""
+    else value
+
+private fun buildSleevesCsv(games: List<GameItem>): String {
+    val sb = StringBuilder()
+    sb.appendLine("Game,Card Set,Count,Size")
+    games
+        .filter { it.isOwned && it.sleeveCardSets.isNotEmpty() }
+        .sortedBy { it.name }
+        .forEach { game ->
+            game.sleeveCardSets.forEach { cs ->
+                sb.appendLine(
+                    "${csvEscape(game.name)}," +
+                    "${csvEscape(cs.label)}," +
+                    "${cs.count ?: ""}," +
+                    csvEscape(cs.size.orEmpty())
+                )
+            }
+        }
+    return sb.trimEnd().toString()
 }

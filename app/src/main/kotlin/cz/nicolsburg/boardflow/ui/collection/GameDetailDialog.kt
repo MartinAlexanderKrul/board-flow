@@ -10,6 +10,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -65,11 +67,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
+import cz.nicolsburg.boardflow.model.SleeveDatabase
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
@@ -707,7 +711,7 @@ private fun SleevesBlock(game: GameItem) {
     Surface(
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.025f),
         shape = GameDetailTokens.CardCorner,
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.07f)),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.10f)),
         tonalElevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -936,7 +940,8 @@ private fun SleevesSection(game: GameItem) {
         game.sleeveCardSets
             .filter { it.size != null || it.count != null }
             .groupBy { it.size?.trim().orEmpty() }
-            .entries.sortedBy { it.key }
+            .entries
+            .sortedWith(compareBy({ SleeveDatabase.findBySize(it.key) == null }, { it.key }))
     }
 
     when {
@@ -956,46 +961,86 @@ private fun SleevesSection(game: GameItem) {
 
         grouped.isEmpty() -> Unit
 
-        else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        else -> Column {
             grouped.forEachIndexed { index, (size, sets) ->
                 if (index > 0) {
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f),
-                        modifier = Modifier.padding(vertical = 1.dp)
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.06f)
                     )
                 }
                 val total = sets.mapNotNull { it.count }.sum()
+                val sleeveEntry = SleeveDatabase.findBySize(size)
+                val genericName = sleeveEntry?.genericName
+                val preferred = sleeveEntry?.preferred
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 3.dp),
+                        .padding(vertical = 5.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = size.ifBlank { "Unknown size" },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                        Text(
+                            text = genericName ?: size.ifBlank { "Unknown size" },
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.90f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (genericName != null && size.isNotBlank()) {
+                            Text(
+                                text = size,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f),
+                                maxLines = 1
+                            )
+                            if (preferred != null) {
+                                Text(
+                                    text = compactManufacturerLine(preferred.first, preferred.second),
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
                     if (total > 0) {
                         Surface(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-                            shape = CircleShape
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(11.dp)
                         ) {
-                            Text(
-                                text = "$total",
-                                style = MaterialTheme.typography.labelSmall.withTabularNumbers(),
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
-                            )
+                            Box(
+                                modifier = Modifier.defaultMinSize(minWidth = 40.dp, minHeight = 22.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "$total",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
+
+private fun compactManufacturerLine(brand: String, product: String): String {
+    val shortBrand = brand.split(" ").first()
+    val sizePattern = Regex("""\s*\d+\.?\d*\s*[×xX]\s*\d+\.?\d*\s*$""")
+    val productWithoutBrand = when {
+        product.startsWith(brand)      -> product.removePrefix(brand).trim()
+        product.startsWith(shortBrand) -> product.removePrefix(shortBrand).trim()
+        else                           -> product
+    }
+    val cleanProduct = productWithoutBrand.replace(sizePattern, "").trim()
+    return if (cleanProduct.isNotBlank()) "$shortBrand · $cleanProduct" else shortBrand
 }
 
 private fun compactPartnerName(name: String): String {

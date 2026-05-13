@@ -325,7 +325,9 @@ fun CollectionScreen(
                                 allGames = allGames,
                                 listState = sleeveListState,
                                 excludedGameIds = sleevesExcludedGameIds,
-                                onToggleExclusion = { syncViewModel.toggleSleeveGameExclusion(it) }
+                                onToggleExclusion = { syncViewModel.toggleSleeveGameExclusion(it) },
+                                onExcludeAll = { syncViewModel.excludeAllSleeveGames(it) },
+                                onIncludeAll = { syncViewModel.includeAllSleeveGames() }
                             )
 
                             else -> {
