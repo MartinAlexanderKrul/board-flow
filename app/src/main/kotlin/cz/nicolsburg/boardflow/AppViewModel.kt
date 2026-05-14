@@ -1,12 +1,18 @@
 ﻿package cz.nicolsburg.boardflow
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.core.di.AppContainer
+import cz.nicolsburg.boardflow.data.GameRecognitionEngine
+import cz.nicolsburg.boardflow.data.normalizeForRecognition
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.ExtractedPlay
+import cz.nicolsburg.boardflow.model.GameCandidate
+import cz.nicolsburg.boardflow.model.GameRecognitionHint
+import cz.nicolsburg.boardflow.model.ScanRecognitionResult
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.GameRelations
 import cz.nicolsburg.boardflow.model.LogPlayPrefill
@@ -188,9 +194,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _logPlayHasUnsavedChanges.value = false
         prefs.addRecentGame(game)
         _recentGames.value = prefs.getRecentGames()
-        _extractedPlay.value = null
         _additionalGames.value = emptyList()
         _gameRelations.value = findRelatedGames(game, _allGames.value)
+
+        // In correction mode applyDetectedGameCorrection runs immediately after and
+        // handles _extractedPlay / _editablePlayers itself — don't clear them here.
+        if (_quickScanCorrectionMode.value) return
+
+        _extractedPlay.value = null
 
         val pending = _changeGameSession?.takeIf { it.isActive() }
         _changeGameSession = null
@@ -223,6 +234,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     // --- Scan / extraction ---
+    private var sessionModel: String? = null
+    private var sessionModelExpiry: Long = 0L
+    private fun effectiveModel(): String {
+        val now = System.currentTimeMillis()
+        return if (sessionModel != null && now < sessionModelExpiry) sessionModel!! else prefs.geminiModelEndpoint
+    }
+
     private val _extractedPlay = MutableStateFlow<ExtractedPlay?>(null)
     val extractedPlay: StateFlow<ExtractedPlay?> = _extractedPlay.asStateFlow()
     private val _scanLoading = MutableStateFlow(false)
@@ -230,17 +248,190 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _scanError = MutableStateFlow<String?>(null)
     val scanError: StateFlow<String?> = _scanError.asStateFlow()
 
+    private val recognitionEngine = GameRecognitionEngine()
+    private val _gameCandidates = MutableStateFlow<List<GameCandidate>>(emptyList())
+    val gameCandidates: StateFlow<List<GameCandidate>> = _gameCandidates.asStateFlow()
+    private val _scanRecognitionResult = MutableStateFlow<ScanRecognitionResult?>(null)
+    val scanRecognitionResult: StateFlow<ScanRecognitionResult?> = _scanRecognitionResult.asStateFlow()
+    private val _quickScanCorrectionMode = MutableStateFlow(false)
+    val quickScanCorrectionMode: StateFlow<Boolean> = _quickScanCorrectionMode.asStateFlow()
+    private val _pendingWidgetQuickScan = MutableStateFlow(false)
+    val pendingWidgetQuickScan: StateFlow<Boolean> = _pendingWidgetQuickScan.asStateFlow()
+    /** True when the scan was started after a game was explicitly pre-selected (id != 0). */
+    private val _scanStartedWithGame = MutableStateFlow(false)
+    val scanStartedWithGame: StateFlow<Boolean> = _scanStartedWithGame.asStateFlow()
+
     var selectedGame: BggGame? = null
+
+    /**
+     * Switches the active game for an in-progress scan without disturbing the
+     * extracted play data (players/scores/date). Used by game-detection auto-switch
+     * and user-confirmed suggestion acceptance.
+     */
+    private fun applyDetectedGame(game: BggGame) {
+        selectedGame = game
+        _gameRelations.value = findRelatedGames(game, _allGames.value)
+        _logPlayHasUnsavedChanges.value = false
+        prefs.addRecentGame(game)
+        _recentGames.value = prefs.getRecentGames()
+    }
+
+    private fun saveHintForGame(game: BggGame, extracted: ExtractedPlay) {
+        val normTitle = extracted.detectedGameTitle?.let { normalizeForRecognition(it) }
+        val normCats = extracted.detectedScoringCategories.map { normalizeForRecognition(it) }.filter { it.isNotBlank() }
+        val titles = listOfNotNull(normalizeForRecognition(game.name).takeIf { it.isNotBlank() }, normTitle).distinct()
+        prefs.saveGameRecognitionHint(
+            GameRecognitionHint(
+                gameObjectId = game.id.toString(),
+                gameName = game.name,
+                normalizedTitles = titles,
+                normalizedCategories = normCats,
+                confirmedAt = System.currentTimeMillis(),
+                timesConfirmed = 1
+            )
+        )
+    }
+
+    /** User confirmed a game suggestion from the detected candidates list. */
+    fun acceptGameSuggestion(game: BggGame) {
+        _extractedPlay.value?.let { saveHintForGame(game, it) }
+        applyDetectedGame(game)
+        _gameCandidates.value = emptyList()
+    }
+
+    fun clearGameRecognitionHints() { prefs.clearGameRecognitionHints() }
+    fun deleteGameRecognitionHint(gameObjectId: String) { prefs.deleteGameRecognitionHint(gameObjectId) }
+    fun replaceGameRecognitionHint(hint: GameRecognitionHint) { prefs.replaceGameRecognitionHint(hint) }
+
+    /** User dismissed the game suggestion banner without accepting any candidate. */
+    fun dismissGameSuggestion() {
+        _gameCandidates.value = emptyList()
+    }
+
+    fun dismissScanRecognitionResult() {
+        _scanRecognitionResult.value = null
+        clearQuickScanCorrectionMode("recognition result dismissed by user")
+    }
+
+    /** Enters the mode where the next game selection from NewPlayScreen returns to LogPlay without a new scan. */
+    fun enterQuickScanCorrectionMode() {
+        Log.d("QuickScan", "Entering correction mode; extractedPlay preserved=${_extractedPlay.value != null}")
+        _quickScanCorrectionMode.value = true
+    }
+
+    /** Called by AppShell when the user presses back from NewPlayScreen while correction mode is active. */
+    fun exitQuickScanCorrectionMode() {
+        clearQuickScanCorrectionMode("back pressed from NewPlay without game selection")
+    }
+
+    /** Signal from MainActivity that the widget tapped — AppShell will consume and navigate. */
+    fun requestWidgetQuickScan() {
+        _pendingWidgetQuickScan.value = true
+    }
+
+    fun consumeWidgetQuickScan() {
+        _pendingWidgetQuickScan.value = false
+    }
+
+    /** Called when the user selects a correction game. Applies it without clearing extracted scan data. */
+    fun applyDetectedGameCorrection(game: BggGame) {
+        val extracted = _extractedPlay.value
+        Log.d("QuickScan", "Correction game selected: ${game.name}; extractedDataPreserved=${extracted != null} players=${extracted?.players?.size ?: 0}")
+        extracted?.let { saveHintForGame(game, it) }
+        if (extracted != null && extracted.players.isNotEmpty()) {
+            initEditablePlayers(extracted.players)
+            Log.d("QuickScan", "Re-initialized ${extracted.players.size} player(s) from extracted play")
+        }
+        applyDetectedGame(game)
+        _gameCandidates.value = emptyList()
+        _scanRecognitionResult.value = null
+        clearQuickScanCorrectionMode("game selection confirmed")
+    }
+
+    private fun clearQuickScanCorrectionMode(reason: String) {
+        if (_quickScanCorrectionMode.value) {
+            Log.d("QuickScan", "Correction mode cleared: $reason")
+            _quickScanCorrectionMode.value = false
+        }
+    }
 
     fun extractScores(imageFile: File) {
         viewModelScope.launch {
+            _scanStartedWithGame.value = (selectedGame?.id ?: 0) != 0
+            Log.d("AutoSwitch", "Scan started; preselectedGame=${selectedGame?.name ?: "none"} scanStartedWithGame=${_scanStartedWithGame.value}")
             _scanLoading.value = true; _scanError.value = null; _extractedPlay.value = null
+            _gameCandidates.value = emptyList(); _scanRecognitionResult.value = null
+            clearQuickScanCorrectionMode("new scan started")
             container.geminiRepo.extractScoresFromImage(
                 imageFile = imageFile, apiKey = prefs.geminiApiKey,
-                modelName = prefs.geminiModelEndpoint, availableModels = prefs.getAvailableModels(),
-                onModelChanged = { newModel -> prefs.geminiModelEndpoint = newModel }
-            ).onSuccess { _extractedPlay.value = it }
-             .onFailure { _scanError.value = it.message }
+                modelName = effectiveModel(), availableModels = prefs.getAvailableModels(),
+                onModelChanged = { newModel ->
+                    sessionModel = newModel
+                    sessionModelExpiry = System.currentTimeMillis() + 5 * 60 * 1000L
+                }
+            ).onSuccess { extracted ->
+                _extractedPlay.value = extracted
+                val hints = prefs.loadGameRecognitionHints()
+                val candidates = recognitionEngine.rankCandidates(extracted, _collectionItems.value, hints)
+                val geminiConfidence = extracted.detectedGameConfidence ?: 0f
+                val top = candidates.firstOrNull()
+                val second = candidates.getOrNull(1)
+                val margin = if (top != null && second != null) top.score - second.score else top?.score ?: 0f
+                val condConfidence = geminiConfidence >= 0.95f
+                val condMargin = second == null || margin >= 0.15f
+
+                // TITLE_GATE: classic path — title drove the match, high score required.
+                val condTitleScore = top != null && top.score >= 0.90f
+                val condTitlePresent = !extracted.detectedGameTitle.isNullOrBlank()
+                val titleGate = top != null && condConfidence && condTitleScore && condMargin && condTitlePresent
+                    && top.primarySignal != "category-template"
+
+                // TEMPLATE_CATEGORY_GATE: category template drove the match — lower score
+                // threshold compensates for the fact that category-only scores peak at 0.75.
+                val condTemplateScore = top != null && top.score >= 0.75f
+                val condTemplateOverlap = top != null && top.templateOverlap >= 3
+                val templateCategoryGate = top != null && condConfidence && condTemplateScore
+                    && condMargin && condTemplateOverlap
+                    && top.primarySignal == "category-template"
+
+                val autoSwitch = titleGate || templateCategoryGate
+                val gateUsed = when {
+                    titleGate            -> "TITLE_GATE"
+                    templateCategoryGate -> "TEMPLATE_CATEGORY_GATE"
+                    else                 -> "BLOCKED"
+                }
+                Log.d("AutoSwitch", buildString {
+                    append("gate=$gateUsed ")
+                    append("geminiConf=${(geminiConfidence * 100).toInt()}%(need>=95 ok=$condConfidence) ")
+                    append("topScore=${top?.let { (it.score * 100).toInt() } ?: "none"}% ")
+                    append("margin=${(margin * 100).toInt()}%(need>=15 ok=$condMargin) ")
+                    append("primarySignal=${top?.primarySignal ?: "n/a"} ")
+                    append("templateOverlap=${top?.templateOverlap ?: 0}(need>=3 ok=$condTemplateOverlap) ")
+                    append("titlePresent=$condTitlePresent ")
+                    append("top='${top?.game?.name}' second='${second?.game?.name}' ")
+                    append("-> autoSwitch=$autoSwitch")
+                })
+                if (autoSwitch) {
+                    // top is guaranteed non-null by the autoSwitch condition above
+                    if (selectedGame?.id != top!!.game.id) applyDetectedGame(top.game)
+                    saveHintForGame(top.game, extracted)
+                    _gameCandidates.value = emptyList()
+                    _scanRecognitionResult.value = ScanRecognitionResult.AutoSwitched(top.game.name)
+                } else {
+                    _gameCandidates.value = candidates
+                    if (candidates.isEmpty()) {
+                        val detectedTitle = extracted.detectedGameTitle
+                        _scanRecognitionResult.value = if (!detectedTitle.isNullOrBlank()) {
+                            ScanRecognitionResult.NoCollectionMatch(detectedTitle)
+                        } else {
+                            ScanRecognitionResult.LowConfidence
+                        }
+                    } else {
+                        // Suggestion banner handles this case; no extra banner needed.
+                        _scanRecognitionResult.value = null
+                    }
+                }
+            }.onFailure { _scanError.value = it.message }
             _scanLoading.value = false
         }
     }
@@ -862,7 +1053,15 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _extractedPlay.value = ExtractedPlay(players = emptyList(), rawText = "Manual entry", date = java.time.LocalDate.now().toString())
     }
 
-    fun clearExtractedPlay() { _extractedPlay.value = null; _editablePlayers.value = emptyList(); _additionalGames.value = emptyList(); _scanError.value = null }
+    fun clearExtractedPlay() {
+        _extractedPlay.value = null
+        _editablePlayers.value = emptyList()
+        _additionalGames.value = emptyList()
+        _scanError.value = null
+        _gameCandidates.value = emptyList()
+        _scanRecognitionResult.value = null
+        clearQuickScanCorrectionMode("log play flow cleared")
+    }
 
     fun setPendingImportedPlay(play: LoggedPlay) {
         _pendingImportedPlay.value = play

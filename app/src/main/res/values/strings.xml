@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BoardFlow</string>
+    <string name="widget_quick_scan_label">Quick Scan</string>
+    <string name="widget_description">Launch BoardFlow directly into Quick Scan</string>
 </resources>

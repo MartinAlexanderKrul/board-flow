@@ -14,6 +14,8 @@ BoardFlow combines several related workflows in one app:
 - save a play locally when offline
 - post saved local plays later from History via an outbox-style "Unposted plays" section
 - scan a score sheet photo and extract players / scores with Gemini
+- AI game recognition from scan: auto-identify the game from score sheet layout using saved recognition templates; auto-switch when confidence is high enough, or present a ranked suggestion banner for the user to confirm
+- launch Quick Scan directly from the home-screen widget
 - manage a saved player roster with aliases and optional BGG usernames
 - review play history, aggregate stats, and saved-player activity
 - edit or delete logged plays
@@ -53,7 +55,8 @@ Notable behavior:
 - search is debounced (800ms); local collection is checked first; if no match, BGG is queried with `exact=1` then `exact=0` as a fallback
 - background collection loads never overwrite an active BGG search result set; the guard is cleared when the user selects a game or clears the query
 - session context (game, players, location) is persisted across app restarts for up to 4 hours
-- log form tracks unsaved changes
+- log form tracks unsaved changes; tapping X or back when any data is present (unsaved changes, editable players, or extracted play) triggers a discard confirmation dialog
+- if AI recognition identifies the wrong game, the user can tap "Choose another game" from the scan result banner; the app enters quick scan correction mode (`_quickScanCorrectionMode`), preserves the extracted players/scores, navigates to NewPlayScreen for re-selection, then returns to LogPlay with all data intact
 - player rows are keyed UI items with shared editing UI between log and edit flows
 - matched roster players are explicit; non-exact fuzzy matches require user confirmation
 - plays support quantity (multi-game sessions), incomplete flag, and nowInStats toggle
@@ -163,6 +166,7 @@ Behavior:
 - export backup JSON, optionally including sensitive data
 - import backup JSON
 - clear cached collection data
+- AI section shows saved recognition template count; templates can be viewed (tap), edited or deleted (long press), and bulk-cleared with confirmation
 
 ## Data Model And Storage
 
@@ -191,10 +195,11 @@ It stores:
 - session context (active game, players, location, timestamp)
 - sleeve exclusion list (game IDs excluded from sleeve display)
 - per-game insight key cache
+- AI game recognition templates (`GameRecognitionHint` list: normalized titles, category fingerprints, confirmation count)
 
 ### Import / Export
 
-`data/BackupSerializer.kt` handles backup JSON import/export (current format version 2).
+`data/BackupSerializer.kt` handles backup JSON import/export (current format version 3).
 
 Backups can include:
 
@@ -204,10 +209,11 @@ Backups can include:
 - player roster
 - recent games
 - sleeve exclusions
+- AI game recognition templates (`recognitionHints` array)
 - settings (theme, spreadsheet config, sleeve preference)
 - optionally sensitive data (BGG password, Gemini API key)
 
-Import is selective: only fields present in the backup JSON are applied; missing fields do not overwrite existing values.
+Import is selective: only fields present in the backup JSON are applied; missing fields do not overwrite existing values. Recognition templates from a backup fully replace the existing templates on device (bulk replace, not merge).
 
 ## Architecture
 
@@ -228,9 +234,11 @@ High-level ownership:
 
 - `MainActivity`
   - Android lifecycle and activity-result plumbing
+  - handles `ACTION_QUICK_SCAN` intent from home-screen widget (cold start and `onNewIntent`)
 - `AppShell`
   - navigation graph, scaffold, header, and bottom tabs
   - cross-screen deep-link routing (Collection -> History filtered by game, Collection -> Players filtered by player, etc.)
+  - consumes `pendingWidgetQuickScan` to navigate directly to the scan flow when the widget is tapped
 - `AppViewModel`
   - game search and recent games
   - log play state, session continuation, play-again flows
@@ -240,6 +248,7 @@ High-level ownership:
   - play posting, editing, and deletion (local and BGG)
   - manual unposted play outbox (per-play and bulk)
   - AI extraction (Gemini) handoff and result handling
+  - game recognition engine (`GameRecognitionEngine`) and hint management (save, delete, replace, clear)
   - session context persistence (active game / players / location)
   - record moment detection (first win, new high score, win streak)
   - expansion / game-relation detection
@@ -254,7 +263,7 @@ High-level ownership:
   - CSV import
   - Drive folder and QR code creation
   - sync log and progress state
-  - silent startup collection load (skipped if last sync was within 4 hours)
+  - silent startup collection load (skipped if last sync was within 4 hours; writes `lastSyncedAt` on completion so the gate is respected on subsequent startups)
 - `data/`
   - BGG API and scraping (`BggApiClient`, `BggRepository`)
   - Google APIs (`GoogleApiClient`)
@@ -339,6 +348,8 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
     theme/
       Theme.kt
       Spacing.kt
+    widget/
+      QuickScanWidget.kt
 ```
 
 ## External Integrations
@@ -381,7 +392,8 @@ The app supports:
 
 - user-provided Gemini API key
 - configurable model endpoint
-- model discovery and automatic fallback/cycling when a model is unavailable
+- model discovery and automatic fallback/cycling when a model is unavailable (503/429)
+- session-scoped fallback model: when the repository switches to a fallback model mid-scan, that model is reused for subsequent scans for up to 5 minutes; after that (or on next app launch) the user's configured model is used again
 
 ## UX / Product Notes
 

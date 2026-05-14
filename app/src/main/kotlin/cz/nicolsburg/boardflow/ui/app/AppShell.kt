@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -109,6 +110,8 @@ fun BoardFlowApp(
     val historyPlays by appViewModel.historyPlays.collectAsState()
     val players by appViewModel.players.collectAsState()
     val logPlayHasUnsavedChanges by appViewModel.logPlayHasUnsavedChanges.collectAsState()
+    val quickScanCorrectionMode by appViewModel.quickScanCorrectionMode.collectAsState()
+    val pendingWidgetQuickScan by appViewModel.pendingWidgetQuickScan.collectAsState()
     var startupSilentSyncRequested by rememberSaveable { mutableStateOf(false) }
     var showDiscardLogPlayConfirm by rememberSaveable { mutableStateOf(false) }
     var collectionHeaderFilterVisible by remember { mutableStateOf(false) }
@@ -150,6 +153,18 @@ fun BoardFlowApp(
         if (!syncBusy) appViewModel.loadCachedBggPlays()
     }
 
+    LaunchedEffect(pendingWidgetQuickScan) {
+        if (pendingWidgetQuickScan) {
+            appViewModel.consumeWidgetQuickScan()
+            appViewModel.exitQuickScanCorrectionMode()
+            appViewModel.clearLogPlayFlow()
+            val game = appViewModel.selectedGame
+            navController.navigate(AppRoutes.scan(game?.id ?: 0, game?.name ?: "")) {
+                popUpTo(AppRoutes.NEW_PLAY) { inclusive = false }
+            }
+        }
+    }
+
     // Tracks how far the current screen has scrolled so the header can show a divider.
     // Accumulated from NestedScrollConnection deltas; resets on route change.
     var contentScrolled by remember { mutableFloatStateOf(0f) }
@@ -177,6 +192,12 @@ fun BoardFlowApp(
                 return Offset.Zero
             }
         }
+    }
+
+    // Case 6: user presses back from NewPlayScreen without selecting a game while correction mode is active.
+    // Intercept the back gesture to clear the orphaned flag; the user stays on NewPlayScreen.
+    BackHandler(enabled = currentRoute == AppRoutes.NEW_PLAY && quickScanCorrectionMode) {
+        appViewModel.exitQuickScanCorrectionMode()
     }
 
     val tabs = listOf(
@@ -213,7 +234,10 @@ fun BoardFlowApp(
     }
 
     fun requestLeaveLogPlay() {
-        if (logPlayHasUnsavedChanges) {
+        val hasData = logPlayHasUnsavedChanges
+            || appViewModel.editablePlayers.value.isNotEmpty()
+            || appViewModel.extractedPlay.value != null
+        if (hasData) {
             showDiscardLogPlayConfirm = true
         } else {
             leaveLogPlay()
@@ -309,7 +333,10 @@ fun BoardFlowApp(
                 NewPlayScreen(
                     viewModel = appViewModel,
                     onGameSelected = { game ->
-                        if (appViewModel.isOnline()) {
+                        if (appViewModel.quickScanCorrectionMode.value) {
+                            appViewModel.applyDetectedGameCorrection(game)
+                            navController.navigate(AppRoutes.LOG_PLAY)
+                        } else if (appViewModel.isOnline()) {
                             navController.navigate(AppRoutes.scan(game.id, game.name))
                         } else {
                             appViewModel.setExtractedPlayManual()
@@ -318,6 +345,12 @@ fun BoardFlowApp(
                     },
                     onPlayAgain = {
                         navController.navigate(AppRoutes.LOG_PLAY)
+                    },
+                    onScanQuick = {
+                        // Starting a fresh scan exits any in-progress correction flow.
+                        appViewModel.exitQuickScanCorrectionMode()
+                        val game = appViewModel.selectedGame
+                        navController.navigate(AppRoutes.scan(game?.id ?: 0, game?.name ?: ""))
                     }
                 )
             }
@@ -444,7 +477,11 @@ fun BoardFlowApp(
                     },
                     onChangeGame = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) },
                     onNavigateBack = { requestLeaveLogPlay() },
-                    onDiscard = { requestLeaveLogPlay() }
+                    onDiscard = { requestLeaveLogPlay() },
+                    onChooseGame = {
+                        appViewModel.enterQuickScanCorrectionMode()
+                        navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false)
+                    }
                 )
             }
 

@@ -16,6 +16,8 @@ BoardFlow currently supports all of the following:
 - edit and delete play flows
 - play quantity, incomplete flag, and nowInStats toggle
 - AI score extraction from images with Gemini (with model fallback/cycling)
+- AI game recognition from scan: auto-identify the game using saved recognition templates (title similarity + category fingerprint matching, two-gate autoswitch: TITLE_GATE >= 0.90 or TEMPLATE_CATEGORY_GATE >= 0.75 with >= 3 category matches)
+- home-screen Quick Scan widget (`ui/widget/QuickScanWidget.kt`) that cold-starts or resumes the app directly into the scan flow via `ACTION_QUICK_SCAN`
 - saved player roster with aliases, optional BGG usernames, and Levenshtein fuzzy matching
 - collection browsing across owned / wishlist / sleeves
 - per-game sleeve exclusion (toggle individual games out of sleeve display)
@@ -60,9 +62,9 @@ Prefer targeted inspection of those files over broad exploration unless the issu
 
 - `MainActivity.kt`
   - thin Android entry point
-  - lifecycle hooks
-  - activity-result launchers
-  - auth wiring
+  - lifecycle hooks, activity-result launchers, auth wiring
+  - handles `ACTION_QUICK_SCAN` from home-screen widget in both `onCreate` (cold start) and `onNewIntent` (resumed); calls `appViewModel.requestWidgetQuickScan()`
+  - `launchMode="singleTop"` so widget taps call `onNewIntent` when the app is already running
 - `ui/app/AppShell.kt`
   - app scaffold
   - header
@@ -70,6 +72,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - screen routing
   - cross-screen deep-link style callbacks between Collection, History, Players, and Log Play
   - consumes `pendingHistoryNavigation` requests from `AppViewModel`
+  - consumes `pendingWidgetQuickScan` to navigate to the scan flow when the widget is tapped
 - `auth/GoogleAuthManager.kt`
   - Google account selection / sign-in orchestration
 - `core/di/AppContainer.kt`
@@ -80,6 +83,9 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - game search and recent games
   - session continuation / play-again setup
   - AI extraction handoff into review; Gemini model cycling
+  - game recognition: `GameRecognitionEngine` ranks candidates from the local collection; confirmed scans saved as `GameRecognitionHint`; two autoswitch gates (TITLE_GATE, TEMPLATE_CATEGORY_GATE)
+  - recognition hint management: `saveGameRecognitionHint`, `deleteGameRecognitionHint`, `replaceGameRecognitionHint`, `clearGameRecognitionHints`
+  - `pendingWidgetQuickScan` StateFlow consumed by AppShell to navigate to scan on widget tap
   - editable log state integration (shared between log and edit flows)
   - roster and player alias management; fuzzy matching with Levenshtein distance
   - local play history and cached BGG history merge and deduplication (signature-based)
@@ -99,15 +105,15 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - Drive folder and QR code creation
   - full Sheets sync
   - sync log / progress state
-  - silent startup collection load (gated: only runs if last sync was more than 4 hours ago via `securePrefs.lastSyncedAt`)
+  - silent startup collection load (gated: only runs if last sync was more than 4 hours ago via `securePrefs.lastSyncedAt`; writes `lastSyncedAt` on successful completion so the gate is honoured on subsequent startups)
 - `data/`
   - `BggApiClient.kt` -- low-level BGG HTTP/XML client and sleeve scraping
   - `BggRepository.kt` -- BGG feature layer (collection, search, play CRUD, history)
   - `GoogleApiClient.kt` -- Sheets / Drive API
-  - `GeminiRepository.kt` -- AI extraction, model discovery, fallback cycling
+  - `GeminiRepository.kt` -- AI extraction (scores + game detection), model discovery, fallback cycling; debug-logged under TAG "Gemini"
   - `CanonicalCollectionStore.kt` -- Room-backed live source of truth
-  - `BackupSerializer.kt` -- backup JSON import/export
-  - `SecurePreferences.kt` -- encrypted preferences (credentials, settings, roster, session)
+  - `BackupSerializer.kt` -- backup JSON import/export (format version 3; includes `recognitionHints`)
+  - `SecurePreferences.kt` -- encrypted preferences (credentials, settings, roster, session, recognition hints)
   - `QrGenerator.kt` -- QR code PNG generation and gallery save
   - `PlayShareSerializer.kt` -- play encode/decode for QR sharing
   - `BggImageCache.kt` -- thumbnail preload after sync
@@ -115,10 +121,11 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `BggPlaySync.kt` -- top-level BGG play cache refresh function
   - `CsvParser.kt` -- CSV row parsing for sync
 - `model/`
-  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, ...)
+  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, `GameRecognitionHint`, `GameCandidate`, ...)
   - `SleeveDatabase.kt` -- `SleeveManufacturer` enum, `SleeveEntry`, `SleeveDatabase` object
 - `ui/`
   - screens and shared Compose UI helpers
+  - `ui/widget/QuickScanWidget.kt` -- `AppWidgetProvider`; fires `ACTION_QUICK_SCAN` PendingIntent on tap
 
 ## Source Of Truth
 
@@ -146,12 +153,13 @@ It stores:
 - session context (active game, players, location, timestamp)
 - sleeve exclusion list (game IDs)
 - per-game insight key cache
+- AI recognition templates (`game_recognition_hints` key; JSON array of `GameRecognitionHint` objects)
 
 Do not move live collection/history state back into large JSON blobs in preferences.
 
 ### Backup Format
 
-`BackupSerializer` owns import/export JSON (format version 2).
+`BackupSerializer` owns import/export JSON (format version 3).
 
 Backups can contain:
 
@@ -161,10 +169,11 @@ Backups can contain:
 - player roster
 - recent games
 - sleeve exclusions
+- AI game recognition templates (`recognitionHints` JSON array; bulk-replaces templates on import)
 - settings (theme, spreadsheet config, sleeve manufacturer preference)
 - optionally sensitive data (BGG password, Gemini API key)
 
-Import is selective: only keys present in the backup JSON are applied; missing keys do not overwrite existing values.
+Import is selective: only keys present in the backup JSON are applied; missing keys do not overwrite existing values. Recognition templates are bulk-replaced (not merged) when present in the backup.
 
 ## Key Product Flows To Understand
 
@@ -181,6 +190,19 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - session context may prefill players/location
 - AI extraction may prefill players/scores
 - expansion / sibling titles detected from name patterns and shown alongside base game
+- the search field has a trailing camera (`CameraAlt`) icon button that triggers the quick scan flow via `onScanQuick`; tapping it exits any active correction mode and navigates directly to `ScanScreen`
+
+### Quick Scan Correction Flow
+
+When AI recognition picks the wrong game after a scan, the user can tap "Choose another game" from the banner in `LogPlayScreen`:
+
+1. `AppViewModel.enterQuickScanCorrectionMode()` sets `_quickScanCorrectionMode = true`
+2. `AppShell` navigates back to `NewPlayScreen` without clearing `_extractedPlay` or `_editablePlayers`
+3. `AppViewModel.selectGame()` short-circuits its normal clear logic while correction mode is active
+4. When the user picks a replacement game, `applyDetectedGameCorrection()` reads the preserved `_extractedPlay`, calls `initEditablePlayers()` with the original extracted players, applies the new game, and clears correction mode
+5. `AppShell` then navigates directly to `LogPlayScreen` — no new scan
+
+If the user presses back from `NewPlayScreen` while in correction mode, `exitQuickScanCorrectionMode()` is called and they remain on `NewPlayScreen` (back does not exit to the previous screen in this state).
 
 ### Log Play -> Local / BGG
 
@@ -188,6 +210,7 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - if offline or posting is unavailable, the play can still be saved locally
 - extra related games may post separately; failures there can leave local follow-up plays
 - local unposted plays are intentionally user-controlled from History rather than silently auto-posted on startup
+- tapping X or back when Log Play has any data (unsaved changes, editable players, or an extracted play) shows a discard confirmation dialog; the check reads `AppViewModel` StateFlow values directly to avoid a one-frame `LaunchedEffect` delay
 - after posting, `AppViewModel` detects record moments (first win, new high score, win streak) by comparing against play history snapshot
 
 ### Play Deduplication (Merge Logic)
@@ -241,8 +264,72 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - manages Gemini configuration (key, model endpoint, model discovery)
 - manages theme (Light, Dark)
 - manages sleeve manufacturer priority (`SleeveManufacturer`; persisted in `SecurePreferences`, exposed via `AppViewModel.sleevePreferredManufacturer`; used in `GameDetailDialog` via `SleeveEntry.preferredFor()`)
-- manages import/export
+- manages import/export (backup includes recognition templates since format v3)
 - can clear cached collection
+- AI section: view / edit / delete individual recognition templates; bulk-clear all templates with confirmation
+
+### AI Game Recognition
+
+#### Engine (`data/GameRecognitionEngine.kt`)
+
+- stateless; `rankCandidates(extractedPlay, collection, hints)` scores every entry and returns up to 5 ranked `GameCandidate` objects
+- four scoring signals:
+  1. **Title similarity** — Levenshtein distance + containment, up to 1.0; primary signal when a title is detected
+  2. **Category-name-in-game-name** — legacy low-weight boost (up to 0.2) when detected category strings appear in the game name
+  3. **Template category overlap** — compares detected scoring categories against `hint.normalizedCategories`; requires `>= MIN_TEMPLATE_CATEGORY_OVERLAP` (3) for a strong signal; weight is 0.75 / 0.50 / 0.30 depending on title strength so category-only sheets can still produce a high-confidence match
+  4. **Saved title bonus** — +0.15 if the detected title matches a title stored in the hint from a prior confirmation
+- `GameCandidate` carries `score`, `matchReason`, `primarySignal` (`"title"` or `"category-template"`), and `templateOverlap`
+
+#### Autoswitch Gates (`AppViewModel.extractScores`)
+
+Two gates decide whether to auto-switch the active game without user input:
+
+- **TITLE_GATE**: `score >= 0.90`, `primarySignal != "category-template"`, Gemini confidence >= 0.95, score margin over 2nd candidate >= 0.15
+- **TEMPLATE_CATEGORY_GATE**: `score >= 0.75`, `primarySignal == "category-template"`, `templateOverlap >= 3`, Gemini confidence >= 0.95, margin >= 0.15
+
+If a gate fires, `AppViewModel` calls `applyDetectedGame()` silently and emits `ScanRecognitionResult.AutoSwitched`. If neither gate fires but candidates exist, they are exposed via `_gameCandidates` for the user to pick from.
+
+#### Recognition Result State (`ScanRecognitionResult`)
+
+Sealed class emitted to `_scanRecognitionResult` after each scan:
+
+- `AutoSwitched(gameName)` — a gate fired; game was silently switched; `ScanResultBanner` in `LogPlayScreen` shows a success message
+- `NoCollectionMatch(detectedTitle)` — Gemini detected a title but nothing in the collection matched; `ScanResultBanner` shows an info message with a "Choose another game" action
+- `LowConfidence` — Gemini could not detect the game or confidence was below threshold; no banner shown
+
+#### Candidate Suggestion Flow
+
+When neither gate fires but `_gameCandidates` is non-empty, `LogPlayScreen` renders `GameSuggestionBanner` showing the top candidate with confidence and evidence text. From there:
+
+- `AppViewModel.acceptGameSuggestion(game)` — saves a `GameRecognitionHint` for the confirmed game, applies it via `applyDetectedGame()`, and clears `_gameCandidates`
+- `AppViewModel.dismissGameSuggestion()` — clears `_gameCandidates` without changing the active game
+- `AppViewModel.dismissScanRecognitionResult()` — clears `_scanRecognitionResult` and exits correction mode if active
+- `scanStartedWithGame: StateFlow<Boolean>` — true when the scan was started with a game already selected (id != 0); passed to the banner composables as `hasPreselectedGame` to control whether the "Choose another game" action is offered
+- `clearExtractedPlay()` — public helper that nulls `_extractedPlay`; called by screens that need to discard scan data without clearing the full log play flow
+
+`LogPlayScreen` also shows a passive `detectedGameHint` label ("AI detected: X") inside `CompactGameHeader` when Gemini identified a title different from the current game and no actionable banner is already showing.
+
+#### Gemini Prompt and Response (`data/GeminiRepository.kt`)
+
+The extraction prompt explicitly requests game identification fields alongside player scores:
+
+- `detectedGameTitle` — best-guess game name from visible text, logos, or scoring structure; `null` if indeterminate
+- `detectedGameConfidence` — float 0.0–1.0 reflecting certainty about the title
+- `detectedScoringCategories` — list of scoring column/row header labels visible on the sheet
+- `gameDetectionEvidence` — one sentence describing the visual cue used for identification
+
+`parseGeminiResponse()` maps these to `ExtractedPlay` fields. Date handling: `null` or the literal string `"null"` from the model are both treated as absent (the app uses today's date); the model is instructed not to invent a date.
+
+Debug logging (`TAG = "Gemini"`) covers: start time, per-attempt model and HTTP status, total elapsed time, model fallback switches, and parse results.
+
+#### Hint Lifecycle
+
+- A `GameRecognitionHint` stores the game's `objectId`, normalized title strings, normalized scoring category strings, `confirmedAt` timestamp, and `timesConfirmed` count
+- `SecurePreferences.saveGameRecognitionHint()` merges with any existing hint for the same game (accumulates titles and categories, increments counter)
+- `replaceGameRecognitionHint()` does a full replace without merging (used by the Settings edit dialog)
+- `deleteGameRecognitionHint(gameObjectId)` removes one entry; `clearGameRecognitionHints()` removes all
+- Hints are included in backup export/import (format v3 `recognitionHints` array; import bulk-replaces)
+- Settings > AI shows the hint count, allows viewing (tap), editing categories or deleting (long press), and bulk clearing with confirmation
 
 ### QR Play Sharing
 

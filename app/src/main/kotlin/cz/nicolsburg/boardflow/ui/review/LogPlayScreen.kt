@@ -46,8 +46,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
+import cz.nicolsburg.boardflow.model.GameCandidate
 import cz.nicolsburg.boardflow.model.GameRelations
 import cz.nicolsburg.boardflow.model.RecordMoment
+import cz.nicolsburg.boardflow.model.ScanRecognitionResult
 import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.model.Player as BggPlayer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
@@ -73,7 +75,8 @@ fun LogPlayScreen(
     onPosted: () -> Unit,
     onChangeGame: () -> Unit,
     onNavigateBack: () -> Unit,
-    onDiscard: () -> Unit = onNavigateBack
+    onDiscard: () -> Unit = onNavigateBack,
+    onChooseGame: () -> Unit = {}
 ) {
     val players         by viewModel.editablePlayers.collectAsState()
     val posting         by viewModel.postLoading.collectAsState()
@@ -81,6 +84,9 @@ fun LogPlayScreen(
     val gameRelations   by viewModel.gameRelations.collectAsState()
     val additionalGames by viewModel.additionalGames.collectAsState()
     val rosterPlayers   by viewModel.players.collectAsState()
+    val gameCandidates        by viewModel.gameCandidates.collectAsState()
+    val scanRecognitionResult by viewModel.scanRecognitionResult.collectAsState()
+    val scanStartedWithGame   by viewModel.scanStartedWithGame.collectAsState()
 
     // Read prefill once on first composition (consumed from ViewModel).
     val prefill = remember { viewModel.takePrefill() }
@@ -347,9 +353,17 @@ fun LogPlayScreen(
                 }
 
                 item {
+                    // Only show passive AI hint when no actionable suggestion banner is visible.
+                    val detectedGameHint = extractedPlay?.detectedGameTitle
+                        ?.takeIf { title ->
+                            title.isNotBlank() &&
+                            !title.equals(gameName, ignoreCase = true) &&
+                            gameCandidates.isEmpty()
+                        }
                     SessionDetailsCard(
                         title = "Log Play",
                         gameName = gameName,
+                        detectedGameHint = detectedGameHint,
                         date = date,
                         duration = duration,
                         location = location,
@@ -371,6 +385,31 @@ fun LogPlayScreen(
                         onIncompleteChange = { incomplete = it },
                         onNowInStatsChange = { nowInStats = it }
                     )
+                }
+
+                scanRecognitionResult?.let { result ->
+                    item {
+                        ScanResultBanner(
+                            result = result,
+                            hasPreselectedGame = scanStartedWithGame,
+                            onDismiss = { viewModel.dismissScanRecognitionResult() },
+                            onChooseGame = onChooseGame
+                        )
+                    }
+                }
+
+                if (gameCandidates.isNotEmpty()) {
+                    item {
+                        GameSuggestionBanner(
+                            candidate = gameCandidates.first(),
+                            geminiConfidence = extractedPlay?.detectedGameConfidence,
+                            detectionEvidence = extractedPlay?.gameDetectionEvidence,
+                            hasPreselectedGame = scanStartedWithGame,
+                            onAccept = { viewModel.acceptGameSuggestion(gameCandidates.first().game) },
+                            onDismiss = { viewModel.dismissGameSuggestion() },
+                            onChooseGame = onChooseGame
+                        )
+                    }
                 }
 
                 item {
@@ -491,6 +530,7 @@ fun LogPlayScreen(
 private fun SessionDetailsCard(
     title: String,
     gameName: String,
+    detectedGameHint: String? = null,
     date: String,
     duration: String,
     location: String,
@@ -524,7 +564,7 @@ private fun SessionDetailsCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CompactGameHeader(title = title, gameName = gameName)
+            CompactGameHeader(title = title, gameName = gameName, detectedGameHint = detectedGameHint)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -669,7 +709,7 @@ private fun SessionFieldLabel(text: String) {
 }
 
 @Composable
-private fun CompactGameHeader(title: String, gameName: String) {
+private fun CompactGameHeader(title: String, gameName: String, detectedGameHint: String? = null) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -690,6 +730,13 @@ private fun CompactGameHeader(title: String, gameName: String) {
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary
             )
+            if (!detectedGameHint.isNullOrBlank()) {
+                Text(
+                    "AI detected: $detectedGameHint",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+                )
+            }
         }
     }
 }
@@ -1211,6 +1258,189 @@ private fun playerInitialColor(name: String): Color {
         Color(0xFF795548), Color(0xFF546E7A)
     )
     return palette[(name.hashCode() and 0x7FFFFFFF) % palette.size]
+}
+
+// ---------------------------------------------------------------------------
+// Scan recognition result banner (non-blocking feedback after Quick Scan)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun ScanResultBanner(
+    result: ScanRecognitionResult,
+    hasPreselectedGame: Boolean,
+    onDismiss: () -> Unit,
+    onChooseGame: () -> Unit
+) {
+    // Auto-dismiss the success state after 7 seconds to give time to read + act.
+    if (result is ScanRecognitionResult.AutoSwitched) {
+        LaunchedEffect(result) {
+            kotlinx.coroutines.delay(7000)
+            onDismiss()
+        }
+    }
+
+    val isSuccess = result is ScanRecognitionResult.AutoSwitched
+    val message = when (result) {
+        is ScanRecognitionResult.AutoSwitched      -> "Detected and switched to ${result.gameName}"
+        is ScanRecognitionResult.NoCollectionMatch -> "Detected ${result.detectedTitle}, but it is not in your collection"
+        is ScanRecognitionResult.LowConfidence     -> "Could not confidently detect the game"
+    }
+
+    Surface(
+        shape  = RoundedCornerShape(22.dp),
+        color  = if (isSuccess)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+        else
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isSuccess)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+            else
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    message,
+                    style    = MaterialTheme.typography.bodyMedium,
+                    color    = if (isSuccess) MaterialTheme.colorScheme.primary
+                               else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    BoardFlowCloseGlyph(
+                        contentDescription = "Dismiss",
+                        modifier = Modifier.size(14.dp),
+                        iconSize = 14.dp
+                    )
+                }
+            }
+            when {
+                isSuccess && hasPreselectedGame -> BoardFlowSecondaryButton(
+                    onClick  = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Keep current") }
+
+                isSuccess && !hasPreselectedGame -> BoardFlowSecondaryButton(
+                    onClick  = onChooseGame,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Choose another game") }
+
+                else -> BoardFlowSecondaryButton(
+                    onClick  = onChooseGame,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Choose game") }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Game suggestion banner (shown when detection confidence is below auto-switch
+// threshold or when there are multiple plausible candidates)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun GameSuggestionBanner(
+    candidate: GameCandidate,
+    geminiConfidence: Float? = null,
+    detectionEvidence: String? = null,
+    hasPreselectedGame: Boolean = false,
+    onAccept: () -> Unit,
+    onDismiss: () -> Unit,
+    onChooseGame: () -> Unit = {}
+) {
+    Surface(
+        shape    = RoundedCornerShape(22.dp),
+        color    = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        border   = androidx.compose.foundation.BorderStroke(
+            1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Header row: label + dismiss
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Detected game",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    BoardFlowCloseGlyph(
+                        contentDescription = "Dismiss suggestion",
+                        modifier = Modifier.size(14.dp),
+                        iconSize = 14.dp
+                    )
+                }
+            }
+
+            // Game title
+            Text(
+                candidate.game.name,
+                style      = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color      = MaterialTheme.colorScheme.primary
+            )
+
+            // Confidence line
+            if (geminiConfidence != null) {
+                Text(
+                    "Confidence: ${(geminiConfidence * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Evidence text
+            if (!detectionEvidence.isNullOrBlank()) {
+                Text(
+                    detectionEvidence,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.80f)
+                )
+            }
+
+            // Action buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                BoardFlowButton(
+                    onClick  = onAccept,
+                    modifier = Modifier.weight(1f)
+                ) { Text("Use this game") }
+                if (hasPreselectedGame) {
+                    BoardFlowSecondaryButton(
+                        onClick  = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Keep current") }
+                } else {
+                    BoardFlowSecondaryButton(
+                        onClick  = onChooseGame,
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Choose another") }
+                }
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

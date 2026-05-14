@@ -357,6 +357,9 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     saveSleevesToSheetIfAvailable(merged)
                     launch { BggImageCache.preloadAll(getApplication(), merged) }
                 }
+                val now = System.currentTimeMillis()
+                _lastSyncedAt.value = now
+                securePrefs.lastSyncedAt = now
             } catch (_: Exception) {
                 // Silent startup refresh should fail quietly and leave cached data in place.
             } finally {

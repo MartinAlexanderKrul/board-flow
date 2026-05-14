@@ -40,11 +40,14 @@ import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.SessionContext
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material3.Icon
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
+import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -56,7 +59,8 @@ private data class ScrollDragState(val letter: Char, val dragFraction: Float)
 fun NewPlayScreen(
     viewModel: AppViewModel,
     onGameSelected: (BggGame) -> Unit,
-    onPlayAgain: () -> Unit = {}
+    onPlayAgain: () -> Unit = {},
+    onScanQuick: () -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
     val results by viewModel.searchResults.collectAsState()
@@ -100,7 +104,16 @@ fun NewPlayScreen(
                 value = query,
                 onValueChange = { query = it },
                 placeholder = "Search games...",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                trailingAction = {
+                    SearchFieldActionButton(onClick = onScanQuick) {
+                        Icon(
+                            Icons.Default.CameraAlt,
+                            contentDescription = "Scan score",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             )
 
             AnimatedVisibility(visible = changeGameActive) {

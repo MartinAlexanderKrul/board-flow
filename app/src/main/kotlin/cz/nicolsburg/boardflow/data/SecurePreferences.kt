@@ -6,6 +6,7 @@ import androidx.security.crypto.MasterKey
 import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.GameItem
+import cz.nicolsburg.boardflow.model.GameRecognitionHint
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import org.json.JSONArray
@@ -246,6 +247,91 @@ class SecurePreferences(context: Context) {
         prefs.edit().putString("$KEY_GAME_INSIGHT_PREFIX$gameId", key).apply()
     }
 
+    // --- Game recognition hints ---
+    fun saveGameRecognitionHint(hint: GameRecognitionHint) {
+        val existing = loadGameRecognitionHints().toMutableList()
+        val idx = existing.indexOfFirst { it.gameObjectId == hint.gameObjectId }
+        val merged = if (idx >= 0) {
+            val old = existing[idx]
+            hint.copy(
+                normalizedTitles = (old.normalizedTitles + hint.normalizedTitles).distinct(),
+                normalizedCategories = (old.normalizedCategories + hint.normalizedCategories).distinct(),
+                timesConfirmed = old.timesConfirmed + 1
+            )
+        } else hint
+        if (idx >= 0) existing[idx] = merged else existing.add(merged)
+        val json = JSONArray()
+        existing.forEach { h ->
+            json.put(JSONObject().apply {
+                put("gameObjectId", h.gameObjectId)
+                put("gameName", h.gameName)
+                put("normalizedTitles", JSONArray().also { a -> h.normalizedTitles.forEach { a.put(it) } })
+                put("normalizedCategories", JSONArray().also { a -> h.normalizedCategories.forEach { a.put(it) } })
+                put("confirmedAt", h.confirmedAt)
+                put("timesConfirmed", h.timesConfirmed)
+            })
+        }
+        prefs.edit().putString(KEY_GAME_RECOGNITION_HINTS, json.toString()).apply()
+    }
+
+    fun loadGameRecognitionHints(): List<GameRecognitionHint> {
+        val json = prefs.getString(KEY_GAME_RECOGNITION_HINTS, "[]") ?: "[]"
+        return try {
+            val array = JSONArray(json)
+            (0 until array.length()).map { i ->
+                val obj = array.getJSONObject(i)
+                val titlesArr = obj.optJSONArray("normalizedTitles") ?: JSONArray()
+                val catsArr = obj.optJSONArray("normalizedCategories") ?: JSONArray()
+                GameRecognitionHint(
+                    gameObjectId = obj.getString("gameObjectId"),
+                    gameName = obj.getString("gameName"),
+                    normalizedTitles = (0 until titlesArr.length()).map { titlesArr.getString(it) },
+                    normalizedCategories = (0 until catsArr.length()).map { catsArr.getString(it) },
+                    confirmedAt = obj.getLong("confirmedAt"),
+                    timesConfirmed = obj.getInt("timesConfirmed")
+                )
+            }
+        } catch (e: Exception) { emptyList() }
+    }
+
+    fun deleteGameRecognitionHint(gameObjectId: String) {
+        val updated = loadGameRecognitionHints().filter { it.gameObjectId != gameObjectId }
+        val json = JSONArray()
+        updated.forEach { h ->
+            json.put(JSONObject().apply {
+                put("gameObjectId", h.gameObjectId)
+                put("gameName", h.gameName)
+                put("normalizedTitles", JSONArray().also { a -> h.normalizedTitles.forEach { a.put(it) } })
+                put("normalizedCategories", JSONArray().also { a -> h.normalizedCategories.forEach { a.put(it) } })
+                put("confirmedAt", h.confirmedAt)
+                put("timesConfirmed", h.timesConfirmed)
+            })
+        }
+        prefs.edit().putString(KEY_GAME_RECOGNITION_HINTS, json.toString()).apply()
+    }
+
+    fun replaceGameRecognitionHint(hint: GameRecognitionHint) {
+        val existing = loadGameRecognitionHints().toMutableList()
+        val idx = existing.indexOfFirst { it.gameObjectId == hint.gameObjectId }
+        if (idx >= 0) existing[idx] = hint else existing.add(hint)
+        val json = JSONArray()
+        existing.forEach { h ->
+            json.put(JSONObject().apply {
+                put("gameObjectId", h.gameObjectId)
+                put("gameName", h.gameName)
+                put("normalizedTitles", JSONArray().also { a -> h.normalizedTitles.forEach { a.put(it) } })
+                put("normalizedCategories", JSONArray().also { a -> h.normalizedCategories.forEach { a.put(it) } })
+                put("confirmedAt", h.confirmedAt)
+                put("timesConfirmed", h.timesConfirmed)
+            })
+        }
+        prefs.edit().putString(KEY_GAME_RECOGNITION_HINTS, json.toString()).apply()
+    }
+
+    fun clearGameRecognitionHints() {
+        prefs.edit().remove(KEY_GAME_RECOGNITION_HINTS).apply()
+    }
+
     // --- Legacy BGG history cache compatibility ---
     fun clearLegacyBggPlayCacheArtifacts() {
         prefs.edit().remove(KEY_BGG_PLAYS_CACHE).remove(KEY_BGG_PLAYS_CACHE_TS).apply()
@@ -300,6 +386,7 @@ class SecurePreferences(context: Context) {
             players = getPlayers(),
             recentGames = getRecentGames(),
             availableModels = getAvailableModels(),
+            recognitionHints = loadGameRecognitionHints(),
             collectionSnapshot = collectionSnapshot ?: emptyList(),
             loggedPlays = loggedPlays ?: emptyList(),
             cachedBggPlays = cachedBggPlays ?: emptyList()
@@ -331,6 +418,20 @@ class SecurePreferences(context: Context) {
             onPlayers = { players -> savePlayers(players) },
             onRecentGamesJson = { jsonArray -> prefs.edit().putString(KEY_RECENT_GAMES, jsonArray).apply() },
             onAvailableModelsJson = { jsonArray -> prefs.edit().putString(KEY_AVAILABLE_MODELS, jsonArray).apply() },
+            onRecognitionHints = { hints ->
+                prefs.edit().putString(KEY_GAME_RECOGNITION_HINTS, org.json.JSONArray().also { arr ->
+                    hints.forEach { h ->
+                        arr.put(org.json.JSONObject().apply {
+                            put("gameObjectId", h.gameObjectId)
+                            put("gameName", h.gameName)
+                            put("normalizedTitles", org.json.JSONArray().also { a -> h.normalizedTitles.forEach { a.put(it) } })
+                            put("normalizedCategories", org.json.JSONArray().also { a -> h.normalizedCategories.forEach { a.put(it) } })
+                            put("confirmedAt", h.confirmedAt)
+                            put("timesConfirmed", h.timesConfirmed)
+                        })
+                    }
+                }.toString()).apply()
+            },
             clearLegacyCachedCollection = { prefs.edit().remove(KEY_COLLECTION).remove(KEY_COLLECTION_TIMESTAMP).apply() }
         )
     }
@@ -359,5 +460,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_SESSION_CONTEXT  = "log_play_session_context"
         private const val KEY_GAME_INSIGHT_PREFIX = "game_insight_last_"
         private const val KEY_LAST_SYNCED_AT      = "last_synced_at"
+        private const val KEY_GAME_RECOGNITION_HINTS = "game_recognition_hints"
     }
 }

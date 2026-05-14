@@ -1,6 +1,7 @@
 ﻿package cz.nicolsburg.boardflow
 
 import android.app.Activity
+import android.content.Intent
 import android.content.IntentSender
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,6 +17,7 @@ import cz.nicolsburg.boardflow.core.di.AppContainer
 import cz.nicolsburg.boardflow.model.LogEntry
 import cz.nicolsburg.boardflow.ui.app.BoardFlowApp
 import cz.nicolsburg.boardflow.ui.theme.BggCombinedTheme
+import cz.nicolsburg.boardflow.ui.widget.QuickScanWidget
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -27,6 +29,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (intent?.action == QuickScanWidget.ACTION_QUICK_SCAN) {
+            appViewModel.requestWidgetQuickScan()
+        }
 
         container.securePreferences.run {
             syncViewModel.setSpreadsheetId(syncSpreadsheetId)
@@ -49,6 +55,13 @@ class MainActivity : ComponentActivity() {
                     onRequestCsvPick = { csvPickerLauncher.launch("*/*") }
                 )
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == QuickScanWidget.ACTION_QUICK_SCAN) {
+            appViewModel.requestWidgetQuickScan()
         }
     }
 

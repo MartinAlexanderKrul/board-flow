@@ -2,6 +2,7 @@ package cz.nicolsburg.boardflow.data
 
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.GameItem
+import cz.nicolsburg.boardflow.model.GameRecognitionHint
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
@@ -32,12 +33,13 @@ object BackupSerializer {
         players: List<Player>,
         recentGames: List<BggGame>,
         availableModels: List<String>,
+        recognitionHints: List<GameRecognitionHint>,
         collectionSnapshot: List<GameItem>,
         loggedPlays: List<LoggedPlay>,
         cachedBggPlays: List<LoggedPlay>
     ): String {
         val root = JSONObject()
-        root.put("version", 2)
+        root.put("version", 3)
         root.put("exportDate", java.time.LocalDate.now().toString())
         root.put("includesSensitiveData", includeSensitiveData)
         root.put("settings", JSONObject().apply {
@@ -107,6 +109,18 @@ object BackupSerializer {
         root.put("availableModels", JSONArray().also { arr ->
             availableModels.forEach { model -> arr.put(model) }
         })
+        root.put("recognitionHints", JSONArray().also { arr ->
+            recognitionHints.forEach { h ->
+                arr.put(JSONObject().apply {
+                    put("gameObjectId", h.gameObjectId)
+                    put("gameName", h.gameName)
+                    put("normalizedTitles", JSONArray().also { a -> h.normalizedTitles.forEach { a.put(it) } })
+                    put("normalizedCategories", JSONArray().also { a -> h.normalizedCategories.forEach { a.put(it) } })
+                    put("confirmedAt", h.confirmedAt)
+                    put("timesConfirmed", h.timesConfirmed)
+                })
+            }
+        })
         root.put("collectionSnapshots", JSONObject().also { snapshots ->
             snapshots.put(CANONICAL_SNAPSHOT_ID, JSONArray().also { arr ->
                 collectionSnapshot.forEach { game -> arr.put(gameItemToJson(game)) }
@@ -123,6 +137,7 @@ object BackupSerializer {
         onPlayers: (List<Player>) -> Unit,
         onRecentGamesJson: (String) -> Unit,
         onAvailableModelsJson: (String) -> Unit,
+        onRecognitionHints: (List<GameRecognitionHint>) -> Unit = {},
         clearLegacyCachedCollection: () -> Unit
     ): ImportedBackupData {
         val root = JSONObject(json)
@@ -144,6 +159,24 @@ object BackupSerializer {
         root.optJSONArray("recentGames")?.let { arr -> onRecentGamesJson(arr.toString()) }
         root.optJSONArray("cachedCollection")?.let { clearLegacyCachedCollection() }
         root.optJSONArray("availableModels")?.let { arr -> onAvailableModelsJson(arr.toString()) }
+        root.optJSONArray("recognitionHints")?.let { arr ->
+            val hints = (0 until arr.length()).mapNotNull { i ->
+                runCatching {
+                    val obj = arr.getJSONObject(i)
+                    val titlesArr = obj.optJSONArray("normalizedTitles") ?: JSONArray()
+                    val catsArr = obj.optJSONArray("normalizedCategories") ?: JSONArray()
+                    GameRecognitionHint(
+                        gameObjectId = obj.getString("gameObjectId"),
+                        gameName = obj.getString("gameName"),
+                        normalizedTitles = (0 until titlesArr.length()).map { titlesArr.getString(it) },
+                        normalizedCategories = (0 until catsArr.length()).map { catsArr.getString(it) },
+                        confirmedAt = obj.getLong("confirmedAt"),
+                        timesConfirmed = obj.getInt("timesConfirmed")
+                    )
+                }.getOrNull()
+            }
+            if (hints.isNotEmpty()) onRecognitionHints(hints)
+        }
 
         val importedLoggedPlays = root.optJSONArray("loggedPlays")?.let { arr ->
             (0 until arr.length()).map { i -> jsonToPlay(arr.getJSONObject(i)) }

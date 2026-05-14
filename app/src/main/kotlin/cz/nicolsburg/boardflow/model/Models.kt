@@ -19,7 +19,22 @@ data class PlayerResult(
 data class ExtractedPlay(
     val players: List<PlayerResult>,
     val rawText: String,
-    val date: String? = null
+    val date: String? = null,
+    val detectedGameTitle: String? = null,
+    val detectedGameConfidence: Float? = null,
+    val detectedScoringCategories: List<String> = emptyList(),
+    val gameDetectionEvidence: String? = null
+)
+
+/** A ranked match produced by GameRecognitionEngine against the local collection. */
+data class GameCandidate(
+    val game: BggGame,
+    val score: Float,
+    val matchReason: String,
+    /** "title", "category-template", or "none" — which signal drove the score. */
+    val primarySignal: String = "title",
+    /** Number of saved template categories that matched detected categories. */
+    val templateOverlap: Int = 0
 )
 
 data class BggCredentials(
@@ -213,6 +228,24 @@ sealed class RecordMoment {
             is NewHighScore -> "🏆 New high score for $playerName in $gameName"
             is WinStreak   -> "🔥 $playerName is on a ${streakLength}-win streak"
         }
+}
+
+data class GameRecognitionHint(
+    val gameObjectId: String,
+    val gameName: String,
+    val normalizedTitles: List<String>,
+    val normalizedCategories: List<String>,
+    val confirmedAt: Long,
+    val timesConfirmed: Int
+)
+
+sealed class ScanRecognitionResult {
+    /** Auto-switch happened; game was confirmed without user interaction. */
+    data class AutoSwitched(val gameName: String) : ScanRecognitionResult()
+    /** Gemini detected a title but it was not found in the local collection. */
+    data class NoCollectionMatch(val detectedTitle: String) : ScanRecognitionResult()
+    /** Gemini could not detect the game, or confidence was too low. */
+    object LowConfidence : ScanRecognitionResult()
 }
 
 data class LogPlayPrefill(

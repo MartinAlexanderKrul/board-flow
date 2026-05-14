@@ -30,6 +30,10 @@ import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -89,7 +93,14 @@ import cz.nicolsburg.boardflow.ui.common.clickableRow
 import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import kotlinx.coroutines.flow.collect
 import cz.nicolsburg.boardflow.ui.sync.SpreadsheetConnectModal
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.SuggestionChip
 import cz.nicolsburg.boardflow.BuildConfig
+import cz.nicolsburg.boardflow.model.GameRecognitionHint
 import cz.nicolsburg.boardflow.model.SleeveManufacturer
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import java.time.LocalDate
@@ -138,6 +149,10 @@ fun SettingsScreen(
     var availableModels by remember { mutableStateOf<List<String>?>(null) }
     var showGoogleSignOutConfirm by remember { mutableStateOf(false) }
     var showClearCollectionConfirm by remember { mutableStateOf(false) }
+    var templateCount by remember { mutableStateOf(viewModel.prefs.loadGameRecognitionHints().size) }
+    var showClearTemplatesConfirm by remember { mutableStateOf(false) }
+    var clearTemplatesStatus by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
+    var showTemplatesDialog by remember { mutableStateOf(false) }
     val hasCollection = cachedCollection.isNotEmpty()
 
     val listState = rememberLazyListState()
@@ -221,6 +236,23 @@ fun SettingsScreen(
                 syncViewModel.clearCollectionCache()
             },
             onDismiss = { showClearCollectionConfirm = false }
+        )
+    }
+
+    if (showClearTemplatesConfirm) {
+        BoardFlowConfirmationDialog(
+            title = "Clear recognition templates?",
+            message = "This removes all saved game scoring layouts used to improve scan recognition. Your plays, roster, and collection are not affected.",
+            confirmLabel = "Clear templates",
+            dismissLabel = "Cancel",
+            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
+            onConfirm = {
+                showClearTemplatesConfirm = false
+                viewModel.clearGameRecognitionHints()
+                templateCount = 0
+                clearTemplatesStatus = true to "Recognition templates cleared."
+            },
+            onDismiss = { showClearTemplatesConfirm = false }
         )
     }
 
@@ -649,6 +681,50 @@ fun SettingsScreen(
                         }
                     }
                 }
+
+                item {
+                    SettingsCard(
+                        icon = Icons.Default.Layers,
+                        title = "Recognition Templates",
+                        subtitle = "Saved scoring layouts that improve game detection from photos."
+                    ) {
+                        Text(
+                            if (templateCount == 0) "No templates saved yet."
+                            else "$templateCount game template${if (templateCount == 1) "" else "s"} saved.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (templateCount > 0) {
+                            BoardFlowOutlinedButton(
+                                onClick = { showTemplatesDialog = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("View templates")
+                            }
+                        }
+                        BoardFlowOutlinedButton(
+                            onClick = { showClearTemplatesConfirm = true },
+                            enabled = templateCount > 0,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Clear recognition templates")
+                        }
+                        clearTemplatesStatus?.let { (success, message) ->
+                            Text(
+                                message,
+                                color = if (success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        if (showTemplatesDialog) {
+                            RecognitionTemplatesDialog(
+                                viewModel = viewModel,
+                                onDismiss = { showTemplatesDialog = false },
+                                onTemplatesChanged = { newCount -> templateCount = newCount }
+                            )
+                        }
+                    }
+                }
             }
 
             if (selectedSection == SettingsSection.DATA) {
@@ -758,6 +834,263 @@ fun SettingsScreen(
                     )
                 }
             }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
+@Composable
+private fun RecognitionTemplatesDialog(
+    viewModel: AppViewModel,
+    onDismiss: () -> Unit,
+    onTemplatesChanged: (Int) -> Unit
+) {
+    var templates by remember { mutableStateOf(viewModel.prefs.loadGameRecognitionHints()) }
+    var editingHint by remember { mutableStateOf<GameRecognitionHint?>(null) }
+
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Recognition Templates",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
+                    }
+                }
+            }
+            item {
+                Text(
+                    "Long-press a template to edit or delete it.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+            }
+            item { HorizontalDivider() }
+            if (templates.isEmpty()) {
+                item {
+                    Text(
+                        "No templates saved.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 12.dp)
+                    )
+                }
+            } else {
+                items(templates.size) { index ->
+                    val hint = templates[index]
+                    var menuExpanded by remember { mutableStateOf(false) }
+                    Box {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .combinedClickable(
+                                    onClick = {},
+                                    onLongClick = { menuExpanded = true }
+                                )
+                                .padding(vertical = 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    hint.gameName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    "confirmed ${hint.timesConfirmed}×",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            }
+                            if (hint.normalizedCategories.isNotEmpty()) {
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    hint.normalizedCategories.forEach { cat ->
+                                        Surface(
+                                            shape = MaterialTheme.shapes.small,
+                                            color = MaterialTheme.colorScheme.surfaceVariant
+                                        ) {
+                                            Text(
+                                                cat,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                Text(
+                                    "No categories saved",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit") },
+                                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                                onClick = { menuExpanded = false; editingHint = hint }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    menuExpanded = false
+                                    viewModel.deleteGameRecognitionHint(hint.gameObjectId)
+                                    templates = viewModel.prefs.loadGameRecognitionHints()
+                                    onTemplatesChanged(templates.size)
+                                }
+                            )
+                        }
+                    }
+                    if (index < templates.size - 1) HorizontalDivider()
+                }
+            }
+        }
+    }
+
+    editingHint?.let { hint ->
+        EditTemplateDialog(
+            hint = hint,
+            onSave = { updated ->
+                viewModel.replaceGameRecognitionHint(updated)
+                templates = viewModel.prefs.loadGameRecognitionHints()
+                editingHint = null
+            },
+            onDismiss = { editingHint = null }
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun EditTemplateDialog(
+    hint: GameRecognitionHint,
+    onSave: (GameRecognitionHint) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var categories by remember { mutableStateOf(hint.normalizedCategories.toMutableList()) }
+    var newCatInput by remember { mutableStateOf("") }
+
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    hint.gameName,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
+                }
+            }
+            HorizontalDivider()
+            Text(
+                "Scoring categories",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (categories.isEmpty()) {
+                Text(
+                    "No categories — add one below.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            } else {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    categories.forEach { cat ->
+                        SuggestionChip(
+                            onClick = {
+                                categories = categories.toMutableList().also { it.remove(cat) }
+                            },
+                            label = { Text(cat, style = MaterialTheme.typography.labelSmall) },
+                            icon = {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Remove",
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = newCatInput,
+                    onValueChange = { newCatInput = it },
+                    label = { Text("Add category") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = {
+                        val normalized = newCatInput.trim()
+                            .lowercase()
+                            .replace(Regex("[^a-z0-9 ]"), " ")
+                            .replace(Regex("\\s+"), " ")
+                            .trim()
+                        if (normalized.isNotBlank() && !categories.contains(normalized)) {
+                            categories = categories.toMutableList().also { it.add(normalized) }
+                        }
+                        newCatInput = ""
+                    },
+                    enabled = newCatInput.isNotBlank()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add")
+                }
+            }
+            HorizontalDivider()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+                Spacer(Modifier.width(8.dp))
+                BoardFlowButton(
+                    onClick = { onSave(hint.copy(normalizedCategories = categories.toList())) }
+                ) { Text("Save") }
             }
         }
     }

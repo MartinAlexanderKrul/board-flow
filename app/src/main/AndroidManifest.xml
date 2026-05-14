@@ -23,6 +23,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.BggCombined">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -46,6 +47,17 @@
                     android:host="play-import" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".ui.widget.QuickScanWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quick_scan_widget_info" />
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"
