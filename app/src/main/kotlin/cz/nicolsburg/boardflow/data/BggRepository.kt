@@ -43,8 +43,8 @@ class BggRepository {
 
     private val client = OkHttpClient.Builder()
         .cookieJar(cookieJar)
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BASIC
+        .addInterceptor(HttpLoggingInterceptor { Log.d("BggRepository", it.replace('\n', ' ')) }.apply {
+            level = HttpLoggingInterceptor.Level.BODY
         })
         .build()
 
@@ -55,7 +55,7 @@ class BggRepository {
             }
             val url = "https://boardgamegeek.com/xmlapi2/search?query=${
                 java.net.URLEncoder.encode(query, "UTF-8")
-            }&type=boardgame&exact=0"
+            }&type=boardgame,boardgameexpansion&exact=0"
             val request = Request.Builder()
                 .url(url)
                 .header("Authorization", "Bearer $xmlApiToken")
@@ -451,7 +451,7 @@ class BggRepository {
             }
             event = parser.next()
         }
-        return games.sortedByDescending { it.yearPublished ?: "0" }.take(20)
+        return games.sortedBy { it.name.lowercase() }
     }
 
     private fun parseCollectionResults(xml: String): List<BggGame> {

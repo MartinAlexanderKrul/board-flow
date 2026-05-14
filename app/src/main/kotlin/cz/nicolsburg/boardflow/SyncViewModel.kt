@@ -62,6 +62,9 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
     private var syncJob: Job? = null
 
+    private val _lastSyncedAt = MutableStateFlow(securePrefs.lastSyncedAt)
+    val lastSyncedAt: StateFlow<Long> = _lastSyncedAt.asStateFlow()
+
     private val _spreadsheetId = MutableStateFlow("")
     val spreadsheetId: StateFlow<String> = _spreadsheetId.asStateFlow()
 
@@ -145,9 +148,9 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val headerMap = api.readHeaderMap()
         if (headerMap.isEmpty()) {
             api.writeHeaderRow(SyncConfig.DEFAULT_SHEET_HEADERS)
-            entry("First sheet", "Added starter columns to ${details.firstSheetTitle}", LogEntry.Type.INFO)
+            entry("Google Sheets", "Added columns to ${details.firstSheetTitle}", LogEntry.Type.INFO)
         } else {
-            entry("First sheet", "Using ${details.firstSheetTitle}", LogEntry.Type.INFO)
+            entry("Google Sheets", "Using tab ${details.firstSheetTitle}", LogEntry.Type.INFO)
         }
         applySpreadsheet(details)
         entry("Connected", details.title, LogEntry.Type.DONE)
@@ -175,10 +178,10 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
     fun syncCsv(account: Account, resolver: ContentResolver, csvUri: Uri) =
         runSync("CSV Sync - tab: ${_sheetTabName.value}") {
-            entry("Reading CSV file...", "", LogEntry.Type.INFO)
+            entry("CSV", "Reading file", LogEntry.Type.INFO)
             val rows = CsvParser.parse(resolver, csvUri)
-            entry("CSV loaded", "${rows.size} games found", LogEntry.Type.INFO)
-            entry("Connecting to Google Sheets...", "", LogEntry.Type.INFO)
+            entry("CSV", "${rows.size} games found", LogEntry.Type.INFO)
+            entry("Google Sheets", "Connecting", LogEntry.Type.INFO)
             val api = GoogleApiClient(getApplication(), account, _spreadsheetId.value, _sheetTabName.value)
             val headerMap = api.readHeaderMap()
             val allRows = api.readAllColumns()
@@ -213,25 +216,25 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             val stopped = !isActive
-            val summary = buildString {
-                if (stopped) append("Stopped early - ")
-                append("$updated updated")
-                if (appended > 0) append("  +$appended new")
-                if (failed > 0) append("  x $failed failed")
-            }
+            val summary = buildList {
+                if (stopped) add("Stopped early")
+                add("$updated updated")
+                if (appended > 0) add("$appended new")
+                if (failed > 0) add("$failed failed")
+            }.joinToString(", ")
             entry("Sync complete", summary, if (stopped) LogEntry.Type.ERROR else LogEntry.Type.DONE)
         }
 
     fun createFolders(account: Account, saveQrToGallery: Boolean) = runSync("Create Folders & QR Codes") {
-        entry("Reading sheet...", "", LogEntry.Type.INFO)
+        entry("Google Sheets", "Reading sheet", LogEntry.Type.INFO)
         val api = GoogleApiClient(getApplication(), account, _spreadsheetId.value, _sheetTabName.value)
         val rows = api.readGameRows()
         val toProcess = rows.filter { it.shareUrl.isBlank() }
         val toSaveLocally = if (saveQrToGallery) rows.filter { it.shareUrl.isNotBlank() } else emptyList()
         entry(
-            "Sheet read",
+            "Google Sheets",
             if (saveQrToGallery) {
-                "${toProcess.size} need folders - ${toSaveLocally.size} can be saved locally"
+                "${toProcess.size} need folders, ${toSaveLocally.size} can save locally"
             } else {
                 "${toProcess.size} need folders"
             },
@@ -288,13 +291,13 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 failed++
             }
         }
-        val summary = buildString {
-            if (created > 0) append("$created new  ")
-            if (downloaded > 0) append("$downloaded downloaded  ")
-            if (skipped > 0) append("$skipped already local  ")
-            if (failed > 0) append("$failed failed")
-        }.trim()
-        entry("Done", summary.ifBlank { "Nothing to do" }, if (failed > 0) LogEntry.Type.ERROR else LogEntry.Type.DONE)
+        val summary = buildList {
+            if (created > 0) add("$created new")
+            if (downloaded > 0) add("$downloaded downloaded")
+            if (skipped > 0) add("$skipped already local")
+            if (failed > 0) add("$failed failed")
+        }.joinToString(", ").ifBlank { "Nothing to do" }
+        entry("Done", summary, if (failed > 0) LogEntry.Type.ERROR else LogEntry.Type.DONE)
     }
 
     fun syncBgg(account: Account, forceRefresh: Boolean) = runSync("BGG API Sync") {
@@ -317,14 +320,14 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 replaceCollectionSnapshot(merged)
                 _collectionGames.value = merged
                 saveSleevesToSheetIfAvailable(merged)
-                entry("Collection cached", "${merged.size} games ready in the app", LogEntry.Type.DONE)
+                entry("Done", "${merged.size} games ready", LogEntry.Type.DONE)
                 launch { BggImageCache.preloadAll(getApplication(), merged) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 val cached = readCanonicalSnapshot()
                 _collectionGames.value = cached
-                entry("Collection cache", fallbackMessage(e, cached.size), fallbackLogType(cached))
+                entry("BGG", fallbackMessage(e, cached.size), fallbackLogType(cached))
             } finally {
                 _collectionLoading.value = false
             }
@@ -396,7 +399,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Exception) {
                 val cached = readCanonicalSnapshot()
                 _collectionGames.value = cached
-                entry("Collection cache", fallbackMessage(e, cached.size), fallbackLogType(cached))
+                entry("BGG", fallbackMessage(e, cached.size), fallbackLogType(cached))
             } finally {
                 _collectionLoading.value = false
             }
@@ -433,7 +436,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val activeJob = syncJob
         if (activeJob?.isActive == true) {
             activeJob.cancel()
-            entry("Stopped", "Sync was cancelled by user", LogEntry.Type.ERROR)
+            entry("Stopped", "Cancelled by user", LogEntry.Type.INFO)
         }
     }
 
@@ -457,6 +460,9 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         syncJob?.cancel()
         syncJob = viewModelScope.launch(Dispatchers.IO) {
             _busy.value = true
+            val now = System.currentTimeMillis()
+            _lastSyncedAt.value = now
+            securePrefs.lastSyncedAt = now
             refreshCredentialState()
             entry(title, "Starting...", LogEntry.Type.HEADER)
             try {
@@ -491,14 +497,14 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val credentials = requireBggCredentials()
         val cache = BggCache(getApplication())
         if (!forceRefresh && cache.exists(credentials.username)) {
-            entry("BGG cache", "Loading from local cache", LogEntry.Type.INFO)
+            entry("BGG", "Loading from cache", LogEntry.Type.INFO)
             return cache.load(credentials.username)
         }
         if (forceRefresh) cache.delete(credentials.username)
-        entry("BGG API", "Fetching collection...", LogEntry.Type.INFO)
+        entry("BGG", "Fetching collection", LogEntry.Type.INFO)
         val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
         val games = client.fetchCollection(credentials.username, credentials.password)
-        entry("BGG API", "${games.size} games fetched, loading full details...", LogEntry.Type.INFO)
+        entry("BGG", "${games.size} games, fetching details", LogEntry.Type.INFO)
         return try {
             val thingDetails = client.fetchThingDetails(games.map { it.objectid })
             val enriched = games.map { game ->
@@ -512,10 +518,10 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 )
             }
             cache.save(credentials.username, enriched)
-            entry("BGG API", "${enriched.size} games fetched and cached", LogEntry.Type.INFO)
+            entry("BGG", "${enriched.size} games fetched", LogEntry.Type.INFO)
             enriched
         } catch (e: Exception) {
-            entry("BGG API", "Could not fetch game details: ${e.message}", LogEntry.Type.ERROR)
+            entry("BGG", "Could not fetch game details: ${e.message}", LogEntry.Type.ERROR)
             // Don't cache — let the next refresh retry enrichment
             games
         }
@@ -556,11 +562,12 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 failed++
             }
         }
-        entry(
-            "Sync complete",
-            "$updated updated  +$appended new  x $failed failed",
-            if (failed > 0) LogEntry.Type.ERROR else LogEntry.Type.DONE
-        )
+        val syncSummary = buildList {
+            add("$updated updated")
+            if (appended > 0) add("$appended new")
+            if (failed > 0) add("$failed failed")
+        }.joinToString(", ")
+        entry("Sync complete", syncSummary, if (failed > 0) LogEntry.Type.ERROR else LogEntry.Type.DONE)
     }
 
     private fun buildSheetById(allRows: List<List<Any>>, objectidCol: Int): MutableMap<String, Int> {
@@ -783,7 +790,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val wishlistItems = try {
             wishlistClient.fetchWishlistGameItems(credentials.username, credentials.password)
         } catch (e: Exception) {
-            entry("BGG wishlist", e.message ?: "Could not load wishlist", LogEntry.Type.ERROR)
+            entry("BGG Wishlist", e.message ?: "Could not load wishlist", LogEntry.Type.ERROR)
             emptyList()
         }
         val ownedIds = ownedGames.map { it.objectId }.toSet()
@@ -807,7 +814,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
             } catch (e: Exception) {
-                entry("BGG wishlist details", e.message ?: "Could not fetch wishlist details", LogEntry.Type.ERROR)
+                entry("BGG Wishlist", e.message ?: "Could not fetch wishlist details", LogEntry.Type.ERROR)
                 newWishlistItems
             }
         } else {
@@ -869,13 +876,13 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 throw e
             } catch (e: Exception) {
                 merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.SLEEVES)
-                entry("BGG sleeves", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
+                entry("BGG Sleeves", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
             }
         }
 
         val (withHistoryCounts, backfilledCount) = backfillMissingBggPlayCountsFromHistory(merged)
         if (backfilledCount > 0) {
-            entry("BGG history", "Filled missing play counts for $backfilledCount games", LogEntry.Type.INFO)
+            entry("BGG History", "Filled missing play counts for $backfilledCount games", LogEntry.Type.INFO)
         }
 
         return withHistoryCounts
@@ -934,7 +941,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val credentials = requireBggCredentials()
         val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
         client.loginIfNeeded(credentials.username, credentials.password)
-        entry("BGG sleeves", "Checking ${games.size} games", LogEntry.Type.INFO)
+        entry("BGG Sleeves", "Checking ${games.size} games", LogEntry.Type.INFO)
 
         var updated = 0
         var missing = 0
@@ -988,28 +995,29 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
-        entry(
-            "Sleeve refresh complete",
-            "$updated updated  $missing missing  $failed failed",
-            if (failed > 0) LogEntry.Type.ERROR else LogEntry.Type.DONE
-        )
+        val sleeveSummary = buildList {
+            if (updated > 0) add("$updated updated")
+            if (missing > 0) add("$missing missing")
+            if (failed > 0) add("$failed failed")
+        }.joinToString(", ").ifBlank { "No changes" }
+        entry("BGG Sleeves", sleeveSummary, if (failed > 0) LogEntry.Type.ERROR else LogEntry.Type.DONE)
         return refreshed
     }
 
     private suspend fun refreshBggPlayHistory() {
-        entry("BGG history", "Refreshing play history", LogEntry.Type.INFO)
+        entry("BGG History", "Fetching plays", LogEntry.Type.INFO)
         try {
             refreshBggPlayCache(securePrefs, collectionStore, bggRepository)
                 .onSuccess { plays ->
-                    entry("BGG history", "${plays.size} plays cached", LogEntry.Type.DONE)
+                    entry("BGG History", "${plays.size} plays cached", LogEntry.Type.DONE)
                 }
                 .onFailure {
-                    entry("BGG history", it.message ?: "Failed to refresh play history", LogEntry.Type.ERROR)
+                    entry("BGG History", it.message ?: "Failed to refresh play history", LogEntry.Type.ERROR)
                 }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            entry("BGG history", e.message ?: "Failed to refresh play history", LogEntry.Type.ERROR)
+            entry("BGG History", e.message ?: "Failed to refresh play history", LogEntry.Type.ERROR)
         }
     }
 
@@ -1037,10 +1045,10 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             val api = GoogleApiClient(getApplication(), account, spreadsheetId, sheetTabName)
             val changedRows = api.writeSleevesJsonByObjectId(gamesWithSleeves)
             if (changedRows > 0) {
-                entry("Sleeves", "Saved sleeves for $changedRows games to sheet", LogEntry.Type.DONE)
+                entry("Google Sheets", "Saved sleeves for $changedRows games", LogEntry.Type.DONE)
             }
         } catch (e: Exception) {
-            entry("Sleeves", e.message ?: "Could not save sleeves to sheet", LogEntry.Type.ERROR)
+            entry("Google Sheets", e.message ?: "Could not save sleeves to sheet", LogEntry.Type.ERROR)
         }
     }
 

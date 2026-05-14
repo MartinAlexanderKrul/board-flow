@@ -125,6 +125,7 @@ fun SyncScreen(
     val log by syncViewModel.log.collectAsState()
     val busy by syncViewModel.busy.collectAsState()
     val hasBggCredentials by syncViewModel.hasBggCredentials.collectAsState()
+    val lastSyncedAt by syncViewModel.lastSyncedAt.collectAsState()
 
     val hasConfiguredSheet = spreadsheetId.isNotBlank()
     val googleConnected = account != null
@@ -152,6 +153,16 @@ fun SyncScreen(
     var logDialogOpen by rememberSaveable { mutableStateOf(false) }
     var logAutoOpenDismissedRun by rememberSaveable { mutableStateOf(-1) }
     var showClearLogConfirm by remember { mutableStateOf(false) }
+    var pendingSyncAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    fun triggerSync(action: () -> Unit) {
+        val elapsed = System.currentTimeMillis() - lastSyncedAt
+        if (lastSyncedAt > 0L && elapsed < 3_600_000L) {
+            pendingSyncAction = action
+        } else {
+            action()
+        }
+    }
 
     val listState = rememberLazyListState()
 
@@ -164,10 +175,10 @@ fun SyncScreen(
     LaunchedEffect(Unit) { syncViewModel.refreshCredentialState() }
     LaunchedEffect(log.size, busy, currentLogRun) {
         if (log.isNotEmpty() && isSyncLog) {
-            listState.animateScrollToItem(log.size - 1)
             if (busy && logAutoOpenDismissedRun != currentLogRun) {
                 logDialogOpen = true
             }
+            listState.animateScrollToItem(log.size - 1)
         }
     }
 
@@ -239,6 +250,24 @@ fun SyncScreen(
         )
     }
 
+    if (pendingSyncAction != null) {
+        val elapsedMs = System.currentTimeMillis() - lastSyncedAt
+        val minutes = (elapsedMs / 60_000).toInt()
+        val timeText = if (minutes < 1) "less than a minute ago" else "$minutes minute${if (minutes == 1) "" else "s"} ago"
+        BoardFlowConfirmationDialog(
+            title = "Sync again?",
+            message = "Collection was last synced $timeText. Do you want to sync again?",
+            confirmLabel = "Sync",
+            dismissLabel = "Cancel",
+            kind = BoardFlowConfirmationKind.NEUTRAL,
+            onConfirm = {
+                pendingSyncAction?.invoke()
+                pendingSyncAction = null
+            },
+            onDismiss = { pendingSyncAction = null }
+        )
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
@@ -276,7 +305,7 @@ fun SyncScreen(
                 SectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         BoardFlowButton(
-                            onClick = { syncViewModel.refreshCollection(forceRefresh = true) },
+                            onClick = { triggerSync { syncViewModel.refreshCollection(forceRefresh = true) } },
                             enabled = !busy && hasBggCredentials,
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -285,7 +314,7 @@ fun SyncScreen(
                             Text("Refresh Collection")
                         }
                         BoardFlowOutlinedButton(
-                            onClick = { syncViewModel.refreshSleeveDataFromBgg(forceRefresh = true) },
+                            onClick = { triggerSync { syncViewModel.refreshSleeveDataFromBgg(forceRefresh = true) } },
                             enabled = !busy && hasBggCredentials,
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -312,8 +341,10 @@ fun SyncScreen(
                                 BoardFlowButton(
                                     onClick = {
                                         val acc = account ?: return@BoardFlowButton
-                                        onSpreadsheetChanged(spreadsheetId)
-                                        syncViewModel.syncBgg(acc, forceRefresh = true)
+                                        triggerSync {
+                                            onSpreadsheetChanged(spreadsheetId)
+                                            syncViewModel.syncBgg(acc, forceRefresh = true)
+                                        }
                                     },
                                     enabled = !busy && canSync,
                                     modifier = Modifier.fillMaxWidth()

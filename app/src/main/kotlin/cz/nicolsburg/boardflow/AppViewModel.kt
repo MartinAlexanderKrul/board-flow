@@ -17,8 +17,8 @@ import cz.nicolsburg.boardflow.model.RecordMoment
 import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.model.SleeveManufacturer
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -326,6 +326,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _playHistory = MutableStateFlow<List<LoggedPlay>>(emptyList())
     val playHistory: StateFlow<List<LoggedPlay>> = _playHistory.asStateFlow()
     private val _bggPlaysCacheAgeMinutes = MutableStateFlow(Long.MAX_VALUE)
+    val bggPlaysCacheAgeMinutes: StateFlow<Long> = _bggPlaysCacheAgeMinutes.asStateFlow()
 
     fun loadPlayHistory() {
         viewModelScope.launch {

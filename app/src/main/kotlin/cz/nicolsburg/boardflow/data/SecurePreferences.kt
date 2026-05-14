@@ -274,6 +274,10 @@ class SecurePreferences(context: Context) {
         get() = prefs.getString(KEY_GOOGLE_AUTHORIZED_EMAIL, "") ?: ""
         set(value) = prefs.edit().putString(KEY_GOOGLE_AUTHORIZED_EMAIL, value.trim()).apply()
 
+    var lastSyncedAt: Long
+        get() = prefs.getLong(KEY_LAST_SYNCED_AT, 0L)
+        set(value) = prefs.edit().putLong(KEY_LAST_SYNCED_AT, value).apply()
+
     // --- Export / Import all local data ---
     fun exportAll(
         includeSensitiveData: Boolean = false,
@@ -354,5 +358,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_SLEEVE_PREFERRED_MANUFACTURER = "sleeve_preferred_manufacturer"
         private const val KEY_SESSION_CONTEXT  = "log_play_session_context"
         private const val KEY_GAME_INSIGHT_PREFIX = "game_insight_last_"
+        private const val KEY_LAST_SYNCED_AT      = "last_synced_at"
     }
 }

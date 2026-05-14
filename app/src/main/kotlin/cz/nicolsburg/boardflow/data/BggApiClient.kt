@@ -2,6 +2,7 @@
 
 import android.util.Log
 import cz.nicolsburg.boardflow.model.GameItem
+import okhttp3.logging.HttpLoggingInterceptor
 import kotlinx.coroutines.delay
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
@@ -23,6 +24,9 @@ class BggApiClient(private val xmlApiToken: String = "") {
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(HttpLoggingInterceptor { Log.d(TAG, it.replace('\n', ' ')) }.apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        })
         .build()
 
     @Volatile private var sessionCookies: String = ""

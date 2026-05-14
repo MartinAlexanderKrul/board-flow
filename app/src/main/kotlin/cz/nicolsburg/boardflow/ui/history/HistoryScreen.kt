@@ -202,6 +202,34 @@ fun HistoryScreen(
     val deletingPlayId by viewModel.deletingBggPlayId.collectAsState()
     val editPlayLoading by viewModel.editPlayLoading.collectAsState()
     val postingPlayId by viewModel.postingPlayId.collectAsState()
+    val bggPlaysCacheAgeMinutes by viewModel.bggPlaysCacheAgeMinutes.collectAsState()
+
+    var showBggPlaysRefreshConfirm by remember { mutableStateOf(false) }
+
+    if (showBggPlaysRefreshConfirm) {
+        val minutes = bggPlaysCacheAgeMinutes
+        val timeText = if (minutes < 1L) "less than a minute ago" else "$minutes minute${if (minutes == 1L) "" else "s"} ago"
+        BoardFlowConfirmationDialog(
+            title = "Refresh again?",
+            message = "Play history was last synced $timeText. Do you want to refresh again?",
+            confirmLabel = "Refresh",
+            dismissLabel = "Cancel",
+            kind = BoardFlowConfirmationKind.NEUTRAL,
+            onConfirm = {
+                showBggPlaysRefreshConfirm = false
+                viewModel.fetchBggPlays()
+            },
+            onDismiss = { showBggPlaysRefreshConfirm = false }
+        )
+    }
+
+    fun triggerBggPlaysRefresh() {
+        if (bggPlaysCacheAgeMinutes < 60L) {
+            showBggPlaysRefreshConfirm = true
+        } else {
+            viewModel.fetchBggPlays()
+        }
+    }
     val syncingUnpostedPlays by viewModel.syncingUnpostedPlays.collectAsState()
     val pendingHistoryNavigation by viewModel.pendingHistoryNavigation.collectAsState()
     var playToDelete by remember { mutableStateOf<LoggedPlay?>(null) }
@@ -729,7 +757,7 @@ fun HistoryScreen(
                         error = bggError,
                         hasBggUsername = viewModel.prefs.bggUsername.isNotBlank(),
                         onOpenPlay = { selectedPlay = it },
-                        onRefresh = viewModel::fetchBggPlays,
+                        onRefresh = ::triggerBggPlaysRefresh,
                         listState = playsListState,
                         hasActiveFilters = hasActiveFilters,
                         onResetFilters = {

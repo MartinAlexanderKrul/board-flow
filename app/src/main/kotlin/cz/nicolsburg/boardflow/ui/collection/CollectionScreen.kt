@@ -82,6 +82,8 @@ import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
+import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
@@ -132,6 +134,36 @@ fun CollectionScreen(
     val error by syncViewModel.collectionError.collectAsState()
     val sleevesExcludedGameIds by syncViewModel.sleevesExcludedGameIds.collectAsState()
     val hasBggCredentials by syncViewModel.hasBggCredentials.collectAsState()
+    val lastSyncedAt by syncViewModel.lastSyncedAt.collectAsState()
+
+    var pendingSyncConfirm by remember { mutableStateOf(false) }
+
+    fun triggerSync(action: () -> Unit = { syncViewModel.refreshCollection(forceRefresh = true) }) {
+        val elapsed = System.currentTimeMillis() - lastSyncedAt
+        if (lastSyncedAt > 0L && elapsed < 3_600_000L) {
+            pendingSyncConfirm = true
+        } else {
+            action()
+        }
+    }
+
+    if (pendingSyncConfirm) {
+        val elapsedMs = System.currentTimeMillis() - lastSyncedAt
+        val minutes = (elapsedMs / 60_000).toInt()
+        val timeText = if (minutes < 1) "less than a minute ago" else "$minutes minute${if (minutes == 1) "" else "s"} ago"
+        BoardFlowConfirmationDialog(
+            title = "Sync again?",
+            message = "Collection was last synced $timeText. Do you want to sync again?",
+            confirmLabel = "Sync",
+            dismissLabel = "Cancel",
+            kind = BoardFlowConfirmationKind.NEUTRAL,
+            onConfirm = {
+                pendingSyncConfirm = false
+                syncViewModel.refreshCollection(forceRefresh = true)
+            },
+            onDismiss = { pendingSyncConfirm = false }
+        )
+    }
 
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(SortMode.RATING) }
@@ -323,20 +355,20 @@ fun CollectionScreen(
                     BoardFlowPullRefreshContainer(
                         isRefreshing = loading,
                         isAtTop = activeListAtTop,
-                        onRefresh = { syncViewModel.refreshCollection(forceRefresh = true) },
+                        onRefresh = { triggerSync() },
                         modifier = Modifier.fillMaxSize()
                     ) {
                         when {
                             error != null && allGames.isEmpty() -> ErrorState(
                                 error = error.orEmpty(),
-                                onRetry = if (hasBggCredentials) ({ syncViewModel.refreshCollection(forceRefresh = true) }) else null
+                                onRetry = if (hasBggCredentials) ({ triggerSync() }) else null
                             )
 
                             allGames.isEmpty() -> EmptyState(
                                 accountReady = account != null,
                                 spreadsheetReady = spreadsheetId.isNotBlank(),
                                 hasCachedSource = spreadsheetId.isNotBlank(),
-                                onLoad = if (hasBggCredentials) ({ syncViewModel.refreshCollection(forceRefresh = true) }) else null
+                                onLoad = if (hasBggCredentials) ({ triggerSync() }) else null
                             )
 
                             tabMode == TabMode.SLEEVES -> SleevesContent(
