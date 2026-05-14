@@ -1,11 +1,21 @@
-﻿package cz.nicolsburg.boardflow.ui.search
+package cz.nicolsburg.boardflow.ui.search
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -15,18 +25,31 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.SessionContext
-import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
+import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+private data class ScrollDragState(val letter: Char, val dragFraction: Float)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +70,7 @@ fun NewPlayScreen(
     LaunchedEffect(Unit) { viewModel.loadRecentGames() }
 
     LaunchedEffect(query) {
-        delay(300)
+        delay(600)
         viewModel.filterGames(query)
     }
 
@@ -166,18 +189,209 @@ fun NewPlayScreen(
                     }
                 }
 
-                else -> LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
-                ) {
-                    items(results) { game ->
-                        GameRow(game = game, onClick = {
-                            viewModel.selectGame(game)
-                            onGameSelected(game)
-                        })
+                else -> {
+                    val listState = rememberLazyListState()
+                    val scope = rememberCoroutineScope()
+                    val showScrollBar = results.size > 20
+                    var dragState by remember { mutableStateOf<ScrollDragState?>(null) }
+
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        LazyColumn(
+                            state = listState,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(
+                                top = 8.dp,
+                                bottom = 8.dp,
+                                end = if (showScrollBar) 20.dp else 0.dp
+                            )
+                        ) {
+                            items(results) { game ->
+                                GameRow(game = game, onClick = {
+                                    viewModel.selectGame(game)
+                                    onGameSelected(game)
+                                })
+                            }
+                        }
+
+                        if (showScrollBar) {
+                            // Floating letter bubble — follows finger position instantly
+                            dragState?.let { state ->
+                                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                                    val bubbleSize = 52.dp
+                                    val inset = 8.dp
+                                    val usable = maxHeight - inset * 2
+                                    val yOffset = (inset + usable * state.dragFraction - bubbleSize / 2)
+                                        .coerceIn(inset, maxHeight - inset - bubbleSize)
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .offset(x = (-24).dp, y = yOffset)
+                                            .shadow(elevation = 12.dp, shape = CircleShape)
+                                            .size(bubbleSize)
+                                            .background(MaterialTheme.colorScheme.primary, CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = state.letter.toString(),
+                                            fontSize = 24.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
+                                }
+                            }
+
+                            FastScrollBar(
+                                listState = listState,
+                                results = results,
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .fillMaxHeight()
+                                    .padding(vertical = 8.dp)
+                                    .width(20.dp),
+                                onScrollRequested = { idx -> scope.launch { listState.scrollToItem(idx) } },
+                                onDragStateChange = { dragState = it }
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun FastScrollBar(
+    listState: LazyListState,
+    results: List<BggGame>,
+    modifier: Modifier = Modifier,
+    onScrollRequested: (Int) -> Unit,
+    onDragStateChange: (ScrollDragState?) -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+
+    val isScrollInProgress = listState.isScrollInProgress
+    var isDragging by remember { mutableStateOf(false) }
+    var lastLetter by remember { mutableStateOf<Char?>(null) }
+
+    fun letterAt(idx: Int): Char? {
+        val first = results.getOrNull(idx)?.name?.trimStart()?.firstOrNull()?.uppercaseChar()
+        return if (first?.isLetter() == true) first else null
+    }
+
+    // Thumb position derived from list scroll state — avoids unnecessary recompositions
+    val thumbFraction by remember {
+        derivedStateOf {
+            val layout = listState.layoutInfo
+            val total = layout.totalItemsCount.takeIf { it > 0 } ?: return@derivedStateOf 0f
+            val visibleCount = layout.visibleItemsInfo.size
+            val scrollable = (total - visibleCount).takeIf { it > 0 } ?: return@derivedStateOf 0f
+            val avgH = layout.visibleItemsInfo
+                .takeIf { it.isNotEmpty() }
+                ?.let { it.sumOf { item -> item.size }.toFloat() / it.size }
+                ?: 60f
+            ((listState.firstVisibleItemIndex + listState.firstVisibleItemScrollOffset / avgH) / scrollable)
+                .coerceIn(0f, 1f)
+        }
+    }
+
+    val thumbSizeFraction by remember {
+        derivedStateOf {
+            val layout = listState.layoutInfo
+            val total = layout.totalItemsCount.takeIf { it > 0 } ?: return@derivedStateOf 1f
+            (layout.visibleItemsInfo.size.toFloat() / total).coerceIn(0.04f, 1f)
+        }
+    }
+
+    // Near-invisible at rest, brightens while scrolling, semi-transparent while dragging
+    val thumbAlpha by animateFloatAsState(
+        targetValue = when {
+            isDragging         -> 0.80f
+            isScrollInProgress -> 0.65f
+            else               -> 0.20f
+        },
+        animationSpec = tween(durationMillis = if (isDragging || isScrollInProgress) 80 else 600),
+        label = "thumbAlpha"
+    )
+
+    // Thumb fattens slightly when active
+    val thumbWidthDp by animateDpAsState(
+        targetValue = when {
+            isDragging         -> 5.dp
+            isScrollInProgress -> 4.dp
+            else               -> 3.dp
+        },
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "thumbWidth"
+    )
+
+    val primary   = MaterialTheme.colorScheme.primary
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    var trackHeightPx by remember { mutableIntStateOf(0) }
+
+    Box(
+        modifier = modifier
+            .onSizeChanged { trackHeightPx = it.height }
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragStart = { offset ->
+                        isDragging = true
+                        val total = listState.layoutInfo.totalItemsCount
+                        if (total == 0) return@detectVerticalDragGestures
+                        val fraction = (offset.y / trackHeightPx).coerceIn(0f, 1f)
+                        val targetIdx = (fraction * total).toInt().coerceIn(0, total - 1)
+                        val letter = letterAt(targetIdx)
+                        lastLetter = letter
+                        if (letter != null) onDragStateChange(ScrollDragState(letter, fraction))
+                        onScrollRequested(targetIdx)
+                    },
+                    onDragEnd = {
+                        isDragging = false
+                        lastLetter = null
+                        onDragStateChange(null)
+                    },
+                    onDragCancel = {
+                        isDragging = false
+                        lastLetter = null
+                        onDragStateChange(null)
+                    },
+                    onVerticalDrag = { change, _ ->
+                        val total = listState.layoutInfo.totalItemsCount
+                        if (total == 0) return@detectVerticalDragGestures
+                        val fraction = (change.position.y / trackHeightPx).coerceIn(0f, 1f)
+                        val targetIdx = (fraction * total).toInt().coerceIn(0, total - 1)
+                        val letter = letterAt(targetIdx) ?: lastLetter
+                        if (letter != null && letter != lastLetter) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
+                        lastLetter = letter
+                        if (letter != null) onDragStateChange(ScrollDragState(letter, fraction))
+                        onScrollRequested(targetIdx)
+                    }
+                )
+            }
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val tw = thumbWidthDp.toPx()
+            val trackX = size.width - tw - 1.dp.toPx()
+            val minThumbPx = 28.dp.toPx()
+            val thumbH = (size.height * thumbSizeFraction).coerceAtLeast(minThumbPx)
+            val thumbTop = (thumbFraction * (size.height - thumbH)).coerceIn(0f, size.height - thumbH)
+
+            // Subtle track groove
+            drawRoundRect(
+                color = onSurface.copy(alpha = (thumbAlpha * 0.25f).coerceAtMost(0.10f)),
+                topLeft = Offset(trackX, 0f),
+                size = Size(tw, size.height),
+                cornerRadius = CornerRadius(tw / 2)
+            )
+            // Amber thumb pill
+            drawRoundRect(
+                color = primary.copy(alpha = thumbAlpha),
+                topLeft = Offset(trackX, thumbTop),
+                size = Size(tw, thumbH),
+                cornerRadius = CornerRadius(tw / 2)
+            )
         }
     }
 }
@@ -192,9 +406,9 @@ private fun SessionContinueBanner(
         .let { if (context.players.size > 3) "$it +${context.players.size - 3}" else it }
     val elapsedMs = System.currentTimeMillis() - context.lastPlayTimestamp
     val elapsedLabel = when {
-        elapsedMs < 60_000L -> "just now"
+        elapsedMs < 60_000L    -> "just now"
         elapsedMs < 3_600_000L -> "${elapsedMs / 60_000}m ago"
-        else -> "${elapsedMs / 3_600_000}h ago"
+        else                   -> "${elapsedMs / 3_600_000}h ago"
     }
     val subtitle = buildString {
         append(context.gameName)
@@ -271,3 +485,4 @@ private fun GameRow(game: BggGame, onClick: () -> Unit) {
             .clickable(onClick = onClick)
     )
 }
+

@@ -171,7 +171,12 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 ### Search -> Log Play
 
 - `NewPlayScreen` loads recent games and local collection-backed search first
-- if no local collection result matches, search may fall back to BGG XML search
+- if no local collection result matches, search falls back to BGG XML search
+- BGG search covers both base games and expansions (`type=boardgame,boardgameexpansion`)
+- BGG search results are sorted alphabetically; the list has no hard result cap
+- search is debounced (300ms after typing stops); local collection is checked first; if no local match, BGG is called with `exact=1` first, then `exact=0` as a fallback if exact returns nothing
+- `isBggSearchActive` in `AppViewModel` prevents `loadCollection`, `updateFromCollection`, and `loadRecentGames` from overwriting `_searchResults` while a BGG search result set is displayed; the guard clears when the user selects a game or clears the query
+- lists longer than 20 items show a draggable fast-scroll bar on the right edge (`NewPlayScreen.FastScrollBar`): amber pill thumb, animated opacity (idle 20% / scrolling 65% / dragging 80%), floating letter bubble that leads the thumb position, and haptic feedback (`HapticFeedbackType.TextHandleMove`) per letter section change
 - selected games move into `LogPlayScreen`
 - session context may prefill players/location
 - AI extraction may prefill players/scores
@@ -288,6 +293,8 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - retry and error handling exist in the repository layer
 - BGG XML search outside the local collection requires `BGG_XML_API_TOKEN`
 - if BGG XML token-based search is unavailable, fail quietly to empty results instead of noisy user-facing errors where possible
+- `BggRepository.searchGames` accepts an `exact: Boolean` parameter that maps to `exact=1` / `exact=0` in the BGG XML API URL; `AppViewModel.searchGames` cascades exact=1 then exact=0 automatically
+- search covers `type=boardgame,boardgameexpansion` so expansions appear alongside base games in external search results
 
 ## History / Roster Notes
 
