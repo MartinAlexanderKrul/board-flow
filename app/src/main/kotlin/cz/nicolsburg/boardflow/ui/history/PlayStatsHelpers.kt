@@ -440,6 +440,191 @@ fun formatDuration(minutes: Int): String = when {
     else -> "${minutes}m"
 }
 
+// ── Range-specific observations ───────────────────────────────────────────────
+
+fun List<LoggedPlay>.buildRangeObservations(
+    range: StatsTimeRange,
+    allPlays: List<LoggedPlay>
+): List<SmartObservation> {
+    if (isEmpty()) return emptyList()
+    val now = LocalDate.now()
+    val totalPlays = sumOf { it.quantity.coerceAtLeast(1) }
+    val uniqueGames = map { it.gameName }.toSet().size
+    val withDuration = filter { it.durationMinutes > 0 }
+    val avgSession = if (withDuration.isNotEmpty()) withDuration.sumOf { it.durationMinutes } / withDuration.size else 0
+    val result = mutableListOf<SmartObservation>()
+
+    when (range) {
+        StatsTimeRange.THIS_YEAR -> {
+            val monthsElapsed = now.monthValue.coerceAtLeast(1)
+            val projected = totalPlays * 12 / monthsElapsed
+
+            // Pace projection
+            if (monthsElapsed >= 2) {
+                result += SmartObservation(
+                    "$totalPlays plays so far this year. On pace for $projected by December."
+                )
+            }
+
+            // vs last year
+            val lastYearCount = allPlays.filter {
+                runCatching { LocalDate.parse(it.date).year == now.year - 1 }.getOrDefault(false)
+            }.sumOf { it.quantity.coerceAtLeast(1) }
+            if (lastYearCount > 0 && monthsElapsed >= 3) {
+                val paceVsLastYear = projected - lastYearCount
+                when {
+                    paceVsLastYear > 5 -> result += SmartObservation(
+                        "Ahead of last year's pace by $paceVsLastYear plays. A stronger year."
+                    )
+                    paceVsLastYear < -5 -> result += SmartObservation(
+                        "Behind last year's pace by ${-paceVsLastYear} plays. Still time to catch up."
+                    )
+                    else -> result += SmartObservation(
+                        "Almost exactly on last year's pace. Consistent as ever."
+                    )
+                }
+            }
+
+            // Most active month this year
+            val byMonth = groupBy { runCatching { LocalDate.parse(it.date).monthValue }.getOrNull() }
+                .filterKeys { it != null }
+                .mapValues { (_, g) -> g.sumOf { it.quantity.coerceAtLeast(1) } }
+            val peakMonth = byMonth.maxByOrNull { it.value }
+            if (peakMonth != null && byMonth.size >= 2) {
+                val monthName = java.time.Month.of(peakMonth.key!!).getDisplayName(TextStyle.FULL, Locale.getDefault())
+                    .replaceFirstChar { it.uppercase() }
+                result += SmartObservation(
+                    "$monthName was your busiest month — ${peakMonth.value} ${if (peakMonth.value == 1) "play" else "plays"}."
+                )
+            }
+
+            // Unique games
+            if (uniqueGames >= 5) {
+                result += SmartObservation(
+                    "$uniqueGames different games played this year. " +
+                        if (uniqueGames > totalPlays / 2) "Lots of variety." else "With some clear favorites emerging."
+                )
+            }
+
+            // Average session this year
+            if (avgSession > 0) {
+                result += SmartObservation(
+                    "Average session this year: ${formatDuration(avgSession)}."
+                )
+            }
+        }
+
+        StatsTimeRange.THIS_MONTH -> {
+            val monthName = now.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                .replaceFirstChar { it.uppercase() }
+
+            // vs last month
+            val lastMonthStart = now.withDayOfMonth(1).minusMonths(1)
+            val lastMonthEnd = now.withDayOfMonth(1).minusDays(1)
+            val lastMonthCount = allPlays.filter {
+                runCatching {
+                    val d = LocalDate.parse(it.date)
+                    !d.isBefore(lastMonthStart) && !d.isAfter(lastMonthEnd)
+                }.getOrDefault(false)
+            }.sumOf { it.quantity.coerceAtLeast(1) }
+
+            when {
+                lastMonthCount == 0 -> result += SmartObservation(
+                    "$totalPlays ${if (totalPlays == 1) "play" else "plays"} in $monthName so far."
+                )
+                totalPlays > lastMonthCount -> result += SmartObservation(
+                    "$totalPlays plays in $monthName so far — more than all of last month ($lastMonthCount)."
+                )
+                totalPlays == lastMonthCount -> result += SmartObservation(
+                    "$totalPlays plays so far — exactly matching last month. Right on track."
+                )
+                else -> result += SmartObservation(
+                    "$totalPlays plays in $monthName so far. Last month was $lastMonthCount."
+                )
+            }
+
+            // Most played game this month
+            val topGame = groupBy { it.gameName }
+                .mapValues { (_, g) -> g.sumOf { it.quantity.coerceAtLeast(1) } }
+                .maxByOrNull { it.value }
+            if (topGame != null && topGame.value >= 2) {
+                result += SmartObservation(
+                    "${topGame.key} is leading the month with ${topGame.value} plays."
+                )
+            }
+
+            // Active days this month
+            val activeDays = mapNotNull { runCatching { LocalDate.parse(it.date) }.getOrNull() }.toSet().size
+            val daysInMonth = now.dayOfMonth
+            if (activeDays >= 3) {
+                result += SmartObservation(
+                    "Games on $activeDays of the $daysInMonth days so far this month."
+                )
+            }
+
+            // Average session
+            if (avgSession > 0 && withDuration.size >= 2) {
+                result += SmartObservation(
+                    "Average session in $monthName: ${formatDuration(avgSession)}."
+                )
+            }
+        }
+
+        StatsTimeRange.LAST_30 -> {
+            // vs previous 30 days
+            val cutoff30 = now.minusDays(30)
+            val cutoff60 = now.minusDays(60)
+            val prev30Count = allPlays.filter {
+                runCatching {
+                    val d = LocalDate.parse(it.date)
+                    !d.isBefore(cutoff60) && d.isBefore(cutoff30)
+                }.getOrDefault(false)
+            }.sumOf { it.quantity.coerceAtLeast(1) }
+
+            when {
+                prev30Count == 0 -> result += SmartObservation(
+                    "$totalPlays plays in the last 30 days."
+                )
+                totalPlays > prev30Count * 1.3 -> result += SmartObservation(
+                    "$totalPlays plays in 30 days — up from $prev30Count the month before. Momentum building."
+                )
+                totalPlays < prev30Count * 0.7 -> result += SmartObservation(
+                    "$totalPlays plays in the last 30 days, down from $prev30Count. Quieter stretch."
+                )
+                else -> result += SmartObservation(
+                    "$totalPlays plays in the last 30 days — roughly the same as the month before ($prev30Count)."
+                )
+            }
+
+            // Weekly pace
+            val playsPerWeek = totalPlays.toFloat() / 4.3f
+            if (playsPerWeek >= 1f) {
+                result += SmartObservation(
+                    "${String.format("%.1f", playsPerWeek)} plays per week on average over the last month."
+                )
+            }
+
+            // Unique games
+            if (uniqueGames >= 3) {
+                result += SmartObservation(
+                    "$uniqueGames different games across $totalPlays plays in 30 days."
+                )
+            }
+
+            // Average session
+            if (avgSession > 0 && withDuration.size >= 3) {
+                result += SmartObservation(
+                    "Sessions averaged ${formatDuration(avgSession)} over the last 30 days."
+                )
+            }
+        }
+
+        StatsTimeRange.ALL -> Unit
+    }
+
+    return result.distinctBy { it.text }
+}
+
 // ── Smart observations ────────────────────────────────────────────────────────
 
 data class SmartObservation(val text: String)

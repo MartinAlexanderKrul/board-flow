@@ -161,7 +161,8 @@ private data class HistoryNavState(
     val filterPlayer: String?,
     val searchQuery: String,
     val selectedPlayId: String? = null,
-    val selectedGameObjectId: String? = null
+    val selectedGameObjectId: String? = null,
+    val viewingPlayerId: String? = null
 )
 
 private enum class HistorySortMode(val label: String) {
@@ -211,6 +212,7 @@ fun HistoryScreen(
     var deleteError by remember { mutableStateOf<String?>(null) }
     var editError by remember { mutableStateOf<String?>(null) }
     var navHistory by remember { mutableStateOf(listOf<HistoryNavState>()) }
+    var restoredViewingPlayerId by remember { mutableStateOf<String?>(null) }
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var filterGameId by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -314,6 +316,7 @@ fun HistoryScreen(
         searchQuery = prev.searchQuery
         selectedPlay = prev.selectedPlayId?.let { id -> historyPlays.find { it.id == id } }
         selectedGame = prev.selectedGameObjectId?.let { objId -> collectionItems.firstOrNull { it.objectId == objId } }
+        restoredViewingPlayerId = prev.viewingPlayerId
     }
 
     LaunchedEffect(activeTab) {
@@ -763,13 +766,15 @@ fun HistoryScreen(
                     sourcePlays = historyPlays,
                     listState = playersListState,
                     onEditPlayer = { editingPlayer = it },
-                    onViewPlayerPlays = { playerName ->
-                        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayer, searchQuery)
+                    openPlayerId = restoredViewingPlayerId,
+                    onOpenPlayerConsumed = { restoredViewingPlayerId = null },
+                    onViewPlayerPlays = { playerName, sourcePlayerId ->
+                        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayer, searchQuery, viewingPlayerId = sourcePlayerId.ifBlank { null })
                         activeTab = HistoryTab.PLAYS
                         filterPlayer = playerName
                     },
-                    onViewPlayerGame = { gameId, gameName ->
-                        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayer, searchQuery)
+                    onViewPlayerGame = { gameId, gameName, sourcePlayerId ->
+                        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayer, searchQuery, viewingPlayerId = sourcePlayerId.ifBlank { null })
                         activeTab = HistoryTab.PLAYS
                         filterGameId = gameId
                         filterGameName = gameName

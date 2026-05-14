@@ -413,13 +413,22 @@ fun PlayersTabContent(
     sourcePlays: List<LoggedPlay>,
     onEditPlayer: (Player) -> Unit,
     listState: LazyListState = rememberLazyListState(),
-    onViewPlayerPlays: (playerName: String) -> Unit = {},
-    onViewPlayerGame: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
+    openPlayerId: String? = null,
+    onOpenPlayerConsumed: () -> Unit = {},
+    onViewPlayerPlays: (playerName: String, sourcePlayerId: String) -> Unit = { _, _ -> },
+    onViewPlayerGame: (gameId: Int, gameName: String, sourcePlayerId: String) -> Unit = { _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var viewingPlayer by remember { mutableStateOf<Player?>(null) }
     var viewingRival by remember { mutableStateOf<Player?>(null) }
     val sortedPlayers = remember(players, sourcePlays) { players.sortedByRecentActivity(sourcePlays) }
+
+    LaunchedEffect(openPlayerId, players) {
+        if (openPlayerId != null && viewingPlayer == null && viewingRival == null) {
+            viewingPlayer = players.find { it.id == openPlayerId }
+            onOpenPlayerConsumed()
+        }
+    }
 
     viewingPlayer?.let { vp ->
         val livePlayer = players.find { it.id == vp.id }
@@ -433,8 +442,8 @@ fun PlayersTabContent(
                 allPlayers = players,
                 onDismiss = { viewingPlayer = null },
                 onEdit = { onEditPlayer(livePlayer); viewingPlayer = null },
-                onViewPlays = { viewingPlayer = null; onViewPlayerPlays(livePlayer.displayName) },
-                onViewGame = { gameId, gameName -> viewingPlayer = null; onViewPlayerGame(gameId, gameName) },
+                onViewPlays = { val id = vp.id; viewingPlayer = null; onViewPlayerPlays(livePlayer.displayName, id) },
+                onViewGame = { gameId, gameName -> val id = vp.id; viewingPlayer = null; onViewPlayerGame(gameId, gameName, id) },
                 onViewRival = { rival -> viewingRival = rival }
             )
         } else { viewingPlayer = null }
@@ -452,8 +461,8 @@ fun PlayersTabContent(
                 allPlayers = players,
                 onDismiss = { viewingRival = null },
                 onEdit = { onEditPlayer(liveRival); viewingRival = null },
-                onViewPlays = { viewingRival = null; onViewPlayerPlays(liveRival.displayName) },
-                onViewGame = { gameId, gameName -> viewingRival = null; onViewPlayerGame(gameId, gameName) },
+                onViewPlays = { val id = rv.id; viewingRival = null; onViewPlayerPlays(liveRival.displayName, id) },
+                onViewGame = { gameId, gameName -> val id = rv.id; viewingRival = null; onViewPlayerGame(gameId, gameName, id) },
                 onViewRival = { rival -> viewingRival = rival }
             )
         } else { viewingRival = null }

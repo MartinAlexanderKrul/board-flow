@@ -107,7 +107,8 @@ fun GameDetailsDialog(
     onLogPlay: () -> Unit = {},
     onViewHistory: (Int) -> Unit = {},
     onViewHistoryPlayer: (gameId: Int, playerName: String) -> Unit = { _, _ -> },
-    onViewPlayers: (playerName: String) -> Unit = {}
+    onViewPlayers: (playerName: String) -> Unit = {},
+    onNavigateToSleeve: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val securePreferences = remember(context) { SecurePreferences(context.applicationContext) }
@@ -240,7 +241,7 @@ fun GameDetailsDialog(
                 }
 
                 if (hasSleeves) {
-                    item { SleevesBlock(game, preferredManufacturer) }
+                    item { SleevesBlock(game, preferredManufacturer, onNavigateToSleeve) }
                 }
 
                 if (customRows.isNotEmpty()) {
@@ -710,7 +711,11 @@ private fun InfoGroupBlock(sections: List<InfoSection>) {
 // â"€â"€ Sleeves block â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
-private fun SleevesBlock(game: GameItem, preferredManufacturer: SleeveManufacturer = SleeveManufacturer.AUTO) {
+private fun SleevesBlock(
+    game: GameItem,
+    preferredManufacturer: SleeveManufacturer = SleeveManufacturer.AUTO,
+    onNavigateToSleeve: (String) -> Unit = {}
+) {
     var expanded by remember { mutableStateOf(false) }
 
     Surface(
@@ -790,7 +795,7 @@ private fun SleevesBlock(game: GameItem, preferredManufacturer: SleeveManufactur
                             )
                             .padding(horizontal = GameDetailTokens.CardPadding, vertical = 9.dp)
                     ) {
-                        SleevesSection(game, preferredManufacturer)
+                        SleevesSection(game, preferredManufacturer, onNavigateToSleeve)
                     }
                 }
             }
@@ -940,7 +945,11 @@ private fun DetailCell(
 // â"€â"€ Sleeves expanded content â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @Composable
-private fun SleevesSection(game: GameItem, preferredManufacturer: SleeveManufacturer = SleeveManufacturer.AUTO) {
+private fun SleevesSection(
+    game: GameItem,
+    preferredManufacturer: SleeveManufacturer = SleeveManufacturer.AUTO,
+    onNavigateToSleeve: (String) -> Unit = {}
+) {
     val context = LocalContext.current
     val grouped = remember(game) {
         game.sleeveCardSets
@@ -982,26 +991,23 @@ private fun SleevesSection(game: GameItem, preferredManufacturer: SleeveManufact
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .then(
-                            if (preferred != null) Modifier.clickable {
-                                val query = Uri.encode("${preferred.first} ${preferred.second}")
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$query"))
-                                )
-                            } else Modifier
-                        )
                         .padding(vertical = 5.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 10.dp)
+                    ) {
                         Text(
                             text = genericName ?: size.ifBlank { "Unknown size" },
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.90f),
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.clickable { onNavigateToSleeve(genericName ?: size.ifBlank { "Unknown size" }) }
                         )
                         if (genericName != null && size.isNotBlank()) {
                             Text(
@@ -1016,7 +1022,13 @@ private fun SleevesSection(game: GameItem, preferredManufacturer: SleeveManufact
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f),
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.clickable {
+                                        val query = Uri.encode("${preferred.first} ${preferred.second}")
+                                        context.startActivity(
+                                            Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$query"))
+                                        )
+                                    }
                                 )
                             }
                         }

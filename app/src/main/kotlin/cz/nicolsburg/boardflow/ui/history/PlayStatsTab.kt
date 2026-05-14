@@ -401,12 +401,14 @@ internal fun StatsContent(
     }
 
     // ── New narrative computations ─────────────────────────────────────────────
-    val observations   = remember(plays) { plays.buildSmartObservations() }
-    val headerText     = remember(statPlays, timeRange, curStreak) { statPlays.buildContextualHeader(timeRange, curStreak) }
-    val heatmapData    = remember(plays) { plays.buildHeatmapData() }
-    val onThisDay      = remember(plays) { plays.buildOnThisDay() }
-    val archetype      = remember(plays) { if (timeRange == StatsTimeRange.ALL) plays.computeGamerArchetype() else null }
-    val rivalryPairs   = remember(statPlays) { statPlays.buildTopRivalryPairs() }
+    val observations     = remember(plays) { plays.buildSmartObservations() }
+    val rangeObservations = remember(statPlays, timeRange) { statPlays.buildRangeObservations(timeRange, plays) }
+    val activeObservations = if (timeRange == StatsTimeRange.ALL) observations else rangeObservations
+    val headerText       = remember(statPlays, timeRange, curStreak) { statPlays.buildContextualHeader(timeRange, curStreak) }
+    val heatmapData      = remember(plays) { plays.buildHeatmapData() }
+    val onThisDay        = remember(plays) { plays.buildOnThisDay() }
+    val archetype        = remember(plays) { if (timeRange == StatsTimeRange.ALL) plays.computeGamerArchetype() else null }
+    val rivalryPairs     = remember(statPlays) { statPlays.buildTopRivalryPairs() }
 
     LazyColumn(
         state = listState,
@@ -465,8 +467,14 @@ internal fun StatsContent(
             item { NarrativeHeader(headerText, curStreak) }
 
             // ── Hero rotating observation ──────────────────────────────────────
-            if (observations.isNotEmpty() && timeRange == StatsTimeRange.ALL) {
-                item { HeroObservationCard(observations) }
+            if (activeObservations.isNotEmpty()) {
+                val insightLabel = when (timeRange) {
+                    StatsTimeRange.ALL       -> "This week's insight"
+                    StatsTimeRange.THIS_YEAR -> "This year so far"
+                    StatsTimeRange.THIS_MONTH -> "This month"
+                    StatsTimeRange.LAST_30   -> "Last 30 days"
+                }
+                item { HeroObservationCard(activeObservations, insightLabel) }
             }
 
             // ── Summary ────────────────────────────────────────────────────────
@@ -595,7 +603,7 @@ private fun NarrativeHeader(text: String, currentStreak: Int) {
 // ── Hero rotating observation ─────────────────────────────────────────────────
 
 @Composable
-private fun HeroObservationCard(observations: List<SmartObservation>) {
+private fun HeroObservationCard(observations: List<SmartObservation>, label: String = "This week's insight") {
     if (observations.isEmpty()) return
     val dayOfYear = remember { LocalDate.now().dayOfYear }
     var offset by remember { mutableIntStateOf(0) }
@@ -620,7 +628,7 @@ private fun HeroObservationCard(observations: List<SmartObservation>) {
                         .background(MaterialTheme.colorScheme.primary, CircleShape)
                 )
                 Text(
-                    "This week's insight",
+                    label,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold

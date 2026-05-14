@@ -52,6 +52,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -137,8 +138,18 @@ fun CollectionScreen(
     var tabMode by remember { mutableStateOf(TabMode.OWNED) }
     var filterPlayers by remember { mutableStateOf<Int?>(null) }
     var filterBestFor by remember { mutableStateOf<Int?>(null) }
+    var sleevesHighlightGroup by remember { mutableStateOf<String?>(null) }
+    var sleevesReturnGame by remember { mutableStateOf<GameItem?>(null) }
+    var sleevesReturnTab by remember { mutableStateOf(TabMode.OWNED) }
     var showFilters by remember { mutableStateOf(false) }
     var selectedGame by remember { mutableStateOf<GameItem?>(null) }
+
+    BackHandler(enabled = tabMode == TabMode.SLEEVES && sleevesReturnGame != null) {
+        selectedGame = sleevesReturnGame
+        sleevesReturnGame = null
+        tabMode = sleevesReturnTab
+        sleevesHighlightGroup = null
+    }
 
     val listState = rememberLazyListState()
     val sleeveListState = rememberLazyListState()
@@ -236,7 +247,7 @@ fun CollectionScreen(
     selectedGame?.let { game ->
         GameDetailsDialog(
             game = game,
-            onDismiss = { selectedGame = null },
+            onDismiss = { selectedGame = null; sleevesReturnGame = null },
             historyPlays = historyPlays,
             players = players,
             onLogPlay = {
@@ -254,6 +265,13 @@ fun CollectionScreen(
             onViewPlayers = { playerName ->
                 selectedGame = null
                 onViewPlayers(playerName)
+            },
+            onNavigateToSleeve = { groupName ->
+                sleevesReturnGame = selectedGame
+                sleevesReturnTab = tabMode
+                selectedGame = null
+                tabMode = TabMode.SLEEVES
+                sleevesHighlightGroup = groupName
             }
         )
     }
@@ -327,7 +345,8 @@ fun CollectionScreen(
                                 excludedGameIds = sleevesExcludedGameIds,
                                 onToggleExclusion = { syncViewModel.toggleSleeveGameExclusion(it) },
                                 onExcludeAll = { syncViewModel.excludeAllSleeveGames(it) },
-                                onIncludeAll = { syncViewModel.includeAllSleeveGames() }
+                                onIncludeAll = { syncViewModel.includeAllSleeveGames() },
+                                initiallyExpandedGroup = sleevesHighlightGroup
                             )
 
                             else -> {

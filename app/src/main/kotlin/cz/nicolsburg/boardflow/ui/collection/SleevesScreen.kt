@@ -34,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -161,9 +162,17 @@ internal fun SleevesContent(
     onToggleExclusion: (String) -> Unit = {},
     onExcludeAll: (Set<String>) -> Unit = {},
     onIncludeAll: () -> Unit = {},
+    initiallyExpandedGroup: String? = null,
     modifier: Modifier = Modifier
 ) {
     var showAllGames by remember { mutableStateOf(false) }
+    var expandedGroups by remember { mutableStateOf(emptySet<String>()) }
+
+    LaunchedEffect(initiallyExpandedGroup) {
+        if (initiallyExpandedGroup != null) {
+            expandedGroups = expandedGroups + initiallyExpandedGroup
+        }
+    }
 
     val context = LocalContext.current
     val onShare: () -> Unit = remember(allGames, excludedGameIds, showAllGames) {
@@ -196,6 +205,13 @@ internal fun SleevesContent(
 
     val groups = remember(allGames, excludedGameIds, showAllGames) {
         computeSleeveSummary(allGames, excludedGameIds, showAll = showAllGames)
+    }
+
+    LaunchedEffect(initiallyExpandedGroup, groups) {
+        if (initiallyExpandedGroup != null) {
+            val idx = groups.indexOfFirst { it.displayName == initiallyExpandedGroup }
+            if (idx >= 0) listState.animateScrollToItem(idx + 2)
+        }
     }
     val includedCount = remember(allGamesToSleeve, excludedGameIds) {
         allGamesToSleeve.count { it.objectId !in excludedGameIds }
@@ -299,7 +315,16 @@ internal fun SleevesContent(
         }
 
         items(groups, key = { it.displayName }) { group ->
-            SleeveSizeGroupCard(group = group)
+            SleeveSizeGroupCard(
+                group = group,
+                expanded = group.displayName in expandedGroups,
+                onToggleExpand = {
+                    expandedGroups = if (group.displayName in expandedGroups)
+                        expandedGroups - group.displayName
+                    else
+                        expandedGroups + group.displayName
+                }
+            )
         }
     }
 }
@@ -451,11 +476,14 @@ private fun sleeveSearchIntent(brand: String, product: String): Intent {
 }
 
 @Composable
-private fun SleeveSizeGroupCard(group: SleeveSizeGroup) {
+private fun SleeveSizeGroupCard(
+    group: SleeveSizeGroup,
+    expanded: Boolean = false,
+    onToggleExpand: () -> Unit = {}
+) {
     val context = LocalContext.current
-    var expanded by remember { mutableStateOf(false) }
 
-    SectionCard(accented = false, onClick = { expanded = !expanded }) {
+    SectionCard(accented = false, onClick = onToggleExpand) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
