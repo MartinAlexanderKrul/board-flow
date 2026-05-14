@@ -1,4 +1,4 @@
-package cz.nicolsburg.boardflow.ui.search
+﻿package cz.nicolsburg.boardflow.ui.search
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -70,7 +70,7 @@ fun NewPlayScreen(
     LaunchedEffect(Unit) { viewModel.loadRecentGames() }
 
     LaunchedEffect(query) {
-        delay(600)
+        delay(800)
         viewModel.filterGames(query)
     }
 
