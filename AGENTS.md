@@ -99,7 +99,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - Drive folder and QR code creation
   - full Sheets sync
   - sync log / progress state
-  - silent startup collection load
+  - silent startup collection load (gated: only runs if last sync was more than 4 hours ago via `securePrefs.lastSyncedAt`)
 - `data/`
   - `BggApiClient.kt` -- low-level BGG HTTP/XML client and sleeve scraping
   - `BggRepository.kt` -- BGG feature layer (collection, search, play CRUD, history)
@@ -174,7 +174,7 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - if no local collection result matches, search falls back to BGG XML search
 - BGG search covers both base games and expansions (`type=boardgame,boardgameexpansion`)
 - BGG search results are sorted alphabetically; the list has no hard result cap
-- search is debounced (300ms after typing stops); local collection is checked first; if no local match, BGG is called with `exact=1` first, then `exact=0` as a fallback if exact returns nothing
+- search is debounced (800ms after typing stops); local collection is checked first; if no local match, BGG is called with `exact=1` first, then `exact=0` as a fallback if exact returns nothing
 - `isBggSearchActive` in `AppViewModel` prevents `loadCollection`, `updateFromCollection`, and `loadRecentGames` from overwriting `_searchResults` while a BGG search result set is displayed; the guard clears when the user selects a game or clears the query
 - lists longer than 20 items show a draggable fast-scroll bar on the right edge (`NewPlayScreen.FastScrollBar`): amber pill thumb, animated opacity (idle 20% / scrolling 65% / dragging 80%), floating letter bubble that leads the thumb position, and haptic feedback (`HapticFeedbackType.TextHandleMove`) per letter section change
 - selected games move into `LogPlayScreen`

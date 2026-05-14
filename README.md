@@ -50,7 +50,7 @@ Notable behavior:
 - game search prefers the local loaded collection, then falls back to BGG XML search
 - BGG search covers both base games and expansions (`type=boardgame,boardgameexpansion`)
 - BGG search results are sorted alphabetically; lists over 20 items show a draggable fast-scroll bar with a floating letter bubble and haptic feedback per section
-- search is debounced (300ms); local collection is checked first; if no match, BGG is queried with `exact=1` then `exact=0` as a fallback
+- search is debounced (800ms); local collection is checked first; if no match, BGG is queried with `exact=1` then `exact=0` as a fallback
 - background collection loads never overwrite an active BGG search result set; the guard is cleared when the user selects a game or clears the query
 - session context (game, players, location) is persisted across app restarts for up to 4 hours
 - log form tracks unsaved changes
@@ -254,7 +254,7 @@ High-level ownership:
   - CSV import
   - Drive folder and QR code creation
   - sync log and progress state
-  - silent startup collection load
+  - silent startup collection load (skipped if last sync was within 4 hours)
 - `data/`
   - BGG API and scraping (`BggApiClient`, `BggRepository`)
   - Google APIs (`GoogleApiClient`)

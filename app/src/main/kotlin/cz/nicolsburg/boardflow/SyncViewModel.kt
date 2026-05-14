@@ -341,6 +341,10 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 refreshCredentialState()
                 if (!securePrefs.hasCredentials()) return@launch
 
+                val lastSync = securePrefs.lastSyncedAt
+                val staleThresholdMs = 4L * 60 * 60 * 1000
+                if (lastSync > 0L && System.currentTimeMillis() - lastSync < staleThresholdMs) return@launch
+
                 withSuppressedLogging {
                     refreshBggPlayHistory()
                     val merged = buildCanonicalCollectionSnapshot(
