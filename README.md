@@ -13,7 +13,7 @@ BoardFlow combines several related workflows in one app:
 - log a play directly to BGG when online
 - save a play locally when offline
 - post saved local plays later from History via an outbox-style "Unposted plays" section
-- scan a score sheet photo and extract players / scores with Gemini
+- scan a score sheet photo and extract players / scores with Gemini, with a local preflight warning for obviously dark, blurry, low-resolution, or too-far images
 - AI game recognition from scan: auto-identify the game from score sheet layout using saved recognition templates; auto-switch when confidence is high enough, or present a ranked suggestion banner for the user to confirm
 - AI player recognition from scan: scanned player names are auto-resolved to roster players using saved hints, then aliases, then fuzzy matching; ambiguous hints are not auto-applied; confirmed mappings are saved as hints after each successful play log
 - launch Quick Scan directly from the home-screen widget
@@ -57,6 +57,7 @@ Notable behavior:
 - background collection loads never overwrite an active BGG search result set; the guard is cleared when the user selects a game or clears the query
 - session context (game, players, location) is persisted across app restarts for up to 4 hours
 - log form tracks unsaved changes; tapping X or back when any data is present (unsaved changes, editable players, or extracted play) triggers a discard confirmation dialog
+- score-sheet images are checked locally before Gemini extraction; poor scans show a non-blocking warning with a reason and let the user continue anyway or retake
 - if AI recognition identifies the wrong game, the user can tap "Choose another game" from the scan result banner; the app enters quick scan correction mode (`_quickScanCorrectionMode`), preserves the extracted players/scores, navigates to NewPlayScreen for re-selection, then returns to LogPlay with all data intact
 - player rows are keyed UI items with shared editing UI between log and edit flows
 - matched roster players are explicit; non-exact fuzzy matches require user confirmation
@@ -273,6 +274,7 @@ High-level ownership:
   - BGG API and scraping (`BggApiClient`, `BggRepository`)
   - Google APIs (`GoogleApiClient`)
   - AI extraction (`GeminiRepository`)
+  - local scan image quality preflight (`ScanImageQualityAnalyzer`)
   - Room persistence (`CanonicalCollectionStore`)
   - backup serialization (`BackupSerializer`)
   - QR code generation and play sharing (`QrGenerator`, `PlayShareSerializer`)
@@ -308,6 +310,7 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
     GoogleApiClient.kt
     PlayShareSerializer.kt
     QrGenerator.kt
+    ScanImageQualityAnalyzer.kt
     SecurePreferences.kt
   model/
     Models.kt          (BggGame, PlayerResult, LoggedPlay, GameItem, Player, ...)
@@ -399,6 +402,8 @@ The app supports:
 - configurable model endpoint
 - model discovery and automatic fallback/cycling when a model is unavailable (503/429)
 - session-scoped fallback model: when the repository switches to a fallback model mid-scan, that model is reused for subsequent scans for up to 5 minutes; after that (or on next app launch) the user's configured model is used again
+
+Before an image is sent to Gemini, `ScanImageQualityAnalyzer` runs local-only checks for obvious readability problems: dark images, blur, low resolution, and likely too much empty border / too-far framing. Poor scans show "This scan may be hard to read." with a reason, plus "Use anyway" and "Retake"; good scans continue directly to extraction.
 
 ## UX / Product Notes
 

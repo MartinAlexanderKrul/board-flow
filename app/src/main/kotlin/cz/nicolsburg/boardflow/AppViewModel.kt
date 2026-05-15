@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -255,6 +256,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     val gameCandidates: StateFlow<List<GameCandidate>> = _gameCandidates.asStateFlow()
     private val _scanRecognitionResult = MutableStateFlow<ScanRecognitionResult?>(null)
     val scanRecognitionResult: StateFlow<ScanRecognitionResult?> = _scanRecognitionResult.asStateFlow()
+    private var _retryJob: Job? = null
+    private val _scanRetryResult = MutableStateFlow<ExtractedPlay?>(null)
+    val scanRetryResult: StateFlow<ExtractedPlay?> = _scanRetryResult.asStateFlow()
     private val _quickScanCorrectionMode = MutableStateFlow(false)
     val quickScanCorrectionMode: StateFlow<Boolean> = _quickScanCorrectionMode.asStateFlow()
     private val _pendingWidgetQuickScan = MutableStateFlow(false)
@@ -313,6 +317,25 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun dismissScanRecognitionResult() {
         _scanRecognitionResult.value = null
         clearQuickScanCorrectionMode("recognition result dismissed by user")
+    }
+
+    private fun cancelBackgroundRetry() {
+        _retryJob?.cancel()
+        _retryJob = null
+        _scanRetryResult.value = null
+    }
+
+    fun acceptRetryResult() {
+        val retried = _scanRetryResult.value ?: return
+        _scanRetryResult.value = null
+        _extractedPlay.value = retried
+        if (retried.players.isNotEmpty()) initEditablePlayers(retried.players)
+    }
+
+    fun dismissRetryResult() {
+        _scanRetryResult.value = null
+        _retryJob?.cancel()
+        _retryJob = null
     }
 
     /** Enters the mode where the next game selection from NewPlayScreen returns to LogPlay without a new scan. */
@@ -431,6 +454,24 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     } else {
                         // Suggestion banner handles this case; no extra banner needed.
                         _scanRecognitionResult.value = null
+                    }
+                }
+
+                if (extracted.isMalformed) {
+                    _retryJob?.cancel()
+                    _retryJob = viewModelScope.launch {
+                        container.geminiRepo.extractScoresFromImage(
+                            imageFile = imageFile,
+                            apiKey = prefs.geminiApiKey,
+                            modelName = effectiveModel(),
+                            availableModels = prefs.getAvailableModels(),
+                            onModelChanged = { newModel ->
+                                sessionModel = newModel
+                                sessionModelExpiry = System.currentTimeMillis() + 5 * 60 * 1000L
+                            }
+                        ).onSuccess { retried ->
+                            if (!retried.isMalformed) _scanRetryResult.value = retried
+                        }
                     }
                 }
             }.onFailure { _scanError.value = it.message }
@@ -759,6 +800,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 prefs.addRecentGame(game)
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                 savePlayerHintsFromCurrentPlay()
+                cancelBackgroundRetry()
                 _logPlayHasUnsavedChanges.value = false
                 onSuccess()
             }
@@ -838,6 +880,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         _postResult.value = "Logged main play. Saved ${locallySavedExtras.size} extra game(s) locally for later BGG sync."
                     }
                     savePlayerHintsFromCurrentPlay()
+                    cancelBackgroundRetry()
                     _logPlayHasUnsavedChanges.value = false
                     _postLoading.value = false
                     onSuccess()
@@ -1071,6 +1114,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun clearExtractedPlay() {
+        cancelBackgroundRetry()
         _extractedPlay.value = null
         _editablePlayers.value = emptyList()
         _additionalGames.value = emptyList()

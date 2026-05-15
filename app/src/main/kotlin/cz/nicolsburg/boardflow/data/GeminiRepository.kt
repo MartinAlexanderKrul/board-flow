@@ -63,7 +63,7 @@ class GeminiRepository {
                     response.isSuccessful -> {
                         val totalMs = System.currentTimeMillis() - startTime
                         Log.d(TAG, "Success; model=$currentModel attempt=$attempts HTTP 200 in ${attemptMs}ms (total ${totalMs}ms)")
-                        return@runCatching parseGeminiResponse(responseText)
+                        return@runCatching parseGeminiResponse(responseText).copy(modelUsed = currentModel)
                     }
                     response.code == 503 || response.code == 429 -> {
                         val nextModel = findNextModel(currentModel, availableModels)
@@ -197,7 +197,7 @@ class GeminiRepository {
     private fun parseGeminiResponse(responseJson: String): ExtractedPlay {
         val root = JSONObject(responseJson)
         val rawText = root.getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text").trim()
-        var cleaned = rawText.removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+        var cleaned = rawText.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
         if (!cleaned.endsWith("}")) {
             val openBraces = cleaned.count { it == '{' }; val closeBraces = cleaned.count { it == '}' }
             if (openBraces > closeBraces) cleaned += "}".repeat(openBraces - closeBraces)
@@ -221,7 +221,7 @@ class GeminiRepository {
             Log.d(TAG, "Parsed: date=$date players=${players.size} game=$detectedGameTitle conf=${detectedGameConfidence?.let { (it*100).toInt() }}% categories=${detectedScoringCategories.size}")
             ExtractedPlay(
                 players = players,
-                rawText = rawText,
+                rawText = cleaned,
                 date = date,
                 detectedGameTitle = detectedGameTitle,
                 detectedGameConfidence = detectedGameConfidence,
@@ -231,7 +231,7 @@ class GeminiRepository {
         } catch (e: Exception) {
             Log.d(TAG, "Parse error: ${e.message}; attempting partial extraction")
             val partialPlayers = tryExtractPartialPlayers(cleaned)
-            ExtractedPlay(players = partialPlayers, rawText = "⚠️ Incomplete/malformed response (tried to parse anyway):\n$rawText", date = null)
+            ExtractedPlay(players = partialPlayers, rawText = "⚠️ Incomplete/malformed response (tried to parse anyway):\n$rawText", date = null, isMalformed = true)
         }
     }
 

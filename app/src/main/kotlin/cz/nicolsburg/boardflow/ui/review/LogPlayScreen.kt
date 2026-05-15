@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.People
@@ -88,6 +89,7 @@ fun LogPlayScreen(
     val gameCandidates        by viewModel.gameCandidates.collectAsState()
     val scanRecognitionResult by viewModel.scanRecognitionResult.collectAsState()
     val scanStartedWithGame   by viewModel.scanStartedWithGame.collectAsState()
+    val scanRetryResult       by viewModel.scanRetryResult.collectAsState()
 
     // Read prefill once on first composition (consumed from ViewModel).
     val prefill = remember { viewModel.takePrefill() }
@@ -402,6 +404,15 @@ fun LogPlayScreen(
                     }
                 }
 
+                if (scanRetryResult != null) {
+                    item {
+                        ScanRetryBanner(
+                            onApply = { viewModel.acceptRetryResult() },
+                            onDismiss = { viewModel.dismissRetryResult() }
+                        )
+                    }
+                }
+
                 item {
                     PlayersHeader(
                         playerCount = players.size,
@@ -430,7 +441,7 @@ fun LogPlayScreen(
                 val extracted = extractedPlay
                 if (showAiOutput && extracted != null) {
                     item {
-                        AiOutputCard(rawText = extracted.rawText)
+                        AiOutputCard(rawText = extracted.rawText, modelUsed = extracted.modelUsed)
                     }
                 }
 
@@ -882,7 +893,7 @@ private fun AddPlayerRow(onClick: () -> Unit) {
 }
 
 @Composable
-private fun AiOutputCard(rawText: String) {
+private fun AiOutputCard(rawText: String, modelUsed: String? = null) {
     val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
     Surface(
@@ -902,11 +913,20 @@ private fun AiOutputCard(rawText: String) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    "Raw AI response",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column {
+                    Text(
+                        "Raw AI response",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (modelUsed != null) {
+                        Text(
+                            modelUsed,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
                 BoardFlowInlineAction(
                     onClick = {
                         clipboardManager.setText(AnnotatedString(rawText))
@@ -1245,6 +1265,52 @@ private fun playerInitialColor(name: String): Color {
         Color(0xFF795548), Color(0xFF546E7A)
     )
     return palette[(name.hashCode() and 0x7FFFFFFF) % palette.size]
+}
+
+// ---------------------------------------------------------------------------
+// Retry result banner — shown when a background re-extraction succeeded
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun ScanRetryBanner(onApply: () -> Unit, onDismiss: () -> Unit) {
+    val primary = MaterialTheme.colorScheme.primary
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = primary.copy(alpha = 0.08f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    "Scan retry got a cleaner result.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = primary
+                )
+            }
+            Text(
+                "Apply it to replace the current player data?",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BoardFlowSecondaryButton(onClick = onDismiss) { Text("Dismiss") }
+                BoardFlowButton(onClick = onApply) { Text("Apply update") }
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

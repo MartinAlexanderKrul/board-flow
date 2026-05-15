@@ -36,6 +36,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import cz.nicolsburg.boardflow.AppViewModel
+import cz.nicolsburg.boardflow.data.ScanQualityIssue
 import cz.nicolsburg.boardflow.data.ScanImageQualityAnalyzer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraActionPanel
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
@@ -44,7 +45,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraPermissionPrompt
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraScene
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
@@ -90,10 +90,25 @@ fun ScanScreen(
     // CameraX image capture use-case
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
     var pendingPhoto by remember { mutableStateOf<File?>(null) }
-    var qualityWarning by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
+    var qualityWarningIssues by remember { mutableStateOf<List<ScanQualityIssue>>(emptyList()) }
+    var qualityAnalysisRunning by remember { mutableStateOf(false) }
 
-    LaunchedEffect(pendingPhoto) { qualityWarning = false }
+    LaunchedEffect(pendingPhoto) {
+        val file = pendingPhoto
+        qualityWarningIssues = emptyList()
+        if (file == null) {
+            qualityAnalysisRunning = false
+            return@LaunchedEffect
+        }
+        qualityAnalysisRunning = true
+        val result = withContext(Dispatchers.IO) {
+            ScanImageQualityAnalyzer.analyze(file)
+        }
+        if (pendingPhoto == file) {
+            qualityWarningIssues = result.issues
+            qualityAnalysisRunning = false
+        }
+    }
 
     val onEnterManually: () -> Unit = {
         viewModel.setExtractedPlayManual()
@@ -193,7 +208,19 @@ fun ScanScreen(
                                             .fillMaxWidth()
                                             .heightIn(min = 220.dp, max = 360.dp)
                                     )
-                                    if (qualityWarning) {
+                                    if (qualityAnalysisRunning) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                                            Text(
+                                                "Checking scan quality...",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    } else if (qualityWarningIssues.isNotEmpty()) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -209,6 +236,18 @@ fun ScanScreen(
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.error
                                             )
+                                        }
+                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            qualityWarningIssues
+                                                .map { it.userMessage }
+                                                .distinct()
+                                                .forEach { reason ->
+                                                    Text(
+                                                        reason,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
                                         }
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -248,19 +287,11 @@ fun ScanScreen(
                                             }
                                             BoardFlowButton(
                                                 onClick = {
-                                                    coroutineScope.launch {
-                                                        val result = withContext(Dispatchers.IO) {
-                                                            ScanImageQualityAnalyzer.analyze(file)
-                                                        }
-                                                        if (result.isAcceptable) {
-                                                            viewModel.extractScores(file)
-                                                            pendingPhoto = null
-                                                        } else {
-                                                            qualityWarning = true
-                                                        }
-                                                    }
+                                                    viewModel.extractScores(file)
+                                                    pendingPhoto = null
                                                 },
-                                                modifier = Modifier.weight(1f)
+                                                modifier = Modifier.weight(1f),
+                                                enabled = !qualityAnalysisRunning
                                             ) {
                                                 Text("Use Photo")
                                             }

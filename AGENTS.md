@@ -15,7 +15,8 @@ BoardFlow currently supports all of the following:
 - manual reposting of unposted local plays from History
 - edit and delete play flows
 - play quantity, incomplete flag, and nowInStats toggle
-- AI score extraction from images with Gemini (with model fallback/cycling)
+- AI score extraction from images with Gemini (with model fallback/cycling), preceded by a local non-blocking scan quality warning for obviously dark, blurry, low-resolution, or too-far images; malformed responses automatically trigger a silent background retry — if it succeeds while the user is still on `LogPlayScreen`, a non-blocking banner offers to apply the cleaner result
+- the model name used for a scan is stored on `ExtractedPlay.modelUsed` and shown below the "Raw AI response" label in the AI output card
 - AI game recognition from scan: auto-identify the game using saved recognition templates (title similarity + category fingerprint matching, two-gate autoswitch: TITLE_GATE >= 0.90 or TEMPLATE_CATEGORY_GATE >= 0.75 with >= 3 category matches)
 - home-screen Quick Scan widget (`ui/widget/QuickScanWidget.kt`) that cold-starts or resumes the app directly into the scan flow via `ACTION_QUICK_SCAN`
 - saved player roster with aliases, optional BGG usernames, and Levenshtein fuzzy matching
@@ -23,7 +24,7 @@ BoardFlow currently supports all of the following:
 - per-game sleeve exclusion (toggle individual games out of sleeve display)
 - configurable sleeve manufacturer priority (Appearance settings)
 - game detail drill-ins with history and player links
-- expansion / sibling title detection and display in log flow
+- expansion / sibling title detection and display in log flow; `RelatedGamesBanner` shows the first 6 related games by default with a "Show all (N)" / "Show less" toggle and `animateContentSize` smooth expand; 2–5 related titles are shown without a toggle
 - record moment detection after logging (first win, new high score, win streak)
 - history tabs for plays, stats, and players
 - signature-based deduplication of local and BGG plays
@@ -82,7 +83,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
 - `AppViewModel.kt`
   - game search and recent games
   - session continuation / play-again setup
-  - AI extraction handoff into review; Gemini model cycling
+  - AI extraction handoff into review; Gemini model cycling; `scanRetryResult: StateFlow<ExtractedPlay?>` — set when a background retry resolves a previously malformed scan; `acceptRetryResult()` replaces the current extracted play and re-initialises editable players; `dismissRetryResult()` discards it; `cancelBackgroundRetry()` called automatically on save or discard
   - game recognition: `GameRecognitionEngine` ranks candidates from the local collection; confirmed scans saved as `GameRecognitionHint`; two autoswitch gates (TITLE_GATE, TEMPLATE_CATEGORY_GATE)
   - recognition hint management: `saveGameRecognitionHint`, `deleteGameRecognitionHint`, `replaceGameRecognitionHint`, `clearGameRecognitionHints`
   - player recognition: `PlayerRecognitionEngine` resolves scanned names to roster players; `initEditablePlayers` applies hints (confidence ≥ 0.70) and alias matches; `savePlayerHintsFromCurrentPlay` persists mappings on successful log; `clearPlayerRecognitionHints` exposed for Settings
@@ -93,7 +94,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - play post/edit/delete flows (local and BGG)
   - local outbox posting for unposted plays (per-play and bulk)
   - record moment detection (first win, new high score, win streak)
-  - expansion / sibling title detection (`GameRelations`)
+  - expansion / sibling title detection (`GameRelations`); `findRelatedGames` uses `isExpansionOf()` helper supporting both separator-based (`"Root: Sub"`) and space-prefix-based (`"Root Sub"`) expansion names; detects when the selected game is itself a space-separated expansion and treats its prefix as the base
   - cross-tab navigation requests (`pendingHistoryNavigation`)
   - import/export and backup restore
   - app theme and sleeve manufacturer preference state (`appTheme`, `sleevePreferredManufacturer`)
@@ -111,7 +112,8 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `BggApiClient.kt` -- low-level BGG HTTP/XML client and sleeve scraping
   - `BggRepository.kt` -- BGG feature layer (collection, search, play CRUD, history)
   - `GoogleApiClient.kt` -- Sheets / Drive API
-  - `GeminiRepository.kt` -- AI extraction (scores + game detection), model discovery, fallback cycling; debug-logged under TAG "Gemini"
+  - `GeminiRepository.kt` -- AI extraction (scores + game detection), model discovery, fallback cycling; debug-logged under TAG "Gemini"; sets `ExtractedPlay.modelUsed` to the winning model name and `ExtractedPlay.isMalformed = true` when JSON parsing fails
+  - `ScanImageQualityAnalyzer.kt` -- local pre-Gemini image readability checks; does not persist image, player, or score data
   - `CanonicalCollectionStore.kt` -- Room-backed live source of truth
   - `BackupSerializer.kt` -- backup JSON import/export (format version 3; includes `recognitionHints`)
   - `SecurePreferences.kt` -- encrypted preferences (credentials, settings, roster, session, recognition hints)
@@ -122,7 +124,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `BggPlaySync.kt` -- top-level BGG play cache refresh function
   - `CsvParser.kt` -- CSV row parsing for sync
 - `model/`
-  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, `GameRecognitionHint`, `PlayerRecognitionHint`, `GameCandidate`, ...)
+  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, `GameRecognitionHint`, `PlayerRecognitionHint`, `GameCandidate`, ...); `ExtractedPlay` carries `isMalformed: Boolean` (parse failed, partial data) and `modelUsed: String?` (Gemini model that produced the response)
   - `SleeveDatabase.kt` -- `SleeveManufacturer` enum, `SleeveEntry`, `SleeveDatabase` object
 - `ui/`
   - screens and shared Compose UI helpers
@@ -191,6 +193,7 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - selected games move into `LogPlayScreen`
 - session context may prefill players/location
 - AI extraction may prefill players/scores
+- `ScanScreen` runs `ScanImageQualityAnalyzer` before sending an image to Gemini; poor scans show a non-blocking "This scan may be hard to read." warning with a reason and "Use anyway" / "Retake" actions
 - expansion / sibling titles detected from name patterns and shown alongside base game
 - the search field has a trailing camera (`CameraAlt`) icon button that triggers the quick scan flow via `onScanQuick`; tapping it exits any active correction mode and navigates directly to `ScanScreen`
 
@@ -320,9 +323,24 @@ The extraction prompt explicitly requests game identification fields alongside p
 - `detectedScoringCategories` — list of scoring column/row header labels visible on the sheet
 - `gameDetectionEvidence` — one sentence describing the visual cue used for identification
 
-`parseGeminiResponse()` maps these to `ExtractedPlay` fields. Date handling: `null` or the literal string `"null"` from the model are both treated as absent (the app uses today's date); the model is instructed not to invent a date.
+`parseGeminiResponse()` maps these to `ExtractedPlay` fields. Date handling: `null` or the literal string `"null"` from the model are both treated as absent (the app uses today's date); the model is instructed not to invent a date. On success the returned `ExtractedPlay` also carries `modelUsed` (the model that returned HTTP 200) and `isMalformed = false`. If JSON parsing throws, partial player extraction is attempted via regex, `isMalformed` is set to `true`, and the raw text is prefixed with a warning emoji.
 
 Debug logging (`TAG = "Gemini"`) covers: start time, per-attempt model and HTTP status, total elapsed time, model fallback switches, and parse results.
+
+#### Malformed Response Retry
+
+When `extractScores` receives an `ExtractedPlay` with `isMalformed = true`, `AppViewModel` immediately launches a background coroutine (stored as `_retryJob`) that silently re-calls Gemini with the same image file and model parameters. The loading indicator is **not** shown during the retry — the user lands on `LogPlayScreen` with the partial data and can start editing. If the retry returns `isMalformed = false`, `_scanRetryResult` is set and `LogPlayScreen` shows a `ScanRetryBanner` ("Scan retry got a cleaner result. Apply it?") with "Apply update" / "Dismiss" buttons. Accepting calls `acceptRetryResult()` which replaces `_extractedPlay` and re-initialises editable players. The retry job is cancelled (and `_scanRetryResult` cleared) by `cancelBackgroundRetry()`, which is invoked from `clearExtractedPlay()` and both success paths in `postPlay()`, ensuring the background work stops when the user saves or discards the play.
+
+#### Scan Image Quality (`data/ScanImageQualityAnalyzer.kt`)
+
+Before Gemini extraction, captured or gallery-picked score-sheet images are checked locally for obvious readability issues:
+
+- too dark
+- too blurry
+- too low resolution
+- likely too far away / too much empty border
+
+Good images continue to Gemini immediately. Poor images show a warning in `ScanScreen` with the first available human-readable reason, but the user can still choose "Use anyway" and continue the existing extraction flow. "Retake" returns to the camera/gallery choice. Keep this preflight local-only and separate from game recognition, player recognition, and Gemini prompt/response logic.
 
 #### Hint Lifecycle (Game)
 
@@ -409,6 +427,9 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - roster-oriented views should stay roster-based
 - editable player rows should use stable UI identity and survive configuration changes where practical
 - fuzzy player matching uses Levenshtein distance (threshold ~1/3 of input length); matches shown as suggestions, not auto-applied
+- `PlayerResultEditorCard` shows a `MatchedPlayerChip` ("Matched [name]") when the typed name resolves to an exact roster player; the chip is styled as a `SuggestionChip` at the same size as fuzzy suggestions
+- the name field is only auto-renamed to `player.displayName` when the field is **not** focused; if the user is actively typing, the rename is deferred until they leave the field (`onFocusChanged` guard on the `LaunchedEffect(exactMatch?.id, nameFocused)`)
+- player cards collapse only when the user explicitly adds another player (`collapseCompletePlayers()` called from `addEditablePlayer` and `addPlayerFromRoster`); there is no reactive auto-collapse on field completion
 
 ## Sleeve Notes
 

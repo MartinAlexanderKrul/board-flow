@@ -23,7 +23,9 @@ data class ExtractedPlay(
     val detectedGameTitle: String? = null,
     val detectedGameConfidence: Float? = null,
     val detectedScoringCategories: List<String> = emptyList(),
-    val gameDetectionEvidence: String? = null
+    val gameDetectionEvidence: String? = null,
+    val isMalformed: Boolean = false,
+    val modelUsed: String? = null
 )
 
 /** A ranked match produced by GameRecognitionEngine against the local collection. */
