@@ -360,6 +360,10 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
       QuickScanWidget.kt
 ```
 
+## UI Surface Inventory
+
+For a screen-by-screen map of dialogs, popups, bottom sheets, cards, dropdowns, banners, lists, and related UI surfaces, see [`docs/UI_SURFACES.md`](docs/UI_SURFACES.md).
+
 ## External Integrations
 
 ### BoardGameGeek

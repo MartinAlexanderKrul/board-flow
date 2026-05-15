@@ -112,6 +112,11 @@ import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyListState
@@ -142,6 +147,8 @@ import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowPressScale
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
 import kotlinx.coroutines.flow.collect
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
 import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import androidx.activity.compose.BackHandler
@@ -1923,7 +1930,7 @@ private fun EditPlayDialog(
     var collapsedPlayers by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { true }) }
     var playerRowKeys by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { java.util.UUID.randomUUID().toString() }) }
     var showDatePicker by rememberSaveable(play.id) { mutableStateOf(false) }
-    var showNotes by rememberSaveable(play.id) { mutableStateOf(play.comments.isNotBlank()) }
+    var showAdvanced by rememberSaveable(play.id) { mutableStateOf(comments.isNotBlank()) }
     var nameFieldFocusIndex by remember { mutableStateOf(-1) }
 
     if (showDatePicker) {
@@ -2011,7 +2018,28 @@ private fun EditPlayDialog(
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        if (showNotes || comments.isNotBlank()) {
+                        TextButton(
+                            onClick = { showAdvanced = !showAdvanced },
+                            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(if (showAdvanced) "Hide options" else "More options")
+                                Icon(
+                                    imageVector = if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        AnimatedVisibility(
+                            visible = showAdvanced,
+                            enter = expandVertically() + fadeIn(tween(150)),
+                            exit  = shrinkVertically() + fadeOut(tween(150))
+                        ) {
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -2026,10 +2054,6 @@ private fun EditPlayDialog(
                                     maxLines = 4,
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                            }
-                        } else {
-                            TextButton(onClick = { showNotes = true }, contentPadding = PaddingValues(0.dp)) {
-                                Text("+ Add notes")
                             }
                         }
                     }

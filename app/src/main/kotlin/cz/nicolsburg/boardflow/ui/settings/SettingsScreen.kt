@@ -37,12 +37,10 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
@@ -87,6 +85,8 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowPickerField
+import cz.nicolsburg.boardflow.ui.common.BoardFlowPickerSheet
 import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.SectionHeader
@@ -94,11 +94,8 @@ import cz.nicolsburg.boardflow.ui.common.clickableRow
 import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import kotlinx.coroutines.flow.collect
 import cz.nicolsburg.boardflow.ui.sync.SpreadsheetConnectModal
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.SuggestionChip
 import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.model.GameRecognitionHint
@@ -471,29 +468,24 @@ fun SettingsScreen(
                         title = "Theme",
                         subtitle = "Set the visual style for the app."
                     ) {
-                        ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
-                            OutlinedTextField(
-                                value = currentTheme.label,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Theme") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth()
+                        BoardFlowPickerField(
+                            label = "Theme",
+                            value = currentTheme.label,
+                            expanded = themeExpanded,
+                            onClick = { themeExpanded = true }
+                        )
+                        if (themeExpanded) {
+                            BoardFlowPickerSheet(
+                                title = "Choose theme",
+                                options = AppTheme.entries,
+                                selectedOption = currentTheme,
+                                optionLabel = { it.label },
+                                onSelect = { theme ->
+                                    viewModel.setAppTheme(theme)
+                                    themeExpanded = false
+                                },
+                                onDismiss = { themeExpanded = false }
                             )
-                            ExposedDropdownMenu(expanded = themeExpanded, onDismissRequest = { themeExpanded = false }) {
-                                AppTheme.entries.forEach { theme ->
-                                    DropdownMenuItem(
-                                        text = { Text(theme.label) },
-                                        onClick = {
-                                            viewModel.setAppTheme(theme)
-                                            themeExpanded = false
-                                        },
-                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                                    )
-                                }
-                            }
                         }
                     }
                 }
@@ -504,29 +496,24 @@ fun SettingsScreen(
                         title = "Sleeve manufacturer",
                         subtitle = "Priority brand shown for sleeve recommendations."
                     ) {
-                        ExposedDropdownMenuBox(expanded = manufacturerExpanded, onExpandedChange = { manufacturerExpanded = it }) {
-                            OutlinedTextField(
-                                value = currentManufacturer.label,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Manufacturer") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = manufacturerExpanded) },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth()
+                        BoardFlowPickerField(
+                            label = "Manufacturer",
+                            value = currentManufacturer.label,
+                            expanded = manufacturerExpanded,
+                            onClick = { manufacturerExpanded = true }
+                        )
+                        if (manufacturerExpanded) {
+                            BoardFlowPickerSheet(
+                                title = "Choose sleeve manufacturer",
+                                options = SleeveManufacturer.entries,
+                                selectedOption = currentManufacturer,
+                                optionLabel = { it.label },
+                                onSelect = { manufacturer ->
+                                    viewModel.setSleevePreferredManufacturer(manufacturer)
+                                    manufacturerExpanded = false
+                                },
+                                onDismiss = { manufacturerExpanded = false }
                             )
-                            ExposedDropdownMenu(expanded = manufacturerExpanded, onDismissRequest = { manufacturerExpanded = false }) {
-                                SleeveManufacturer.entries.forEach { manufacturer ->
-                                    DropdownMenuItem(
-                                        text = { Text(manufacturer.label) },
-                                        onClick = {
-                                            viewModel.setSleevePreferredManufacturer(manufacturer)
-                                            manufacturerExpanded = false
-                                        },
-                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                                    )
-                                }
-                            }
                         }
                     }
                 }
@@ -630,11 +617,29 @@ fun SettingsScreen(
                                 }
                             }
                         }
-                        var modelDropdownExpanded by remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(
-                            expanded = modelDropdownExpanded,
-                            onExpandedChange = { modelDropdownExpanded = it }
-                        ) {
+                        var modelPickerOpen by remember { mutableStateOf(false) }
+                        if (availableModels?.isNotEmpty() == true) {
+                            BoardFlowPickerField(
+                                label = "Gemini model",
+                                value = modelEndpoint.ifBlank { "Not selected" },
+                                expanded = modelPickerOpen,
+                                onClick = { modelPickerOpen = true }
+                            )
+                            if (modelPickerOpen) {
+                                BoardFlowPickerSheet(
+                                    title = "Choose Gemini model",
+                                    options = availableModels ?: emptyList(),
+                                    selectedOption = modelEndpoint,
+                                    optionLabel = { it },
+                                    onSelect = { model ->
+                                        modelEndpoint = model
+                                        prefs.geminiModelEndpoint = model.trim()
+                                        modelPickerOpen = false
+                                    },
+                                    onDismiss = { modelPickerOpen = false }
+                                )
+                            }
+                        } else {
                             OutlinedTextField(
                                 value = modelEndpoint,
                                 onValueChange = {
@@ -644,34 +649,8 @@ fun SettingsScreen(
                                 label = { Text("Gemini model") },
                                 placeholder = { Text("e.g. gemini-flash-latest") },
                                 singleLine = true,
-                                readOnly = availableModels?.isNotEmpty() == true,
-                                trailingIcon = {
-                                    if (availableModels?.isNotEmpty() == true) {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelDropdownExpanded)
-                                    }
-                                },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            if (availableModels?.isNotEmpty() == true) {
-                                ExposedDropdownMenu(
-                                    expanded = modelDropdownExpanded,
-                                    onDismissRequest = { modelDropdownExpanded = false }
-                                ) {
-                                    availableModels?.forEach { model ->
-                                        DropdownMenuItem(
-                                            text = { Text(model) },
-                                            onClick = {
-                                                modelEndpoint = model
-                                                prefs.geminiModelEndpoint = model.trim()
-                                                modelDropdownExpanded = false
-                                            },
-                                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                                        )
-                                    }
-                                }
-                            }
                         }
                         BoardFlowOutlinedButton(
                             onClick = {
@@ -889,7 +868,7 @@ fun SettingsScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RecognitionTemplatesDialog(
     viewModel: AppViewModel,
@@ -924,7 +903,7 @@ private fun RecognitionTemplatesDialog(
             }
             item {
                 Text(
-                    "Long-press a template to edit or delete it.",
+                    "Edit or delete saved recognition templates.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.padding(bottom = 6.dp)
@@ -943,80 +922,81 @@ private fun RecognitionTemplatesDialog(
             } else {
                 items(templates.size) { index ->
                     val hint = templates[index]
-                    var menuExpanded by remember { mutableStateOf(false) }
-                    Box {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .combinedClickable(
-                                    onClick = {},
-                                    onLongClick = { menuExpanded = true }
-                                )
-                                .padding(vertical = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                            Text(
+                                hint.gameName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                "confirmed ${hint.timesConfirmed}x",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                        }
+                        if (hint.normalizedCategories.isNotEmpty()) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Text(
-                                    hint.gameName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Text(
-                                    "confirmed ${hint.timesConfirmed}×",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                            }
-                            if (hint.normalizedCategories.isNotEmpty()) {
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    hint.normalizedCategories.forEach { cat ->
-                                        Surface(
-                                            shape = MaterialTheme.shapes.small,
-                                            color = MaterialTheme.colorScheme.surfaceVariant
-                                        ) {
-                                            Text(
-                                                cat,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                                            )
-                                        }
+                                hint.normalizedCategories.forEach { cat ->
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = MaterialTheme.colorScheme.surfaceVariant
+                                    ) {
+                                        Text(
+                                            cat,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                        )
                                     }
                                 }
-                            } else {
-                                Text(
-                                    "No categories saved",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                )
                             }
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Edit") },
-                                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                                onClick = { menuExpanded = false; editingHint = hint }
+                        } else {
+                            Text(
+                                "No categories saved",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
-                            DropdownMenuItem(
-                                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
-                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error) },
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(
+                                onClick = { editingHint = hint },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Edit")
+                            }
+                            TextButton(
                                 onClick = {
-                                    menuExpanded = false
                                     viewModel.deleteGameRecognitionHint(hint.gameObjectId)
                                     templates = viewModel.prefs.loadGameRecognitionHints()
                                     onTemplatesChanged(templates.size)
-                                }
-                            )
+                                },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                ),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Delete")
+                            }
                         }
                     }
                     if (index < templates.size - 1) HorizontalDivider()

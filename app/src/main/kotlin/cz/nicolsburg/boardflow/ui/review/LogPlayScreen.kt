@@ -106,7 +106,6 @@ fun LogPlayScreen(
     var showAiOutput      by rememberSaveable { mutableStateOf(false) }
     var showDatePicker    by rememberSaveable { mutableStateOf(false) }
     var focusFirstScore   by remember { mutableStateOf(false) }
-    var showNotes         by rememberSaveable { mutableStateOf(false) }
     var collapsedPlayers by rememberSaveable { mutableStateOf<List<Boolean>>(emptyList()) }
     var playerRowKeys by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
 
@@ -148,7 +147,6 @@ fun LogPlayScreen(
     }
 
     val initialDate = extractedPlay?.date?.takeIf { it.isNotBlank() } ?: LocalDate.now().toString()
-    val notesExpanded = showNotes || comments.isNotBlank()
     val hasUnsavedChanges by remember(
         date,
         duration,
@@ -360,7 +358,6 @@ fun LogPlayScreen(
                         duration = duration,
                         location = location,
                         notes = comments,
-                        notesExpanded = notesExpanded,
                         showAdvanced = showAdvanced,
                         quantity = quantity,
                         incomplete = incomplete,
@@ -370,7 +367,6 @@ fun LogPlayScreen(
                         onDurationChange = { duration = it },
                         onLocationChange = { location = it },
                         onNotesChange = { comments = it },
-                        onNotesExpand = { showNotes = true },
                         onAdvancedToggle = { showAdvanced = !showAdvanced },
                         onQuantityDecrease = { if (quantity > 1) quantity-- },
                         onQuantityIncrease = { quantity++ },
@@ -533,7 +529,6 @@ private fun SessionDetailsCard(
     duration: String,
     location: String,
     notes: String,
-    notesExpanded: Boolean,
     showAdvanced: Boolean,
     quantity: Int,
     incomplete: Boolean,
@@ -543,7 +538,6 @@ private fun SessionDetailsCard(
     onDurationChange: (String) -> Unit,
     onLocationChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
-    onNotesExpand: () -> Unit,
     onAdvancedToggle: () -> Unit,
     onQuantityDecrease: () -> Unit,
     onQuantityIncrease: () -> Unit,
@@ -612,31 +606,6 @@ private fun SessionDetailsCard(
                 )
             }
 
-            if (notesExpanded) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    SessionFieldLabel("Notes")
-                    CompactTextField(
-                        value = notes,
-                        onValueChange = onNotesChange,
-                        label = "Notes",
-                        singleLine = false,
-                        minLines = 3,
-                        maxLines = 4,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            } else {
-                TextButton(
-                    onClick = onNotesExpand,
-                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
-                ) {
-                    Text("+ Add notes")
-                }
-            }
-
             TextButton(
                 onClick = onAdvancedToggle,
                 contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
@@ -660,6 +629,21 @@ private fun SessionDetailsCard(
                 exit = shrinkVertically() + fadeOut(tween(150))
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SessionFieldLabel("Notes")
+                        CompactTextField(
+                            value = notes,
+                            onValueChange = onNotesChange,
+                            label = "Notes",
+                            singleLine = false,
+                            minLines = 3,
+                            maxLines = 4,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     CompactStepperRow(
                         label = "Quantity",
                         value = quantity.toString(),
@@ -1413,17 +1397,18 @@ private fun GameSuggestionBanner(
     onDismiss: () -> Unit,
     onChooseGame: () -> Unit = {}
 ) {
+    val onSurfaceMuted = MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
-        shape    = RoundedCornerShape(22.dp),
-        color    = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        shape    = RoundedCornerShape(16.dp),
+        color    = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.14f),
         border   = androidx.compose.foundation.BorderStroke(
-            1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+            1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             // Header row: label + dismiss
             Row(
@@ -1434,7 +1419,7 @@ private fun GameSuggestionBanner(
                 Text(
                     "Detected game",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = onSurfaceMuted.copy(alpha = 0.60f)
                 )
                 BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
                     BoardFlowCloseGlyph(
@@ -1448,49 +1433,48 @@ private fun GameSuggestionBanner(
             // Game title
             Text(
                 candidate.game.name,
-                style      = MaterialTheme.typography.titleMedium,
+                style      = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color      = MaterialTheme.colorScheme.primary
             )
 
-            // Confidence line
-            if (geminiConfidence != null) {
+            // Confidence + evidence
+            val confidenceLabel = when {
+                geminiConfidence != null && geminiConfidence >= 0.90f -> "High confidence"
+                geminiConfidence != null && geminiConfidence >= 0.70f -> "Good match"
+                geminiConfidence != null                              -> "Possible match"
+                else                                                  -> null
+            }
+            val confPct = geminiConfidence?.let { "${(it * 100).toInt()}%" }
+            val confLine = listOfNotNull(confidenceLabel, confPct).joinToString(" · ")
+            if (confLine.isNotBlank()) {
                 Text(
-                    "Confidence: ${(geminiConfidence * 100).toInt()}%",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    confLine,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = onSurfaceMuted.copy(alpha = 0.60f)
                 )
             }
-
-            // Evidence text
             if (!detectionEvidence.isNullOrBlank()) {
                 Text(
                     detectionEvidence,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.80f)
+                    style = MaterialTheme.typography.labelSmall,
+                    color = onSurfaceMuted.copy(alpha = 0.50f)
                 )
             }
 
-            // Action buttons
+            // Actions — right-aligned, lightweight
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                BoardFlowButton(
-                    onClick  = onAccept,
-                    modifier = Modifier.weight(1f)
-                ) { Text("Use this game") }
                 if (hasPreselectedGame) {
-                    BoardFlowSecondaryButton(
-                        onClick  = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    ) { Text("Keep current") }
+                    BoardFlowInlineAction(onClick = onDismiss) { Text("Keep current") }
                 } else {
-                    BoardFlowSecondaryButton(
-                        onClick  = onChooseGame,
-                        modifier = Modifier.weight(1f)
-                    ) { Text("Choose another") }
+                    BoardFlowInlineAction(onClick = onChooseGame) { Text("Choose another") }
                 }
+                Spacer(Modifier.width(4.dp))
+                BoardFlowSecondaryButton(onClick = onAccept) { Text("Use this game") }
             }
         }
     }
