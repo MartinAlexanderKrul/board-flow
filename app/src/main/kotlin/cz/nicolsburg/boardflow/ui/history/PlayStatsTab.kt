@@ -2,9 +2,13 @@ package cz.nicolsburg.boardflow.ui.history
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -51,16 +55,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cz.nicolsburg.boardflow.model.InsightRarity
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.ui.common.BoardFlowMotion
@@ -70,6 +79,7 @@ import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 // ── Private data holders ──────────────────────────────────────────────────────
 
@@ -393,7 +403,7 @@ internal fun StatsContent(
             ?.let { it.gameName to it.durationMinutes }
     }
     val hotStreak     = remember(statPlays, players) { statPlays.hotPlayerStreak(players) }
-    val mostThisMonth = remember(statPlays) {
+    val mostThisMonth = remember(statPlays, timeRange) {
         if (timeRange == StatsTimeRange.ALL) statPlays.mostPlayedThisMonth() else null
     }
     val insights      = remember(totalPlays, uniqueGames, totalMinutes, statPlays, topGames, topPlayers, dayDist, hIndex, curStreak, bestStreak, avgDuration, longestSession, hotStreak, mostThisMonth) {
@@ -402,13 +412,14 @@ internal fun StatsContent(
 
     // ── New narrative computations ─────────────────────────────────────────────
     val observations     = remember(plays) { plays.buildSmartObservations() }
-    val rangeObservations = remember(statPlays, timeRange) { statPlays.buildRangeObservations(timeRange, plays) }
+    val rangeObservations = remember(plays, timeRange) { statPlays.buildRangeObservations(timeRange, plays) }
     val activeObservations = if (timeRange == StatsTimeRange.ALL) observations else rangeObservations
     val headerText       = remember(statPlays, timeRange, curStreak) { statPlays.buildContextualHeader(timeRange, curStreak) }
     val heatmapData      = remember(plays) { plays.buildHeatmapData() }
     val onThisDay        = remember(plays) { plays.buildOnThisDay() }
-    val archetype        = remember(plays) { if (timeRange == StatsTimeRange.ALL) plays.computeGamerArchetype() else null }
+    val archetype        = remember(plays, timeRange) { if (timeRange == StatsTimeRange.ALL) plays.computeGamerArchetype() else null }
     val rivalryPairs     = remember(statPlays) { statPlays.buildTopRivalryPairs() }
+    val periodReview     = remember(plays) { plays.buildPeriodReview() }
 
     LazyColumn(
         state = listState,
@@ -426,7 +437,7 @@ internal fun StatsContent(
                     FilterChip(
                         selected = timeRange == range,
                         onClick = { timeRange = range },
-                        label = { Text(range.label, style = MaterialTheme.typography.labelMedium) }
+                    label = { Text(range.displayLabel(), style = MaterialTheme.typography.labelMedium) }
                     )
                 }
             }
@@ -463,22 +474,27 @@ internal fun StatsContent(
             }
         } else {
 
+            // ── Period in Review (first days of new month / year) ─────────────
+            if (timeRange == StatsTimeRange.ALL && periodReview != null) {
+                item { PeriodReviewCard(periodReview) }
+            }
+
             // ── Contextual narrative header ────────────────────────────────────
             item { NarrativeHeader(headerText, curStreak) }
 
             // ── Hero rotating observation ──────────────────────────────────────
             if (activeObservations.isNotEmpty()) {
                 val insightLabel = when (timeRange) {
-                    StatsTimeRange.ALL       -> "This week's insight"
-                    StatsTimeRange.THIS_YEAR -> "This year so far"
-                    StatsTimeRange.THIS_MONTH -> "This month"
-                    StatsTimeRange.LAST_30   -> "Last 30 days"
+                    StatsTimeRange.ALL       -> "Your Chronicle"
+                    StatsTimeRange.THIS_YEAR -> "${LocalDate.now().year} So Far"
+                    StatsTimeRange.THIS_MONTH -> "${LocalDate.now().month.name.lowercase().replaceFirstChar { it.uppercase() }}'s Table"
+                    StatsTimeRange.LAST_30   -> "Recent Run"
                 }
                 item { HeroObservationCard(activeObservations, insightLabel) }
             }
 
-            // ── Summary ────────────────────────────────────────────────────────
-            item { SummarySection(totalPlays, uniqueGames, totalMinutes, players.size) }
+            // ── Summary + Archetype ────────────────────────────────────────────
+            item { SummarySection(totalPlays, uniqueGames, totalMinutes, players.size, archetype) }
 
             // ── 52-week heatmap (all-time only) ───────────────────────────────
             if (timeRange == StatsTimeRange.ALL) {
@@ -487,12 +503,12 @@ internal fun StatsContent(
 
             // ── Activity chart (filtered ranges) ──────────────────────────────
             if (timeRange != StatsTimeRange.ALL && activity.any { it.count > 0 }) {
-                item { ActivitySection(activity, rangeLabel = timeRange.subtitle) }
+                item { ActivitySection(activity, rangeLabel = timeRange.displaySubtitle()) }
             }
 
             // ── Top games ──────────────────────────────────────────────────────
             if (topGames.isNotEmpty()) {
-                item { TopGamesSection(topGames, rangeLabel = timeRange.subtitle, onGameTapped = onGameTapped) }
+                item { TopGamesSection(topGames, rangeLabel = timeRange.displaySubtitle(), onGameTapped = onGameTapped) }
             }
 
             // ── Rivalries ─────────────────────────────────────────────────────
@@ -502,12 +518,12 @@ internal fun StatsContent(
 
             // ── Day of week ────────────────────────────────────────────────────
             if (dayDist.any { it.second > 0 }) {
-                item { DayOfWeekSection(dayDist, rangeLabel = timeRange.subtitle) }
+                item { DayOfWeekSection(dayDist, rangeLabel = timeRange.displaySubtitle()) }
             }
 
             // ── Top players ────────────────────────────────────────────────────
             if (topPlayers.isNotEmpty()) {
-                item { TopPlayersSection(topPlayers, rangeLabel = timeRange.subtitle, onPlayerTapped = onPlayerTapped) }
+                item { TopPlayersSection(topPlayers, rangeLabel = timeRange.displaySubtitle(), onPlayerTapped = onPlayerTapped) }
             }
 
             // ── On This Day ────────────────────────────────────────────────────
@@ -515,16 +531,11 @@ internal fun StatsContent(
                 item { OnThisDaySection(onThisDay, onGameTapped) }
             }
 
-            // ── Archetype ─────────────────────────────────────────────────────
-            if (archetype != null) {
-                item { ArchetypeCard(archetype) }
-            }
-
             // ── Insights grid ─────────────────────────────────────────────────
             item {
                 InsightsSection(
                     insights = insights,
-                    rangeLabel = timeRange.subtitle,
+                    rangeLabel = timeRange.displaySubtitle(),
                     onGameTapped = onGameTapped,
                     onPlayerTapped = onPlayerTapped
                 )
@@ -600,6 +611,37 @@ private fun NarrativeHeader(text: String, currentStreak: Int) {
     }
 }
 
+// ── Period in Review card ─────────────────────────────────────────────────────
+
+@Composable
+private fun PeriodReviewCard(review: PeriodReview) {
+    val primary = MaterialTheme.colorScheme.primary
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape    = RoundedCornerShape(16.dp),
+        color    = primary.copy(alpha = 0.07f),
+        border   = BorderStroke(0.5.dp, primary.copy(alpha = 0.14f))
+    ) {
+        Column(
+            modifier            = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            Text(
+                text       = review.periodLabel.uppercase(),
+                style      = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color      = primary.copy(alpha = 0.62f)
+            )
+            Text(
+                text  = review.headline,
+                style = MaterialTheme.typography.bodyMedium,
+                color = onSurface.copy(alpha = 0.88f)
+            )
+        }
+    }
+}
+
 // ── Hero rotating observation ─────────────────────────────────────────────────
 
 @Composable
@@ -607,44 +649,142 @@ private fun HeroObservationCard(observations: List<SmartObservation>, label: Str
     if (observations.isEmpty()) return
     val dayOfYear = remember { LocalDate.now().dayOfYear }
     var offset by remember { mutableIntStateOf(0) }
-    val observation = observations[(dayOfYear + offset) % observations.size]
+    val orderedObservations = remember(observations) {
+        observations.sortedWith(
+            compareByDescending<SmartObservation> { it.rarity.sortWeight }
+                .thenBy { it.text }
+        )
+    }
+    val observation = orderedObservations[(dayOfYear + offset) % orderedObservations.size]
+    val isHighTier  = observation.rarity == InsightRarity.EPIC || observation.rarity == InsightRarity.LEGENDARY
+    val shape       = RoundedCornerShape(16.dp)
+    val textColor   = observation.rarity.primaryTextColor()
+    val mutedColor  = observation.rarity.mutedTextColor()
+    val accentColor = observation.rarity.accentColor()
+    val dateText    = remember(observation.dateAchieved) {
+        observation.dateAchieved.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
+    }
+
+    // ── Phase 5: entrance scale animation ────────────────────────────────────
+    val scale = remember(observation) { Animatable(0.95f) }
+    LaunchedEffect(observation) {
+        scale.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness    = Spring.StiffnessMedium
+            )
+        )
+    }
+
+    // ── Phase 5: shimmer sweep for Epic / Legendary ───────────────────────────
+    val shimmer = remember(observation) { Animatable(0f) }
+    LaunchedEffect(observation) {
+        if (isHighTier) {
+            delay(1500L)          // wait for card to settle before the sweep
+            shimmer.animateTo(
+                targetValue      = 1f,
+                animationSpec    = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
+    // ── Phase 5: haptic feedback for Epic / Legendary ────────────────────────
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(observation) {
+        if (isHighTier) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+    }
 
     Surface(
-        modifier = Modifier.fillMaxWidth().clickable { offset = (offset + 1) % observations.size },
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f)
+        onClick  = { offset = (offset + 1) % orderedObservations.size },
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale.value),
+        shape  = shape,
+        color  = Color.Transparent,
+        border = BorderStroke(1.dp, observation.rarity.borderColor())
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(observation.rarity.cardBrush(), shape)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(4.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(if (observation.rarity.sortWeight >= InsightRarity.RARE.sortWeight) 6.dp else 4.dp)
+                            .background(accentColor, CircleShape)
+                    )
+                    Text(
+                        "${observation.rarity.label.uppercase()} · ${label.uppercase()}",
+                        style      = MaterialTheme.typography.labelSmall,
+                        color      = mutedColor,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
                 Text(
-                    label,
+                    observation.text,
+                    style      = MaterialTheme.typography.titleMedium,
+                    color      = textColor,
+                    fontWeight = if (isHighTier) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines   = 3,
+                    overflow   = TextOverflow.Ellipsis
+                )
+                HorizontalDivider(color = mutedColor.copy(alpha = 0.28f))
+                Row(
+                    modifier              = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment     = Alignment.CenterVertically
+                ) {
+                    Text(
+                        observation.subtext ?: "From your play history",
+                        style    = MaterialTheme.typography.labelSmall,
+                        color    = mutedColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        dateText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = mutedColor.copy(alpha = 0.72f)
+                    )
+                }
+                Text(
+                    "Tap · ${(offset % observations.size) + 1} of ${observations.size}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
+                    color = mutedColor.copy(alpha = 0.5f)
                 )
             }
-            Text(
-                observation.text,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                lineHeight = 26.sp
-            )
-            Text(
-                "Tap for another · ${(offset % observations.size) + 1} of ${observations.size}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
+
+            // Shimmer overlay — single diagonal sweep, Epic/Legendary only
+            if (isHighTier && shimmer.value > 0f && shimmer.value < 1f) {
+                Canvas(modifier = Modifier.matchParentSize()) {
+                    val sweepWidth = size.width * 0.45f
+                    val centerX    = shimmer.value * (size.width + sweepWidth * 2f) - sweepWidth
+                    drawRect(
+                        brush = Brush.horizontalGradient(
+                            colors  = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.20f),
+                                Color.White.copy(alpha = 0.08f),
+                                Color.Transparent
+                            ),
+                            startX  = centerX - sweepWidth,
+                            endX    = centerX + sweepWidth
+                        ),
+                        size = size
+                    )
+                }
+            }
         }
     }
 }
@@ -652,11 +792,67 @@ private fun HeroObservationCard(observations: List<SmartObservation>, label: Str
 // ── Summary ───────────────────────────────────────────────────────────────────
 
 @Composable
+private fun InsightRarity.cardBrush(): Brush = when (this) {
+    InsightRarity.COMMON -> Brush.linearGradient(
+        listOf(
+            MaterialTheme.colorScheme.surface,
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        )
+    )
+    InsightRarity.NOTABLE -> Brush.linearGradient(
+        listOf(Color(0xFF12312D), MaterialTheme.colorScheme.surface)
+    )
+    InsightRarity.RARE -> Brush.linearGradient(
+        listOf(Color(0xFF172B55), Color(0xFF1F1F32))
+    )
+    InsightRarity.EPIC -> Brush.linearGradient(
+        listOf(Color(0xFF2D174A), Color(0xFF17131F))
+    )
+    InsightRarity.LEGENDARY -> Brush.linearGradient(
+        listOf(Color(0xFFE3A72F), Color(0xFF5C3E10))
+    )
+}
+
+@Composable
+private fun InsightRarity.primaryTextColor(): Color = when (this) {
+    InsightRarity.LEGENDARY -> Color(0xFF181208)
+    InsightRarity.RARE, InsightRarity.EPIC -> Color(0xFFF4F1EA)
+    else -> MaterialTheme.colorScheme.onSurface
+}
+
+@Composable
+private fun InsightRarity.mutedTextColor(): Color = when (this) {
+    InsightRarity.LEGENDARY -> Color(0xFF4A350B)
+    InsightRarity.RARE, InsightRarity.EPIC -> Color(0xFFD4D0DD)
+    InsightRarity.NOTABLE -> Color(0xFFBDE7DE)
+    else -> MaterialTheme.colorScheme.onSurfaceVariant
+}
+
+@Composable
+private fun InsightRarity.accentColor(): Color = when (this) {
+    InsightRarity.COMMON -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+    InsightRarity.NOTABLE -> Color(0xFF80CBC4)
+    InsightRarity.RARE -> Color(0xFF9DB7FF)
+    InsightRarity.EPIC -> Color(0xFFC8A7FF)
+    InsightRarity.LEGENDARY -> Color(0xFF5C3E10)
+}
+
+@Composable
+private fun InsightRarity.borderColor(): Color = when (this) {
+    InsightRarity.COMMON -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+    InsightRarity.NOTABLE -> Color(0xFF80CBC4).copy(alpha = 0.36f)
+    InsightRarity.RARE -> Color(0xFF9DB7FF).copy(alpha = 0.42f)
+    InsightRarity.EPIC -> Color(0xFFC8A7FF).copy(alpha = 0.46f)
+    InsightRarity.LEGENDARY -> Color(0xFFFFD37A).copy(alpha = 0.52f)
+}
+
+@Composable
 private fun SummarySection(
     totalPlays: Int,
     uniqueGames: Int,
     totalMinutes: Int,
-    playerCount: Int
+    playerCount: Int,
+    archetype: GamerArchetype? = null
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -664,18 +860,59 @@ private fun SummarySection(
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            // Hero plays number
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                AnimatedCount(
-                    target = totalPlays,
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    "plays logged",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+            // Hero row: plays count (left) + archetype (right)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    AnimatedCount(
+                        target = totalPlays,
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        "plays logged",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                if (archetype != null) {
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Icon(
+                            when (archetype) {
+                                GamerArchetype.DEDICANT   -> Icons.Default.Star
+                                GamerArchetype.LOYALIST   -> Icons.Default.EmojiEvents
+                                GamerArchetype.MARATHONER -> Icons.Default.Schedule
+                                GamerArchetype.SOCIALITE  -> Icons.Default.Group
+                                GamerArchetype.EXPLORER   -> Icons.AutoMirrored.Filled.TrendingUp
+                                GamerArchetype.CURATOR    -> Icons.Default.History
+                            },
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp).align(Alignment.End),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        )
+                        Text(
+                            archetype.title,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.End
+                        )
+                        Text(
+                            archetype.tagline,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.End
+                        )
+                    }
+                }
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
@@ -1050,7 +1287,7 @@ private fun RivalryPairRow(pair: RivalryPair) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                pair.playerA.take(10),
+                shortName(pair.playerA),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(60.dp),
@@ -1074,7 +1311,7 @@ private fun RivalryPairRow(pair: RivalryPair) {
                 )
             }
             Text(
-                pair.playerB.take(10),
+                shortName(pair.playerB),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(60.dp),
@@ -1292,56 +1529,6 @@ private fun OnThisDaySection(
                     }
                 }
             }
-        }
-    }
-}
-
-// ── Gamer archetype ────────────────────────────────────────────────────────────
-
-@Composable
-private fun ArchetypeCard(archetype: GamerArchetype) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
-                    "Your gaming profile",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    archetype.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    archetype.tagline,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Icon(
-                when (archetype) {
-                    GamerArchetype.DEDICANT  -> Icons.Default.Star
-                    GamerArchetype.LOYALIST  -> Icons.Default.EmojiEvents
-                    GamerArchetype.MARATHONER -> Icons.Default.Schedule
-                    GamerArchetype.SOCIALITE -> Icons.Default.Group
-                    GamerArchetype.EXPLORER  -> Icons.AutoMirrored.Filled.TrendingUp
-                    GamerArchetype.CURATOR   -> Icons.Default.History
-                },
-                contentDescription = null,
-                modifier = Modifier.size(36.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
-            )
         }
     }
 }

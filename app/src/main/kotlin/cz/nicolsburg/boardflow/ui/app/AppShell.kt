@@ -144,13 +144,16 @@ fun BoardFlowApp(
         appViewModel.updateFromCollection(collectionGames)
     }
 
-    // Reload BGG play cache after any sync completes so historyPlays (and Stats) reflect
+    // Reload play data after any sync completes so historyPlays (and Stats) reflect
     // fresh data. SyncViewModel writes to Room via its own store; AppViewModel's _bggPlays
-    // is not notified otherwise. Guard on !syncBusy prevents reads mid-sync and collapses
-    // the two triggers (collectionGames change + busy→false) into one effect so there is
-    // no duplicate call when both change together at sync completion.
+    // and _playHistory are not notified otherwise. Guard on !syncBusy prevents reads
+    // mid-sync and collapses the two triggers (collectionGames change + busy→false) into
+    // one effect so there is no duplicate call when both change together at sync completion.
     LaunchedEffect(collectionGames, syncBusy) {
-        if (!syncBusy) appViewModel.loadCachedBggPlays()
+        if (!syncBusy) {
+            appViewModel.loadCachedBggPlays()
+            appViewModel.loadPlayHistory()
+        }
     }
 
     LaunchedEffect(pendingWidgetQuickScan) {

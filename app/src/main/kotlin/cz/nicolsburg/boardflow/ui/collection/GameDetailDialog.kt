@@ -476,6 +476,20 @@ private fun YourStatsCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = onSurfaceVariant.copy(alpha = 0.5f)
                     )
+                    masteryLabel(stats.plays)?.let { label ->
+                        Surface(
+                            shape = CircleShape,
+                            color = primary.copy(alpha = 0.10f)
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = primary.copy(alpha = 0.78f),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
                 stats.lastPlayedDate?.let { date ->
                     Column(
@@ -1253,6 +1267,16 @@ private fun CompactStickyHeader(
             )
         }
     }
+}
+
+private fun masteryLabel(plays: Int): String? = when {
+    plays <= 0  -> null
+    plays <= 4  -> "Learning"
+    plays <= 14 -> "Familiar"
+    plays <= 29 -> "Comfortable"
+    plays <= 49 -> "Practiced"
+    plays <= 99 -> "Deep"
+    else        -> "Mastered"
 }
 
 private fun polishGameDetailStat(stat: SectionStat): SectionStat = stat

@@ -1477,25 +1477,25 @@ private fun PlayDetailsDialog(
             if (isEmpty()) {
                 val firstPlayCount = play.players.count { it.isNew }
                 if (firstPlayCount > 0) {
-                    add(
+                    add(PlayInsight(
                         if (firstPlayCount == 1) "One player marked this as a first play."
                         else "$firstPlayCount players marked this as a first play."
-                    )
+                    ))
                 }
                 val ratedCount = play.players.count {
                     it.rating.trim().toIntOrNull()?.let { rating -> rating > 0 } == true
                 }
                 if (ratedCount > 0) {
-                    add(
+                    add(PlayInsight(
                         if (ratedCount == 1) "One player left a rating for this session."
                         else "$ratedCount players left ratings for this session."
-                    )
+                    ))
                 }
                 if (play.quantity > 1) {
-                    add("Logged as ${play.quantity} sessions.")
+                    add(PlayInsight("Logged as ${play.quantity} sessions."))
                 }
                 if (play.incomplete) {
-                    add("Marked as an incomplete session.")
+                    add(PlayInsight("Marked as an incomplete session."))
                 }
             }
         }.take(2)
@@ -1618,7 +1618,7 @@ private fun PlayDetailsDialog(
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             insights.forEach { insight ->
-                                PlayInsightStrip(text = insight)
+                                PlayInsightStrip(insight = insight)
                             }
                         }
                     }
