@@ -1,6 +1,5 @@
 package cz.nicolsburg.boardflow.ui.widget
 
-import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -16,25 +15,24 @@ import android.widget.RemoteViews
 import androidx.core.content.res.ResourcesCompat
 import cz.nicolsburg.boardflow.R
 import cz.nicolsburg.boardflow.data.CanonicalCollectionStore
+import cz.nicolsburg.boardflow.model.LoggedPlay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
+import kotlin.math.abs
 
 class InsightsWidget : AppWidgetProvider() {
-
-    override fun onEnabled(context: Context) {
-        scheduleRotation(context)
-    }
 
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        val insights = computeInsights(context)
-        val index = currentIndex(context, insights.size)
+        val snapshot = computeSnapshot(context)
         for (appWidgetId in appWidgetIds) {
-            updateWidget(context, appWidgetManager, appWidgetId, insights, index)
+            updateWidget(context, appWidgetManager, appWidgetId, snapshot)
         }
     }
 
@@ -44,34 +42,42 @@ class InsightsWidget : AppWidgetProvider() {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, InsightsWidget::class.java))
             if (ids.isEmpty()) return
-            val insights = computeInsights(context)
-            advanceIndex(context, insights.size)
-            val index = currentIndex(context, insights.size)
+            val snapshot = computeSnapshot(context)
             for (id in ids) {
-                updateWidget(context, appWidgetManager, id, insights, index)
+                updateWidget(context, appWidgetManager, id, snapshot)
             }
         }
-    }
-
-    override fun onDisabled(context: Context) {
-        cancelRotation(context)
     }
 
     private fun updateWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
-        insights: List<String>,
-        index: Int
+        snapshot: WidgetSnapshot
     ) {
         val insightText = insights.getOrElse(index) { "No plays this week" }
         val views = RemoteViews(context.packageName, R.layout.widget_insights)
 
         views.setOnClickPendingIntent(
             R.id.widget_insights_root,
-            PendingIntent.getBroadcast(
-                context, 0,
-                Intent(context, InsightsWidget::class.java).apply { action = ACTION_ROTATE },
+            PendingIntent.getActivity(
+                context,
+                0,
+                Intent(context, cz.nicolsburg.boardflow.MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+        views.setOnClickPendingIntent(
+            R.id.widget_insights_scan,
+            PendingIntent.getActivity(
+                context,
+                1,
+                Intent(context, cz.nicolsburg.boardflow.MainActivity::class.java).apply {
+                    action = QuickScanWidget.ACTION_QUICK_SCAN
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                },
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
@@ -98,63 +104,242 @@ class InsightsWidget : AppWidgetProvider() {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    private fun computeInsights(context: Context): List<String> {
+    private fun computeSnapshot(context: Context): WidgetSnapshot {
         return runCatching {
             val plays = runBlocking(Dispatchers.IO) {
                 CanonicalCollectionStore.getInstance(context).getLoggedPlays()
             }
-            val weekAgo = LocalDate.now().minusDays(7)
-            val weekPlays = plays.filter { play ->
-                runCatching { LocalDate.parse(play.date) >= weekAgo }.getOrDefault(false)
-            }
-            if (weekPlays.isEmpty()) return listOf("No plays this week")
-
-            val insights = mutableListOf<String>()
-
-            val totalPlays = weekPlays.sumOf { it.quantity.coerceAtLeast(1) }
-            val uniqueGames = weekPlays.map { it.gameName }.distinct().size
-            insights.add("$totalPlays plays across $uniqueGames game${if (uniqueGames != 1) "s" else ""}")
-
-            weekPlays.groupBy { it.gameName }
-                .mapValues { (_, p) -> p.sumOf { it.quantity.coerceAtLeast(1) } }
-                .maxByOrNull { it.value }
-                ?.let { insights.add("Most played: ${it.key} ×${it.value}") }
-
-            weekPlays.flatMap { it.players }
-                .groupBy { it.name }
-                .mapValues { it.value.size }
-                .maxByOrNull { it.value }
-                ?.let { insights.add("Most active: ${it.key} (${it.value} game${if (it.value != 1) "s" else ""})") }
-
-            val totalMinutes = weekPlays.filter { it.durationMinutes > 0 }.sumOf { it.durationMinutes }
-            if (totalMinutes > 0) {
-                val h = totalMinutes / 60
-                val m = totalMinutes % 60
-                insights.add("Time at table: ${if (h > 0) "${h}h ${m}m" else "${m}m"}")
-            }
-
-            weekPlays.flatMap { it.players }
-                .filter { it.isWinner }
-                .groupBy { it.name }
-                .mapValues { it.value.size }
-                .maxByOrNull { it.value }
-                ?.takeIf { it.value > 0 }
-                ?.let { insights.add("Top winner: ${it.key} (${it.value} win${if (it.value != 1) "s" else ""})") }
-
-            insights
-        }.getOrElse { listOf("No plays this week") }
+            chooseDailySnapshot(context, plays)
+        }.getOrElse {
+            WidgetSnapshot(header = "Daily Snapshot", text = "Every collection starts somewhere.", accentColor = NEUTRAL)
+        }
     }
 
-    private fun currentIndex(context: Context, size: Int): Int {
-        if (size == 0) return 0
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getInt(KEY_INDEX, 0) % size
+    private fun chooseDailySnapshot(context: Context, plays: List<LoggedPlay>): WidgetSnapshot {
+        if (plays.isEmpty()) {
+            return WidgetSnapshot(header = "Daily Snapshot", text = "Every collection starts somewhere.", accentColor = NEUTRAL)
+        }
+
+        val today = LocalDate.now()
+        val candidates = buildSnapshotCandidates(plays, today)
+        val selected = candidates
+            .sortedWith(compareByDescending<WidgetSnapshot> { it.priority }.thenBy { it.id })
+            .let { ordered ->
+                val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                val lastDay = prefs.getString(KEY_LAST_DAY, null)
+                val lastText = prefs.getString(KEY_LAST_TEXT, null)
+                val todayKey = today.toString()
+                val preferred = ordered.firstOrNull()
+                    ?: WidgetSnapshot(header = "Daily Snapshot", text = "Every play leaves a trace.", accentColor = NEUTRAL)
+                val choice = if (lastDay != todayKey && preferred.text == lastText) {
+                    ordered.firstOrNull { it.text != lastText } ?: preferred
+                } else {
+                    preferred
+                }
+                prefs.edit()
+                    .putString(KEY_LAST_DAY, todayKey)
+                    .putString(KEY_LAST_TEXT, choice.text)
+                    .apply()
+                choice
+            }
+        return selected
     }
 
-    private fun advanceIndex(context: Context, size: Int) {
-        if (size == 0) return
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putInt(KEY_INDEX, (prefs.getInt(KEY_INDEX, 0) + 1) % size).apply()
+    private fun buildSnapshotCandidates(plays: List<LoggedPlay>, today: LocalDate): List<WidgetSnapshot> {
+        val datedPlays = plays.mapNotNull { play -> parseDate(play)?.let { it to play } }
+        val byGame = plays.groupBy { it.gameId to it.gameName }
+            .map { (game, gamePlays) ->
+                GameCount(
+                    id = game.first,
+                    name = game.second,
+                    plays = gamePlays.sumOf { it.quantity.coerceAtLeast(1) },
+                    lastDate = gamePlays.mapNotNull(::parseDate).maxOrNull()
+                )
+            }
+
+        return listOfNotNull(
+            approachingMilestone(byGame),
+            recentLandmark(byGame, today),
+            lastSession(datedPlays, today),
+            rivalryPulse(plays, today),
+            dormantGame(byGame, today),
+            seasonStat(plays, today)
+        )
+    }
+
+    private fun approachingMilestone(games: List<GameCount>): WidgetSnapshot? {
+        val targets = listOf(10, 25, 50, 100, 200)
+        return games.mapNotNull { game ->
+            val target = targets.firstOrNull { it > game.plays } ?: return@mapNotNull null
+            val remaining = target - game.plays
+            if (remaining !in 1..2) return@mapNotNull null
+            WidgetSnapshot(
+                id = "approaching_${game.id}_$target",
+                header = "Approaching Landmark",
+                text = "${game.name} is at ${game.plays} plays. ${if (remaining == 1) "One more." else "$remaining more."}",
+                accentColor = AMBER,
+                priority = 120 - remaining
+            )
+        }.maxByOrNull { it.priority }
+    }
+
+    private fun recentLandmark(games: List<GameCount>, today: LocalDate): WidgetSnapshot? {
+        val landmarkCounts = setOf(25, 50, 100, 200)
+        return games
+            .filter { it.plays in landmarkCounts && it.lastDate != null && !it.lastDate.isBefore(today.minusDays(2)) }
+            .maxByOrNull { it.plays }
+            ?.let { game ->
+                val line = when (game.plays) {
+                    25 -> "25 plays of ${game.name}. This one has history."
+                    50 -> "50 plays of ${game.name}. That's a relationship."
+                    100 -> "100 plays. ${game.name} stuck around."
+                    else -> "${game.plays} plays of ${game.name}. The table remembers."
+                }
+                WidgetSnapshot("landmark_${game.id}_${game.plays}", "Landmark", line, BLUE, 110)
+            }
+    }
+
+    private fun lastSession(datedPlays: List<Pair<LocalDate, LoggedPlay>>, today: LocalDate): WidgetSnapshot? {
+        val (date, play) = datedPlays.maxByOrNull { it.first } ?: return null
+        val dayLabel = when (date) {
+            today -> "Today"
+            today.minusDays(1) -> "Yesterday"
+            else -> date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+        }
+        val winner = play.players.firstOrNull { it.isWinner }?.name?.trim().orEmpty()
+        val result = if (winner.isNotBlank()) "$winner won." else "Recorded."
+        return WidgetSnapshot(
+            id = "last_${play.id}",
+            header = "Last Session",
+            text = "${play.gameName} - $dayLabel - $result",
+            accentColor = NEUTRAL,
+            priority = 80
+        )
+    }
+
+    private fun rivalryPulse(plays: List<LoggedPlay>, today: LocalDate): WidgetSnapshot? {
+        val recentPairKeys = mutableSetOf<String>()
+        plays.filter { play ->
+            parseDate(play)?.let { !it.isBefore(today.minusDays(7)) } == true
+        }.forEach { play ->
+            playerPairs(play).forEach { recentPairKeys += it.key }
+        }
+        if (recentPairKeys.isEmpty()) return null
+
+        val totals = mutableMapOf<String, RivalryCount>()
+        plays.forEach { play ->
+            playerPairs(play).forEach { pair ->
+                val current = totals[pair.key] ?: RivalryCount(pair.a, pair.b, 0, 0, 0)
+                totals[pair.key] = current.copy(
+                    plays = current.plays + 1,
+                    aWins = current.aWins + if (pair.aWon) 1 else 0,
+                    bWins = current.bWins + if (pair.bWon) 1 else 0
+                )
+            }
+        }
+
+        return totals
+            .filterKeys { it in recentPairKeys }
+            .values
+            .filter { it.plays >= 3 && it.aWins != it.bWins }
+            .maxWithOrNull(compareBy<RivalryCount> { abs(it.aWins - it.bWins) }.thenBy { it.plays })
+            ?.let { rivalry ->
+                val aLeads = rivalry.aWins > rivalry.bWins
+                val leader = if (aLeads) rivalry.a else rivalry.b
+                val leadWins = if (aLeads) rivalry.aWins else rivalry.bWins
+                val trailingWins = if (aLeads) rivalry.bWins else rivalry.aWins
+                WidgetSnapshot(
+                    id = "rivalry_${rivalry.a}_${rivalry.b}_${rivalry.plays}",
+                    header = "Rivalry Pulse",
+                    text = "$leader leads $leadWins-$trailingWins. The table remembers.",
+                    accentColor = TEAL,
+                    priority = 70
+                )
+            }
+    }
+
+    private fun dormantGame(games: List<GameCount>, today: LocalDate): WidgetSnapshot? {
+        return games
+            .filter { it.plays >= 2 && it.lastDate != null }
+            .mapNotNull { game ->
+                val days = today.toEpochDay() - game.lastDate!!.toEpochDay()
+                if (days < 30) return@mapNotNull null
+                game to days
+            }
+            .maxByOrNull { it.second }
+            ?.let { (game, days) ->
+                WidgetSnapshot(
+                    id = "dormant_${game.id}_$days",
+                    header = "Waiting",
+                    text = "${game.name} hasn't been played in ${formatAge(days)}.",
+                    accentColor = BLUE,
+                    priority = 55
+                )
+            }
+    }
+
+    private fun seasonStat(plays: List<LoggedPlay>, today: LocalDate): WidgetSnapshot? {
+        val thisYear = plays.filter { parseDate(it)?.year == today.year }
+        val monthCount = thisYear
+            .filter { parseDate(it)?.monthValue == today.monthValue }
+            .sumOf { it.quantity.coerceAtLeast(1) }
+        if (monthCount == 0) return null
+
+        val byMonth = thisYear.groupBy { parseDate(it)?.monthValue }
+            .filterKeys { it != null }
+            .mapValues { (_, monthPlays) -> monthPlays.sumOf { it.quantity.coerceAtLeast(1) } }
+        val best = byMonth.values.maxOrNull() ?: monthCount
+        val month = today.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+        val suffix = if (monthCount >= best) "Your best month this year." else "The month has shape."
+        return WidgetSnapshot(
+            id = "season_${today.year}_${today.monthValue}_$monthCount",
+            header = "Season",
+            text = "$monthCount plays in $month. $suffix",
+            accentColor = AMBER,
+            priority = 40
+        )
+    }
+
+    private fun playerPairs(play: LoggedPlay): List<PlayerPair> {
+        val players = play.players
+            .mapNotNull { result ->
+                result.name.trim().takeIf { it.isNotBlank() }?.let { it to result.isWinner }
+            }
+            .distinctBy { it.first.lowercase() }
+        if (players.size < 2) return emptyList()
+
+        val pairs = mutableListOf<PlayerPair>()
+        for (i in players.indices) {
+            for (j in i + 1 until players.size) {
+                val first = players[i]
+                val second = players[j]
+                val sorted = listOf(first, second).sortedBy { it.first.lowercase() }
+                val a = sorted[0]
+                val b = sorted[1]
+                pairs += PlayerPair(
+                    a = a.first,
+                    b = b.first,
+                    aWon = a.second,
+                    bWon = b.second
+                )
+            }
+        }
+        return pairs
+    }
+
+    private fun parseDate(play: LoggedPlay): LocalDate? =
+        runCatching { LocalDate.parse(play.date) }.getOrNull()
+
+    private fun formatAge(days: Long): String = when {
+        days < 60 -> "$days days"
+        days < 365 -> {
+            val months = (days / 30).coerceAtLeast(1)
+            "$months month${if (months == 1L) "" else "s"}"
+        }
+        else -> {
+            val years = (days / 365).coerceAtLeast(1)
+            "$years year${if (years == 1L) "" else "s"}"
+        }
     }
 
     private fun renderSingleLine(context: Context, text: String, textSizeSp: Float, color: Int): Bitmap {
@@ -184,15 +369,21 @@ class InsightsWidget : AppWidgetProvider() {
         )
     }
 
-    private fun cancelRotation(context: Context) {
-        (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager)
-            .cancel(rotationPendingIntent(context))
+    private data class PlayerPair(
+        val a: String,
+        val b: String,
+        val aWon: Boolean,
+        val bWon: Boolean
+    ) {
+        val key: String = "${a.lowercase()}|${b.lowercase()}"
     }
 
-    private fun rotationPendingIntent(context: Context) = PendingIntent.getBroadcast(
-        context, 0,
-        Intent(context, InsightsWidget::class.java).apply { action = ACTION_ROTATE },
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    private data class RivalryCount(
+        val a: String,
+        val b: String,
+        val plays: Int,
+        val aWins: Int,
+        val bWins: Int
     )
 
     companion object {

@@ -29,6 +29,7 @@ BoardFlow combines several related workflows in one app:
 - create Drive folders and QR-related assets through the Google sync pipeline
 - export and import app data backups
 - detect record moments after a play (first win, new high score, win streak)
+- gamification layer: rarity-tiered insights, game mastery levels, period reviews, and animated observation cards
 
 ## Main User Flows
 
@@ -363,6 +364,10 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
 ## UI Surface Inventory
 
 For a screen-by-screen map of dialogs, popups, bottom sheets, cards, dropdowns, banners, lists, and related UI surfaces, see [`docs/UI_SURFACES.md`](docs/UI_SURFACES.md).
+
+## Gamification System
+
+For the full reference on rarity tiers, insight categories, mastery levels, animations, and period reviews, see [`docs/GAMIFICATION.md`](docs/GAMIFICATION.md).
 
 ## External Integrations
 

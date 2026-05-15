@@ -1037,6 +1037,12 @@ private fun PostSaveCard(
 
     val players = info.sessionContext.players
     val winners = players.filter { it.isWinner }
+    val winnerText = winners.joinToString(" & ") { it.name.trim() }
+    val primaryMemory = info.record?.displayText ?: when {
+        winners.isNotEmpty() -> "$winnerText wins this one."
+        players.isNotEmpty() -> "Another session recorded."
+        else -> "This play is part of the record now."
+    }
     val hasNumericScores = players.any { it.score.trim().toDoubleOrNull() != null }
     val sortedPlayers = if (hasNumericScores) {
         players.sortedByDescending { it.score.trim().toDoubleOrNull() ?: Double.NEGATIVE_INFINITY }
@@ -1053,9 +1059,9 @@ private fun PostSaveCard(
         AnimatedVisibility(
             visible = animIn,
             enter = scaleIn(
-                initialScale = 0.88f,
+                initialScale = 0.95f,
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    dampingRatio = Spring.DampingRatioNoBouncy,
                     stiffness    = Spring.StiffnessMedium
                 )
             ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium))
@@ -1076,28 +1082,26 @@ private fun PostSaveCard(
                         )
                     }
 
-                    // Winner callout
-                    if (winners.isNotEmpty()) {
-                        val winnerText = winners.joinToString(" & ") { it.name.trim() }
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.EmojiEvents,
-                                contentDescription = null,
-                                tint     = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp)
-                            )
-                            Text(
-                                "$winnerText wins!",
-                                style      = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.ExtraBold,
-                                color      = MaterialTheme.colorScheme.onSurface,
-                                textAlign  = TextAlign.Center
-                            )
-                        }
-                    }
+                    Icon(
+                        Icons.Default.EmojiEvents,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        primaryMemory,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 30.sp
+                    )
+                    Text(
+                        LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy")),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.58f),
+                        textAlign = TextAlign.Center
+                    )
 
                     // Score table
                     if (sortedPlayers.isNotEmpty()) {
@@ -1142,16 +1146,6 @@ private fun PostSaveCard(
                                 }
                             }
                         }
-                    }
-
-                    // Record moment — integrated inline, no separate surface
-                    info.record?.let { record ->
-                        Text(
-                            record.displayText,
-                            style     = MaterialTheme.typography.labelMedium,
-                            color     = MaterialTheme.colorScheme.primary,
-                            textAlign = TextAlign.Center
-                        )
                     }
 
                     // Actions

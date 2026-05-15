@@ -219,16 +219,44 @@ data class SessionContext(
         System.currentTimeMillis() - lastPlayTimestamp < 60L * 60 * 1000
 }
 
+enum class InsightRarity(val label: String, val sortWeight: Int) {
+    COMMON("Moment", 0),
+    NOTABLE("Notable", 1),
+    RARE("Landmark", 2),
+    EPIC("Chronicle", 3),
+    LEGENDARY("Legacy", 4)
+}
+
 sealed class RecordMoment {
     data class FirstWin(val playerName: String, val gameName: String) : RecordMoment()
     data class NewHighScore(val playerName: String, val gameName: String) : RecordMoment()
     data class WinStreak(val playerName: String, val streakLength: Int) : RecordMoment()
 
+    val rarity: InsightRarity
+        get() = when (this) {
+            is FirstWin    -> InsightRarity.NOTABLE
+            is NewHighScore -> InsightRarity.NOTABLE
+            is WinStreak   -> when {
+                streakLength >= 7 -> InsightRarity.EPIC
+                streakLength >= 4 -> InsightRarity.RARE
+                else              -> InsightRarity.NOTABLE
+            }
+        }
+
+    /** Emoji version — used in the post-log PostSaveCard celebration beat. */
     val displayText: String
         get() = when (this) {
-            is FirstWin    -> "🎉 First win for $playerName in $gameName"
-            is NewHighScore -> "🏆 New high score for $playerName in $gameName"
-            is WinStreak   -> "🔥 $playerName is on a ${streakLength}-win streak"
+            is FirstWin    -> "🎉 $playerName finally wins one."
+            is NewHighScore -> "🏆 A new personal best for $playerName. Log it."
+            is WinStreak   -> "🔥 $playerName has won ${streakLength} in a row. The table has noticed."
+        }
+
+    /** No-emoji version — used in historical insight strips (PlayDetailsDialog). */
+    val stripText: String
+        get() = when (this) {
+            is FirstWin    -> "$playerName wins it for the first time."
+            is NewHighScore -> "New personal best for $playerName."
+            is WinStreak   -> "$playerName is on a ${streakLength}-win streak."
         }
 }
 

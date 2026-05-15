@@ -102,17 +102,17 @@ Source: `ui/history/HistoryScreen.kt`
 Sources: `ui/history/PlayStatsTab.kt`, `ui/history/InsightStripCard.kt`
 
 - Stats tab list: `LazyColumn` of analytics sections.
-- `ContextualInsightStrip` / `InsightStripCard`: compact insight strips used for game/player/stat context.
-- `HeroObservationCard`: prominent observation card.
-- `SummarySection`: overview metrics.
+- `PeriodReviewCard`: auto-generated narrative card surfaced at the top of Stats during the first 5 days of a new month (or first 7 days of a new year). Driven by `buildPeriodReview()` in `PlayStatsHelpers.kt`. Shows play count, unique games, new players, and a narrative highlight ("Martin finally won Brass."). Only shown in the All-time range.
+- `ContextualInsightStrip` / `InsightStripCard`: compact rarity-aware insight strips. Background alpha, border colour, and icon tint scale across the five rarity tiers (Common → Legendary). Used for game/player/stat context.
+- `HeroObservationCard`: prominent rotating observation card driven by `buildSmartObservations()`. Features a spring-physics scale entrance (0.95 → 1.0, ~350 ms), a single shimmer sweep for Epic/Legendary cards (fires 1.5 s after settle), and haptic feedback (`LongPress`) on Epic/Legendary reveal. Tappable to cycle through observations.
+- `SummarySection`: overview metrics with inline `GamerArchetype` display (archetype title and tagline shown to the right of the play count). `ArchetypeCard` was removed; archetype is now embedded in this section.
 - `HeatmapSection`: play activity heatmap card.
 - `ActivitySection`: recent/all-time activity chart section.
 - `TopGamesSection` and `TopGameRow`: top game rankings; rows can deep-link into game-filtered history.
 - `TopPlayersSection` and `TopPlayerRow`: top player rankings; rows can deep-link into player-filtered history.
-- `RivalryPairsSection` and `RivalryPairRow`: rivalry pair stats.
+- `RivalryPairsSection` and `RivalryPairRow`: rivalry pair stats. Graph-row player labels use `shortName()` to abbreviate long names (e.g. "Martin Alexander Krul" → "Martin K.") only in the narrow bar-flanking slots; the narrative headline keeps the full name.
 - `DayOfWeekSection`: play distribution section.
 - `OnThisDaySection`: historical anniversary/memory section.
-- `ArchetypeCard`: player style summary card.
 - `InsightsSection`: generated insight list.
 
 ## QR Play Import
@@ -151,8 +151,8 @@ Source: `ui/collection/GameDetailDialog.kt`
 
 - `GameDetailsDialog`: primary animated dialog with image backdrop, scrollable content, sticky compact header, and game actions.
 - Header section: cover image, status chips, Log Play, and History actions.
-- `YourStatsCard`: personal game stats with player links.
-- `ContextualInsightStrip`: contextual game insight when available.
+- `YourStatsCard`: personal game stats with player links. Includes a mastery-level pill chip below the play count (Learning / Familiar / Comfortable / Practiced / Deep / Mastered based on total plays). Driven by `masteryLabel()`.
+- `ContextualInsightStrip`: contextual game insight when available. Insight is rarity-aware (colour, border, icon opacity scale with tier).
 - `PlayerPreferenceBlock`: player-count/best-player information.
 - `InfoGroupBlock`: overview, ratings, and custom metadata groups.
 - `SleevesBlock` / `SleevesSection`: sleeve status, counts, manufacturer recommendation, and navigation to sleeve group.
