@@ -12,9 +12,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.SystemClock
-import android.text.Layout
-import android.text.StaticLayout
-import android.text.TextPaint
 import android.widget.RemoteViews
 import androidx.core.content.res.ResourcesCompat
 import cz.nicolsburg.boardflow.R
@@ -68,9 +65,6 @@ class InsightsWidget : AppWidgetProvider() {
         index: Int
     ) {
         val insightText = insights.getOrElse(index) { "No plays this week" }
-        val density = context.resources.displayMetrics.density
-        val maxWidthPx = (INSIGHT_MAX_WIDTH_DP * density).toInt()
-
         val views = RemoteViews(context.packageName, R.layout.widget_insights)
 
         views.setOnClickPendingIntent(
@@ -81,17 +75,25 @@ class InsightsWidget : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
+        views.setOnClickPendingIntent(
+            R.id.widget_insights_scan,
+            PendingIntent.getActivity(
+                context, 1,
+                Intent(context, cz.nicolsburg.boardflow.MainActivity::class.java).apply {
+                    action = QuickScanWidget.ACTION_QUICK_SCAN
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        )
 
         runCatching {
             views.setImageViewBitmap(
                 R.id.widget_insights_header,
-                renderSingleLine(context, "THIS WEEK", 9f, Color.parseColor("#FEB316"))
-            )
-            views.setImageViewBitmap(
-                R.id.widget_insights_text,
-                renderWrapped(context, insightText, 11f, Color.WHITE, maxWidthPx)
+                renderSingleLine(context, "Board Flow - Player Chronicle", 9f, Color.parseColor("#FEB316"))
             )
         }
+        views.setTextViewText(R.id.widget_insights_text, insightText)
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
@@ -172,28 +174,6 @@ class InsightsWidget : AppWidgetProvider() {
         return bitmap
     }
 
-    private fun renderWrapped(context: Context, text: String, textSizeSp: Float, color: Int, maxWidthPx: Int): Bitmap {
-        val density = context.resources.displayMetrics.density
-        val typeface = ResourcesCompat.getFont(context, R.font.cinzel_decorative_bold)
-        val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.typeface = typeface
-            textSize = textSizeSp * density
-            this.color = color
-        }
-        val layout = StaticLayout.Builder.obtain(text, 0, text.length, paint, maxWidthPx)
-            .setAlignment(Layout.Alignment.ALIGN_CENTER)
-            .setLineSpacing(0f, 1.15f)
-            .setMaxLines(3)
-            .build()
-        val bitmap = Bitmap.createBitmap(
-            layout.width.coerceAtLeast(1),
-            layout.height.coerceAtLeast(1),
-            Bitmap.Config.ARGB_8888
-        )
-        layout.draw(Canvas(bitmap))
-        return bitmap
-    }
-
     private fun scheduleRotation(context: Context) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.setInexactRepeating(
@@ -220,6 +200,5 @@ class InsightsWidget : AppWidgetProvider() {
         private const val PREFS_NAME = "InsightsWidgetPrefs"
         private const val KEY_INDEX = "insight_index"
         private const val INTERVAL_MS = 5 * 60 * 1000L
-        private const val INSIGHT_MAX_WIDTH_DP = 175f
-    }
+}
 }

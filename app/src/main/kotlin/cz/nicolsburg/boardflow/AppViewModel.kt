@@ -42,6 +42,9 @@ import java.util.UUID
 class AppViewModel(private val container: AppContainer) : ViewModel() {
     companion object {
         private const val CANONICAL_SNAPSHOT_ID = "__canonical_collection__"
+        private const val TAG_SCAN = "QuickScan"
+        private const val TAG_AUTO_SWITCH = "AutoSwitch"
+        private const val TAG_PLAYER = "PlayerRecognition"
 
         fun factory(container: AppContainer) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
@@ -413,7 +416,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     /** Enters the mode where the next game selection from NewPlayScreen returns to LogPlay without a new scan. */
     fun enterQuickScanCorrectionMode() {
-        Log.d("QuickScan", "Entering correction mode; extractedPlay preserved=${_extractedPlay.value != null}")
+        Log.d(TAG_SCAN, "Entering correction mode; extractedPlay preserved=${_extractedPlay.value != null}")
         _quickScanCorrectionMode.value = true
     }
 
@@ -434,11 +437,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     /** Called when the user selects a correction game. Applies it without clearing extracted scan data. */
     fun applyDetectedGameCorrection(game: BggGame) {
         val extracted = _extractedPlay.value
-        Log.d("QuickScan", "Correction game selected: ${game.name}; extractedDataPreserved=${extracted != null} players=${extracted?.players?.size ?: 0}")
+        Log.d(TAG_SCAN, "Correction game selected: ${game.name}; extractedDataPreserved=${extracted != null} players=${extracted?.players?.size ?: 0}")
         extracted?.let { saveHintForGame(game, it) }
         if (extracted != null && extracted.players.isNotEmpty()) {
             initEditablePlayers(extracted.players)
-            Log.d("QuickScan", "Re-initialized ${extracted.players.size} player(s) from extracted play")
+            Log.d(TAG_SCAN, "Re-initialized ${extracted.players.size} player(s) from extracted play")
         }
         applyDetectedGame(game)
         _gameCandidates.value = emptyList()
@@ -448,7 +451,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     private fun clearQuickScanCorrectionMode(reason: String) {
         if (_quickScanCorrectionMode.value) {
-            Log.d("QuickScan", "Correction mode cleared: $reason")
+            Log.d(TAG_SCAN, "Correction mode cleared: $reason")
             _quickScanCorrectionMode.value = false
         }
     }
@@ -456,7 +459,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun extractScores(imageFile: File) {
         viewModelScope.launch {
             _scanStartedWithGame.value = (selectedGame?.id ?: 0) != 0
-            Log.d("AutoSwitch", "Scan started; preselectedGame=${selectedGame?.name ?: "none"} scanStartedWithGame=${_scanStartedWithGame.value}")
+            Log.d(TAG_AUTO_SWITCH, "Scan started; preselectedGame=${selectedGame?.name ?: "none"} scanStartedWithGame=${_scanStartedWithGame.value}")
             _scanLoading.value = true; _scanError.value = null; _extractedPlay.value = null
             _gameCandidates.value = emptyList(); _scanRecognitionResult.value = null
             clearQuickScanCorrectionMode("new scan started")
@@ -507,7 +510,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     templateCategoryGate -> "TEMPLATE_CATEGORY_GATE"
                     else                 -> "BLOCKED"
                 }
-                Log.d("AutoSwitch", buildString {
+                Log.d(TAG_AUTO_SWITCH, buildString {
                     append("gate=$gateUsed ")
                     val reqPct = if (titleGate || !templateCategoryGate) (requiredGeminiConfForTitle * 100).toInt() else 95
                     append("geminiConf=${(geminiConfidence * 100).toInt()}%(need>=$reqPct strongTitle=$isStrongTitleMatch ok=${titleGate || templateCategoryGate}) ")
@@ -557,7 +560,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         }
                     }
                 }
-            }.onFailure { _scanError.value = it.message }
+            }.onFailure {
+                Log.e(TAG_AUTO_SWITCH, "Scan failed: ${it.message}")
+                _scanError.value = it.message
+            }
             _scanLoading.value = false
         }
     }
@@ -1142,6 +1148,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             val unposted = container.canonicalCollectionStore.getLoggedPlays().filter { !it.postedToBgg }
             try {
                 if (unposted.isEmpty()) return@launch
+                Log.i(TAG_AUTO_SWITCH, "Syncing ${unposted.size} unposted play(s) to BGG")
                 container.bggRepository.login(creds).onFailure { return@launch }
                 val postedPlays = mutableListOf<LoggedPlay>()
                 for (play in unposted) {
@@ -1152,6 +1159,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                             postedPlays += play.copy(id = savedPlayId ?: play.id, players = normalizedPlayers, postedToBgg = true)
                         }
                 }
+                Log.i(TAG_AUTO_SWITCH, "Sync complete: ${postedPlays.size}/${unposted.size} play(s) posted to BGG")
                 addOptimisticBggPlays(postedPlays)
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
             } finally {
@@ -1488,7 +1496,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     lastConfirmedAt         = now
                 )
                 prefs.savePlayerRecognitionHint(hint)
-                Log.d("PlayerRecognition", "saved hint '${originalName}' -> '${rosterPlayer.displayName}'")
+                Log.d(TAG_PLAYER, "saved hint '${originalName}' -> '${rosterPlayer.displayName}'")
             }
         }
         _originalScannedNames = emptyList()
@@ -1498,7 +1506,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun clearPlayerRecognitionHints() {
         prefs.clearPlayerRecognitionHints()
-        Log.d("PlayerRecognition", "all player recognition hints cleared")
+        Log.d(TAG_PLAYER, "all player recognition hints cleared")
     }
 
 }

@@ -68,24 +68,24 @@ class GeminiRepository {
                     response.code == 503 || response.code == 429 -> {
                         val nextModel = findNextModel(currentModel, availableModels)
                         if (nextModel != null && attempts < maxAttempts) {
-                            Log.d(TAG, "HTTP ${response.code} in ${attemptMs}ms; switching model $currentModel → $nextModel (attempt $attempts/$maxAttempts)")
+                            Log.w(TAG, "HTTP ${response.code} in ${attemptMs}ms; switching model $currentModel → $nextModel (attempt $attempts/$maxAttempts)")
                             currentModel = nextModel
                             onModelChanged?.invoke(nextModel)
                             kotlinx.coroutines.delay(1000)
                             continue
                         } else {
-                            Log.d(TAG, "HTTP ${response.code} in ${attemptMs}ms; no fallback model after $attempts attempt(s)")
+                            Log.e(TAG, "HTTP ${response.code} in ${attemptMs}ms; no fallback model after $attempts attempt(s)")
                             throw Exception("All models are currently experiencing high demand (${response.code}). Please try again in a moment.")
                         }
                     }
                     else -> {
-                        Log.d(TAG, "HTTP ${response.code} error in ${attemptMs}ms; model=$currentModel attempt=$attempts")
+                        Log.e(TAG, "HTTP ${response.code} error in ${attemptMs}ms; model=$currentModel attempt=$attempts")
                         throw Exception("Gemini API error ${response.code} (using $currentModel):\n$responseText")
                     }
                 }
             }
             val totalMs = System.currentTimeMillis() - startTime
-            Log.d(TAG, "Failed after $maxAttempts attempts; total=${totalMs}ms")
+            Log.e(TAG, "Failed after $maxAttempts attempts; total=${totalMs}ms")
             throw Exception("Failed after $maxAttempts attempts")
         }
     }
@@ -134,10 +134,10 @@ class GeminiRepository {
                             }
                         }
                     } else {
-                        Log.d(TAG, "Model list HTTP ${response.code} via $apiVersion")
+                        Log.w(TAG, "Model list HTTP ${response.code} via $apiVersion")
                     }
                 } catch (e: Exception) {
-                    Log.d(TAG, "Model list error via $apiVersion: ${e.message}")
+                    Log.w(TAG, "Model list error via $apiVersion: ${e.message}")
                 }
             }
             throw Exception("Could not retrieve model list. Visit https://aistudio.google.com to check available models.")
@@ -229,7 +229,7 @@ class GeminiRepository {
                 gameDetectionEvidence = gameDetectionEvidence
             )
         } catch (e: Exception) {
-            Log.d(TAG, "Parse error: ${e.message}; attempting partial extraction")
+            Log.w(TAG, "Parse error: ${e.message}; attempting partial extraction")
             val partialPlayers = tryExtractPartialPlayers(cleaned)
             ExtractedPlay(players = partialPlayers, rawText = "⚠️ Incomplete/malformed response (tried to parse anyway):\n$rawText", date = null, isMalformed = true)
         }
