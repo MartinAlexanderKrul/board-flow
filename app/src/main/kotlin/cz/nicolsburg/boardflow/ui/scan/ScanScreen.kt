@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,12 +36,16 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import cz.nicolsburg.boardflow.AppViewModel
+import cz.nicolsburg.boardflow.data.ScanImageQualityAnalyzer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraActionPanel
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraSecondaryAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraPermissionPrompt
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraScene
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -85,6 +90,10 @@ fun ScanScreen(
     // CameraX image capture use-case
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
     var pendingPhoto by remember { mutableStateOf<File?>(null) }
+    var qualityWarning by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(pendingPhoto) { qualityWarning = false }
 
     val onEnterManually: () -> Unit = {
         viewModel.setExtractedPlayManual()
@@ -184,29 +193,77 @@ fun ScanScreen(
                                             .fillMaxWidth()
                                             .heightIn(min = 220.dp, max = 360.dp)
                                     )
-                                    Text(
-                                        "Retake if the sheet is cropped or blurry.\nUse photo to extract scores.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        BoardFlowOutlinedButton(
-                                            onClick = { pendingPhoto = null },
-                                            modifier = Modifier.weight(1f)
+                                    if (qualityWarning) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
-                                            Text("Retake")
+                                            Icon(
+                                                Icons.Default.Warning,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Text(
+                                                "This scan may be hard to read.",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
                                         }
-                                        BoardFlowButton(
-                                            onClick = {
-                                                viewModel.extractScores(file)
-                                                pendingPhoto = null
-                                            },
-                                            modifier = Modifier.weight(1f)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
-                                            Text("Use Photo")
+                                            BoardFlowOutlinedButton(
+                                                onClick = { pendingPhoto = null },
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text("Retake")
+                                            }
+                                            BoardFlowButton(
+                                                onClick = {
+                                                    viewModel.extractScores(file)
+                                                    pendingPhoto = null
+                                                },
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text("Use anyway")
+                                            }
+                                        }
+                                    } else {
+                                        Text(
+                                            "Retake if the sheet is cropped or blurry.\nUse photo to extract scores.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            BoardFlowOutlinedButton(
+                                                onClick = { pendingPhoto = null },
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text("Retake")
+                                            }
+                                            BoardFlowButton(
+                                                onClick = {
+                                                    coroutineScope.launch {
+                                                        val result = withContext(Dispatchers.IO) {
+                                                            ScanImageQualityAnalyzer.analyze(file)
+                                                        }
+                                                        if (result.isAcceptable) {
+                                                            viewModel.extractScores(file)
+                                                            pendingPhoto = null
+                                                        } else {
+                                                            qualityWarning = true
+                                                        }
+                                                    }
+                                                },
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text("Use Photo")
+                                            }
                                         }
                                     }
                                 }

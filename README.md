@@ -15,6 +15,7 @@ BoardFlow combines several related workflows in one app:
 - post saved local plays later from History via an outbox-style "Unposted plays" section
 - scan a score sheet photo and extract players / scores with Gemini
 - AI game recognition from scan: auto-identify the game from score sheet layout using saved recognition templates; auto-switch when confidence is high enough, or present a ranked suggestion banner for the user to confirm
+- AI player recognition from scan: scanned player names are auto-resolved to roster players using saved hints, then aliases, then fuzzy matching; ambiguous hints are not auto-applied; confirmed mappings are saved as hints after each successful play log
 - launch Quick Scan directly from the home-screen widget
 - manage a saved player roster with aliases and optional BGG usernames
 - review play history, aggregate stats, and saved-player activity
@@ -59,6 +60,7 @@ Notable behavior:
 - if AI recognition identifies the wrong game, the user can tap "Choose another game" from the scan result banner; the app enters quick scan correction mode (`_quickScanCorrectionMode`), preserves the extracted players/scores, navigates to NewPlayScreen for re-selection, then returns to LogPlay with all data intact
 - player rows are keyed UI items with shared editing UI between log and edit flows
 - matched roster players are explicit; non-exact fuzzy matches require user confirmation
+- scanned player names are resolved at `initEditablePlayers` time using: (1) saved `PlayerRecognitionHint` entries with confidence ≥ 0.70, (2) exact alias match — fuzzy matches are not auto-applied; hints are saved on successful play log when the original scanned name differs from the final resolved display name
 - plays support quantity (multi-game sessions), incomplete flag, and nowInStats toggle
 - expansions / sibling titles are detected from name patterns and shown alongside the base game
 
@@ -167,6 +169,7 @@ Behavior:
 - import backup JSON
 - clear cached collection data
 - AI section shows saved recognition template count; templates can be viewed (tap), edited or deleted (long press), and bulk-cleared with confirmation
+- AI section shows saved player recognition hint count; hints can be bulk-cleared with confirmation
 
 ## Data Model And Storage
 
@@ -196,6 +199,7 @@ It stores:
 - sleeve exclusion list (game IDs excluded from sleeve display)
 - per-game insight key cache
 - AI game recognition templates (`GameRecognitionHint` list: normalized titles, category fingerprints, confirmation count)
+- AI player recognition hints (`PlayerRecognitionHint` list: normalized scanned name, confirmed roster player ID, display name, timesConfirmed, lastConfirmedAt)
 
 ### Import / Export
 
@@ -249,6 +253,7 @@ High-level ownership:
   - manual unposted play outbox (per-play and bulk)
   - AI extraction (Gemini) handoff and result handling
   - game recognition engine (`GameRecognitionEngine`) and hint management (save, delete, replace, clear)
+  - player recognition engine (`PlayerRecognitionEngine`) and hint management (save on successful log, clear); resolves scanned names to roster players at `initEditablePlayers` time
   - session context persistence (active game / players / location)
   - record moment detection (first win, new high score, win streak)
   - expansion / game-relation detection

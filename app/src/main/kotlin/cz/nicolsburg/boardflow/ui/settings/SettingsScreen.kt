@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -153,6 +154,9 @@ fun SettingsScreen(
     var showClearTemplatesConfirm by remember { mutableStateOf(false) }
     var clearTemplatesStatus by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var showTemplatesDialog by remember { mutableStateOf(false) }
+    var playerHintCount by remember { mutableStateOf(viewModel.getPlayerRecognitionHintCount()) }
+    var showClearPlayerHintsConfirm by remember { mutableStateOf(false) }
+    var clearPlayerHintsStatus by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     val hasCollection = cachedCollection.isNotEmpty()
 
     val listState = rememberLazyListState()
@@ -253,6 +257,23 @@ fun SettingsScreen(
                 clearTemplatesStatus = true to "Recognition templates cleared."
             },
             onDismiss = { showClearTemplatesConfirm = false }
+        )
+    }
+
+    if (showClearPlayerHintsConfirm) {
+        BoardFlowConfirmationDialog(
+            title = "Clear player recognition hints?",
+            message = "This removes all saved scan-name-to-player mappings. Future scans will rely on aliases and fuzzy matching until hints are re-learned.",
+            confirmLabel = "Clear hints",
+            dismissLabel = "Cancel",
+            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
+            onConfirm = {
+                showClearPlayerHintsConfirm = false
+                viewModel.clearPlayerRecognitionHints()
+                playerHintCount = 0
+                clearPlayerHintsStatus = true to "Player recognition hints cleared."
+            },
+            onDismiss = { showClearPlayerHintsConfirm = false }
         )
     }
 
@@ -721,6 +742,35 @@ fun SettingsScreen(
                                 viewModel = viewModel,
                                 onDismiss = { showTemplatesDialog = false },
                                 onTemplatesChanged = { newCount -> templateCount = newCount }
+                            )
+                        }
+                    }
+                }
+
+                item {
+                    SettingsCard(
+                        icon = Icons.Default.Person,
+                        title = "Player Recognition Hints",
+                        subtitle = "Learned scan-name-to-player mappings that pre-fill roster players from scan output."
+                    ) {
+                        Text(
+                            if (playerHintCount == 0) "No hints saved yet."
+                            else "$playerHintCount player hint${if (playerHintCount == 1) "" else "s"} saved.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        BoardFlowOutlinedButton(
+                            onClick = { showClearPlayerHintsConfirm = true },
+                            enabled = playerHintCount > 0,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Clear player recognition hints")
+                        }
+                        clearPlayerHintsStatus?.let { (success, message) ->
+                            Text(
+                                message,
+                                color = if (success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }

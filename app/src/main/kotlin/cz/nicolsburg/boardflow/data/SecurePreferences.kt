@@ -7,6 +7,7 @@ import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.GameRecognitionHint
+import cz.nicolsburg.boardflow.model.PlayerRecognitionHint
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import org.json.JSONArray
@@ -332,6 +333,55 @@ class SecurePreferences(context: Context) {
         prefs.edit().remove(KEY_GAME_RECOGNITION_HINTS).apply()
     }
 
+    // --- Player recognition hints ---
+    fun savePlayerRecognitionHint(hint: PlayerRecognitionHint) {
+        val existing = loadPlayerRecognitionHints().toMutableList()
+        val idx = existing.indexOfFirst {
+            it.scannedNameNormalized == hint.scannedNameNormalized &&
+            it.confirmedRosterPlayerId == hint.confirmedRosterPlayerId
+        }
+        val merged = if (idx >= 0) {
+            hint.copy(timesConfirmed = existing[idx].timesConfirmed + 1)
+        } else hint
+        if (idx >= 0) existing[idx] = merged else existing.add(merged)
+        prefs.edit().putString(KEY_PLAYER_RECOGNITION_HINTS, serializePlayerHints(existing)).apply()
+    }
+
+    fun loadPlayerRecognitionHints(): List<PlayerRecognitionHint> {
+        val json = prefs.getString(KEY_PLAYER_RECOGNITION_HINTS, "[]") ?: "[]"
+        return try {
+            val array = JSONArray(json)
+            (0 until array.length()).map { i ->
+                val obj = array.getJSONObject(i)
+                PlayerRecognitionHint(
+                    scannedNameNormalized   = obj.getString("scannedNameNormalized"),
+                    confirmedRosterPlayerId = obj.getString("confirmedRosterPlayerId"),
+                    playerDisplayName       = obj.getString("playerDisplayName"),
+                    timesConfirmed          = obj.getInt("timesConfirmed"),
+                    lastConfirmedAt         = obj.getLong("lastConfirmedAt")
+                )
+            }
+        } catch (e: Exception) { emptyList() }
+    }
+
+    fun clearPlayerRecognitionHints() {
+        prefs.edit().remove(KEY_PLAYER_RECOGNITION_HINTS).apply()
+    }
+
+    private fun serializePlayerHints(hints: List<PlayerRecognitionHint>): String {
+        val json = JSONArray()
+        hints.forEach { h ->
+            json.put(JSONObject().apply {
+                put("scannedNameNormalized",   h.scannedNameNormalized)
+                put("confirmedRosterPlayerId", h.confirmedRosterPlayerId)
+                put("playerDisplayName",       h.playerDisplayName)
+                put("timesConfirmed",          h.timesConfirmed)
+                put("lastConfirmedAt",         h.lastConfirmedAt)
+            })
+        }
+        return json.toString()
+    }
+
     // --- Legacy BGG history cache compatibility ---
     fun clearLegacyBggPlayCacheArtifacts() {
         prefs.edit().remove(KEY_BGG_PLAYS_CACHE).remove(KEY_BGG_PLAYS_CACHE_TS).apply()
@@ -460,6 +510,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_SESSION_CONTEXT  = "log_play_session_context"
         private const val KEY_GAME_INSIGHT_PREFIX = "game_insight_last_"
         private const val KEY_LAST_SYNCED_AT      = "last_synced_at"
-        private const val KEY_GAME_RECOGNITION_HINTS = "game_recognition_hints"
+        private const val KEY_GAME_RECOGNITION_HINTS  = "game_recognition_hints"
+        private const val KEY_PLAYER_RECOGNITION_HINTS = "player_recognition_hints"
     }
 }

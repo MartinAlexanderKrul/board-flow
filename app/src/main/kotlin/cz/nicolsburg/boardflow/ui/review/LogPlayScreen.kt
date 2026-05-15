@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -105,7 +106,6 @@ fun LogPlayScreen(
     var focusFirstScore   by remember { mutableStateOf(false) }
     var showNotes         by rememberSaveable { mutableStateOf(false) }
     var collapsedPlayers by rememberSaveable { mutableStateOf<List<Boolean>>(emptyList()) }
-    var previousCompletion by rememberSaveable { mutableStateOf<List<Boolean>>(emptyList()) }
     var playerRowKeys by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
 
     // Post-save card state. Non-null while post-save card is visible.
@@ -181,27 +181,9 @@ fun LogPlayScreen(
         if (collapsedPlayers.size != players.size) {
             collapsedPlayers = List(players.size) { index -> collapsedPlayers.getOrElse(index) { false } }
         }
-        if (previousCompletion.size != players.size) {
-            previousCompletion = List(players.size) { index -> previousCompletion.getOrElse(index) { false } }
-        }
         if (playerRowKeys.size != players.size) {
             playerRowKeys = List(players.size) { index -> playerRowKeys.getOrElse(index) { java.util.UUID.randomUUID().toString() } }
         }
-    }
-
-    LaunchedEffect(players) {
-        val nextCollapsed = collapsedPlayers.toMutableList()
-        val nextCompletion = previousCompletion.toMutableList()
-        players.forEachIndexed { index, player ->
-            val isComplete = player.isReadyToCollapse()
-            val wasComplete = nextCompletion.getOrElse(index) { false }
-            if (isComplete && !wasComplete) {
-                nextCollapsed[index] = true
-            }
-            nextCompletion[index] = isComplete
-        }
-        collapsedPlayers = nextCollapsed
-        previousCompletion = nextCompletion
     }
 
     BackHandler {
@@ -219,10 +201,18 @@ fun LogPlayScreen(
     val totalGames = 1 + additionalGames.size
     var nameFieldFocusIndex by remember { mutableStateOf(-1) }
 
+    // Collapse every card whose player data is complete. Called when the user moves away
+    // from the current player by adding another one.
+    val collapseCompletePlayers: () -> Unit = {
+        collapsedPlayers = players.mapIndexed { i, p ->
+            collapsedPlayers.getOrElse(i) { false } || p.isReadyToCollapse()
+        }
+    }
+
     val addEditablePlayer: () -> Unit = {
         val nextIndex = players.size
+        collapseCompletePlayers()
         collapsedPlayers = collapsedPlayers + false
-        previousCompletion = previousCompletion + false
         playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
         viewModel.addPlayer()
         nameFieldFocusIndex = nextIndex
@@ -428,8 +418,8 @@ fun LogPlayScreen(
                             frequentPlayers = frequentPlayers,
                             recentPlayers = recentPlayers,
                             onAddPlayer = {
+                                collapseCompletePlayers()
                                 collapsedPlayers = collapsedPlayers + false
-                                previousCompletion = previousCompletion + false
                                 playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
                                 viewModel.addPlayerFromRoster(it)
                             }
@@ -455,9 +445,6 @@ fun LogPlayScreen(
                         onRemove = {
                             if (index < collapsedPlayers.size) {
                                 collapsedPlayers = collapsedPlayers.toMutableList().also { it.removeAt(index) }
-                            }
-                            if (index < previousCompletion.size) {
-                                previousCompletion = previousCompletion.toMutableList().also { it.removeAt(index) }
                             }
                             if (index < playerRowKeys.size) {
                                 playerRowKeys = playerRowKeys.toMutableList().also { it.removeAt(index) }
@@ -1448,6 +1435,9 @@ private fun GameSuggestionBanner(
 // ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalLayoutApi::class)
+private const val RELATED_GAMES_INITIAL_LIMIT = 6
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RelatedGamesBanner(
     relations: GameRelations,
@@ -1460,7 +1450,9 @@ private fun RelatedGamesBanner(
     val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
     val label = if (relations.isExpansion) "Expansion - also post for base game?"
                 else "Also post for an expansion?"
-
+    val hasOverflow = relatedGames.size > RELATED_GAMES_INITIAL_LIMIT
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val visibleGames = if (!hasOverflow || expanded) relatedGames else relatedGames.take(RELATED_GAMES_INITIAL_LIMIT)
     val anySelected = relatedGames.any { game -> additionalGames.any { it.id == game.id } }
 
     Surface(
@@ -1470,7 +1462,9 @@ private fun RelatedGamesBanner(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
@@ -1500,7 +1494,7 @@ private fun RelatedGamesBanner(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement   = Arrangement.spacedBy(4.dp)
             ) {
-                relatedGames.take(6).forEach { game ->
+                visibleGames.forEach { game ->
                     val selected = additionalGames.any { it.id == game.id }
                     FilterChip(
                         selected = selected,
@@ -1508,12 +1502,24 @@ private fun RelatedGamesBanner(
                         label    = { Text(game.name, style = MaterialTheme.typography.labelMedium) }
                     )
                 }
-                if (relatedGames.size > 6) {
+            }
+
+            if (hasOverflow) {
+                TextButton(
+                    onClick = { expanded = !expanded },
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    modifier = Modifier.height(24.dp)
+                ) {
+                    Icon(
+                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
                     Text(
-                        "& ${relatedGames.size - 6} more",
-                        style    = MaterialTheme.typography.labelSmall,
-                        color    = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                        modifier = Modifier.align(Alignment.CenterVertically)
+                        if (expanded) "Show less"
+                        else "Show all (${relatedGames.size})",
+                        style = MaterialTheme.typography.labelSmall
                     )
                 }
             }

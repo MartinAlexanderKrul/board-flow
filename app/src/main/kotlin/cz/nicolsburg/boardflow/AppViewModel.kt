@@ -7,11 +7,13 @@ import androidx.lifecycle.viewModelScope
 import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.core.di.AppContainer
 import cz.nicolsburg.boardflow.data.GameRecognitionEngine
+import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.ExtractedPlay
 import cz.nicolsburg.boardflow.model.GameCandidate
 import cz.nicolsburg.boardflow.model.GameRecognitionHint
+import cz.nicolsburg.boardflow.model.PlayerRecognitionHint
 import cz.nicolsburg.boardflow.model.ScanRecognitionResult
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.GameRelations
@@ -447,10 +449,23 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // --- Review / edit ---
     private val _editablePlayers = MutableStateFlow<List<PlayerResult>>(emptyList())
     val editablePlayers: StateFlow<List<PlayerResult>> = _editablePlayers.asStateFlow()
+    // Raw scanned names recorded at init time; used to build player hints on successful log.
+    private var _originalScannedNames: List<String> = emptyList()
 
-    fun initEditablePlayers(players: List<PlayerResult>) { _editablePlayers.value = players.toMutableList() }
+    fun initEditablePlayers(players: List<PlayerResult>) {
+        _originalScannedNames = players.map { it.name }
+        val hints = prefs.loadPlayerRecognitionHints()
+        val roster = _players.value
+        val resolved = players.map { pr ->
+            val match = PlayerRecognitionEngine.resolve(pr.name, roster, hints)
+            if (match != null && match.confidence >= 0.70f && match.source != "fuzzy") {
+                pr.copy(name = match.player.displayName)
+            } else pr
+        }
+        _editablePlayers.value = resolved.toMutableList()
+    }
     fun updatePlayer(index: Int, updated: PlayerResult) { _editablePlayers.value = _editablePlayers.value.toMutableList().also { it[index] = updated } }
-    fun addPlayer() { _editablePlayers.value = _editablePlayers.value + PlayerResult("", "0", false) }
+    fun addPlayer() { _editablePlayers.value = _editablePlayers.value + PlayerResult("", "", false) }
     fun removePlayer(index: Int) { _editablePlayers.value = _editablePlayers.value.toMutableList().also { it.removeAt(index) } }
 
     // --- Player roster ---
@@ -743,6 +758,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 }
                 prefs.addRecentGame(game)
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+                savePlayerHintsFromCurrentPlay()
                 _logPlayHasUnsavedChanges.value = false
                 onSuccess()
             }
@@ -821,6 +837,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     if (locallySavedExtras.isNotEmpty()) {
                         _postResult.value = "Logged main play. Saved ${locallySavedExtras.size} extra game(s) locally for later BGG sync."
                     }
+                    savePlayerHintsFromCurrentPlay()
                     _logPlayHasUnsavedChanges.value = false
                     _postLoading.value = false
                     onSuccess()
@@ -1060,6 +1077,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _scanError.value = null
         _gameCandidates.value = emptyList()
         _scanRecognitionResult.value = null
+        _originalScannedNames = emptyList()
         clearQuickScanCorrectionMode("log play flow cleared")
     }
 
@@ -1324,6 +1342,38 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    private fun savePlayerHintsFromCurrentPlay() {
+        val originals = _originalScannedNames
+        if (originals.isEmpty()) return
+        val finalPlayers = _editablePlayers.value
+        val now = System.currentTimeMillis()
+        finalPlayers.forEachIndexed { i, pr ->
+            val originalName = originals.getOrNull(i) ?: return@forEachIndexed
+            val rosterPlayer = resolveRosterPlayer(pr.name) ?: return@forEachIndexed
+            val normalizedOriginal = normalizeForRecognition(originalName)
+            val normalizedFinal = normalizeForRecognition(rosterPlayer.displayName)
+            if (normalizedOriginal != normalizedFinal) {
+                val hint = PlayerRecognitionHint(
+                    scannedNameNormalized   = normalizedOriginal,
+                    confirmedRosterPlayerId = rosterPlayer.id,
+                    playerDisplayName       = rosterPlayer.displayName,
+                    timesConfirmed          = 1,
+                    lastConfirmedAt         = now
+                )
+                prefs.savePlayerRecognitionHint(hint)
+                Log.d("PlayerRecognition", "saved hint '${originalName}' -> '${rosterPlayer.displayName}'")
+            }
+        }
+        _originalScannedNames = emptyList()
+    }
+
+    fun getPlayerRecognitionHintCount(): Int = prefs.loadPlayerRecognitionHints().size
+
+    fun clearPlayerRecognitionHints() {
+        prefs.clearPlayerRecognitionHints()
+        Log.d("PlayerRecognition", "all player recognition hints cleared")
+    }
+
 }
 
 private fun mergeHistorySources(local: List<LoggedPlay>, remote: List<LoggedPlay>): List<LoggedPlay> {
@@ -1429,17 +1479,49 @@ private fun String.isLikelyLocalUuid(): Boolean {
 
 private fun findRelatedGames(game: BggGame, collection: List<BggGame>): GameRelations {
     val name = game.name.trim()
-    fun separatorIndex(s: String): Int? = listOf(s.indexOf(':').takeIf { it > 0 }, s.indexOf(" \u2013 ").takeIf { it > 0 }, s.indexOf(" \u2014 ").takeIf { it > 0 }, s.indexOf(" - ").takeIf { it > 0 }).filterNotNull().minOrNull()
-    fun rootOf(s: String) = separatorIndex(s)?.let { s.substring(0, it).trim() } ?: s.trim()
+    fun separatorIndex(s: String): Int? = listOf(
+        s.indexOf(':').takeIf { it > 0 },
+        s.indexOf(" \u2013 ").takeIf { it > 0 },
+        s.indexOf(" \u2014 ").takeIf { it > 0 },
+        s.indexOf(" - ").takeIf { it > 0 }
+    ).filterNotNull().minOrNull()
+
+    // True when `candidate` is an expansion of `root` \u2014 either via separator ("Root: Sub")
+    // or via space-separated prefix ("Root Sub" where Sub is not the root itself).
+    fun isExpansionOf(candidate: String, root: String): Boolean {
+        val c = candidate.trim(); val r = root.trim()
+        if (c.equals(r, ignoreCase = true)) return false
+        val sep = separatorIndex(c)
+        return if (sep != null) c.substring(0, sep).trim().equals(r, ignoreCase = true)
+        else c.lowercase().startsWith(r.lowercase() + " ")
+    }
+
     val mySepIdx = separatorIndex(name)
     return if (mySepIdx != null) {
+        // Separator present \u2014 this is an expansion.
         val root = name.substring(0, mySepIdx).trim()
-        val baseGames = collection.filter { other -> other.id != game.id && separatorIndex(other.name.trim()) == null && other.name.trim().equals(root, ignoreCase = true) }
-        val siblings = collection.filter { other -> other.id != game.id && separatorIndex(other.name.trim()) != null && rootOf(other.name).equals(root, ignoreCase = true) }
+        val baseGames = collection.filter { other ->
+            other.id != game.id && separatorIndex(other.name.trim()) == null &&
+            other.name.trim().equals(root, ignoreCase = true)
+        }
+        val siblings = collection.filter { other -> other.id != game.id && isExpansionOf(other.name, root) }
         GameRelations(isExpansion = true, baseGames = baseGames, expansions = siblings)
     } else {
-        val expansions = collection.filter { other -> other.id != game.id && rootOf(other.name).equals(name, ignoreCase = true) }
-        GameRelations(isExpansion = false, baseGames = emptyList(), expansions = expansions)
+        // No separator \u2014 could be a base game or a space-separated expansion ("Wingspan Expansion").
+        val lowerName = name.lowercase()
+        val possibleBase = collection.firstOrNull { other ->
+            other.id != game.id && separatorIndex(other.name.trim()) == null &&
+            lowerName.startsWith(other.name.trim().lowercase() + " ")
+        }
+        if (possibleBase != null) {
+            // Space-separated expansion detected.
+            val siblings = collection.filter { other -> other.id != game.id && isExpansionOf(other.name, possibleBase.name) }
+            GameRelations(isExpansion = true, baseGames = listOf(possibleBase), expansions = siblings)
+        } else {
+            // Base game \u2014 find all expansions (separator-based and space-separated).
+            val expansions = collection.filter { other -> other.id != game.id && isExpansionOf(other.name, name) }
+            GameRelations(isExpansion = false, baseGames = emptyList(), expansions = expansions)
+        }
     }
 }
 

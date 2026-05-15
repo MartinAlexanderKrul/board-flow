@@ -36,12 +36,16 @@ import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.TextStyle
@@ -73,6 +77,7 @@ fun PlayerResultEditorCard(
 ) {
     val scoreFocusRequester = remember { FocusRequester() }
     val nameFocusRequester = remember { FocusRequester() }
+    var nameFocused by remember { mutableStateOf(false) }
     val exactMatch = remember(rosterPlayers, player.name) { rosterPlayers.exactPlayerMatch(player.name) }
     val suggestedMatches = remember(rosterPlayers, player.name) {
         rosterPlayers.playerMatchSuggestions(player.name).filter { it.id != exactMatch?.id }
@@ -86,9 +91,10 @@ fun PlayerResultEditorCard(
         }
     }
 
-    LaunchedEffect(exactMatch?.id) {
+    // Only rename the field when the user is not actively typing in it.
+    LaunchedEffect(exactMatch?.id, nameFocused) {
         val match = exactMatch ?: return@LaunchedEffect
-        if (player.name.trim() != match.displayName) {
+        if (!nameFocused && player.name.trim() != match.displayName) {
             onUpdate(player.copy(name = match.displayName))
         }
     }
@@ -187,6 +193,7 @@ fun PlayerResultEditorCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .focusRequester(nameFocusRequester)
+                                .onFocusChanged { nameFocused = it.isFocused }
                         )
                     }
 
@@ -221,11 +228,14 @@ fun PlayerResultEditorCard(
                     }
                 }
 
-                if (suggestedMatches.isNotEmpty()) {
+                if (exactMatch != null || suggestedMatches.isNotEmpty()) {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
+                        if (exactMatch != null) {
+                            MatchedPlayerChip(exactMatch.displayName)
+                        }
                         suggestedMatches.forEach { match ->
                             SuggestionChip(
                                 onClick = { onUpdate(player.copy(name = match.displayName)) },
@@ -336,32 +346,23 @@ private fun WinnerChip(
 
 @Composable
 private fun MatchedPlayerChip(name: String) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    SuggestionChip(
+        onClick = {},
+        label = { Text("Matched $name", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false) },
+        icon = {
             Icon(
                 Icons.Default.Check,
                 contentDescription = null,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            Text(
-                "Matched $name",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                softWrap = false
-            )
-        }
-    }
+        },
+        colors = SuggestionChipDefaults.suggestionChipColors(
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+            labelColor = MaterialTheme.colorScheme.primary
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+    )
 }
 
 @Composable

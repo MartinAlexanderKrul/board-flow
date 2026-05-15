@@ -230,6 +230,14 @@ sealed class RecordMoment {
         }
 }
 
+data class PlayerRecognitionHint(
+    val scannedNameNormalized: String,
+    val confirmedRosterPlayerId: String,
+    val playerDisplayName: String,
+    val timesConfirmed: Int,
+    val lastConfirmedAt: Long
+)
+
 data class GameRecognitionHint(
     val gameObjectId: String,
     val gameName: String,

@@ -85,6 +85,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - AI extraction handoff into review; Gemini model cycling
   - game recognition: `GameRecognitionEngine` ranks candidates from the local collection; confirmed scans saved as `GameRecognitionHint`; two autoswitch gates (TITLE_GATE, TEMPLATE_CATEGORY_GATE)
   - recognition hint management: `saveGameRecognitionHint`, `deleteGameRecognitionHint`, `replaceGameRecognitionHint`, `clearGameRecognitionHints`
+  - player recognition: `PlayerRecognitionEngine` resolves scanned names to roster players; `initEditablePlayers` applies hints (confidence ≥ 0.70) and alias matches; `savePlayerHintsFromCurrentPlay` persists mappings on successful log; `clearPlayerRecognitionHints` exposed for Settings
   - `pendingWidgetQuickScan` StateFlow consumed by AppShell to navigate to scan on widget tap
   - editable log state integration (shared between log and edit flows)
   - roster and player alias management; fuzzy matching with Levenshtein distance
@@ -121,7 +122,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `BggPlaySync.kt` -- top-level BGG play cache refresh function
   - `CsvParser.kt` -- CSV row parsing for sync
 - `model/`
-  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, `GameRecognitionHint`, `GameCandidate`, ...)
+  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, `GameRecognitionHint`, `PlayerRecognitionHint`, `GameCandidate`, ...)
   - `SleeveDatabase.kt` -- `SleeveManufacturer` enum, `SleeveEntry`, `SleeveDatabase` object
 - `ui/`
   - screens and shared Compose UI helpers
@@ -154,6 +155,7 @@ It stores:
 - sleeve exclusion list (game IDs)
 - per-game insight key cache
 - AI recognition templates (`game_recognition_hints` key; JSON array of `GameRecognitionHint` objects)
+- AI player recognition hints (`player_recognition_hints` key; JSON array of `PlayerRecognitionHint` objects: scannedNameNormalized, confirmedRosterPlayerId, playerDisplayName, timesConfirmed, lastConfirmedAt)
 
 Do not move live collection/history state back into large JSON blobs in preferences.
 
@@ -322,7 +324,7 @@ The extraction prompt explicitly requests game identification fields alongside p
 
 Debug logging (`TAG = "Gemini"`) covers: start time, per-attempt model and HTTP status, total elapsed time, model fallback switches, and parse results.
 
-#### Hint Lifecycle
+#### Hint Lifecycle (Game)
 
 - A `GameRecognitionHint` stores the game's `objectId`, normalized title strings, normalized scoring category strings, `confirmedAt` timestamp, and `timesConfirmed` count
 - `SecurePreferences.saveGameRecognitionHint()` merges with any existing hint for the same game (accumulates titles and categories, increments counter)
@@ -330,6 +332,22 @@ Debug logging (`TAG = "Gemini"`) covers: start time, per-attempt model and HTTP 
 - `deleteGameRecognitionHint(gameObjectId)` removes one entry; `clearGameRecognitionHints()` removes all
 - Hints are included in backup export/import (format v3 `recognitionHints` array; import bulk-replaces)
 - Settings > AI shows the hint count, allows viewing (tap), editing categories or deleting (long press), and bulk clearing with confirmation
+
+### AI Player Recognition (`data/PlayerRecognitionEngine.kt`)
+
+`PlayerRecognitionEngine` (stateless object) resolves a raw scanned player name to a roster `Player` using a three-tier lookup:
+
+1. **Saved hints** (`PlayerRecognitionHint`) — keyed by `scannedNameNormalized`; confidence = `0.70 + timesConfirmed * 0.05` capped at `0.95`; if two hints for the same scanned name point to different players with close `timesConfirmed` (second ≥ half of first), the result is flagged ambiguous (confidence 0.55)
+2. **Exact alias / display name** — case-insensitive; confidence 1.0
+3. **Fuzzy (Levenshtein)** — threshold = `max(2, name.length / 3)`; confidence = `1 - dist / (name.length + 1)`
+
+`AppViewModel.initEditablePlayers()` applies resolution for each scan-extracted player: if match confidence ≥ 0.70 and source ≠ "fuzzy", the scanned name is replaced with `player.displayName`. Fuzzy matches are not auto-applied. Raw scanned names are stored in `_originalScannedNames`.
+
+`AppViewModel.savePlayerHintsFromCurrentPlay()` is called on both success paths in `postPlay`. It compares each final editable player name against its original scanned name; for any pair where a roster player is found for the final name and `normalizeForRecognition(originalScanned) ≠ normalizeForRecognition(rosterDisplayName)`, a `PlayerRecognitionHint` is saved (or incremented via `savePlayerRecognitionHint`).
+
+`SecurePreferences.savePlayerRecognitionHint()` upserts by `(scannedNameNormalized, confirmedRosterPlayerId)` pair, incrementing `timesConfirmed` on collision.
+
+Settings > AI section shows the count of saved player hints and a "Clear player recognition hints" action.
 
 ### QR Play Sharing
 
