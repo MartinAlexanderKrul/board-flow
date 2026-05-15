@@ -407,7 +407,7 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
                     "Could not parse sleeve data from $url snippet=${lastHtmlSnippet ?: ""}"
                 )
             } catch (e: Exception) {
-                Log.i(TAG, "BGG sleeves fetch failed for $url: ${e.message}")
+                Log.w(TAG, "BGG sleeves fetch failed for $url: ${e.message}")
                 lastFailure = e
             }
         }
@@ -447,7 +447,7 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
             }
             return parsed
         } catch (e: Exception) {
-            Log.i(TAG, "BGG sleeve API failed for gameId=$gameId: ${e.message}")
+            Log.w(TAG, "BGG sleeve API failed for gameId=$gameId: ${e.message}")
             null
         }
     }
@@ -500,7 +500,7 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 val snippet = response.body?.string().orEmpty().take(400).replace(Regex("\\s+"), " ")
-                Log.i(TAG, "BGG sleeves HTTP ${response.code} for $url body=$snippet")
+                Log.w(TAG, "BGG sleeves HTTP ${response.code} for $url body=$snippet")
                 throw RuntimeException("BGG sleeves page HTTP ${response.code}")
             }
             return response.body?.string().orEmpty()
@@ -518,7 +518,7 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 val snippet = response.body?.string().orEmpty().take(400).replace(Regex("\\s+"), " ")
-                Log.i(TAG, "BGG sleeve API HTTP ${response.code} for $url body=$snippet")
+                Log.w(TAG, "BGG sleeve API HTTP ${response.code} for $url body=$snippet")
                 throw RuntimeException("BGG sleeve API HTTP ${response.code}")
             }
             return response.body?.string().orEmpty()

@@ -25,6 +25,10 @@ import java.time.LocalDate
 
 class BggRepository {
 
+    companion object {
+        private const val TAG = "BggRepository"
+    }
+
     private val cookieStore = mutableMapOf<String, MutableList<Cookie>>()
 
     private val cookieJar = object : CookieJar {
@@ -43,7 +47,7 @@ class BggRepository {
 
     private val client = OkHttpClient.Builder()
         .cookieJar(cookieJar)
-        .addInterceptor(HttpLoggingInterceptor { Log.d("BggRepository", it.replace('\n', ' ')) }.apply {
+        .addInterceptor(HttpLoggingInterceptor { Log.d(TAG, it.replace('\n', ' ')) }.apply {
             level = HttpLoggingInterceptor.Level.BODY
         })
         .build()
@@ -118,7 +122,7 @@ class BggRepository {
     }
 
     suspend fun login(credentials: BggCredentials): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<Unit> {
             val json = JSONObject()
                 .put(
                     "credentials",
@@ -136,6 +140,7 @@ class BggRepository {
             if (!response.isSuccessful) throw Exception("Login failed: HTTP ${response.code}")
             val hasCookies = cookieStore["boardgamegeek.com"]?.any { it.name == "SessionID" } == true
             if (!hasCookies) throw Exception("Login failed: no session cookie received")
+            Log.i(TAG, "Login success for ${credentials.username}")
         }
     }
 
@@ -189,6 +194,7 @@ class BggRepository {
             if (savedPlayId == null && !looksLikePlaySaveAccepted(responseBody)) {
                 throw Exception("Unexpected BGG response: $responseBody")
             }
+            Log.i(TAG, "Play logged: gameId=$gameId date=$date players=${players.size} savedPlayId=$savedPlayId")
             savedPlayId
         }
     }
@@ -205,7 +211,7 @@ class BggRepository {
 
             val initialBody = executeGeekplayPost(deleteRequest)
             Log.i(
-                "BggRepository",
+                TAG,
                 "Delete play confirmation step: body=${initialBody.take(200)}"
             )
 
@@ -229,7 +235,7 @@ class BggRepository {
 
             val confirmBody = executeGeekplayPost(confirmFields)
             Log.i(
-                "BggRepository",
+                TAG,
                 "Delete play confirm step: body=${confirmBody.take(200)}"
             )
             val accepted = looksLikeDeleteAccepted(confirmBody)

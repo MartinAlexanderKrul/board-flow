@@ -12,6 +12,8 @@ data class PlayerMatch(
 
 object PlayerRecognitionEngine {
 
+    private const val TAG = "PlayerRecognition"
+
     /**
      * Resolve a scanned player name against the roster using hints, then aliases, then fuzzy.
      * Fuzzy matches are returned with low confidence so callers can decide whether to auto-apply.
@@ -39,7 +41,7 @@ object PlayerRecognitionEngine {
                     second.timesConfirmed * 2 >= best.timesConfirmed
                 val confidence = if (ambiguous) 0.55f
                 else minOf(0.95f, 0.70f + best.timesConfirmed * 0.05f)
-                Log.d("PlayerRecognition", "hint '$scannedName' -> '${player.displayName}' conf=$confidence ambiguous=$ambiguous")
+                Log.d(TAG, "hint '$scannedName' -> '${player.displayName}' conf=$confidence ambiguous=$ambiguous")
                 return PlayerMatch(player, confidence, "hint")
             }
         }
@@ -49,7 +51,7 @@ object PlayerRecognitionEngine {
             (listOf(p.displayName) + p.aliases).any { it.lowercase().trim() == lower }
         }
         if (exactMatch != null) {
-            Log.d("PlayerRecognition", "alias '$scannedName' -> '${exactMatch.displayName}'")
+            Log.d(TAG, "alias '$scannedName' -> '${exactMatch.displayName}'")
             return PlayerMatch(exactMatch, 1.0f, "alias")
         }
 
@@ -63,11 +65,11 @@ object PlayerRecognitionEngine {
         if (fuzzy.isNotEmpty()) {
             val (p, dist) = fuzzy.first()
             val confidence = 1f - dist.toFloat() / (lower.length + 1)
-            Log.d("PlayerRecognition", "fuzzy '$scannedName' -> '${p.displayName}' dist=$dist conf=$confidence")
+            Log.d(TAG, "fuzzy '$scannedName' -> '${p.displayName}' dist=$dist conf=$confidence")
             return PlayerMatch(p, confidence, "fuzzy")
         }
 
-        Log.d("PlayerRecognition", "no match '$scannedName'")
+        Log.d(TAG, "no match '$scannedName'")
         return null
     }
 
