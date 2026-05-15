@@ -14,7 +14,7 @@ import androidx.core.content.res.ResourcesCompat
 import cz.nicolsburg.boardflow.MainActivity
 import cz.nicolsburg.boardflow.R
 
-class QuickScanWidget : AppWidgetProvider() {
+class LauncherWidget : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -32,7 +32,7 @@ class QuickScanWidget : AppWidgetProvider() {
         appWidgetId: Int
     ) {
         val launchIntent = Intent(context, MainActivity::class.java).apply {
-            action = ACTION_QUICK_SCAN
+            action = QuickScanWidget.ACTION_QUICK_SCAN
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val pendingIntent = PendingIntent.getActivity(
@@ -41,15 +41,11 @@ class QuickScanWidget : AppWidgetProvider() {
             launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val views = RemoteViews(context.packageName, R.layout.widget_quick_scan)
-        views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+        val views = RemoteViews(context.packageName, R.layout.widget_launcher)
+        views.setOnClickPendingIntent(R.id.widget_launcher_root, pendingIntent)
         views.setImageViewBitmap(
-            R.id.widget_label_top,
-            renderTextBitmap(context, context.getString(R.string.widget_label_top))
-        )
-        views.setImageViewBitmap(
-            R.id.widget_label_bottom,
-            renderTextBitmap(context, context.getString(R.string.widget_label_bottom))
+            R.id.widget_launcher_label,
+            renderTextBitmap(context, context.getString(R.string.widget_launcher_label))
         )
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
@@ -59,8 +55,8 @@ class QuickScanWidget : AppWidgetProvider() {
         val typeface = ResourcesCompat.getFont(context, R.font.cinzel_decorative_bold)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
-            textSize = 10f * density
-            color = Color.parseColor("#FEB316")
+            textSize = 12f * density
+            color = Color.WHITE
             textAlign = Paint.Align.LEFT
         }
         val fm = paint.fontMetrics
@@ -73,9 +69,5 @@ class QuickScanWidget : AppWidgetProvider() {
         )
         Canvas(bitmap).drawText(text, 0f, -fm.ascent, paint)
         return bitmap
-    }
-
-    companion object {
-        const val ACTION_QUICK_SCAN = "cz.nicolsburg.boardflow.ACTION_QUICK_SCAN"
     }
 }

@@ -18,22 +18,25 @@
         android:paddingRight="6dp">
 
         <ImageView
+            android:id="@+id/widget_label_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@null" />
+
+        <ImageView
             android:layout_width="56dp"
             android:layout_height="56dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
             android:src="@drawable/app_logo"
             android:scaleType="fitCenter"
             android:contentDescription="@null" />
 
-        <TextView
+        <ImageView
+            android:id="@+id/widget_label_bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/widget_quick_scan_label"
-            android:textColor="#FEB316"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:maxLines="1" />
+            android:contentDescription="@null" />
 
     </LinearLayout>
 

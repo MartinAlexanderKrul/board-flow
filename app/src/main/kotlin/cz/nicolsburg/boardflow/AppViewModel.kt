@@ -475,32 +475,42 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 val top = candidates.firstOrNull()
                 val second = candidates.getOrNull(1)
                 val margin = if (top != null && second != null) top.score - second.score else top?.score ?: 0f
-                val condConfidence = geminiConfidence >= 0.95f
                 val condMargin = second == null || margin >= 0.15f
+                val condTitlePresent = !extracted.detectedGameTitle.isNullOrBlank()
 
                 // TITLE_GATE: classic path — title drove the match, high score required.
                 val condTitleScore = top != null && top.score >= 0.90f
-                val condTitlePresent = !extracted.detectedGameTitle.isNullOrBlank()
-                val titleGate = top != null && condConfidence && condTitleScore && condMargin && condTitlePresent
+                // Strong-title lowered threshold: allow 90% Gemini confidence when the local
+                // title match is unambiguous (topScore >= 98%, margin >= 25%).
+                val isStrongTitleMatch = top != null
+                    && top.primarySignal == "title"
+                    && condTitlePresent
+                    && top.score >= 0.98f
+                    && margin >= 0.25f
+                val requiredGeminiConfForTitle = if (isStrongTitleMatch) 0.90f else 0.95f
+                val condConfidenceTitle = geminiConfidence >= requiredGeminiConfForTitle
+                val titleGate = top != null && condConfidenceTitle && condTitleScore && condMargin && condTitlePresent
                     && top.primarySignal != "category-template"
 
                 // TEMPLATE_CATEGORY_GATE: category template drove the match — lower score
                 // threshold compensates for the fact that category-only scores peak at 0.75.
                 val condTemplateScore = top != null && top.score >= 0.75f
                 val condTemplateOverlap = top != null && top.templateOverlap >= 3
-                val templateCategoryGate = top != null && condConfidence && condTemplateScore
+                val condConfidenceTemplate = geminiConfidence >= 0.95f
+                val templateCategoryGate = top != null && condConfidenceTemplate && condTemplateScore
                     && condMargin && condTemplateOverlap
                     && top.primarySignal == "category-template"
 
                 val autoSwitch = titleGate || templateCategoryGate
                 val gateUsed = when {
-                    titleGate            -> "TITLE_GATE"
+                    titleGate            -> if (isStrongTitleMatch) "TITLE_GATE(strong)" else "TITLE_GATE"
                     templateCategoryGate -> "TEMPLATE_CATEGORY_GATE"
                     else                 -> "BLOCKED"
                 }
                 Log.d("AutoSwitch", buildString {
                     append("gate=$gateUsed ")
-                    append("geminiConf=${(geminiConfidence * 100).toInt()}%(need>=95 ok=$condConfidence) ")
+                    val reqPct = if (titleGate || !templateCategoryGate) (requiredGeminiConfForTitle * 100).toInt() else 95
+                    append("geminiConf=${(geminiConfidence * 100).toInt()}%(need>=$reqPct strongTitle=$isStrongTitleMatch ok=${titleGate || templateCategoryGate}) ")
                     append("topScore=${top?.let { (it.score * 100).toInt() } ?: "none"}% ")
                     append("margin=${(margin * 100).toInt()}%(need>=15 ok=$condMargin) ")
                     append("primarySignal=${top?.primarySignal ?: "n/a"} ")
