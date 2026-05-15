@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
@@ -60,6 +62,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.PlayerResultEditorCard
 import java.time.Instant
 import java.time.LocalDate
@@ -183,6 +186,12 @@ fun LogPlayScreen(
         }
         if (playerRowKeys.size != players.size) {
             playerRowKeys = List(players.size) { index -> playerRowKeys.getOrElse(index) { java.util.UUID.randomUUID().toString() } }
+        }
+    }
+
+    LaunchedEffect(extractedPlay) {
+        if (extractedPlay != null && players.isNotEmpty()) {
+            collapsedPlayers = players.map { it.isReadyToCollapse() }
         }
     }
 
@@ -545,7 +554,7 @@ private fun SessionDetailsCard(
     onNowInStatsChange: (Boolean) -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = BoardFlowSurfaceTokens.ContentCardShape,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
@@ -846,9 +855,9 @@ private fun AddPlayerRow(onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
+            .clip(BoardFlowSurfaceTokens.ContentCardShape)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(22.dp),
+        shape = BoardFlowSurfaceTokens.ContentCardShape,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.10f),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
@@ -1324,7 +1333,7 @@ private fun ScanResultBanner(
     }
 
     Surface(
-        shape  = RoundedCornerShape(22.dp),
+        shape  = BoardFlowSurfaceTokens.ContentCardShape,
         color  = if (isSuccess)
             MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
         else
@@ -1484,10 +1493,6 @@ private fun GameSuggestionBanner(
 // Related games banner (unchanged)
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalLayoutApi::class)
-private const val RELATED_GAMES_INITIAL_LIMIT = 6
-
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RelatedGamesBanner(
     relations: GameRelations,
@@ -1500,9 +1505,7 @@ private fun RelatedGamesBanner(
     val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
     val label = if (relations.isExpansion) "Expansion - also post for base game?"
                 else "Also post for an expansion?"
-    val hasOverflow = relatedGames.size > RELATED_GAMES_INITIAL_LIMIT
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val visibleGames = if (!hasOverflow || expanded) relatedGames else relatedGames.take(RELATED_GAMES_INITIAL_LIMIT)
     val anySelected = relatedGames.any { game -> additionalGames.any { it.id == game.id } }
 
     Surface(
@@ -1540,38 +1543,37 @@ private fun RelatedGamesBanner(
                 }
             }
 
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement   = Arrangement.spacedBy(4.dp)
-            ) {
-                visibleGames.forEach { game ->
-                    val selected = additionalGames.any { it.id == game.id }
-                    FilterChip(
-                        selected = selected,
-                        onClick  = { onToggleGame(game) },
-                        label    = { Text(game.name, style = MaterialTheme.typography.labelMedium) }
-                    )
+            if (expanded) {
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement   = Arrangement.spacedBy(4.dp)
+                ) {
+                    relatedGames.forEach { game ->
+                        val selected = additionalGames.any { it.id == game.id }
+                        FilterChip(
+                            selected = selected,
+                            onClick  = { onToggleGame(game) },
+                            label    = { Text(game.name, style = MaterialTheme.typography.labelMedium) }
+                        )
+                    }
                 }
-            }
-
-            if (hasOverflow) {
                 TextButton(
-                    onClick = { expanded = !expanded },
+                    onClick = { expanded = false },
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier.height(24.dp)
                 ) {
-                    Icon(
-                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
+                    Icon(Icons.Default.ExpandLess, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(
-                        if (expanded) "Show less"
-                        else "Show all (${relatedGames.size})",
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                    Text("Show less", style = MaterialTheme.typography.labelSmall)
                 }
+            } else {
+                TwoRowGameChips(
+                    games = relatedGames,
+                    additionalGames = additionalGames,
+                    onToggleGame = onToggleGame,
+                    onExpand = { expanded = true }
+                )
             }
 
             if (anySelected) {
@@ -1581,6 +1583,85 @@ private fun RelatedGamesBanner(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TwoRowGameChips(
+    games: List<BggGame>,
+    additionalGames: List<BggGame>,
+    onToggleGame: (BggGame) -> Unit,
+    onExpand: () -> Unit,
+    horizontalSpacing: Dp = 6.dp,
+    verticalSpacing: Dp = 4.dp
+) {
+    SubcomposeLayout(modifier = Modifier.fillMaxWidth()) { constraints ->
+        val hSpacing = horizontalSpacing.roundToPx()
+        val vSpacing = verticalSpacing.roundToPx()
+        val loose = constraints.copy(minWidth = 0, minHeight = 0, maxHeight = Int.MAX_VALUE)
+
+        // Measure all chips
+        val allPlaceables = games.mapIndexed { i, game ->
+            val selected = additionalGames.any { it.id == game.id }
+            subcompose("chip_$i") {
+                FilterChip(
+                    selected = selected,
+                    onClick  = { onToggleGame(game) },
+                    label    = { Text(game.name, style = MaterialTheme.typography.labelMedium) }
+                )
+            }.first().measure(loose)
+        }
+
+        // Simulate flow layout and find the index where row 3 would begin
+        var curX = 0; var curY = 0; var rowH = 0; var row = 1
+        var cutIndex = allPlaceables.size
+        for ((i, p) in allPlaceables.withIndex()) {
+            if (curX > 0 && curX + hSpacing + p.width > constraints.maxWidth) {
+                curY += rowH + vSpacing; curX = 0; rowH = 0; row++
+            }
+            if (row > 2) { cutIndex = i; break }
+            curX += (if (curX == 0) 0 else hSpacing) + p.width
+            rowH = maxOf(rowH, p.height)
+        }
+
+        val hasOverflow = cutIndex < allPlaceables.size
+
+        // Measure "Show all" button only when there is overflow
+        val showAllPlaceable = if (hasOverflow) {
+            subcompose("showAll") {
+                TextButton(
+                    onClick = onExpand,
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    modifier = Modifier.height(24.dp)
+                ) {
+                    Icon(Icons.Default.ExpandMore, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Show all (${games.size})", style = MaterialTheme.typography.labelSmall)
+                }
+            }.first().measure(loose)
+        } else null
+
+        // Layout rows 1–2 chips
+        curX = 0; curY = 0; rowH = 0
+        val positions = allPlaceables.take(cutIndex).map { p ->
+            if (curX > 0 && curX + hSpacing + p.width > constraints.maxWidth) {
+                curY += rowH + vSpacing; curX = 0; rowH = 0
+            }
+            val pos = curX to curY
+            curX += (if (curX == 0) 0 else hSpacing) + p.width
+            rowH = maxOf(rowH, p.height)
+            pos
+        }
+        val flowHeight = if (allPlaceables.isEmpty()) 0 else curY + rowH
+        val showAllY = flowHeight + (if (showAllPlaceable != null) vSpacing else 0)
+        val totalHeight = (showAllY + (showAllPlaceable?.height ?: 0)).coerceAtLeast(0)
+
+        layout(constraints.maxWidth, totalHeight) {
+            allPlaceables.take(cutIndex).forEachIndexed { i, p ->
+                p.place(positions[i].first, positions[i].second)
+            }
+            showAllPlaceable?.place(0, showAllY)
         }
     }
 }

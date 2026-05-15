@@ -92,7 +92,7 @@ private data class InfoSection(
 
 private object GameDetailTokens {
     val CardPadding = 14.dp
-    val CardCorner = RoundedCornerShape(18.dp)
+    val CardCorner = RoundedCornerShape(16.dp)
     const val CardBorderAlpha = 0.12f
     const val NeutralCardAlpha = 0.04f
     const val FeaturedCardAlpha = 0.045f
@@ -414,7 +414,7 @@ private fun HeaderSection(
     }
 }
 
-// â"€â"€ Your Stats card â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// Your Stats card
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -667,7 +667,7 @@ private fun YourStatsCard(
     }
 }
 
-// â"€â"€ Grouped info block â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// Grouped info block
 
 @Composable
 private fun InfoGroupBlock(sections: List<InfoSection>) {
@@ -708,7 +708,7 @@ private fun InfoGroupBlock(sections: List<InfoSection>) {
     }
 }
 
-// â"€â"€ Sleeves block â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// Sleeves block
 
 @Composable
 private fun SleevesBlock(
@@ -803,7 +803,7 @@ private fun SleevesBlock(
     }
 }
 
-// â"€â"€ Status chip â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// Status chip
 
 @Composable
 private fun StatusChip(
@@ -835,7 +835,7 @@ private fun StatusChip(
     }
 }
 
-// â"€â"€ Detail grid â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// Detail grid
 
 @Composable
 private fun DetailGrid(
@@ -942,7 +942,7 @@ private fun DetailCell(
     }
 }
 
-// â"€â"€ Sleeves expanded content â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// Sleeves expanded content
 
 @Composable
 private fun SleevesSection(
@@ -1222,7 +1222,7 @@ private fun CompactStickyHeader(
     if (alpha <= 0f) return
     Surface(
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f * alpha),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.08f * alpha)),
         modifier = modifier.alpha(alpha)
     ) {
@@ -1266,7 +1266,7 @@ private fun DialogPrimaryActionButton(
     Button(
         onClick = onClick,
         modifier = modifier.heightIn(min = 32.dp),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary

@@ -183,11 +183,11 @@ fun SyncScreen(
     }
 
     if (showSheetModal) {
-        SpreadsheetConnectModal(
+        SpreadsheetConnectDialog(
             currentSheetName = spreadsheetTitle.ifBlank { null },
             onDismiss = { showSheetModal = false },
             onConnect = { input ->
-                val acc = account ?: return@SpreadsheetConnectModal
+                val acc = account ?: return@SpreadsheetConnectDialog
                 showSheetModal = false
                 onSpreadsheetChanged(input)
                 syncViewModel.connectExistingSpreadsheet(acc, input)
@@ -200,7 +200,7 @@ fun SyncScreen(
     }
 
     if (showGoogleModal) {
-        GoogleManageModal(
+        GoogleManageDialog(
             accountEmail = account?.name,
             onDismiss = { showGoogleModal = false },
             onSignIn = { onSignIn(); showGoogleModal = false },
@@ -209,7 +209,7 @@ fun SyncScreen(
     }
 
     if (showBggModal) {
-        BggEditModal(
+        BggEditDialog(
             initialUsername = bggUsername,
             initialPassword = bggPassword,
             onDismiss = { showBggModal = false },
@@ -847,10 +847,10 @@ private fun LogEntryRow(entry: LogEntry) {
     }
 }
 
-// ── Account modals ────────────────────────────────────────────────────────────
+// Account dialogs
 
 @Composable
-private fun GoogleManageModal(
+private fun GoogleManageDialog(
     accountEmail: String?,
     onDismiss: () -> Unit,
     onSignIn: () -> Unit,
@@ -934,7 +934,7 @@ private fun GoogleManageModal(
 }
 
 @Composable
-private fun BggEditModal(
+private fun BggEditDialog(
     initialUsername: String,
     initialPassword: String,
     onDismiss: () -> Unit,

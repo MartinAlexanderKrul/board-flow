@@ -93,7 +93,7 @@ import cz.nicolsburg.boardflow.ui.common.SectionHeader
 import cz.nicolsburg.boardflow.ui.common.clickableRow
 import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import kotlinx.coroutines.flow.collect
-import cz.nicolsburg.boardflow.ui.sync.SpreadsheetConnectModal
+import cz.nicolsburg.boardflow.ui.sync.SpreadsheetConnectDialog
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.SuggestionChip
@@ -275,11 +275,11 @@ fun SettingsScreen(
     }
 
     if (showSheetModal) {
-        SpreadsheetConnectModal(
+        SpreadsheetConnectDialog(
             currentSheetName = spreadsheetTitle.ifBlank { null },
             onDismiss = { showSheetModal = false },
             onConnect = { input ->
-                val acc = googleAccount ?: return@SpreadsheetConnectModal
+                val acc = googleAccount ?: return@SpreadsheetConnectDialog
                 showSheetModal = false
                 syncViewModel.connectExistingSpreadsheet(acc, input)
             },
@@ -885,21 +885,13 @@ private fun RecognitionTemplatesDialog(
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             item {
-                Row(
+                Text(
+                    "Recognition Templates",
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Recognition Templates",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
-                    }
-                }
+                        .padding(top = 16.dp, bottom = 8.dp)
+                )
             }
             item {
                 Text(
@@ -1035,19 +1027,11 @@ private fun EditTemplateDialog(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    hint.gameName,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
-                }
-            }
+            Text(
+                hint.gameName,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth()
+            )
             HorizontalDivider()
             Text(
                 "Scoring categories",

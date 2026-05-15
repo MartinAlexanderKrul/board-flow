@@ -49,7 +49,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -107,6 +106,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowDestructiveButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTonalButton
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
@@ -989,7 +989,7 @@ private fun PendingPlaysCard(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = BoardFlowSurfaceTokens.ContentCardShape,
         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f))
     ) {
@@ -1792,17 +1792,10 @@ private fun PlayDetailsActionsRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        FilledTonalButton(
+        BoardFlowTonalButton(
             onClick = onEdit,
             enabled = enabled,
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.24f),
-                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
-            ),
-            modifier = Modifier.height(42.dp)
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
         ) {
             Icon(
                 Icons.Default.Edit,
@@ -1814,17 +1807,10 @@ private fun PlayDetailsActionsRow(
             Text("Edit", style = MaterialTheme.typography.labelLarge)
         }
 
-        FilledTonalButton(
+        BoardFlowTonalButton(
             onClick = onPlayAgain,
             enabled = enabled,
-            contentPadding = PaddingValues(horizontal = 11.dp, vertical = 0.dp),
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.24f),
-                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
-            ),
-            modifier = Modifier.height(42.dp)
+            contentPadding = PaddingValues(horizontal = 11.dp, vertical = 0.dp)
         ) {
             Icon(
                 Icons.Default.EmojiEvents,
@@ -1960,7 +1946,7 @@ private fun EditPlayDialog(
         ) {
             item {
                 Surface(
-                    shape = RoundedCornerShape(22.dp),
+                    shape = BoardFlowSurfaceTokens.ContentCardShape,
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
                 ) {
@@ -2126,9 +2112,9 @@ private fun EditPlayDialog(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(22.dp))
+                        .clip(BoardFlowSurfaceTokens.ContentCardShape)
                         .clickable(onClick = addPlayer),
-                    shape = RoundedCornerShape(22.dp),
+                    shape = BoardFlowSurfaceTokens.ContentCardShape,
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.10f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.10f))
                 ) {

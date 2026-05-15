@@ -26,7 +26,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 
 @Composable
-fun SpreadsheetConnectModal(
+fun SpreadsheetConnectDialog(
     currentSheetName: String?,
     onDismiss: () -> Unit,
     onConnect: (String) -> Unit,

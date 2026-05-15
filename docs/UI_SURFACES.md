@@ -188,7 +188,7 @@ Source: `ui/settings/SettingsScreen.kt`
 
 - `ScreenTabRow`: Accounts, Appearance, AI, Data sections.
 - `SettingsCard`: `SectionCard` wrapper for settings groups.
-- `SpreadsheetConnectModal`: animated dialog used from Settings for Google Sheet connect/change/create.
+- `SpreadsheetConnectDialog`: `AnimatedDialog` used from Settings for Google Sheet connect/change/create.
 - `BoardFlowConfirmationDialog` titled "Import backup and replace current data?": destructive backup import confirmation.
 - `BoardFlowConfirmationDialog` titled "Sign out of Google?": Google sign-out confirmation.
 - `BoardFlowConfirmationDialog` titled "Clear collection cache?": destructive collection cache clear.
@@ -198,9 +198,9 @@ Source: `ui/settings/SettingsScreen.kt`
 - Sleeve manufacturer picker: `BoardFlowPickerField` + `BoardFlowPickerSheet` over `SleeveManufacturer` entries.
 - Gemini model picker: `BoardFlowPickerField` + `BoardFlowPickerSheet` when models have been discovered; falls back to a plain `OutlinedTextField` for free-text entry before discovery.
 - API key help dialog: `AnimatedDialog` explaining how to get a Gemini API key.
-- `RecognitionTemplatesDialog`: animated dialog listing saved game recognition templates.
+- `RecognitionTemplatesDialog`: `AnimatedDialog` listing saved game recognition templates; title only, no close button (drag-handle dismisses).
 - Recognition template item `DropdownMenu`: long-press menu with Edit and Delete.
-- `EditTemplateDialog`: animated dialog for editing template scoring categories.
+- `EditTemplateDialog`: `AnimatedDialog` for editing template scoring categories; title only, no close button.
 - Category chips: removable `SuggestionChip` entries in template editing.
 - Import/export status text surfaces: inline success/error messages.
 
@@ -211,10 +211,10 @@ Sources: `ui/sync/SyncScreen.kt`, `ui/sync/SpreadsheetModal.kt`
 - `ReadinessHub`: top readiness/status card for Google, BGG, and Sheet setup.
 - Step `SectionCard`s: BGG refresh actions and Google Sheets sync actions.
 - `AdvancedSection`: expandable advanced area with CSV import, Drive folder/QR creation, and save-QR checkbox.
-- `SpreadsheetConnectModal`: animated dialog for connecting or creating a sheet.
-- `GoogleManageModal`: animated dialog for Google sign-in/sign-out management.
-- Nested `BoardFlowConfirmationDialog` titled "Sign out of Google?": shown from Google manage modal.
-- `BggEditModal`: animated dialog for BGG username/password edit.
+- `SpreadsheetConnectDialog`: `AnimatedDialog` for connecting or creating a sheet.
+- `GoogleManageDialog`: `AnimatedDialog` for Google sign-in/sign-out management.
+- Nested `BoardFlowConfirmationDialog` titled "Sign out of Google?": shown from Google manage dialog.
+- `BggEditDialog`: `AnimatedDialog` for BGG username/password edit.
 - `LogBar`: bottom sync status bar, tappable to view details.
 - `LogDialog`: animated dialog with sync summary and raw log entries.
 - `BoardFlowConfirmationDialog` titled "Clear sync log?": destructive clear confirmation.
@@ -236,8 +236,13 @@ These are not custom Compose dialogs, but they open system-owned surfaces:
 ## Maintenance Notes
 
 - Prefer `AnimatedDialog` for custom app dialogs and `BoardFlowConfirmationDialog` for simple confirm/cancel decisions.
+- `AnimatedDialog` provides a drag-handle strip at the top; do not add a redundant X close `IconButton` inside the dialog content.
+- Name `AnimatedDialog`-backed composables with a `Dialog` suffix, not `Modal` (the three Sync dialogs were renamed accordingly).
 - Prefer `BoardFlowModalBottomSheet` for temporary filter panels.
 - Prefer `BoardFlowPickerField` + `BoardFlowPickerSheet` for settings-style single-value pickers; do not add new `ExposedDropdownMenuBox` pickers.
 - Prefer `SectionCard` for repeated list/group cards.
+- Corner-radius families: use `BoardFlowSurfaceTokens.Shape` (12 dp) for standard cards, `BoardFlowSurfaceTokens.ContentCardShape` (16 dp) for prominent feature content surfaces, `BoardFlowActionTokens.ButtonShape` (16 dp) for buttons, and `BoardFlowConfirmationTokens.Shape` (24 dp) for confirmation dialogs. Do not introduce new hardcoded radius values in the 14–22 dp range.
+- Button hierarchy: use `BoardFlowButton` / `BoardFlowPrimaryButton` for primary actions, `BoardFlowSecondaryButton` / `BoardFlowOutlinedButton` for secondary actions, `BoardFlowTonalButton` for compact secondary actions inside cards and dialogs (grey surfaceVariant fill, 42 dp height), `BoardFlowDestructiveButton` for destructive actions. Do not add raw `FilledTonalButton` or `Button` calls without a BoardFlow wrapper.
+- Text separators: use `" · "` as the standard inline-text separator between metadata items; avoid mixing with `" - "` or em-dashes in the same visual context.
 - Avoid adding business logic directly to composables when a surface grows; push state decisions into view models or small UI state models.
 - When adding a new surface, update this file with the trigger, file, and dismissal/confirmation behavior.

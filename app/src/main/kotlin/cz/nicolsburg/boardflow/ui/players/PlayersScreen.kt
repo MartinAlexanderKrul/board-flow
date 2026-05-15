@@ -208,7 +208,7 @@ internal fun PlayerListItem(player: Player, stats: PlayerStats, onTap: () -> Uni
                 }
                 if (infoParts.isNotEmpty()) {
                     Text(
-                        infoParts.joinToString("  -  "),
+                        infoParts.joinToString("  ·  "),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

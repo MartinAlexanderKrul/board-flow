@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -126,6 +127,8 @@ fun SectionHeader(
 object BoardFlowSurfaceTokens {
     val CornerRadius = 12.dp
     val Shape = RoundedCornerShape(CornerRadius)
+    /** Larger rounded shape for prominent feature content surfaces (session cards, play cards, banners). */
+    val ContentCardShape = RoundedCornerShape(16.dp)
     val CardContentPadding = 12.dp
     val FilterControlHeight = 40.dp
     val FilterControlHorizontalPadding = 14.dp
@@ -917,4 +920,34 @@ fun <T> BoardFlowPickerSheet(
         }
         Spacer(Modifier.height(16.dp))
     }
+}
+
+@Composable
+fun BoardFlowTonalButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+    content: @Composable RowScope.() -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "tonalBtnScale")
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier
+            .height(42.dp)
+            .scale(scale),
+        enabled = enabled,
+        shape = BoardFlowActionTokens.ButtonShape,
+        contentPadding = contentPadding,
+        colors = ButtonDefaults.filledTonalButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.24f),
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
+        ),
+        interactionSource = interactionSource,
+        content = content
+    )
 }
