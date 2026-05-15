@@ -505,13 +505,26 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val cache = BggCache(getApplication())
         if (!forceRefresh && cache.exists(credentials.username)) {
             entry("BGG", "Loading from cache", LogEntry.Type.INFO)
-            return cache.load(credentials.username)
+            val cached = cache.load(credentials.username)
+            if (cached.none { it.bggbestplayers.isBlank() && it.bggrecplayers.isBlank() && it.bggrecagerange.isBlank() }) {
+                return cached
+            }
+            entry("BGG", "Refreshing cached game details", LogEntry.Type.INFO)
+            return enrichBggCollectionDetails(cached, BggApiClient(BuildConfig.BGG_XML_API_TOKEN))
+                .also { cache.save(credentials.username, it) }
         }
         if (forceRefresh) cache.delete(credentials.username)
         entry("BGG", "Fetching collection", LogEntry.Type.INFO)
         val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
         val games = client.fetchCollection(credentials.username, credentials.password)
         entry("BGG", "${games.size} games, fetching details", LogEntry.Type.INFO)
+        return enrichBggCollectionDetails(games, client).also { cache.save(credentials.username, it) }
+    }
+
+    private suspend fun enrichBggCollectionDetails(
+        games: List<BggApiClient.BggGame>,
+        client: BggApiClient
+    ): List<BggApiClient.BggGame> {
         return try {
             val thingDetails = client.fetchThingDetails(games.map { it.objectid })
             val enriched = games.map { game ->
@@ -524,12 +537,10 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     bgglanguagedependence = detail.bgglanguagedependence.ifBlank { game.bgglanguagedependence }
                 )
             }
-            cache.save(credentials.username, enriched)
             entry("BGG", "${enriched.size} games fetched", LogEntry.Type.INFO)
             enriched
         } catch (e: Exception) {
             entry("BGG", "Could not fetch game details: ${e.message}", LogEntry.Type.ERROR)
-            // Don't cache — let the next refresh retry enrichment
             games
         }
     }

@@ -49,37 +49,27 @@
         </activity>
 
         <receiver
-            android:name=".ui.widget.InsightsWidget"
+            android:name=".ui.widget.SessionWidget"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="cz.nicolsburg.boardflow.ACTION_ROTATE_INSIGHT" />
+                <action android:name="cz.nicolsburg.boardflow.ACTION_ROTATE_SESSION" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/insights_widget_info" />
+                android:resource="@xml/sessions_widget_info" />
         </receiver>
 
         <receiver
-            android:name=".ui.widget.LauncherWidget"
+            android:name=".ui.widget.DailyInsightWidget"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="cz.nicolsburg.boardflow.ACTION_ROTATE_DAILY_INSIGHT" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/launcher_widget_info" />
-        </receiver>
-
-        <receiver
-            android:name=".ui.widget.QuickScanWidget"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/quick_scan_widget_info" />
+                android:resource="@xml/daily_insight_widget_info" />
         </receiver>
 
         <provider

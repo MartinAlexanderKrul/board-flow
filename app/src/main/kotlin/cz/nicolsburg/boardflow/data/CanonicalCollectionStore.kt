@@ -15,7 +15,6 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.withTransaction
 import androidx.room.migration.Migration
-import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.PlayerResult
@@ -43,32 +42,6 @@ class CanonicalCollectionStore private constructor(
     }
 
     suspend fun countGames(): Int = dao.count()
-
-    suspend fun getLightweightGames(): List<BggGame> {
-        return dao.getAllLightweight().mapNotNull { item ->
-            item.objectId.toIntOrNull()?.let { id ->
-                BggGame(
-                    id = id,
-                    name = item.name,
-                    yearPublished = item.yearPublished?.toString(),
-                    thumbnailUrl = item.thumbnailUrl
-                )
-            }
-        }
-    }
-
-    suspend fun getLightweightOwnedGames(): List<BggGame> {
-        return dao.getOwnedLightweight().mapNotNull { item ->
-            item.objectId.toIntOrNull()?.let { id ->
-                BggGame(
-                    id = id,
-                    name = item.name,
-                    yearPublished = item.yearPublished?.toString(),
-                    thumbnailUrl = item.thumbnailUrl
-                )
-            }
-        }
-    }
 
     suspend fun getLoggedPlays(): List<LoggedPlay> =
         dao.getAllLoggedPlays().map { it.toModel() }
@@ -138,12 +111,6 @@ class CanonicalCollectionStore private constructor(
 private interface CanonicalCollectionDao {
     @Query("SELECT * FROM canonical_games ORDER BY name COLLATE NOCASE")
     suspend fun getAll(): List<CanonicalGameEntity>
-
-    @Query("SELECT objectId, name, yearPublished, thumbnailUrl FROM canonical_games ORDER BY name COLLATE NOCASE")
-    suspend fun getAllLightweight(): List<LightweightGameRow>
-
-    @Query("SELECT objectId, name, yearPublished, thumbnailUrl FROM canonical_games WHERE isOwned = 1 ORDER BY name COLLATE NOCASE")
-    suspend fun getOwnedLightweight(): List<LightweightGameRow>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(games: List<CanonicalGameEntity>)
@@ -294,7 +261,11 @@ private data class CanonicalGameEntity(
     val bggValues: Map<String, String>,
     val lastCachedAt: Long
 ) {
-    fun toModel(): GameItem = GameItem(
+    fun toModel(): GameItem {
+        val bestPlayersResolved = bestPlayers ?: bggValues["bggbestplayers"]?.takeIf { it.isNotBlank() }
+        val recommendedPlayersResolved = recommendedPlayers ?: bggValues["bggrecplayers"]?.takeIf { it.isNotBlank() }
+        val recommendedAgeResolved = recommendedAge ?: bggValues["bggrecagerange"]?.takeIf { it.isNotBlank() }
+        return GameItem(
         identity = GameItem.Identity(
             objectId = objectId,
             name = name
@@ -315,9 +286,9 @@ private data class CanonicalGameEntity(
         players = GameItem.Players(
             minPlayers = minPlayers,
             maxPlayers = maxPlayers,
-            bestPlayers = bestPlayers,
-            recommendedPlayers = recommendedPlayers,
-            recommendedAge = recommendedAge
+            bestPlayers = bestPlayersResolved,
+            recommendedPlayers = recommendedPlayersResolved,
+            recommendedAge = recommendedAgeResolved
         ),
         ownership = GameItem.Ownership(
             isOwned = isOwned,
@@ -345,7 +316,7 @@ private data class CanonicalGameEntity(
             bggValues = bggValues
         ),
         lastCachedAt = lastCachedAt
-    )
+    )}
 
     companion object {
         fun fromModel(game: GameItem): CanonicalGameEntity = CanonicalGameEntity(
@@ -385,13 +356,6 @@ private data class CanonicalGameEntity(
         )
     }
 }
-
-private data class LightweightGameRow(
-    val objectId: String,
-    val name: String,
-    val yearPublished: Int?,
-    val thumbnailUrl: String?
-)
 
 @Entity(tableName = "logged_plays", indices = [Index(value = ["date"])])
 private data class LoggedPlayEntity(

@@ -186,8 +186,9 @@ fun BoardFlowPullRefreshContainer(
             }
 
             override suspend fun onPreFling(available: Velocity): Velocity {
-                if (!refreshTriggered && !isRefreshingState) {
+                if (!isRefreshingState) {
                     pullDistance = 0f
+                    refreshTriggered = false
                 }
                 return Velocity.Zero
             }

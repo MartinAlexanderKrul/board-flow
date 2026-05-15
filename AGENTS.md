@@ -18,7 +18,7 @@ BoardFlow currently supports all of the following:
 - AI score extraction from images with Gemini (with model fallback/cycling), preceded by a local non-blocking scan quality warning for obviously dark, blurry, low-resolution, or too-far images; malformed responses automatically trigger a silent background retry — if it succeeds while the user is still on `LogPlayScreen`, a non-blocking banner offers to apply the cleaner result
 - the model name used for a scan is stored on `ExtractedPlay.modelUsed` and shown below the "Raw AI response" label in the AI output card
 - AI game recognition from scan: auto-identify the game using saved recognition templates (title similarity + category fingerprint matching, two-gate autoswitch: TITLE_GATE >= 0.90 or TEMPLATE_CATEGORY_GATE >= 0.75 with >= 3 category matches)
-- home-screen Quick Scan widget (`ui/widget/QuickScanWidget.kt`) that cold-starts or resumes the app directly into the scan flow via `ACTION_QUICK_SCAN`
+- home-screen widgets: `SessionWidget` (last played session) and `DailyInsightWidget` (rotating stat insights); both include a camera button that cold-starts the app into Quick Scan via `ACTION_QUICK_SCAN`
 - saved player roster with aliases, optional BGG usernames, and Levenshtein fuzzy matching
 - collection browsing across owned / wishlist / sleeves
 - per-game sleeve exclusion (toggle individual games out of sleeve display)
@@ -128,7 +128,8 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `SleeveDatabase.kt` -- `SleeveManufacturer` enum, `SleeveEntry`, `SleeveDatabase` object
 - `ui/`
   - screens and shared Compose UI helpers
-  - `ui/widget/QuickScanWidget.kt` -- `AppWidgetProvider`; fires `ACTION_QUICK_SCAN` PendingIntent on tap
+  - `ui/widget/SessionsWidget.kt` -- `SessionGlanceWidget` (open base, all layouts) + `SessionWidget` receiver; shows last session
+  - `ui/widget/DailyInsightWidget.kt` -- `DailyInsightGlanceWidget` (overrides `computeSnapshot`) + `DailyInsightWidget` receiver; shows rotating stat insights
 
 ## Source Of Truth
 

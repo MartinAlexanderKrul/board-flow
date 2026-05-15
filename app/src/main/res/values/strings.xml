@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BoardFlow</string>
-    <string name="widget_label_top">SCAN</string>
-    <string name="widget_label_bottom">SCORE</string>
-    <string name="widget_launcher_label">Scan Game Score</string>
-    <string name="widget_description">Launch BoardFlow directly into Quick Scan</string>
+    <string name="widget_sessions_description">Your last board game session — game, players, scores, and result. Resize from a quick-tap icon up to a full session summary.</string>
+    <string name="widget_daily_insight_description">A daily insight from your play history — milestones, rivalries, dormant games, seasonal patterns, and more.</string>
 </resources>

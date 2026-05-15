@@ -112,6 +112,7 @@ fun BoardFlowApp(
     val logPlayHasUnsavedChanges by appViewModel.logPlayHasUnsavedChanges.collectAsState()
     val quickScanCorrectionMode by appViewModel.quickScanCorrectionMode.collectAsState()
     val pendingWidgetQuickScan by appViewModel.pendingWidgetQuickScan.collectAsState()
+    val pendingWidgetOpenGameId by appViewModel.pendingWidgetOpenGameId.collectAsState()
     var startupSilentSyncRequested by rememberSaveable { mutableStateOf(false) }
     var showDiscardLogPlayConfirm by rememberSaveable { mutableStateOf(false) }
     var collectionHeaderFilterVisible by remember { mutableStateOf(false) }
@@ -153,6 +154,17 @@ fun BoardFlowApp(
         if (!syncBusy) {
             appViewModel.loadCachedBggPlays()
             appViewModel.loadPlayHistory()
+        }
+    }
+
+    LaunchedEffect(pendingWidgetOpenGameId) {
+        val gameId = pendingWidgetOpenGameId ?: return@LaunchedEffect
+        appViewModel.consumeWidgetOpenPlay()
+        appViewModel.setPendingHistoryFilter(gameId = gameId)
+        navController.navigate(AppRoutes.HISTORY) {
+            popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
         }
     }
 

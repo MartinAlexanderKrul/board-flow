@@ -359,7 +359,8 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
       Theme.kt
       Spacing.kt
     widget/
-      QuickScanWidget.kt
+      SessionsWidget.kt
+      DailyInsightWidget.kt
 ```
 
 ## UI Surface Inventory

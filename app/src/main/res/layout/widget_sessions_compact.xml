@@ -4,10 +4,9 @@
     android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/widget_insights_root"
+        android:id="@+id/widget_sessions_root"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
+        android:layout_height="match_parent"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/widget_background"
@@ -20,21 +19,23 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="start">
 
             <ImageView
-                android:id="@+id/widget_insights_header"
+                android:id="@+id/widget_sessions_header"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
                 android:contentDescription="@null" />
 
             <TextView
-                android:id="@+id/widget_insights_text"
+                android:id="@+id/widget_sessions_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:maxLines="1"
                 android:ellipsize="end" />
@@ -42,9 +43,9 @@
         </LinearLayout>
 
         <ImageView
-            android:id="@+id/widget_insights_scan"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:id="@+id/widget_sessions_scan"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_marginStart="8dp"
             android:src="@drawable/ic_widget_camera"
             android:scaleType="fitCenter"

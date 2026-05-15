@@ -17,7 +17,7 @@ import cz.nicolsburg.boardflow.core.di.AppContainer
 import cz.nicolsburg.boardflow.model.LogEntry
 import cz.nicolsburg.boardflow.ui.app.BoardFlowApp
 import cz.nicolsburg.boardflow.ui.theme.BggCombinedTheme
-import cz.nicolsburg.boardflow.ui.widget.QuickScanWidget
+import cz.nicolsburg.boardflow.ui.widget.SessionGlanceWidget
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -30,8 +30,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (intent?.action == QuickScanWidget.ACTION_QUICK_SCAN) {
-            appViewModel.requestWidgetQuickScan()
+        when (intent?.action) {
+            SessionGlanceWidget.ACTION_QUICK_SCAN -> appViewModel.requestWidgetQuickScan()
+            SessionGlanceWidget.ACTION_OPEN_PLAY  -> {
+                val gameId = intent.getIntExtra(SessionGlanceWidget.EXTRA_GAME_ID, 0)
+                if (gameId != 0) appViewModel.requestWidgetOpenPlay(gameId)
+            }
         }
 
         container.securePreferences.run {
@@ -60,8 +64,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.action == QuickScanWidget.ACTION_QUICK_SCAN) {
-            appViewModel.requestWidgetQuickScan()
+        when (intent.action) {
+            SessionGlanceWidget.ACTION_QUICK_SCAN -> appViewModel.requestWidgetQuickScan()
+            SessionGlanceWidget.ACTION_OPEN_PLAY  -> {
+                val gameId = intent.getIntExtra(SessionGlanceWidget.EXTRA_GAME_ID, 0)
+                if (gameId != 0) appViewModel.requestWidgetOpenPlay(gameId)
+            }
         }
     }
 
