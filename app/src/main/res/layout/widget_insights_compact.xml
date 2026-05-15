@@ -10,21 +10,10 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/widget_background"
-        android:paddingStart="14dp"
-        android:paddingEnd="10dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
-
-        <!-- Logo — hidden by default, shown when widget is wide enough -->
-        <ImageView
-            android:id="@+id/widget_insights_logo"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:layout_marginEnd="12dp"
-            android:src="@drawable/app_logo"
-            android:scaleType="fitCenter"
-            android:visibility="gone"
-            android:contentDescription="@null" />
+        android:paddingStart="12dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -44,22 +33,20 @@
                 android:id="@+id/widget_insights_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:maxLines="2"
-                android:lineSpacingExtra="2dp"
+                android:maxLines="1"
                 android:ellipsize="end" />
 
         </LinearLayout>
 
         <ImageView
             android:id="@+id/widget_insights_scan"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:layout_marginStart="10dp"
-            android:layout_gravity="center_vertical"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="8dp"
             android:src="@drawable/ic_widget_camera"
             android:scaleType="fitCenter"
             android:contentDescription="@null" />
