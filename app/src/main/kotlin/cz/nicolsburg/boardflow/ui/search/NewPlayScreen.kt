@@ -63,7 +63,7 @@ fun NewPlayScreen(
     onScanQuick: () -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
-    val results by viewModel.searchResults.collectAsState()
+    val results by viewModel.logPlaySearchResults.collectAsState()
     val loading by viewModel.searchLoading.collectAsState()
     val error   by viewModel.searchError.collectAsState()
     val collectionLoaded by viewModel.collectionLoaded.collectAsState()
@@ -71,11 +71,11 @@ fun NewPlayScreen(
     val sessionContext by viewModel.sessionContext.collectAsState()
     val changeGameActive by viewModel.changeGameSessionActive.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.loadRecentGames() }
+    LaunchedEffect(Unit) { viewModel.loadLogPlayGames() }
 
     LaunchedEffect(query) {
         delay(800)
-        viewModel.filterGames(query)
+        viewModel.filterLogPlayGames(query)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -154,7 +154,7 @@ fun NewPlayScreen(
                             }
                         }
                     }
-                    BoardFlowOutlinedButton(onClick = { viewModel.loadRecentGames() }) {
+                    BoardFlowOutlinedButton(onClick = { viewModel.loadLogPlayGames() }) {
                         Text("Use recent games instead")
                     }
                 }

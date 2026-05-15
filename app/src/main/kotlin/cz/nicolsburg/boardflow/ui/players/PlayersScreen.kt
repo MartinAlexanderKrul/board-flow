@@ -22,6 +22,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.AppViewModel
@@ -33,6 +36,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowDestructiveButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.SectionCard
@@ -297,16 +301,31 @@ internal fun EditPlayerDialog(
         onDismissRequest = onDismiss,
         title = "Edit Player",
         actions = {
-            BoardFlowButton(
-                onClick = {
-                    if (displayName.isNotBlank() && displayName != player.displayName) onRenameDisplayName(displayName)
-                    if (bggUsername.trim() != player.bggUsername) onUpdateBggUsername(bggUsername)
-                    onDismiss()
-                },
-                enabled = identityChanged,
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Save Changes")
+                BoardFlowDestructiveButton(
+                    onClick = { showDeleteConfirm = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(BoardFlowIcons.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Delete Player")
+                }
+                BoardFlowButton(
+                    onClick = {
+                        if (displayName.isNotBlank() && displayName != player.displayName) onRenameDisplayName(displayName)
+                        if (bggUsername.trim() != player.bggUsername) onUpdateBggUsername(bggUsername)
+                        onDismiss()
+                    },
+                    enabled = identityChanged,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(BoardFlowIcons.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Save Changes")
+                }
             }
         }
     ) {
@@ -349,24 +368,31 @@ internal fun EditPlayerDialog(
                     }
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("New Alias", style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    OutlinedTextField(value = newAlias, onValueChange = { newAlias = it },
-                        placeholder = { Text("e.g. Al") }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth())
-                }
-                BoardFlowIconButton(onClick = { onAddAlias(newAlias); newAlias = "" },
-                    enabled = newAlias.isNotBlank()) {
-                    Icon(Icons.Default.Add, contentDescription = "Add alias")
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("New Alias", style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val canAdd = newAlias.isNotBlank()
+                val doAdd = { if (canAdd) { onAddAlias(newAlias); newAlias = "" } }
+                OutlinedTextField(
+                    value = newAlias,
+                    onValueChange = { newAlias = it },
+                    placeholder = { Text("e.g. Al") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { doAdd() }),
+                    trailingIcon = {
+                        IconButton(onClick = doAdd, enabled = canAdd) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add alias",
+                                tint = if (canAdd) MaterialTheme.colorScheme.primary
+                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                            )
+                        }
+                    }
+                )
             }
-            HorizontalDivider()
-            BoardFlowDestructiveButton(
-                onClick = { showDeleteConfirm = true },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Delete Player", color = MaterialTheme.colorScheme.error) }
         }
     }
 }

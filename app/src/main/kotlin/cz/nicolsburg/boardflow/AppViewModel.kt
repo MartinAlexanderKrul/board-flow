@@ -93,6 +93,12 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     val searchError: StateFlow<String?> = _searchError.asStateFlow()
     private val _collectionLoaded = MutableStateFlow(false)
     val collectionLoaded: StateFlow<Boolean> = _collectionLoaded.asStateFlow()
+
+    // Owned-only games for Log Play — excludes wishlist items
+    private val _ownedGames = MutableStateFlow<List<BggGame>>(emptyList())
+    private val _logPlaySearchResults = MutableStateFlow<List<BggGame>>(emptyList())
+    val logPlaySearchResults: StateFlow<List<BggGame>> = _logPlaySearchResults.asStateFlow()
+    private var isLogPlayBggSearchActive = false
     private val _logPlayHasUnsavedChanges = MutableStateFlow(false)
     val logPlayHasUnsavedChanges: StateFlow<Boolean> = _logPlayHasUnsavedChanges.asStateFlow()
 
@@ -132,7 +138,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _collectionItems.value = games
         if (games.isEmpty()) {
             _allGames.value = emptyList()
+            _ownedGames.value = emptyList()
             if (!isBggSearchActive) _searchResults.value = _recentGames.value
+            if (!isLogPlayBggSearchActive) _logPlaySearchResults.value = _recentGames.value
             _collectionLoaded.value = false
             return
         }
@@ -148,6 +156,17 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         if (bggGames.isEmpty()) return
         _allGames.value = bggGames
         if (!isBggSearchActive) _searchResults.value = bggGames
+        val ownedGames = games.filter { it.isOwned }.mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            BggGame(
+                id = id,
+                name = item.identity.name,
+                yearPublished = item.yearPublished?.toString(),
+                thumbnailUrl = item.thumbnailUrl
+            )
+        }.sortedBy { it.name }
+        _ownedGames.value = ownedGames
+        if (!isLogPlayBggSearchActive) _logPlaySearchResults.value = ownedGames.ifEmpty { _recentGames.value }
         _collectionLoaded.value = true
     }
 
@@ -186,6 +205,60 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             }
             container.bggRepository.searchGames(query, BuildConfig.BGG_XML_API_TOKEN, exact = false)
                 .onSuccess { isBggSearchActive = true; _searchResults.value = it }
+                .onFailure { _searchError.value = it.message }
+            _searchLoading.value = false
+        }
+    }
+
+    fun loadLogPlayGames() {
+        _recentGames.value = prefs.getRecentGames()
+        if (_ownedGames.value.isNotEmpty()) {
+            if (!isLogPlayBggSearchActive) _logPlaySearchResults.value = _ownedGames.value
+            return
+        }
+        viewModelScope.launch {
+            val owned = container.canonicalCollectionStore.getLightweightOwnedGames()
+            _ownedGames.value = owned
+            if (!isLogPlayBggSearchActive) {
+                _logPlaySearchResults.value = owned.ifEmpty { _recentGames.value }
+            }
+            // Also seed the global collection if not yet loaded
+            if (_allGames.value.isEmpty()) {
+                val all = container.canonicalCollectionStore.getLightweightGames()
+                if (all.isNotEmpty()) {
+                    _allGames.value = all
+                    _collectionLoaded.value = true
+                }
+            }
+        }
+    }
+
+    fun filterLogPlayGames(query: String) {
+        if (query.isBlank()) {
+            isLogPlayBggSearchActive = false
+            _searchError.value = null
+            _logPlaySearchResults.value = _ownedGames.value.ifEmpty { _recentGames.value }
+            return
+        }
+        val localMatches = _ownedGames.value.filter { it.name.contains(query, ignoreCase = true) }
+        if (localMatches.isNotEmpty()) {
+            _searchError.value = null
+            _logPlaySearchResults.value = localMatches
+            return
+        }
+        _logPlaySearchResults.value = emptyList()
+        viewModelScope.launch {
+            _searchLoading.value = true
+            _searchError.value = null
+            val exactResult = container.bggRepository.searchGames(query, BuildConfig.BGG_XML_API_TOKEN, exact = true)
+            if (exactResult.isSuccess && exactResult.getOrNull()?.isNotEmpty() == true) {
+                isLogPlayBggSearchActive = true
+                _logPlaySearchResults.value = exactResult.getOrNull()!!
+                _searchLoading.value = false
+                return@launch
+            }
+            container.bggRepository.searchGames(query, BuildConfig.BGG_XML_API_TOKEN, exact = false)
+                .onSuccess { isLogPlayBggSearchActive = true; _logPlaySearchResults.value = it }
                 .onFailure { _searchError.value = it.message }
             _searchLoading.value = false
         }

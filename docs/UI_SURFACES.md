@@ -18,6 +18,7 @@ Use this as a map when changing layout, motion, state handling, or visual langua
 | `ScreenTabRow` | `ui/common/ScreenTabRow.kt` | Screen-level tab row. | History, Collection, Settings. |
 | `GameSearchField` / `SearchFieldActionButton` | `ui/common/GameSearchField.kt` | Reusable search input with trailing icon actions. | New Play, Collection, History. |
 | `PlayerResultEditorCard` | `ui/common/PlayerResultEditorCard.kt` | Collapsible player edit card with name, score, team, rating, winner, first-play, exact match, and suggestions. | Log Play, Edit Play, QR import review. |
+| `BoardFlowTonalButton` | `ui/common/BoardFlowUi.kt` | `FilledTonalButton` wrapper, 42 dp height, grey `surfaceVariant` fill, press-scale animation. | Compact paired actions inside cards and dialogs (e.g. Edit + Play again in play details). |
 | `BoardFlowCameraScene` | `ui/common/BoardFlowCameraUi.kt` | Full-screen camera scene with title/subtitle overlays. | Score scan and QR import scan. |
 | `BoardFlowCameraActionPanel` | `ui/common/BoardFlowCameraUi.kt` | Bottom camera action panel. | Score scan capture/gallery/manual actions and QR import image/cancel actions. |
 | `BoardFlowCameraPermissionPrompt` | `ui/common/BoardFlowCameraUi.kt` | Full-screen camera permission state. | Score scan and QR import scan. |
@@ -40,7 +41,7 @@ Source: `ui/search/NewPlayScreen.kt`
 - Loading list: `LazyColumn` of `ShimmerGameRow` placeholders.
 - Error card: Material `Card` in error colors for collection/search errors, with "Use recent games instead".
 - Empty states: centered "Log a Play" and "No games found" states.
-- Game result list: `LazyColumn` of `GameRow` list items.
+- Game result list: `LazyColumn` of `GameRow` list items — populated from owned games only (wishlist excluded); falls back to BGG API search when no local owned match is found.
 - Fast scroll bar and floating letter bubble: shown for result lists over 20 items.
 - Change-game notice: small inline text when a previous session is being retargeted.
 
@@ -63,13 +64,13 @@ Source: `ui/review/LogPlayScreen.kt`
 
 - `DatePickerDialog`: date picker for the play date.
 - `SessionDetailsCard`: main play metadata card for game, AI detected hint, date, duration, location, notes, quantity, incomplete, and now-in-stats controls.
-- `RelatedGamesBanner`: expansion/base-game follow-up posting banner with chips, dismiss, and show all/show less overflow.
+- `RelatedGamesBanner`: expansion/base-game follow-up posting banner. Chips are capped to 2 rows via `SubcomposeLayout`; overflow shown as "Show all (N)" / "Show less" `TextButton`.
 - `ScanResultBanner`: post-scan game recognition feedback for auto-switch, no collection match, or low confidence.
 - `GameSuggestionBanner`: candidate game suggestion banner with confidence/evidence and actions.
 - `ScanRetryBanner`: non-blocking banner when a background AI retry produced cleaner data.
 - `PlayersHeader`: players section header with add-player and AI output toggle.
 - `FrequentPlayerChips`: frequent/recent player suggestion chips.
-- `PlayerEditCard`: wrapper around `PlayerResultEditorCard`.
+- `PlayerEditCard`: wrapper around `PlayerResultEditorCard`. Cards that have a filled name and score auto-collapse when scan results first arrive.
 - `AiOutputCard`: collapsible raw AI output card with model name and copy action.
 - `PostSaveCard`: post-log success card with session summary, record moment, and Play again / Change game / Done actions.
 - Bottom post bar: persistent bottom action area with error surface and Log/Save button.
@@ -89,7 +90,7 @@ Source: `ui/history/HistoryScreen.kt`
 - Plays list: `LazyColumn` of `PlayHistoryCard`.
 - Loading list: `ShimmerPlayCard` placeholders.
 - Empty state: centered "No play history".
-- `PlayDetailsDialog`: animated play details dialog with thumbnail/backdrop, stats, insights, player rows, share, edit, play again, delete, and game/player deep links.
+- `PlayDetailsDialog`: animated play details dialog with thumbnail/backdrop, stats, insights, player rows, share, edit, play again, delete, and game/player deep links. Edit and Play again actions use paired `BoardFlowTonalButton`s on one row.
 - Nested `PlayerDetailDialog`: opened from player rows inside play details.
 - `SharePlayQrDialog`: animated dialog showing a generated QR code and share image / done actions.
 - `EditPlayDialog`: animated play edit dialog with metadata fields, player editor cards, date picker, notes, and save.
@@ -176,7 +177,7 @@ Source: `ui/players/PlayersScreen.kt`
 - Floating add button: opens `AddPlayerDialog`.
 - `PlayerDialog`: shared animated dialog shell for player add/edit/detail.
 - `AddPlayerDialog`: new player form.
-- `EditPlayerDialog`: display name, BGG username, aliases, add alias, remove alias, delete player.
+- `EditPlayerDialog`: display name, BGG username, aliases, add alias (inline `OutlinedTextField` with trailing `+` icon; lit when non-blank; IME Done adds alias), remove alias, delete player. Delete and Save Changes actions use a paired `BoardFlowDestructiveButton` + `BoardFlowButton` on one row with trash / pen icons.
 - `BoardFlowConfirmationDialog` titled "Delete player?": destructive confirmation.
 - `BoardFlowConfirmationDialog` titled "Remove alias?": destructive confirmation.
 - `PlayerDetailDialog`: player identity, stats, favorite/most-played links, rivalries, All plays and Edit actions.
@@ -243,6 +244,9 @@ These are not custom Compose dialogs, but they open system-owned surfaces:
 - Prefer `SectionCard` for repeated list/group cards.
 - Corner-radius families: use `BoardFlowSurfaceTokens.Shape` (12 dp) for standard cards, `BoardFlowSurfaceTokens.ContentCardShape` (16 dp) for prominent feature content surfaces, `BoardFlowActionTokens.ButtonShape` (16 dp) for buttons, and `BoardFlowConfirmationTokens.Shape` (24 dp) for confirmation dialogs. Do not introduce new hardcoded radius values in the 14–22 dp range.
 - Button hierarchy: use `BoardFlowButton` / `BoardFlowPrimaryButton` for primary actions, `BoardFlowSecondaryButton` / `BoardFlowOutlinedButton` for secondary actions, `BoardFlowTonalButton` for compact secondary actions inside cards and dialogs (grey surfaceVariant fill, 42 dp height), `BoardFlowDestructiveButton` for destructive actions. Do not add raw `FilledTonalButton` or `Button` calls without a BoardFlow wrapper.
+- Paired action rows: when a dialog needs two sibling actions (e.g. destructive + confirm, or delete + save), place them in a `Row` with `weight(1f)` on each button, icons leading. Use `BoardFlowDestructiveButton` + `BoardFlowButton` for destructive/confirm pairs, `BoardFlowTonalButton` + `BoardFlowTonalButton` for neutral pairs.
+- Chip overflow: use `SubcomposeLayout` for row-capped chip lists (e.g. 2-row limit with "Show all" overflow). `FlowRowOverflow.expandOrClip` is not available in Compose BOM 2024.08.00.
+- Log Play game search shows owned games only (no wishlist). Use `AppViewModel.logPlaySearchResults` / `loadLogPlayGames()` / `filterLogPlayGames()` — do not switch this screen to the shared `searchResults` flow.
 - Text separators: use `" · "` as the standard inline-text separator between metadata items; avoid mixing with `" - "` or em-dashes in the same visual context.
 - Avoid adding business logic directly to composables when a surface grows; push state decisions into view models or small UI state models.
 - When adding a new surface, update this file with the trigger, file, and dismissal/confirmation behavior.

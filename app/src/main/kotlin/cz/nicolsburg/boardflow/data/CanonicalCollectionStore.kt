@@ -57,6 +57,19 @@ class CanonicalCollectionStore private constructor(
         }
     }
 
+    suspend fun getLightweightOwnedGames(): List<BggGame> {
+        return dao.getOwnedLightweight().mapNotNull { item ->
+            item.objectId.toIntOrNull()?.let { id ->
+                BggGame(
+                    id = id,
+                    name = item.name,
+                    yearPublished = item.yearPublished?.toString(),
+                    thumbnailUrl = item.thumbnailUrl
+                )
+            }
+        }
+    }
+
     suspend fun getLoggedPlays(): List<LoggedPlay> =
         dao.getAllLoggedPlays().map { it.toModel() }
 
@@ -128,6 +141,9 @@ private interface CanonicalCollectionDao {
 
     @Query("SELECT objectId, name, yearPublished, thumbnailUrl FROM canonical_games ORDER BY name COLLATE NOCASE")
     suspend fun getAllLightweight(): List<LightweightGameRow>
+
+    @Query("SELECT objectId, name, yearPublished, thumbnailUrl FROM canonical_games WHERE isOwned = 1 ORDER BY name COLLATE NOCASE")
+    suspend fun getOwnedLightweight(): List<LightweightGameRow>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(games: List<CanonicalGameEntity>)
