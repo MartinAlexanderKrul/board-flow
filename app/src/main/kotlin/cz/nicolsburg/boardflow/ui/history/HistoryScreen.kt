@@ -134,6 +134,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowMotion
 import cz.nicolsburg.boardflow.ui.history.playInsights
+import cz.nicolsburg.boardflow.ui.history.resolveCurrentPlayerName
 import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.PlayerResultEditorCard
@@ -781,6 +782,7 @@ fun HistoryScreen(
                 HistoryTab.STATS -> StatsContent(
                     plays = historyPlays,
                     players = players,
+                    currentPlayerName = resolveCurrentPlayerName(viewModel.prefs.bggUsername, players),
                     listState = statsListState,
                     modifier = Modifier.fillMaxSize(),
                     onGameTapped = { gameId, gameName ->

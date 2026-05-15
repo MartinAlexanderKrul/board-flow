@@ -82,6 +82,7 @@ import cz.nicolsburg.boardflow.ui.history.ContextualInsightStrip
 import cz.nicolsburg.boardflow.ui.history.GameHistoryStats
 import cz.nicolsburg.boardflow.ui.history.gameContextualInsight
 import cz.nicolsburg.boardflow.ui.history.gameHistoryStats
+import cz.nicolsburg.boardflow.ui.history.resolveCurrentPlayerName
 
 private data class InfoSection(
     val title: String,
@@ -129,7 +130,10 @@ fun GameDetailsDialog(
         else historyPlays.gameHistoryStats(game.identity.name, players)
     }
     val contextualInsight = remember(game, historyPlays, players) {
-        gameObjectId?.let { historyPlays.gameContextualInsight(it, players, prefs = securePreferences) }
+        gameObjectId?.let {
+            val currentPlayerName = resolveCurrentPlayerName(securePreferences.bggUsername, players)
+            historyPlays.gameContextualInsight(it, players, currentPlayerName = currentPlayerName, prefs = securePreferences)
+        }
     }
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary

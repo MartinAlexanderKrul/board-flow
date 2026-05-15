@@ -82,8 +82,9 @@ private fun resolveDisplayName(raw: String, roster: List<Player>): String {
     val lower = raw.lowercase().trim()
     return roster.firstOrNull { player ->
         player.displayName.lowercase().trim() == lower ||
-            player.aliases.any { alias -> alias.lowercase().trim() == lower }
-    }?.displayName ?: "Unknown"
+            player.aliases.any { alias -> alias.lowercase().trim() == lower } ||
+            player.bggUsername.lowercase().trim().let { u -> u.isNotBlank() && u == lower }
+    }?.displayName ?: raw
 }
 
 private fun computeGameHistoryStats(gamePlays: List<LoggedPlay>, roster: List<Player>): GameHistoryStats? {
@@ -373,6 +374,35 @@ private fun buildInsightCandidates(
         compareBy<InsightCandidate> { it.type.priority }
             .thenBy { it.key }
     )
+}
+
+/**
+ * Resolves the app user's display name for use as [currentPlayerName] in insight
+ * calculations.
+ *
+ * Resolution order:
+ * 1. Roster player whose stored [Player.bggUsername] matches [bggUsername] (case-insensitive)
+ *    → returns their [Player.displayName] so it aligns with what [resolveDisplayName] produces.
+ * 2. Roster player whose display name or alias matches [bggUsername] directly
+ *    → handles setups where the BGG username and roster name are the same string.
+ * 3. The raw [bggUsername] itself — BGG-synced plays store the logged-in user by their
+ *    BGG username, so comparing against the raw value still catches those plays.
+ *
+ * Returns null only when [bggUsername] is blank.
+ */
+fun resolveCurrentPlayerName(bggUsername: String, roster: List<Player>): String? {
+    val trimmed = bggUsername.trim()
+    if (trimmed.isBlank()) return null
+    val norm = trimmed.lowercase()
+    // 1. Match roster player by their stored bggUsername field
+    roster.firstOrNull { it.bggUsername.trim().lowercase() == norm }?.displayName?.let { return it }
+    // 2. Match roster player whose display name or alias equals the bggUsername
+    roster.firstOrNull { player ->
+        player.displayName.lowercase().trim() == norm ||
+            player.aliases.any { it.lowercase().trim() == norm }
+    }?.displayName?.let { return it }
+    // 3. Fall back to the raw bggUsername — BGG play sync stores users by their username
+    return trimmed
 }
 
 fun List<LoggedPlay>.gameContextualInsight(
@@ -1271,7 +1301,11 @@ data class RivalryPair(
     val narrativeLine: String
 )
 
-fun List<LoggedPlay>.buildTopRivalryPairs(limit: Int = 3): List<RivalryPair> {
+fun List<LoggedPlay>.buildTopRivalryPairs(
+    limit: Int = 3,
+    roster: List<Player> = emptyList(),
+    currentPlayerName: String? = null
+): List<RivalryPair> {
     val pairPlays = mutableMapOf<String, Triple<Int, Int, Int>>()
     val pairGames = mutableMapOf<String, MutableMap<String, Int>>()
 
@@ -1281,9 +1315,11 @@ fun List<LoggedPlay>.buildTopRivalryPairs(limit: Int = 3): List<RivalryPair> {
         for (i in active.indices) {
             for (j in i + 1 until active.size) {
                 val a = active[i]; val b = active[j]
-                val sorted = listOf(a.name.trim(), b.name.trim()).sorted()
+                val aName = resolveDisplayName(a.name.trim(), roster)
+                val bName = resolveDisplayName(b.name.trim(), roster)
+                val sorted = listOf(aName, bName).sorted()
                 val key = sorted.joinToString("|")
-                val aIsFirst = a.name.trim() == sorted[0]
+                val aIsFirst = aName == sorted[0]
                 val (t, aw, bw) = pairPlays[key] ?: Triple(0, 0, 0)
                 pairPlays[key] = Triple(
                     t + 1,
@@ -1296,6 +1332,8 @@ fun List<LoggedPlay>.buildTopRivalryPairs(limit: Int = 3): List<RivalryPair> {
         }
     }
 
+    val currentNorm = currentPlayerName?.lowercase()?.trim()
+
     return pairPlays.entries
         .filter { it.value.first >= 3 }
         .sortedByDescending { it.value.first }
@@ -1303,17 +1341,37 @@ fun List<LoggedPlay>.buildTopRivalryPairs(limit: Int = 3): List<RivalryPair> {
         .map { (key, data) ->
             val names = key.split("|")
             val (together, aWins, bWins) = data
+            val aIsMe = currentNorm != null && names[0].lowercase().trim() == currentNorm
+            val bIsMe = currentNorm != null && names[1].lowercase().trim() == currentNorm
             val tied = aWins == bWins
-            val leader = if (aWins >= bWins) names[0] else names[1]
             val lead = abs(aWins - bWins)
             val scoreStr = if (aWins >= bWins) "$aWins–$bWins" else "$bWins–$aWins"
             val mostGame = pairGames[key]?.maxByOrNull { it.value }?.key
             val narrative = when {
-                together < 5 -> "${names[0]} and ${names[1]}. $together games together so far."
-                tied -> "Deadlocked. $aWins each after $together games."
-                lead == 1 -> "$leader leads by one. $together games played."
-                else -> "$leader leads $scoreStr. $together games."
+                together < 5 -> when {
+                    aIsMe -> "You and ${names[1]}. $together games together so far."
+                    bIsMe -> "You and ${names[0]}. $together games together so far."
+                    else  -> "${names[0]} and ${names[1]}. $together games together so far."
+                }
+                tied -> when {
+                    aIsMe -> "Deadlocked with ${names[1]}. $aWins each after $together games."
+                    bIsMe -> "Deadlocked with ${names[0]}. $bWins each after $together games."
+                    else  -> "Deadlocked. $aWins each after $together games."
+                }
+                aWins >= bWins -> when {
+                    aIsMe -> if (lead == 1) "You lead by one. $together games played." else "You lead $aWins–$bWins. $together games."
+                    bIsMe -> if (lead == 1) "${names[0]} leads you by one. $together games played." else "${names[0]} leads you $aWins–$bWins. $together games."
+                    else  -> if (lead == 1) "${names[0]} leads by one. $together games played." else "${names[0]} leads $scoreStr. $together games."
+                }
+                else -> when {
+                    bIsMe -> if (lead == 1) "You lead by one. $together games played." else "You lead $bWins–$aWins. $together games."
+                    aIsMe -> if (lead == 1) "${names[1]} leads you by one. $together games played." else "${names[1]} leads you $bWins–$aWins. $together games."
+                    else  -> if (lead == 1) "${names[1]} leads by one. $together games played." else "${names[1]} leads $scoreStr. $together games."
+                }
             }
-            RivalryPair(names[0], names[1], together, aWins, bWins, mostGame, narrative)
+            // Show "You" in bar labels when this player is the current user
+            val labelA = if (aIsMe) "You" else names[0]
+            val labelB = if (bIsMe) "You" else names[1]
+            RivalryPair(labelA, labelB, together, aWins, bWins, mostGame, narrative)
         }
 }

@@ -347,6 +347,7 @@ private fun buildInsights(
 internal fun StatsContent(
     plays: List<LoggedPlay>,
     players: List<Player>,
+    currentPlayerName: String? = null,
     listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
     onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
@@ -418,7 +419,7 @@ internal fun StatsContent(
     val heatmapData      = remember(plays) { plays.buildHeatmapData() }
     val onThisDay        = remember(plays) { plays.buildOnThisDay() }
     val archetype        = remember(plays, timeRange) { if (timeRange == StatsTimeRange.ALL) plays.computeGamerArchetype() else null }
-    val rivalryPairs     = remember(statPlays) { statPlays.buildTopRivalryPairs() }
+    val rivalryPairs     = remember(statPlays, players, currentPlayerName) { statPlays.buildTopRivalryPairs(roster = players, currentPlayerName = currentPlayerName) }
     val periodReview     = remember(plays) { plays.buildPeriodReview() }
 
     LazyColumn(
