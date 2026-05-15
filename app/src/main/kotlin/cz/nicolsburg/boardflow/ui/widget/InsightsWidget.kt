@@ -10,6 +10,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.SystemClock
 import android.widget.RemoteViews
 import androidx.core.content.res.ResourcesCompat
 import cz.nicolsburg.boardflow.R
@@ -54,6 +55,7 @@ class InsightsWidget : AppWidgetProvider() {
         appWidgetId: Int,
         snapshot: WidgetSnapshot
     ) {
+        val insightText = insights.getOrElse(index) { "No plays this week" }
         val views = RemoteViews(context.packageName, R.layout.widget_insights)
 
         views.setOnClickPendingIntent(
@@ -79,14 +81,25 @@ class InsightsWidget : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
+        views.setOnClickPendingIntent(
+            R.id.widget_insights_scan,
+            PendingIntent.getActivity(
+                context, 1,
+                Intent(context, cz.nicolsburg.boardflow.MainActivity::class.java).apply {
+                    action = QuickScanWidget.ACTION_QUICK_SCAN
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        )
 
         runCatching {
             views.setImageViewBitmap(
                 R.id.widget_insights_header,
-                renderSingleLine(context, snapshot.header.uppercase(), 9f, snapshot.accentColor)
+                renderSingleLine(context, "Board Flow - Player Chronicle", 9f, Color.parseColor("#FEB316"))
             )
         }
-        views.setTextViewText(R.id.widget_insights_text, snapshot.text)
+        views.setTextViewText(R.id.widget_insights_text, insightText)
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
@@ -346,20 +359,15 @@ class InsightsWidget : AppWidgetProvider() {
         return bitmap
     }
 
-    private data class WidgetSnapshot(
-        val id: String = "snapshot",
-        val header: String,
-        val text: String,
-        val accentColor: Int,
-        val priority: Int = 0
-    )
-
-    private data class GameCount(
-        val id: Int,
-        val name: String,
-        val plays: Int,
-        val lastDate: LocalDate?
-    )
+    private fun scheduleRotation(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.setInexactRepeating(
+            AlarmManager.ELAPSED_REALTIME,
+            SystemClock.elapsedRealtime() + INTERVAL_MS,
+            INTERVAL_MS,
+            rotationPendingIntent(context)
+        )
+    }
 
     private data class PlayerPair(
         val a: String,
@@ -381,11 +389,7 @@ class InsightsWidget : AppWidgetProvider() {
     companion object {
         private const val ACTION_ROTATE = "cz.nicolsburg.boardflow.ACTION_ROTATE_INSIGHT"
         private const val PREFS_NAME = "InsightsWidgetPrefs"
-        private const val KEY_LAST_DAY = "last_day"
-        private const val KEY_LAST_TEXT = "last_text"
-        private val NEUTRAL = Color.parseColor("#E8EAED")
-        private val AMBER = Color.parseColor("#FEB316")
-        private val TEAL = Color.parseColor("#80CBC4")
-        private val BLUE = Color.parseColor("#9DB7FF")
-    }
+        private const val KEY_INDEX = "insight_index"
+        private const val INTERVAL_MS = 5 * 60 * 1000L
+}
 }
