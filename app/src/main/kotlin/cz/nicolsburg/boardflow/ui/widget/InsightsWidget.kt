@@ -692,21 +692,7 @@ class InsightsGlanceWidget : GlanceAppWidget() {
     private data class RivalryCount(val a: String, val b: String, val plays: Int, val aWins: Int, val bWins: Int)
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// QuickScanCallback — Glance ActionCallback that starts MainActivity with the
-// Quick Scan action. Required because Glance 1.1 has no actionStartActivity(Intent).
-// ══════════════════════════════════════════════════════════════════════════════
-
-class QuickScanCallback : ActionCallback {
-    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        context.startActivity(
-            Intent(context, MainActivity::class.java).apply {
-                action = QuickScanWidget.ACTION_QUICK_SCAN
-                flags  = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-        )
-    }
-}
+// QuickScanCallback is defined in MainWidget.kt (same package).
 
 // ══════════════════════════════════════════════════════════════════════════════
 // InsightsWidget — BroadcastReceiver registered in AndroidManifest.xml.

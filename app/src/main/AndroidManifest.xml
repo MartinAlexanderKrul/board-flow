@@ -49,6 +49,18 @@
         </activity>
 
         <receiver
+            android:name=".ui.widget.MainWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="cz.nicolsburg.boardflow.ACTION_ROTATE_INSIGHT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/main_widget_info" />
+        </receiver>
+
+        <receiver
             android:name=".ui.widget.InsightsWidget"
             android:exported="false">
             <intent-filter>
@@ -58,28 +70,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/insights_widget_info" />
-        </receiver>
-
-        <receiver
-            android:name=".ui.widget.LauncherWidget"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/launcher_widget_info" />
-        </receiver>
-
-        <receiver
-            android:name=".ui.widget.QuickScanWidget"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/quick_scan_widget_info" />
         </receiver>
 
         <provider

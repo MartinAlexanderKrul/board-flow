@@ -17,7 +17,7 @@ import cz.nicolsburg.boardflow.core.di.AppContainer
 import cz.nicolsburg.boardflow.model.LogEntry
 import cz.nicolsburg.boardflow.ui.app.BoardFlowApp
 import cz.nicolsburg.boardflow.ui.theme.BggCombinedTheme
-import cz.nicolsburg.boardflow.ui.widget.QuickScanWidget
+import cz.nicolsburg.boardflow.ui.widget.MainGlanceWidget
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -30,29 +30,48 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (intent?.action == QuickScanWidget.ACTION_QUICK_SCAN) {
+        if (intent?.action == MainGlanceWidget.ACTION_QUICK_SCAN) {
             appViewModel.requestWidgetQuickScan()
         }
 
         container.securePreferences.run {
             syncViewModel.setSpreadsheetId(syncSpreadsheetId)
             syncViewModel.setSheetTabName(syncSheetTabName)
-            authManager.restoreAuthorizationIfPossible(
-                previouslyAuthorizedEmail = googleAuthorizedEmail,
-                onSignedIn = syncViewModel::setAccount,
-                onLog = { title, detail, type -> appendSyncLog(title, detail, type) }
-            )
+            if (BuildConfig.GOOGLE_SYNC_ENABLED) {
+                authManager.restoreAuthorizationIfPossible(
+                    previouslyAuthorizedEmail = googleAuthorizedEmail,
+                    onSignedIn = syncViewModel::setAccount,
+                    onLog = { title, detail, type -> appendSyncLog(title, detail, type) }
+                )
+            } else {
+                syncViewModel.setAccount(null)
+            }
         }
 
         setContent {
             val appTheme by appViewModel.appTheme.collectAsState()
             BggCombinedTheme(appTheme = appTheme) {
+                val requestSignIn: () -> Unit = if (BuildConfig.GOOGLE_SYNC_ENABLED) {
+                    { launchSignIn() }
+                } else {
+                    {}
+                }
+                val requestSignOut: () -> Unit = if (BuildConfig.GOOGLE_SYNC_ENABLED) {
+                    { launchSignOut() }
+                } else {
+                    {}
+                }
+                val requestCsvPick: () -> Unit = if (BuildConfig.GOOGLE_SYNC_ENABLED) {
+                    { csvPickerLauncher.launch("*/*") }
+                } else {
+                    {}
+                }
                 BoardFlowApp(
                     appViewModel = appViewModel,
                     syncViewModel = syncViewModel,
-                    onRequestSignIn = ::launchSignIn,
-                    onRequestSignOut = ::launchSignOut,
-                    onRequestCsvPick = { csvPickerLauncher.launch("*/*") }
+                    onRequestSignIn = requestSignIn,
+                    onRequestSignOut = requestSignOut,
+                    onRequestCsvPick = requestCsvPick
                 )
             }
         }
@@ -60,7 +79,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.action == QuickScanWidget.ACTION_QUICK_SCAN) {
+        if (intent.action == MainGlanceWidget.ACTION_QUICK_SCAN) {
             appViewModel.requestWidgetQuickScan()
         }
     }
@@ -93,6 +112,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun launchSignIn() {
+        if (!BuildConfig.GOOGLE_SYNC_ENABLED) return
         lifecycleScope.launch {
             authManager.signIn(
                 previouslyAuthorizedEmail = container.securePreferences.googleAuthorizedEmail,
@@ -107,6 +127,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun launchSignOut() {
+        if (!BuildConfig.GOOGLE_SYNC_ENABLED) return
         val account = syncViewModel.account.value ?: run {
             container.securePreferences.googleAuthorizedEmail = ""
             syncViewModel.setAccount(null)
