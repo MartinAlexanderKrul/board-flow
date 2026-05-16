@@ -48,3 +48,17 @@ internal fun SessionMemory.toJsonObject(): JSONObject = JSONObject().apply {
 }
 
 internal fun SessionMemory.toJsonString(): String = toJsonObject().toString()
+
+/** Parses a [SessionMemory] from BGG notes that contain $$mood:/$$quote: lines. Returns null if none found. */
+internal fun String.parseMemoryFromNotes(): SessionMemory? {
+    val lines = lines()
+    val moodLine = lines.firstOrNull { it.startsWith("\$\$mood:") }
+    val quoteLine = lines.firstOrNull { it.startsWith("\$\$quote:") }
+    if (moodLine == null && quoteLine == null) return null
+    val moods = moodLine?.removePrefix("\$\$mood:")?.trim()
+        ?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() }
+        ?: emptyList()
+    val quote = quoteLine?.removePrefix("\$\$quote:")?.trim() ?: ""
+    return SessionMemory(moods = moods, quote = quote)
+        .takeIf { it.moods.isNotEmpty() || it.quote.isNotBlank() }
+}

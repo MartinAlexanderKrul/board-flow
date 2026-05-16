@@ -57,6 +57,10 @@ class SecurePreferences(context: Context) {
         get() = prefs.getString(KEY_STATS_PLAY_SCOPE, "ALL_PLAYS") ?: "ALL_PLAYS"
         set(value) = prefs.edit().putString(KEY_STATS_PLAY_SCOPE, value).apply()
 
+    var chronicleEnabled: Boolean
+        get() = prefs.getBoolean(KEY_CHRONICLE_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_CHRONICLE_ENABLED, value).apply()
+
     // --- Custom moods ---
     fun saveCustomMoods(moods: List<String>) {
         val json = JSONArray()
@@ -537,5 +541,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_GAME_RECOGNITION_HINTS  = "game_recognition_hints"
         private const val KEY_PLAYER_RECOGNITION_HINTS = "player_recognition_hints"
         private const val KEY_CUSTOM_MOODS             = "custom_moods"
+        private const val KEY_CHRONICLE_ENABLED       = "chronicle_enabled"
     }
 }

@@ -216,6 +216,7 @@ fun HistoryScreen(
     val bggPlaysCacheAgeMinutes by viewModel.bggPlaysCacheAgeMinutes.collectAsState()
     val customMoods by viewModel.customMoods.collectAsState()
     val chroniclePendingPlayIds by viewModel.chroniclePendingPlayIds.collectAsState()
+    val chronicleEnabled by viewModel.chronicleEnabled.collectAsState()
 
     var showBggPlaysRefreshConfirm by remember { mutableStateOf(false) }
 
@@ -494,6 +495,7 @@ fun HistoryScreen(
             onViewGame = { g -> selectedGame = g },
             customMoods = customMoods,
             isChroniclePending = chroniclePendingPlayIds.contains(play.id),
+            chronicleEnabled = chronicleEnabled,
             onEnsureChronicle = {
                 viewModel.ensureChronicleForPlay(play) { savedMemory ->
                     selectedPlay = selectedPlay?.takeIf { it.id == play.id }?.copy(memory = savedMemory)
@@ -1510,16 +1512,17 @@ private fun PlayDetailsDialog(
     onSaveMemory: (cz.nicolsburg.boardflow.model.SessionMemory) -> Unit = {},
     onEnsureChronicle: () -> Unit = {},
     customMoods: List<String> = emptyList(),
-    isChroniclePending: Boolean = false
+    isChroniclePending: Boolean = false,
+    chronicleEnabled: Boolean = true
 ) {
     var viewingPlayer by remember { mutableStateOf<Player?>(null) }
     var viewingRival by remember { mutableStateOf<Player?>(null) }
     val memory = play.memory
-    val chronicle = memory?.chronicleLine?.takeIf { it.isNotBlank() }
+    val chronicle = memory?.chronicleLine?.takeIf { chronicleEnabled && it.isNotBlank() }
     val hasMemoryInput = memory?.let { it.moods.isNotEmpty() || it.quote.isNotBlank() } == true
 
-    LaunchedEffect(play.id, chronicle, hasMemoryInput) {
-        if (chronicle == null && hasMemoryInput) onEnsureChronicle()
+    LaunchedEffect(play.id, chronicle, hasMemoryInput, chronicleEnabled) {
+        if (chronicleEnabled && chronicle == null && hasMemoryInput) onEnsureChronicle()
     }
 
     val insights = remember(play, historyPlays) {
@@ -1662,14 +1665,14 @@ private fun PlayDetailsDialog(
                     }
                 }
 
-                if (chronicle != null || (hasMemoryInput && isChroniclePending) || insights.isNotEmpty()) {
+                if (chronicle != null || (chronicleEnabled && hasMemoryInput && isChroniclePending) || insights.isNotEmpty()) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             when {
                                 chronicle != null -> ChronicleInsightCard(
                                     chronicle = chronicle
                                 )
-                                hasMemoryInput && isChroniclePending -> ChronicleInsightCard(
+                                chronicleEnabled && hasMemoryInput && isChroniclePending -> ChronicleInsightCard(
                                     chronicle = "...",
                                     isPlaceholder = true
                                 )

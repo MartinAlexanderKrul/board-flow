@@ -91,6 +91,22 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         prefs.statsPlayScope = scope.name
     }
 
+    private val _chronicleEnabled = MutableStateFlow(prefs.chronicleEnabled)
+    val chronicleEnabled: StateFlow<Boolean> = _chronicleEnabled.asStateFlow()
+
+    fun setChronicleEnabled(enabled: Boolean) {
+        _chronicleEnabled.value = enabled
+        prefs.chronicleEnabled = enabled
+        if (!enabled) {
+            synchronized(chronicleGenerationLock) {
+                chronicleJobs.values.forEach { it.cancel() }
+                chronicleJobs.clear()
+                chronicleInFlightSourceKeys.clear()
+                _chroniclePendingPlayIds.value = emptySet()
+            }
+        }
+    }
+
     // --- Settings save callback ---
     var settingsSaveCallback: (() -> Unit)? = null
 
@@ -751,10 +767,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             _bggPlaysLoading.value = true; _bggPlaysError.value = null
             cz.nicolsburg.boardflow.data.refreshBggPlayCache(prefs, container.canonicalCollectionStore, container.bggRepository)
-                .onSuccess {
-                    _bggPlays.value = mergeBggPlayLists(it)
+                .onSuccess { rawPlays ->
+                    val withMemory = container.canonicalCollectionStore.getBggPlaysCache()
+                    _bggPlays.value = mergeBggPlayLists(withMemory)
                     reconcilePendingLocalPlays(_bggPlays.value)
-                    pruneLocalPlaysDeletedOnBgg(it)
+                    pruneLocalPlaysDeletedOnBgg(rawPlays)
                     _bggPlaysCacheAgeMinutes.value = container.canonicalCollectionStore.getBggPlaysCacheAgeMinutes()
                 }
                 .onFailure { _bggPlaysError.value = it.message }
@@ -841,8 +858,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     container.bggRepository.getPlays(username)
                         .onSuccess { refreshed ->
                             if (!refreshed.any { it.id == playId }) {
-                                _bggPlays.value = refreshed
                                 container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+                                _bggPlays.value = container.canonicalCollectionStore.getBggPlaysCache()
                                 removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
                                 pruneLocalPlaysDeletedOnBgg(refreshed)
                                 _bggPlaysCacheAgeMinutes.value = 0L
@@ -864,8 +881,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         _deletingBggPlayId.value = null
                         onError("BGG did not confirm the delete yet. Please refresh and try again.")
                     } else {
-                        _bggPlays.value = refreshed
                         container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+                        _bggPlays.value = container.canonicalCollectionStore.getBggPlaysCache()
                         removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
                         _bggPlaysCacheAgeMinutes.value = 0L
                         _deletingBggPlayId.value = null
@@ -891,7 +908,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             val plannedMemory = plan.memory
             persistMemoryUpdate(play, plannedMemory, presetMoods)
             onMemoryUpdated(plannedMemory)
-            if (plan.needsGeneration) {
+            if (_chronicleEnabled.value && plan.needsGeneration) {
                 if (tryReserveChronicleGeneration(play.id, plan.sourceKey)) {
                     launchChronicleGeneration(
                         play = play.copy(memory = plannedMemory),
@@ -907,6 +924,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         play: LoggedPlay,
         onMemoryUpdated: (SessionMemory) -> Unit = {}
     ) {
+        if (!_chronicleEnabled.value) return
         val memory = play.memory ?: return
 
         val plan = container.chronicleService.plan(play, memory, play.memory)
@@ -1271,9 +1289,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
         val refreshed = container.bggRepository.getPlays(username).getOrNull() ?: return null
         if (refreshed.isNotEmpty()) {
-            val merged = mergeBggPlayLists(refreshed, _bggPlays.value)
-            _bggPlays.value = merged
-            container.canonicalCollectionStore.saveBggPlaysCache(merged)
+            container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+            val withMemory = container.canonicalCollectionStore.getBggPlaysCache()
+            _bggPlays.value = mergeBggPlayLists(withMemory, _bggPlays.value)
             _bggPlaysCacheAgeMinutes.value = 0L
         }
 
@@ -1723,7 +1741,7 @@ private fun mergeHistorySources(local: List<LoggedPlay>, remote: List<LoggedPlay
     val localOnly = local.filterNot { play ->
         play.id in remoteIds || (play.id.isLikelyLocalUuid() && play.historyCorrelationKey() in remoteCorrelationKeys)
     }
-    val combined = (localOnly + remote).sortedByDescending { it.date }
+    val combined = (localOnly + remote).sortedWith(compareByDescending<LoggedPlay> { it.date }.thenByDescending { it.id })
     // Guarantee unique IDs — LazyColumn keys must not repeat
     val seenIds = hashSetOf<String>()
     return combined.filter { seenIds.add(it.id) }
@@ -1755,7 +1773,7 @@ private fun mergeBggPlayLists(vararg lists: List<LoggedPlay>): List<LoggedPlay> 
             else -> existing
         }
     }
-    return byId.values.sortedByDescending { it.date }
+    return byId.values.sortedWith(compareByDescending<LoggedPlay> { it.date }.thenByDescending { it.id })
 }
 
 private fun LoggedPlay.prefersRemoteIdentityOver(other: LoggedPlay): Boolean {

@@ -47,9 +47,10 @@ class CanonicalCollectionStore private constructor(
     suspend fun getLoggedPlays(): List<LoggedPlay> {
         val memories = dao.getAllPlayMemories().associate { it.id to it.memoryJson }
         return dao.getAllLoggedPlays().map { entity ->
+            val play = entity.toModel()
             val overlayJson = memories[entity.id]
-            if (overlayJson != null) entity.toModel().copy(memory = overlayJson.toSessionMemoryOrNull())
-            else entity.toModel()
+            val memory = overlayJson?.toSessionMemoryOrNull() ?: play.memory ?: play.comments.parseMemoryFromNotes()
+            play.copy(memory = memory)
         }
     }
 
@@ -80,9 +81,9 @@ class CanonicalCollectionStore private constructor(
     suspend fun getBggPlaysCache(): List<LoggedPlay> {
         val memories = dao.getAllPlayMemories().associate { it.id to it.memoryJson }
         return dao.getAllBggCachedPlays().map { entity ->
+            val play = entity.toModel()
             val overlayJson = memories[entity.id]
-            if (overlayJson != null) entity.toModel().copy(memory = overlayJson.toSessionMemoryOrNull())
-            else entity.toModel()
+            play.copy(memory = overlayJson?.toSessionMemoryOrNull() ?: play.comments.parseMemoryFromNotes())
         }
     }
 

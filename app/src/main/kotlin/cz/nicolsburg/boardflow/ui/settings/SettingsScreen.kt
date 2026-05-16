@@ -74,6 +74,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.shape.CircleShape
@@ -141,6 +142,7 @@ fun SettingsScreen(
     val currentTheme by viewModel.appTheme.collectAsState()
     val currentManufacturer by viewModel.sleevePreferredManufacturer.collectAsState()
     val currentStatsPlayScope by viewModel.statsPlayScope.collectAsState()
+    val chronicleEnabled by viewModel.chronicleEnabled.collectAsState()
     val googleAccount by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
     val spreadsheetTitle by syncViewModel.spreadsheetTitle.collectAsState()
@@ -527,6 +529,40 @@ fun SettingsScreen(
                                     statsScopeExpanded = false
                                 },
                                 onDismiss = { statsScopeExpanded = false }
+                            )
+                        }
+                    }
+                }
+
+                item {
+                    SettingsCard(
+                        icon = Icons.Default.AutoStories,
+                        title = "Chronicles",
+                        subtitle = "Generate and show session memory lines."
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f).padding(end = 12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    if (chronicleEnabled) "Chronicles enabled" else "Chronicles disabled",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    "When off, BoardFlow will neither generate nor show chronicles.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+                                )
+                            }
+                            androidx.compose.material3.Switch(
+                                checked = chronicleEnabled,
+                                onCheckedChange = { viewModel.setChronicleEnabled(it) }
                             )
                         }
                     }
