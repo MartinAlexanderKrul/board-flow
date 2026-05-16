@@ -18,6 +18,7 @@ import androidx.room.migration.Migration
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.PlayerResult
+import cz.nicolsburg.boardflow.model.SessionMemory
 import androidx.sqlite.db.SupportSQLiteDatabase
 import org.json.JSONArray
 import org.json.JSONObject
@@ -43,8 +44,14 @@ class CanonicalCollectionStore private constructor(
 
     suspend fun countGames(): Int = dao.count()
 
-    suspend fun getLoggedPlays(): List<LoggedPlay> =
-        dao.getAllLoggedPlays().map { it.toModel() }
+    suspend fun getLoggedPlays(): List<LoggedPlay> {
+        val memories = dao.getAllPlayMemories().associate { it.id to it.memoryJson }
+        return dao.getAllLoggedPlays().map { entity ->
+            val overlayJson = memories[entity.id]
+            if (overlayJson != null) entity.toModel().copy(memory = overlayJson.toSessionMemoryOrNull())
+            else entity.toModel()
+        }
+    }
 
     suspend fun saveLoggedPlay(play: LoggedPlay) {
         dao.upsertLoggedPlay(LoggedPlayEntity.fromModel(play))
@@ -70,8 +77,18 @@ class CanonicalCollectionStore private constructor(
         dao.clearLoggedPlays()
     }
 
-    suspend fun getBggPlaysCache(): List<LoggedPlay> =
-        dao.getAllBggCachedPlays().map { it.toModel() }
+    suspend fun getBggPlaysCache(): List<LoggedPlay> {
+        val memories = dao.getAllPlayMemories().associate { it.id to it.memoryJson }
+        return dao.getAllBggCachedPlays().map { entity ->
+            val overlayJson = memories[entity.id]
+            if (overlayJson != null) entity.toModel().copy(memory = overlayJson.toSessionMemoryOrNull())
+            else entity.toModel()
+        }
+    }
+
+    suspend fun savePlayMemory(playId: String, memory: SessionMemory) {
+        dao.upsertPlayMemory(PlayMemoryEntity(id = playId, memoryJson = memory.toJsonString()))
+    }
 
     suspend fun saveBggPlaysCache(plays: List<LoggedPlay>) {
         db.withTransaction {
@@ -99,7 +116,7 @@ class CanonicalCollectionStore private constructor(
                         CanonicalCollectionDatabase::class.java,
                         "boardflow_collection.db"
                     )
-                        .addMigrations(MIGRATION_1_2)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                         .build()
                 ).also { INSTANCE = it }
             }
@@ -159,16 +176,36 @@ private interface CanonicalCollectionDao {
 
     @Query("SELECT longValue FROM store_metadata WHERE `key` = :key LIMIT 1")
     suspend fun getMetadataLong(key: String): Long?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPlayMemory(memory: PlayMemoryEntity)
+
+    @Query("SELECT * FROM play_memories")
+    suspend fun getAllPlayMemories(): List<PlayMemoryEntity>
 }
 
 @Database(
-    entities = [CanonicalGameEntity::class, LoggedPlayEntity::class, BggCachedPlayEntity::class, StoreMetadataEntity::class],
-    version = 2,
+    entities = [CanonicalGameEntity::class, LoggedPlayEntity::class, BggCachedPlayEntity::class, StoreMetadataEntity::class, PlayMemoryEntity::class],
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(CanonicalCollectionConverters::class)
 private abstract class CanonicalCollectionDatabase : RoomDatabase() {
     abstract fun collectionDao(): CanonicalCollectionDao
+}
+
+@Entity(tableName = "play_memories")
+private data class PlayMemoryEntity(
+    @PrimaryKey val id: String,
+    val memoryJson: String
+)
+
+private val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `play_memories` (`id` TEXT NOT NULL, `memoryJson` TEXT NOT NULL, PRIMARY KEY(`id`))"
+        )
+    }
 }
 
 private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -222,6 +259,12 @@ private val MIGRATION_1_2 = object : Migration(1, 2) {
             )
             """.trimIndent()
         )
+    }
+}
+
+private val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `logged_plays` ADD COLUMN `memory` TEXT NOT NULL DEFAULT ''")
     }
 }
 
@@ -370,7 +413,8 @@ private data class LoggedPlayEntity(
     val comments: String,
     val quantity: Int,
     val incomplete: Boolean,
-    val nowInStats: Boolean
+    val nowInStats: Boolean,
+    val memory: String = ""
 ) {
     fun toModel(): LoggedPlay = LoggedPlay(
         id = id,
@@ -384,7 +428,8 @@ private data class LoggedPlayEntity(
         comments = comments,
         quantity = quantity,
         incomplete = incomplete,
-        nowInStats = nowInStats
+        nowInStats = nowInStats,
+        memory = memory.toSessionMemoryOrNull()
     )
 
     companion object {
@@ -400,7 +445,8 @@ private data class LoggedPlayEntity(
             comments = play.comments,
             quantity = play.quantity,
             incomplete = play.incomplete,
-            nowInStats = play.nowInStats
+            nowInStats = play.nowInStats,
+            memory = play.memory?.toJsonString() ?: ""
         )
     }
 }

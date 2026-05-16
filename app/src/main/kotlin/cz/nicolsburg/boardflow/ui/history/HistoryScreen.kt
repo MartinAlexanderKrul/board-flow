@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -110,6 +111,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowTonalButton
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
+import cz.nicolsburg.boardflow.model.trimMemorySuffix
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -212,6 +214,8 @@ fun HistoryScreen(
     val editPlayLoading by viewModel.editPlayLoading.collectAsState()
     val postingPlayId by viewModel.postingPlayId.collectAsState()
     val bggPlaysCacheAgeMinutes by viewModel.bggPlaysCacheAgeMinutes.collectAsState()
+    val customMoods by viewModel.customMoods.collectAsState()
+    val chroniclePendingPlayIds by viewModel.chroniclePendingPlayIds.collectAsState()
 
     var showBggPlaysRefreshConfirm by remember { mutableStateOf(false) }
 
@@ -487,7 +491,21 @@ fun HistoryScreen(
             onDeletePlay = { playToDelete = play },
             onShareQr = { playToShare = play },
             onPlayAgain = { selectedPlay = null; onPlayAgain(play) },
-            onViewGame = { g -> selectedGame = g }
+            onViewGame = { g -> selectedGame = g },
+            customMoods = customMoods,
+            isChroniclePending = chroniclePendingPlayIds.contains(play.id),
+            onEnsureChronicle = {
+                viewModel.ensureChronicleForPlay(play) { savedMemory ->
+                    selectedPlay = selectedPlay?.takeIf { it.id == play.id }?.copy(memory = savedMemory)
+                }
+            },
+            onSaveMemory = { memory ->
+                val presets = listOf("Chill", "Intense", "Chaotic", "Cozy", "Competitive", "Legendary")
+                viewModel.savePlayMemory(play, memory, presets) { savedMemory ->
+                    selectedPlay = selectedPlay?.takeIf { it.id == play.id }?.copy(memory = savedMemory)
+                }
+                selectedPlay = selectedPlay?.copy(memory = memory) ?: play.copy(memory = memory)
+            }
         )
     }
 
@@ -1488,10 +1506,21 @@ private fun PlayDetailsDialog(
     onDeletePlay: () -> Unit,
     onShareQr: () -> Unit,
     onPlayAgain: () -> Unit = {},
-    onViewGame: ((GameItem) -> Unit)? = null
+    onViewGame: ((GameItem) -> Unit)? = null,
+    onSaveMemory: (cz.nicolsburg.boardflow.model.SessionMemory) -> Unit = {},
+    onEnsureChronicle: () -> Unit = {},
+    customMoods: List<String> = emptyList(),
+    isChroniclePending: Boolean = false
 ) {
     var viewingPlayer by remember { mutableStateOf<Player?>(null) }
     var viewingRival by remember { mutableStateOf<Player?>(null) }
+    val memory = play.memory
+    val chronicle = memory?.chronicleLine?.takeIf { it.isNotBlank() }
+    val hasMemoryInput = memory?.let { it.moods.isNotEmpty() || it.quote.isNotBlank() } == true
+
+    LaunchedEffect(play.id, chronicle, hasMemoryInput) {
+        if (chronicle == null && hasMemoryInput) onEnsureChronicle()
+    }
 
     val insights = remember(play, historyPlays) {
         buildList {
@@ -1515,9 +1544,6 @@ private fun PlayDetailsDialog(
                 }
                 if (play.quantity > 1) {
                     add(PlayInsight("Logged as ${play.quantity} sessions."))
-                }
-                if (play.incomplete) {
-                    add(PlayInsight("Marked as an incomplete session."))
                 }
             }
         }.take(2)
@@ -1636,9 +1662,18 @@ private fun PlayDetailsDialog(
                     }
                 }
 
-                if (insights.isNotEmpty()) {
+                if (chronicle != null || (hasMemoryInput && isChroniclePending) || insights.isNotEmpty()) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            when {
+                                chronicle != null -> ChronicleInsightCard(
+                                    chronicle = chronicle
+                                )
+                                hasMemoryInput && isChroniclePending -> ChronicleInsightCard(
+                                    chronicle = "...",
+                                    isPlaceholder = true
+                                )
+                            }
                             insights.forEach { insight ->
                                 PlayInsightStrip(insight = insight)
                             }
@@ -1647,11 +1682,14 @@ private fun PlayDetailsDialog(
                 }
 
                 item {
+                    val visibleComments = remember(play.comments) {
+                        play.comments.trimMemorySuffix().takeIf { it.isNotBlank() }
+                    }
                     DetailSection(
                         rows = buildList {
                             if (play.quantity > 1) add("Played" to "${play.quantity} times")
                             if (play.incomplete) add("Status" to "Incomplete play")
-                            if (play.comments.isNotBlank()) add("Comment" to play.comments)
+                            if (visibleComments != null) add("Comment" to visibleComments)
                         }
                     )
                 }
@@ -1727,6 +1765,15 @@ private fun PlayDetailsDialog(
                             }
                         }
                     }
+                }
+
+                item {
+                    PlayMemorySection(
+                        memory = play.memory,
+                        customMoods = customMoods,
+                        isChroniclePending = isChroniclePending,
+                        onSaveMemory = onSaveMemory
+                    )
                 }
 
                 item {
@@ -2290,6 +2337,374 @@ private val PlayerResultListSaver = androidx.compose.runtime.saveable.listSaver<
 private fun String.isLikelyLocalUuid(): Boolean {
     return Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
         .matches(this)
+}
+
+@Composable
+private fun PlayMemorySection(
+    memory: cz.nicolsburg.boardflow.model.SessionMemory?,
+    onSaveMemory: (cz.nicolsburg.boardflow.model.SessionMemory) -> Unit,
+    customMoods: List<String> = emptyList(),
+    isChroniclePending: Boolean = false
+) {
+    val presetMoods = listOf("Chill", "Intense", "Chaotic", "Cozy", "Competitive", "Legendary")
+    val moods = remember(customMoods) {
+        (presetMoods + customMoods.filter { c -> presetMoods.none { it.equals(c, ignoreCase = true) } }).distinct()
+    }
+
+    val hasMemory = memory?.run {
+        moods.isNotEmpty() || note.isNotBlank() || quote.isNotBlank() || chronicleLine.isNotBlank()
+    } == true
+    var isEditing by remember { mutableStateOf(false) }
+    var draftMoods by remember(memory) { mutableStateOf(memory?.moods ?: emptyList()) }
+    var draftCustomText by remember { mutableStateOf("") }
+    var draftQuote by remember(memory) { mutableStateOf(memory?.quote ?: "") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(Brush.horizontalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))))
+            )
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Icon(
+                    BoardFlowIcons.Bookmark,
+                    contentDescription = null,
+                    modifier = Modifier.size(11.dp),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                )
+                Text(
+                    "Memory",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                )
+            }
+            Box(
+                Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f), Color.Transparent)))
+            )
+        }
+
+        if (!isEditing) {
+            if (hasMemory) {
+                MemoryDisplay(memory = memory!!, onEdit = { isEditing = true })
+            } else {
+                MemoryEmptyState(onAdd = { isEditing = true })
+            }
+        } else {
+            MemoryEditor(
+                moods = moods,
+                draftMoods = draftMoods,
+                draftCustomText = draftCustomText,
+                draftQuote = draftQuote,
+                onToggleMood = { mood ->
+                    draftMoods = if (draftMoods.contains(mood)) draftMoods - mood else draftMoods + mood
+                },
+                onCustomTextChange = { draftCustomText = it },
+                onQuoteChange = { draftQuote = it },
+                onSave = {
+                    val extra = draftCustomText.trim()
+                    val finalMoods = (draftMoods + if (extra.isNotBlank()) listOf(extra) else emptyList()).distinct()
+                    onSaveMemory(cz.nicolsburg.boardflow.model.SessionMemory(moods = finalMoods, quote = draftQuote.trim()))
+                    draftCustomText = ""
+                    isEditing = false
+                },
+                onCancel = {
+                    draftMoods = memory?.moods ?: emptyList()
+                    draftCustomText = ""
+                    draftQuote = memory?.quote ?: ""
+                    isEditing = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun MemoryEmptyState(onAdd: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .clickable(onClick = onAdd)
+            .padding(vertical = 18.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Text(
+                "Nothing written yet",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+            )
+            Text(
+                "Capture this session",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MemoryDisplay(
+    memory: cz.nicolsburg.boardflow.model.SessionMemory,
+    onEdit: () -> Unit
+) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                if (memory.moods.isNotEmpty()) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f).padding(end = 4.dp)
+                    ) {
+                        memory.moods.forEach { MemoryChip(label = it, highlighted = true) }
+                    }
+                }
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit memory",
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                }
+            }
+            if (memory.note.isNotBlank()) {
+                Text(
+                    memory.note,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.82f),
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                )
+            }
+            if (memory.quote.isNotBlank()) {
+                Text(
+                    "— ${memory.quote}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChronicleInsightCard(
+    chronicle: String,
+    isPlaceholder: Boolean = false
+) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = if (isPlaceholder) 0.18f else 0.28f),
+        border = BorderStroke(
+            0.5.dp,
+            Color(0xFFF0A500).copy(alpha = if (isPlaceholder) 0.14f else 0.22f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.AutoStories,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = Color(0xFFF0A500).copy(alpha = if (isPlaceholder) 0.58f else 0.72f)
+                )
+                Text(
+                    if (isPlaceholder) "Table Memory" else "Chronicle",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.82f)
+                )
+            }
+            Text(
+                chronicle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = if (isPlaceholder) 0.68f else 0.92f),
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            )
+        }
+    }
+}
+
+@Composable
+private fun MemoryChip(label: String, highlighted: Boolean) {
+    val bg = if (highlighted) MaterialTheme.colorScheme.tertiaryContainer
+             else MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+    val fg = if (highlighted) MaterialTheme.colorScheme.onTertiaryContainer
+             else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+    Surface(shape = CircleShape, color = bg) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = fg,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
+private fun MemorySelectableChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val bg = if (selected) MaterialTheme.colorScheme.tertiaryContainer
+             else Color.Transparent
+    val fg = if (selected) MaterialTheme.colorScheme.onTertiaryContainer
+             else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    val border = if (selected) null
+                 else BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+    Surface(
+        shape = CircleShape,
+        color = bg,
+        border = border,
+        onClick = onClick
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = fg,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+        )
+    }
+}
+
+@Composable
+private fun MemoryEditor(
+    moods: List<String>,
+    draftMoods: List<String>,
+    draftCustomText: String,
+    draftQuote: String,
+    onToggleMood: (String) -> Unit,
+    onCustomTextChange: (String) -> Unit,
+    onQuoteChange: (String) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                moods.forEach { mood ->
+                    MemorySelectableChip(
+                        label = mood,
+                        selected = draftMoods.contains(mood),
+                        onClick = { onToggleMood(mood) }
+                    )
+                }
+            }
+
+            OutlinedTextField(
+                value = draftCustomText,
+                onValueChange = { if (it.length <= 40) onCustomTextChange(it) },
+                placeholder = {
+                    Text(
+                        "Add another mood…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                )
+            )
+
+            OutlinedTextField(
+                value = draftQuote,
+                onValueChange = { if (it.length <= 100) onQuoteChange(it) },
+                placeholder = {
+                    Text(
+                        "Any memorable quote?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                )
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onCancel) {
+                    Text(
+                        "Cancel",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                    )
+                }
+                BoardFlowTonalButton(onClick = onSave) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text("Save memory", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+    }
 }
 
 @Composable

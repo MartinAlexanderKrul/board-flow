@@ -40,7 +40,7 @@ object BackupSerializer {
         cachedBggPlays: List<LoggedPlay>
     ): String {
         val root = JSONObject()
-        root.put("version", 3)
+        root.put("version", 4)
         root.put("exportDate", java.time.LocalDate.now().toString())
         root.put("includesSensitiveData", includeSensitiveData)
         root.put("settings", JSONObject().apply {
@@ -225,6 +225,7 @@ object BackupSerializer {
                 })
             }
         })
+        p.memory?.let { put("memory", it.toJsonObject()) }
     }
 
     fun jsonToPlay(obj: JSONObject): LoggedPlay {
@@ -251,7 +252,8 @@ object BackupSerializer {
             comments = obj.optString("comments", ""),
             quantity = obj.optInt("quantity", 1),
             incomplete = obj.optBoolean("incomplete", false),
-            nowInStats = obj.optBoolean("nowInStats", true)
+            nowInStats = obj.optBoolean("nowInStats", true),
+            memory = obj.optJSONObject("memory")?.toSessionMemoryOrNull()
         )
     }
 

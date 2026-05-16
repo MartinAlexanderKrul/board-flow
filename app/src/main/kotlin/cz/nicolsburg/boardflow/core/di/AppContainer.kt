@@ -7,6 +7,9 @@ import cz.nicolsburg.boardflow.data.BggRepository
 import cz.nicolsburg.boardflow.data.CanonicalCollectionStore
 import cz.nicolsburg.boardflow.data.GeminiRepository
 import cz.nicolsburg.boardflow.data.SecurePreferences
+import cz.nicolsburg.boardflow.data.chronicle.FallbackChronicleComposer
+import cz.nicolsburg.boardflow.data.chronicle.GeminiChronicleLineGenerator
+import cz.nicolsburg.boardflow.data.chronicle.SessionChronicleService
 
 class AppContainer(context: Context) {
     private val appContext = context.applicationContext
@@ -15,6 +18,10 @@ class AppContainer(context: Context) {
     val canonicalCollectionStore = CanonicalCollectionStore.getInstance(appContext)
     val bggRepository = BggRepository()
     val geminiRepo = GeminiRepository()
+    val chronicleService = SessionChronicleService(
+        lineGenerator = GeminiChronicleLineGenerator(),
+        fallbackComposer = FallbackChronicleComposer()
+    )
 
     fun isOnline(): Boolean {
         val connectivityManager = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager

@@ -44,6 +44,16 @@ data class BggCredentials(
     val password: String
 )
 
+data class SessionMemory(
+    val moods: List<String> = emptyList(),
+    val momentType: String = "",
+    val note: String = "",
+    val quote: String = "",
+    val chronicleLine: String = "",
+    val chronicleSourceKey: String = "",
+    val chronicleCreatedAt: Long? = null
+)
+
 data class LoggedPlay(
     val id: String,
     val gameId: Int,
@@ -56,8 +66,22 @@ data class LoggedPlay(
     val comments: String = "",
     val quantity: Int = 1,
     val incomplete: Boolean = false,
-    val nowInStats: Boolean = true
+    val nowInStats: Boolean = true,
+    val memory: SessionMemory? = null
 )
+
+fun String.trimMemorySuffix(): String {
+    fun String.isMemoryLine() = startsWith("\$\$mood:") || startsWith("\$\$quote:") || isBlank()
+    val idx = lastIndexOf("\n\n")
+    if (idx == -1) {
+        return if (lines().all { it.isMemoryLine() }) "" else trimEnd()
+    }
+    val suffix = substring(idx + 2)
+    return if (suffix.lines().all { it.isMemoryLine() }) substring(0, idx).trimEnd() else trimEnd()
+}
+
+@Deprecated("Use trimMemorySuffix", ReplaceWith("trimMemorySuffix()"))
+fun String.trimMoodSuffix(): String = trimMemorySuffix()
 
 enum class StatsPlayScope(val label: String, val description: String) {
     ALL_PLAYS("All logged plays", "Every saved play appears in History stats."),

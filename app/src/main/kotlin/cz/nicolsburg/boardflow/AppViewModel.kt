@@ -8,6 +8,7 @@ import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.core.di.AppContainer
 import cz.nicolsburg.boardflow.data.GameRecognitionEngine
 import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
+import cz.nicolsburg.boardflow.data.chronicle.ChronicleAiConfig
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.ExtractedPlay
@@ -23,7 +24,9 @@ import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.model.RecordMoment
 import cz.nicolsburg.boardflow.model.SessionContext
+import cz.nicolsburg.boardflow.model.SessionMemory
 import cz.nicolsburg.boardflow.model.SleeveManufacturer
+import cz.nicolsburg.boardflow.model.trimMemorySuffix
 import cz.nicolsburg.boardflow.model.StatsPlayScope
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -678,6 +681,40 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun deletePlayer(id: String) { _players.value = _players.value.filter { it.id != id }; prefs.savePlayers(_players.value) }
 
+    // --- Custom moods ---
+    private val _customMoods = MutableStateFlow(prefs.getCustomMoods())
+    val customMoods: StateFlow<List<String>> = _customMoods.asStateFlow()
+    private val _chroniclePendingPlayIds = MutableStateFlow<Set<String>>(emptySet())
+    val chroniclePendingPlayIds: StateFlow<Set<String>> = _chroniclePendingPlayIds.asStateFlow()
+    private val chronicleJobs = mutableMapOf<String, Job>()
+    private val chronicleInFlightSourceKeys = mutableMapOf<String, String>()
+    private val chronicleGenerationLock = Any()
+
+    private fun addCustomMoodIfNew(mood: String, presets: List<String>) {
+        if (mood.isBlank() || presets.any { it.equals(mood, ignoreCase = true) }) return
+        val current = _customMoods.value
+        if (current.any { it.equals(mood, ignoreCase = true) }) return
+        val updated = (current + mood).distinct()
+        _customMoods.value = updated
+        prefs.saveCustomMoods(updated)
+    }
+
+    fun deleteCustomMood(mood: String) {
+        val updated = _customMoods.value.filter { !it.equals(mood, ignoreCase = true) }
+        _customMoods.value = updated
+        prefs.saveCustomMoods(updated)
+    }
+
+    fun renameCustomMood(oldMood: String, newMood: String) {
+        val trimmed = newMood.trim()
+        if (trimmed.isBlank()) return
+        val updated = _customMoods.value
+            .map { if (it.equals(oldMood, ignoreCase = true)) trimmed else it }
+            .distinct()
+        _customMoods.value = updated
+        prefs.saveCustomMoods(updated)
+    }
+
     // --- Play history (local) ---
     private val _playHistory = MutableStateFlow<List<LoggedPlay>>(emptyList())
     val playHistory: StateFlow<List<LoggedPlay>> = _playHistory.asStateFlow()
@@ -839,6 +876,161 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     _deletingBggPlayId.value = null
                     onError(error.message ?: "Deleted on BGG, but failed to refresh history")
                 }
+        }
+    }
+
+    fun savePlayMemory(
+        play: LoggedPlay,
+        memory: SessionMemory,
+        presetMoods: List<String>,
+        onMemoryUpdated: (SessionMemory) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val plan = container.chronicleService.plan(play, memory, play.memory)
+            reconcileChronicleGeneration(play.id, if (plan.needsGeneration) plan.sourceKey else null)
+            val plannedMemory = plan.memory
+            persistMemoryUpdate(play, plannedMemory, presetMoods)
+            onMemoryUpdated(plannedMemory)
+            if (plan.needsGeneration) {
+                if (tryReserveChronicleGeneration(play.id, plan.sourceKey)) {
+                    launchChronicleGeneration(
+                        play = play.copy(memory = plannedMemory),
+                        plan = plan,
+                        onMemoryUpdated = onMemoryUpdated
+                    )
+                }
+            }
+        }
+    }
+
+    fun ensureChronicleForPlay(
+        play: LoggedPlay,
+        onMemoryUpdated: (SessionMemory) -> Unit = {}
+    ) {
+        val memory = play.memory ?: return
+
+        val plan = container.chronicleService.plan(play, memory, play.memory)
+        if (!plan.needsGeneration || plan.sourceKey == null) return
+        if (!tryReserveChronicleGeneration(play.id, plan.sourceKey)) return
+        launchChronicleGeneration(play = play, plan = plan, onMemoryUpdated = onMemoryUpdated)
+    }
+
+    private suspend fun persistMemoryUpdate(
+        play: LoggedPlay,
+        memory: SessionMemory,
+        presetMoods: List<String>
+    ) {
+        persistMemoryOverlay(play.id, memory)
+        memory.moods.forEach { addCustomMoodIfNew(it, presetMoods) }
+
+        val moodText = memory.moods.filter { it.isNotBlank() }.joinToString(", ")
+        val newComments = buildMemoryComments(play.comments, moodText, memory.quote.trim())
+        if (newComments != play.comments) {
+            container.canonicalCollectionStore.updateLoggedPlay(play.id) { it.copy(comments = newComments) }
+            if (play.postedToBgg) syncMoodToBgg(play, newComments)
+        }
+
+        _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+        val cached = container.canonicalCollectionStore.getBggPlaysCache()
+        if (cached.isNotEmpty()) _bggPlays.value = cached
+    }
+
+    private suspend fun persistMemoryOverlay(playId: String, memory: SessionMemory) {
+        container.canonicalCollectionStore.savePlayMemory(playId, memory)
+    }
+
+    private fun reconcileChronicleGeneration(playId: String, desiredSourceKey: String?) {
+        synchronized(chronicleGenerationLock) {
+            val currentSourceKey = chronicleInFlightSourceKeys[playId]
+            if (desiredSourceKey == currentSourceKey) return
+            chronicleJobs.remove(playId)?.cancel()
+            chronicleInFlightSourceKeys.remove(playId)
+            _chroniclePendingPlayIds.value = _chroniclePendingPlayIds.value - playId
+        }
+    }
+
+    private fun tryReserveChronicleGeneration(playId: String, sourceKey: String?): Boolean {
+        if (sourceKey == null) return false
+        synchronized(chronicleGenerationLock) {
+            val currentSourceKey = chronicleInFlightSourceKeys[playId]
+            val hasInFlightJob = _chroniclePendingPlayIds.value.contains(playId) || chronicleJobs.containsKey(playId)
+            if (hasInFlightJob && currentSourceKey == sourceKey) return false
+            chronicleInFlightSourceKeys[playId] = sourceKey
+            return true
+        }
+    }
+
+    private fun launchChronicleGeneration(
+        play: LoggedPlay,
+        plan: cz.nicolsburg.boardflow.data.chronicle.ChroniclePlan,
+        onMemoryUpdated: (SessionMemory) -> Unit
+    ) {
+        chronicleJobs[play.id] = viewModelScope.launch {
+            persistMemoryOverlay(play.id, plan.memory)
+            onMemoryUpdated(plan.memory)
+            _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            val cachedBeforeCompose = container.canonicalCollectionStore.getBggPlaysCache()
+            if (cachedBeforeCompose.isNotEmpty()) _bggPlays.value = cachedBeforeCompose
+
+            _chroniclePendingPlayIds.value = _chroniclePendingPlayIds.value + play.id
+            val aiConfig = if (isOnline() && prefs.hasGeminiKey()) {
+                ChronicleAiConfig(
+                    apiKey = prefs.geminiApiKey,
+                    modelName = prefs.geminiModelEndpoint,
+                    availableModels = prefs.getAvailableModels()
+                )
+            } else {
+                null
+            }
+            val composedMemory = runCatching {
+                container.chronicleService.compose(play, plan, aiConfig)
+            }.getOrElse { plan.memory }
+            persistMemoryOverlay(play.id, composedMemory)
+            onMemoryUpdated(composedMemory)
+            _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            val cached = container.canonicalCollectionStore.getBggPlaysCache()
+            if (cached.isNotEmpty()) _bggPlays.value = cached
+        }.also { job ->
+            job.invokeOnCompletion {
+                _chroniclePendingPlayIds.value = _chroniclePendingPlayIds.value - play.id
+                synchronized(chronicleGenerationLock) {
+                    chronicleJobs.remove(play.id)
+                    chronicleInFlightSourceKeys.remove(play.id)
+                }
+            }
+        }
+    }
+
+    private fun buildMemoryComments(existingComments: String, moodText: String, quoteText: String): String {
+        val stripped = existingComments.trimMemorySuffix()
+        val lines = buildList {
+            if (moodText.isNotBlank()) add("\$\$mood: $moodText")
+            if (quoteText.isNotBlank()) add("\$\$quote: $quoteText")
+        }
+        if (lines.isEmpty()) return stripped
+        val block = lines.joinToString("\n")
+        return if (stripped.isBlank()) block else "$stripped\n\n$block"
+    }
+
+    private suspend fun syncMoodToBgg(play: LoggedPlay, newComments: String) {
+        runCatching {
+            if (!isOnline()) return
+            val creds = prefs.getCredentials() ?: return
+            container.bggRepository.login(creds).getOrThrow()
+            val bggPlayId = resolveBggPlayIdForEdit(play) ?: return
+            container.bggRepository.logPlay(
+                gameId = play.gameId,
+                date = LocalDate.parse(play.date),
+                players = play.players,
+                playerBggUsernames = buildBggUsernameMap(play.players),
+                durationMinutes = play.durationMinutes,
+                location = play.location,
+                comments = newComments,
+                quantity = play.quantity,
+                incomplete = play.incomplete,
+                nowInStats = play.nowInStats,
+                playId = bggPlayId
+            ).getOrThrow()
         }
     }
 

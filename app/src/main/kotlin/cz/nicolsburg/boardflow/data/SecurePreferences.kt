@@ -57,6 +57,23 @@ class SecurePreferences(context: Context) {
         get() = prefs.getString(KEY_STATS_PLAY_SCOPE, "ALL_PLAYS") ?: "ALL_PLAYS"
         set(value) = prefs.edit().putString(KEY_STATS_PLAY_SCOPE, value).apply()
 
+    // --- Custom moods ---
+    fun saveCustomMoods(moods: List<String>) {
+        val json = JSONArray()
+        moods.forEach { json.put(it) }
+        prefs.edit().putString(KEY_CUSTOM_MOODS, json.toString()).apply()
+    }
+
+    fun getCustomMoods(): List<String> {
+        val raw = prefs.getString(KEY_CUSTOM_MOODS, "[]") ?: "[]"
+        return try {
+            val array = JSONArray(raw)
+            (0 until array.length()).map { array.getString(it) }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     // --- Available Gemini models cache ---
     fun saveAvailableModels(models: List<String>) {
         val json = JSONArray()
@@ -519,5 +536,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_LAST_SYNCED_AT      = "last_synced_at"
         private const val KEY_GAME_RECOGNITION_HINTS  = "game_recognition_hints"
         private const val KEY_PLAYER_RECOGNITION_HINTS = "player_recognition_hints"
+        private const val KEY_CUSTOM_MOODS             = "custom_moods"
     }
 }

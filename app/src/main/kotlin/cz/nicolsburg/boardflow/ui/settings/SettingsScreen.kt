@@ -73,7 +73,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
@@ -157,6 +161,8 @@ fun SettingsScreen(
     var playerHintCount by remember { mutableStateOf(viewModel.getPlayerRecognitionHintCount()) }
     var showClearPlayerHintsConfirm by remember { mutableStateOf(false) }
     var clearPlayerHintsStatus by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
+    val customMoods by viewModel.customMoods.collectAsState()
+    var showCustomMoodsDialog by remember { mutableStateOf(false) }
     val hasCollection = cachedCollection.isNotEmpty()
 
     val listState = rememberLazyListState()
@@ -790,6 +796,36 @@ fun SettingsScreen(
                         }
                     }
                 }
+
+                item {
+                    SettingsCard(
+                        icon = Icons.Default.Bookmark,
+                        title = "Mood Templates",
+                        subtitle = "Custom moods available when capturing session memories."
+                    ) {
+                        val moodCount = customMoods.size
+                        Text(
+                            if (moodCount == 0) "No custom moods added yet."
+                            else "$moodCount custom mood${if (moodCount == 1) "" else "s"} saved.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (moodCount > 0) {
+                            BoardFlowOutlinedButton(
+                                onClick = { showCustomMoodsDialog = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Manage moods")
+                            }
+                        }
+                        if (showCustomMoodsDialog) {
+                            CustomMoodsDialog(
+                                viewModel = viewModel,
+                                onDismiss = { showCustomMoodsDialog = false }
+                            )
+                        }
+                    }
+                }
             }
 
             if (selectedSection == SettingsSection.DATA) {
@@ -1141,6 +1177,160 @@ private fun EditTemplateDialog(
                 BoardFlowButton(
                     onClick = { onSave(hint.copy(normalizedCategories = categories.toList())) }
                 ) { Text("Save") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CustomMoodsDialog(
+    viewModel: AppViewModel,
+    onDismiss: () -> Unit
+) {
+    val moods by viewModel.customMoods.collectAsState()
+    var editingMood by remember { mutableStateOf<String?>(null) }
+
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
+            item {
+                Text(
+                    "Mood Templates",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp)
+                )
+            }
+            item {
+                Text(
+                    "Custom moods you've added while logging session memories.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+            }
+            item { HorizontalDivider() }
+            if (moods.isEmpty()) {
+                item {
+                    Text(
+                        "No custom moods saved.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 12.dp)
+                    )
+                }
+            } else {
+                items(moods.size) { index ->
+                    val mood = moods[index]
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.tertiaryContainer
+                        ) {
+                            Text(
+                                mood,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                        Row {
+                            TextButton(
+                                onClick = { editingMood = mood },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Edit")
+                            }
+                            TextButton(
+                                onClick = { viewModel.deleteCustomMood(mood) },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                ),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Delete")
+                            }
+                        }
+                    }
+                    if (index < moods.size - 1) HorizontalDivider()
+                }
+            }
+        }
+    }
+
+    editingMood?.let { mood ->
+        EditMoodDialog(
+            mood = mood,
+            onSave = { newMood ->
+                viewModel.renameCustomMood(mood, newMood)
+                editingMood = null
+            },
+            onDismiss = { editingMood = null }
+        )
+    }
+}
+
+@Composable
+private fun EditMoodDialog(
+    mood: String,
+    onSave: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var text by remember { mutableStateOf(mood) }
+
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text("Edit mood", style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = text,
+                onValueChange = { if (it.length <= 40) text = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text("Mood label") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel")
+                }
+                BoardFlowButton(
+                    onClick = { if (text.trim().isNotBlank()) onSave(text.trim()) },
+                    enabled = text.trim().isNotBlank()
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text("Save")
+                }
             }
         }
     }
