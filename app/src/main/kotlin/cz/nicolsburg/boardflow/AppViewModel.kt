@@ -1409,6 +1409,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             container.canonicalCollectionStore.replaceLoggedPlays(imported.loggedPlays)
             _playHistory.value = imported.loggedPlays
             container.canonicalCollectionStore.saveBggPlaysCache(imported.cachedBggPlays)
+            container.canonicalCollectionStore.replaceAllPlayMemories(imported.loggedPlays + imported.cachedBggPlays)
             _bggPlays.value = mergeBggPlayLists(imported.cachedBggPlays)
             _bggPlaysCacheAgeMinutes.value = container.canonicalCollectionStore.getBggPlaysCacheAgeMinutes()
 

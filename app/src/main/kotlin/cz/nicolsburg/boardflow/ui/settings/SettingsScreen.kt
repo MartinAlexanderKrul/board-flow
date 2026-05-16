@@ -111,8 +111,8 @@ import java.time.LocalDate
 
 private enum class SettingsSection(val title: String) {
     ACCOUNTS("Accounts"),
-    APPEARANCE("Appearance"),
-    AI("AI"),
+    PREFERENCES("Preferences"),
+    SCAN("Scan"),
     DATA("Data")
 }
 
@@ -463,13 +463,189 @@ fun SettingsScreen(
                     }
                 }
 
+                item {
+                    SettingsCard(
+                        icon = Icons.Default.AutoAwesome,
+                        title = "Google AI Studio",
+                        subtitle = "Optional. Used for scoresheet scanning and chronicles."
+                    ) {
+                        var showApiHelp by remember { mutableStateOf(false) }
+                        OutlinedTextField(
+                            value = apiKey,
+                            onValueChange = {
+                                apiKey = it
+                                prefs.geminiApiKey = it.trim()
+                            },
+                            label = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Gemini API key")
+                                    Spacer(Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = { showApiHelp = true },
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .focusable()
+                                            .semantics {
+                                                contentDescription = "How to get API key"
+                                                role = androidx.compose.ui.semantics.Role.Button
+                                            }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Info,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            singleLine = true,
+                            visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            trailingIcon = {
+                                IconButton(onClick = { showKey = !showKey }) {
+                                    Icon(
+                                        if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = "Toggle key"
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (showApiHelp) {
+                            AnimatedDialog(onDismissRequest = { showApiHelp = false }) {
+                                val uriHandler = LocalUriHandler.current
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    item {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(
+                                                "How to get a Gemini API key",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+                                    item { HorizontalDivider() }
+                                    item {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("1. Visit ", style = MaterialTheme.typography.bodyMedium)
+                                            TextButton(
+                                                onClick = { uriHandler.openUri("https://aistudio.google.com") },
+                                                contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
+                                            ) {
+                                                Text("aistudio.google.com", style = MaterialTheme.typography.bodyMedium)
+                                            }
+                                        }
+                                    }
+                                    item {
+                                        Text("2. Sign in and open your profile > API Keys.", style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                    item {
+                                        Text("3. Create a key and paste it here.", style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                }
+                            }
+                        }
+                        var extraKeys by remember { mutableStateOf(prefs.getGeminiExtraApiKeys()) }
+                        var newExtraKey by remember { mutableStateOf("") }
+                        var showExtraKeys by remember { mutableStateOf(false) }
+                        if (extraKeys.isNotEmpty() || apiKey.isNotBlank()) {
+                            Text(
+                                "Backup API keys",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+                            )
+                            Text(
+                                "If the primary key hits a rate limit and all models are exhausted, the app rotates to the next key.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            extraKeys.forEachIndexed { index, key ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    OutlinedTextField(
+                                        value = key,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        singleLine = true,
+                                        visualTransformation = if (showExtraKeys) VisualTransformation.None else PasswordVisualTransformation(),
+                                        trailingIcon = {
+                                            IconButton(onClick = { showExtraKeys = !showExtraKeys }) {
+                                                Icon(
+                                                    if (showExtraKeys) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                                    contentDescription = "Toggle key"
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        label = { Text("Backup key ${index + 1}") }
+                                    )
+                                    IconButton(onClick = {
+                                        val updated = extraKeys.toMutableList().also { it.removeAt(index) }
+                                        extraKeys = updated
+                                        prefs.saveGeminiExtraApiKeys(updated)
+                                    }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Remove backup key")
+                                    }
+                                }
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedTextField(
+                                    value = newExtraKey,
+                                    onValueChange = { newExtraKey = it },
+                                    singleLine = true,
+                                    label = { Text("Add backup key") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                    visualTransformation = if (showExtraKeys) VisualTransformation.None else PasswordVisualTransformation(),
+                                    trailingIcon = {
+                                        IconButton(onClick = { showExtraKeys = !showExtraKeys }) {
+                                            Icon(
+                                                if (showExtraKeys) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                                contentDescription = "Toggle key"
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = {
+                                        val trimmed = newExtraKey.trim()
+                                        if (trimmed.isNotBlank()) {
+                                            val updated = extraKeys + trimmed
+                                            extraKeys = updated
+                                            prefs.saveGeminiExtraApiKeys(updated)
+                                            newExtraKey = ""
+                                        }
+                                    },
+                                    enabled = newExtraKey.isNotBlank()
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = "Add backup key")
+                                }
+                            }
+                        }
+                    }
+                }
+
             }
 
-            if (selectedSection == SettingsSection.APPEARANCE) {
+            if (selectedSection == SettingsSection.PREFERENCES) {
                 item {
                     SectionHeader(
-                        title = "Appearance",
-                        subtitle = "Choose how BoardFlow looks."
+                        title = "Preferences",
+                        subtitle = "Appearance and behaviour of the app."
                     )
                 }
 
@@ -595,172 +771,52 @@ fun SettingsScreen(
                         }
                     }
                 }
+
+                item {
+                    SettingsCard(
+                        icon = Icons.Default.Bookmark,
+                        title = "Mood Templates",
+                        subtitle = "Custom moods available when capturing session memories."
+                    ) {
+                        val moodCount = customMoods.size
+                        Text(
+                            if (moodCount == 0) "No custom moods added yet."
+                            else "$moodCount custom mood${if (moodCount == 1) "" else "s"} saved.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (moodCount > 0) {
+                            BoardFlowOutlinedButton(
+                                onClick = { showCustomMoodsDialog = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Manage moods")
+                            }
+                        }
+                        if (showCustomMoodsDialog) {
+                            CustomMoodsDialog(
+                                viewModel = viewModel,
+                                onDismiss = { showCustomMoodsDialog = false }
+                            )
+                        }
+                    }
+                }
             }
 
-            if (selectedSection == SettingsSection.AI) {
+            if (selectedSection == SettingsSection.SCAN) {
                 item {
                     SectionHeader(
-                        title = "AI",
-                        subtitle = "Optional extras for score extraction from photos."
+                        title = "Scan",
+                        subtitle = "Scoresheet scanning with Gemini. Configure the model and manage learned data."
                     )
                 }
 
                 item {
                     SettingsCard(
                         icon = Icons.Default.AutoAwesome,
-                        title = "Google AI Studio",
-                        subtitle = "Optional. Used when you scan scoresheets."
+                        title = "Gemini Model",
+                        subtitle = "Choose which model is used for scoresheet scanning and chronicles."
                     ) {
-                        var showApiHelp by remember { mutableStateOf(false) }
-                        OutlinedTextField(
-                            value = apiKey,
-                            onValueChange = {
-                                apiKey = it
-                                prefs.geminiApiKey = it.trim()
-                            },
-                            label = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Gemini API key")
-                                    Spacer(Modifier.width(8.dp))
-                                    IconButton(
-                                        onClick = { showApiHelp = true },
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .focusable()
-                                            .semantics {
-                                                contentDescription = "How to get API key"
-                                                role = androidx.compose.ui.semantics.Role.Button
-                                            }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Info,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            },
-                            singleLine = true,
-                            visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                IconButton(onClick = { showKey = !showKey }) {
-                                    Icon(
-                                        if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "Toggle key"
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        if (showApiHelp) {
-                            AnimatedDialog(onDismissRequest = { showApiHelp = false }) {
-                                val uriHandler = LocalUriHandler.current
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    item {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Text(
-                                                "How to get a Gemini API key",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                        }
-                                    }
-                                    item { HorizontalDivider() }
-                                    item {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text("1. Visit ", style = MaterialTheme.typography.bodyMedium)
-                                            TextButton(
-                                                onClick = { uriHandler.openUri("https://aistudio.google.com") },
-                                                contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
-                                            ) {
-                                                Text("aistudio.google.com", style = MaterialTheme.typography.bodyMedium)
-                                            }
-                                        }
-                                    }
-                                    item {
-                                        Text("2. Sign in and open your profile > API Keys.", style = MaterialTheme.typography.bodyMedium)
-                                    }
-                                    item {
-                                        Text("3. Create a key and paste it here.", style = MaterialTheme.typography.bodyMedium)
-                                    }
-                                }
-                            }
-                        }
-                        var extraKeys by remember { mutableStateOf(prefs.getGeminiExtraApiKeys()) }
-                        var newExtraKey by remember { mutableStateOf("") }
-                        if (extraKeys.isNotEmpty() || apiKey.isNotBlank()) {
-                            Text(
-                                "Backup API keys",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
-                            )
-                            Text(
-                                "If the primary key hits a rate limit and all models are exhausted, the app rotates to the next key.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            extraKeys.forEachIndexed { index, key ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    OutlinedTextField(
-                                        value = key,
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        singleLine = true,
-                                        visualTransformation = PasswordVisualTransformation(),
-                                        modifier = Modifier.weight(1f),
-                                        label = { Text("Backup key ${index + 1}") }
-                                    )
-                                    IconButton(onClick = {
-                                        val updated = extraKeys.toMutableList().also { it.removeAt(index) }
-                                        extraKeys = updated
-                                        prefs.saveGeminiExtraApiKeys(updated)
-                                    }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Remove backup key")
-                                    }
-                                }
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                OutlinedTextField(
-                                    value = newExtraKey,
-                                    onValueChange = { newExtraKey = it },
-                                    singleLine = true,
-                                    label = { Text("Add backup key") },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                    visualTransformation = PasswordVisualTransformation(),
-                                    modifier = Modifier.weight(1f)
-                                )
-                                IconButton(
-                                    onClick = {
-                                        val trimmed = newExtraKey.trim()
-                                        if (trimmed.isNotBlank()) {
-                                            val updated = extraKeys + trimmed
-                                            extraKeys = updated
-                                            prefs.saveGeminiExtraApiKeys(updated)
-                                            newExtraKey = ""
-                                        }
-                                    },
-                                    enabled = newExtraKey.isNotBlank()
-                                ) {
-                                    Icon(Icons.Default.Add, contentDescription = "Add backup key")
-                                }
-                            }
-                        }
                         var modelPickerOpen by remember { mutableStateOf(false) }
                         if (availableModels?.isNotEmpty() == true) {
                             BoardFlowPickerField(
@@ -817,7 +873,7 @@ fun SettingsScreen(
                         availableModels?.let { models ->
                             if (models.isEmpty()) {
                                 Text(
-                                    "No models found. Check your API key.",
+                                    "No models found. Check your API key in Accounts.",
                                     color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodySmall
                                 )
@@ -894,36 +950,6 @@ fun SettingsScreen(
                                 message,
                                 color = if (success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.Bookmark,
-                        title = "Mood Templates",
-                        subtitle = "Custom moods available when capturing session memories."
-                    ) {
-                        val moodCount = customMoods.size
-                        Text(
-                            if (moodCount == 0) "No custom moods added yet."
-                            else "$moodCount custom mood${if (moodCount == 1) "" else "s"} saved.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        if (moodCount > 0) {
-                            BoardFlowOutlinedButton(
-                                onClick = { showCustomMoodsDialog = true },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Manage moods")
-                            }
-                        }
-                        if (showCustomMoodsDialog) {
-                            CustomMoodsDialog(
-                                viewModel = viewModel,
-                                onDismiss = { showCustomMoodsDialog = false }
                             )
                         }
                     }

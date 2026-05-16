@@ -105,7 +105,7 @@ Source: `ui/history/HistoryScreen.kt`
 Sources: `ui/history/PlayStatsTab.kt`, `ui/history/InsightStripCard.kt`
 
 - Stats tab list: `LazyColumn` of analytics sections.
-- Stats source label: shows whether the tab is using all logged plays or only plays marked Count in stats. The source is chosen in Settings > Appearance.
+- Stats source label: shows whether the tab is using all logged plays or only plays marked Count in stats. The source is chosen in Settings > Preferences.
 - `Table Brief`: compact narrative section with up to three ranked observations for the selected period, such as pace changes, table favorite, dormant favorite, rivalry watch, or most-present player.
 - `PeriodReviewCard`: auto-generated narrative card surfaced at the top of Stats during the first 5 days of a new month (or first 7 days of a new year). Driven by `buildPeriodReview()` in `PlayStatsHelpers.kt`. Shows play count, unique games, new players, and a narrative highlight ("Martin finally won Brass."). Only shown in the All-time range.
 - `ContextualInsightStrip` / `InsightStripCard`: compact rarity-aware insight strips. Background alpha, border colour, and icon tint scale across the five rarity tiers (Common → Legendary). Used for game/player/stat context.
@@ -192,7 +192,7 @@ Source: `ui/players/PlayersScreen.kt`
 
 Source: `ui/settings/SettingsScreen.kt`
 
-- `ScreenTabRow`: Accounts, Appearance, AI, Data sections.
+- `ScreenTabRow`: four tabs — **Accounts**, **Preferences**, **Scan**, **Data**.
 - `SettingsCard`: `SectionCard` wrapper for settings groups.
 - `SpreadsheetConnectDialog`: `AnimatedDialog` used from Settings for Google Sheet connect/change/create.
 - `BoardFlowConfirmationDialog` titled "Import backup and replace current data?": destructive backup import confirmation.
@@ -200,19 +200,36 @@ Source: `ui/settings/SettingsScreen.kt`
 - `BoardFlowConfirmationDialog` titled "Clear collection cache?": destructive collection cache clear.
 - `BoardFlowConfirmationDialog` titled "Clear recognition templates?": destructive game recognition template clear.
 - `BoardFlowConfirmationDialog` titled "Clear player recognition hints?": destructive player hint clear.
+
+**Accounts tab** — all external service credentials:
+- Google `SettingsCard`: signed-in email + sign-out, or Sign in button; Google Sheets connection (connect/change).
+- BoardGameGeek `SettingsCard`: username + password fields with visibility toggle.
+- Google AI Studio `SettingsCard`: primary Gemini API key field with info dialog, visibility toggle, and backup key list (add/delete/toggle visibility per key).
+
+**Preferences tab** — appearance and behaviour:
 - Theme picker: `BoardFlowPickerField` + `BoardFlowPickerSheet` over `AppTheme` entries (Light/Dark).
-- Sleeve manufacturer picker: `BoardFlowPickerField` + `BoardFlowPickerSheet` over `SleeveManufacturer` entries.
 - History stats source picker: `BoardFlowPickerField` + `BoardFlowPickerSheet` over `StatsPlayScope` entries.
-- Gemini model picker: `BoardFlowPickerField` + `BoardFlowPickerSheet` when models have been discovered; falls back to a plain `OutlinedTextField` for free-text entry before discovery.
+- Chronicles toggle: `SettingsCard` with `AutoStories` icon and a `Switch`. When off, all in-flight chronicle generation is cancelled and chronicle cards are hidden app-wide.
+- Sleeve manufacturer picker: `BoardFlowPickerField` + `BoardFlowPickerSheet` over `SleeveManufacturer` entries.
+- Mood Templates `SettingsCard`: count + "Manage moods" → `CustomMoodsDialog`.
+
+**Scan tab** — scoresheet scanning configuration and learned data:
+- Gemini Model `SettingsCard`: `BoardFlowPickerField` + `BoardFlowPickerSheet` when models have been discovered; plain `OutlinedTextField` before discovery; "Refresh available models" button.
+- Recognition Templates `SettingsCard`: count, "View templates" → `RecognitionTemplatesDialog`, "Clear recognition templates" with confirmation.
+- Player Recognition Hints `SettingsCard`: count, "Clear player recognition hints" with confirmation.
+
+**Data tab** — data management:
+- Collection Cache `SettingsCard`: "Clear Collection Cache" with confirmation.
+- Backup & Restore `SettingsCard`: include-sensitive-data checkbox, Export Data, Import Data buttons; inline success/error status.
+
+**Shared dialogs:**
 - API key help dialog: `AnimatedDialog` explaining how to get a Gemini API key.
 - `RecognitionTemplatesDialog`: `AnimatedDialog` listing saved game recognition templates; title only, no close button (drag-handle dismisses).
 - Recognition template item `DropdownMenu`: long-press menu with Edit and Delete.
 - `EditTemplateDialog`: `AnimatedDialog` for editing template scoring categories; title only, no close button.
 - Category chips: removable `SuggestionChip` entries in template editing.
-- Chronicles toggle: `SettingsCard` with `AutoStories` icon and a `Switch`. When off, all in-flight chronicle generation is cancelled and chronicle cards are hidden app-wide.
 - `CustomMoodsDialog`: `AnimatedDialog` listing user-saved mood labels as amber `CircleShape` chips. Each chip has Edit and Delete `TextButton`s; live-updates via `customMoods` StateFlow.
 - `EditMoodDialog`: `AnimatedDialog` with a pre-filled `OutlinedTextField` (40 char max) and a `BoardFlowButton` with `Check` icon to save.
-- Import/export status text surfaces: inline success/error messages.
 
 ## Sync
 

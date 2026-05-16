@@ -91,6 +91,18 @@ class CanonicalCollectionStore private constructor(
         dao.upsertPlayMemory(PlayMemoryEntity(id = playId, memoryJson = memory.toJsonString()))
     }
 
+    suspend fun replaceAllPlayMemories(plays: List<LoggedPlay>) {
+        val entities = plays.mapNotNull { play ->
+            play.memory?.toJsonString()?.takeIf { it.isNotBlank() }?.let {
+                PlayMemoryEntity(id = play.id, memoryJson = it)
+            }
+        }
+        db.withTransaction {
+            dao.clearAllPlayMemories()
+            if (entities.isNotEmpty()) dao.insertAllPlayMemories(entities)
+        }
+    }
+
     suspend fun saveBggPlaysCache(plays: List<LoggedPlay>) {
         db.withTransaction {
             dao.clearBggCachedPlays()
@@ -181,8 +193,14 @@ private interface CanonicalCollectionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertPlayMemory(memory: PlayMemoryEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllPlayMemories(memories: List<PlayMemoryEntity>)
+
     @Query("SELECT * FROM play_memories")
     suspend fun getAllPlayMemories(): List<PlayMemoryEntity>
+
+    @Query("DELETE FROM play_memories")
+    suspend fun clearAllPlayMemories()
 }
 
 @Database(

@@ -530,6 +530,10 @@ class SecurePreferences(context: Context) {
                     }
                 }.toString()).apply()
             },
+            onPlayerRecognitionHints = { hints ->
+                prefs.edit().putString(KEY_PLAYER_RECOGNITION_HINTS, serializePlayerHints(hints)).apply()
+            },
+            onCustomMoods = { moods -> saveCustomMoods(moods) },
             clearLegacyCachedCollection = { prefs.edit().remove(KEY_COLLECTION).remove(KEY_COLLECTION_TIMESTAMP).apply() }
         )
     }
