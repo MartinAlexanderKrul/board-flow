@@ -501,6 +501,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 onModelChanged = { newModel ->
                     sessionModel = newModel
                     sessionModelExpiry = System.currentTimeMillis() + 5 * 60 * 1000L
+                },
+                onModelExhausted = { exhaustedModel ->
+                    prefs.removeAvailableModel(exhaustedModel)
+                    Log.d(TAG_SCAN, "Removed exhausted model from available list: $exhaustedModel")
                 }
             ).onSuccess { extracted ->
                 _extractedPlay.value = extracted
@@ -587,6 +591,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                             onModelChanged = { newModel ->
                                 sessionModel = newModel
                                 sessionModelExpiry = System.currentTimeMillis() + 5 * 60 * 1000L
+                            },
+                            onModelExhausted = { exhaustedModel ->
+                                prefs.removeAvailableModel(exhaustedModel)
+                                Log.d(TAG_SCAN, "Removed exhausted model from available list: $exhaustedModel")
                             }
                         ).onSuccess { retried ->
                             if (!retried.isMalformed) _scanRetryResult.value = retried
@@ -702,6 +710,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // --- Custom moods ---
     private val _customMoods = MutableStateFlow(prefs.getCustomMoods())
     val customMoods: StateFlow<List<String>> = _customMoods.asStateFlow()
+    private val _moodUsageOrder = MutableStateFlow(prefs.getMoodUsageOrder())
+    val moodUsageOrder: StateFlow<List<String>> = _moodUsageOrder.asStateFlow()
     private val _chroniclePendingPlayIds = MutableStateFlow<Set<String>>(emptySet())
     val chroniclePendingPlayIds: StateFlow<Set<String>> = _chroniclePendingPlayIds.asStateFlow()
     private val chronicleJobs = mutableMapOf<String, Job>()
@@ -721,16 +731,12 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val updated = _customMoods.value.filter { !it.equals(mood, ignoreCase = true) }
         _customMoods.value = updated
         prefs.saveCustomMoods(updated)
-    }
-
-    fun renameCustomMood(oldMood: String, newMood: String) {
-        val trimmed = newMood.trim()
-        if (trimmed.isBlank()) return
-        val updated = _customMoods.value
-            .map { if (it.equals(oldMood, ignoreCase = true)) trimmed else it }
-            .distinct()
-        _customMoods.value = updated
-        prefs.saveCustomMoods(updated)
+        viewModelScope.launch {
+            container.canonicalCollectionStore.removeMoodFromAllMemories(mood)
+            _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            val cached = container.canonicalCollectionStore.getBggPlaysCache()
+            if (cached.isNotEmpty()) _bggPlays.value = cached
+        }
     }
 
     // --- Play history (local) ---
@@ -942,6 +948,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     ) {
         persistMemoryOverlay(play.id, memory)
         memory.moods.forEach { addCustomMoodIfNew(it, presetMoods) }
+        if (memory.moods.isNotEmpty()) {
+            prefs.recordMoodsUsed(memory.moods)
+            _moodUsageOrder.value = prefs.getMoodUsageOrder()
+        }
 
         val moodText = memory.moods.filter { it.isNotBlank() }.joinToString(", ")
         val newComments = buildMemoryComments(play.comments, moodText, memory.quote.trim())
@@ -973,8 +983,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         if (sourceKey == null) return false
         synchronized(chronicleGenerationLock) {
             val currentSourceKey = chronicleInFlightSourceKeys[playId]
-            val hasInFlightJob = _chroniclePendingPlayIds.value.contains(playId) || chronicleJobs.containsKey(playId)
-            if (hasInFlightJob && currentSourceKey == sourceKey) return false
+            // Reject if this sourceKey is already reserved or in-flight, regardless of whether
+            // the job coroutine has launched yet (prevents the race between ensureChronicle and savePlayMemory).
+            if (currentSourceKey == sourceKey) return false
             chronicleInFlightSourceKeys[playId] = sourceKey
             return true
         }
@@ -998,7 +1009,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     apiKey = prefs.geminiApiKey,
                     modelName = prefs.geminiModelEndpoint,
                     availableModels = prefs.getAvailableModels(),
-                    availableApiKeys = prefs.getGeminiExtraApiKeys()
+                    availableApiKeys = prefs.getGeminiExtraApiKeys(),
+                    onModelExhausted = { exhaustedModel -> prefs.removeAvailableModel(exhaustedModel) }
                 )
             } else {
                 null
@@ -1229,11 +1241,15 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             _editPlayLoading.value = true
             try {
                 val normalizedPlayers = normalizePlayersForPosting(players)
+                val memory = play.memory
+                val moodText = memory?.moods?.filter { it.isNotBlank() }?.joinToString(", ") ?: ""
+                val quoteText = memory?.quote?.trim() ?: ""
+                val finalComments = buildMemoryComments(comments, moodText, quoteText)
                 val updatedPlay = play.copy(
                     date = date,
                     durationMinutes = durationMinutes,
                     location = location,
-                    comments = comments,
+                    comments = finalComments,
                     players = normalizedPlayers
                 )
                 if (play.postedToBgg) {
@@ -1251,7 +1267,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         playerBggUsernames = buildBggUsernameMap(normalizedPlayers),
                         durationMinutes = durationMinutes,
                         location = location,
-                        comments = comments,
+                        comments = finalComments,
                         quantity = play.quantity,
                         incomplete = play.incomplete,
                         nowInStats = play.nowInStats,
@@ -1264,7 +1280,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         date = date,
                         durationMinutes = durationMinutes,
                         location = location,
-                        comments = comments,
+                        comments = finalComments,
                         players = normalizedPlayers
                     )
                 }

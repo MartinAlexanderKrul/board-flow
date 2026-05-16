@@ -1316,7 +1316,6 @@ private fun CustomMoodsDialog(
     onDismiss: () -> Unit
 ) {
     val moods by viewModel.customMoods.collectAsState()
-    var editingMood by remember { mutableStateOf<String?>(null) }
 
     AnimatedDialog(onDismissRequest = onDismiss) {
         LazyColumn(
@@ -1372,26 +1371,13 @@ private fun CustomMoodsDialog(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
-                        Row {
-                            TextButton(
-                                onClick = { editingMood = mood },
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Edit")
-                            }
-                            TextButton(
-                                onClick = { viewModel.deleteCustomMood(mood) },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.error
-                                ),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Delete")
-                            }
+                        IconButton(onClick = { viewModel.deleteCustomMood(mood) }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete mood",
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                     if (index < moods.size - 1) HorizontalDivider()
@@ -1400,69 +1386,8 @@ private fun CustomMoodsDialog(
         }
     }
 
-    editingMood?.let { mood ->
-        EditMoodDialog(
-            mood = mood,
-            onSave = { newMood ->
-                viewModel.renameCustomMood(mood, newMood)
-                editingMood = null
-            },
-            onDismiss = { editingMood = null }
-        )
-    }
 }
 
-@Composable
-private fun EditMoodDialog(
-    mood: String,
-    onSave: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var text by remember { mutableStateOf(mood) }
-
-    AnimatedDialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text("Edit mood", style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(
-                value = text,
-                onValueChange = { if (it.length <= 40) text = it },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                label = { Text("Mood label") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                )
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onDismiss) {
-                    Text("Cancel")
-                }
-                BoardFlowButton(
-                    onClick = { if (text.trim().isNotBlank()) onSave(text.trim()) },
-                    enabled = text.trim().isNotBlank()
-                ) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(5.dp))
-                    Text("Save")
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun SettingsCard(

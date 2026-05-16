@@ -38,7 +38,8 @@ class GeminiRepository {
         modelName: String = "gemini-flash-latest",
         availableModels: List<String> = emptyList(),
         availableApiKeys: List<String> = emptyList(),
-        onModelChanged: ((String) -> Unit)? = null
+        onModelChanged: ((String) -> Unit)? = null,
+        onModelExhausted: ((String) -> Unit)? = null
     ): Result<ExtractedPlay> = withContext(Dispatchers.IO) {
         runCatching {
             val startTime = System.currentTimeMillis()
@@ -63,12 +64,12 @@ class GeminiRepository {
                     .build()
 
                 val attemptStart = System.currentTimeMillis()
-                logGemini("request score-extract attempt=$attempts/$maxAttempts model=$currentModel key=${currentKeyIndex + 1}/${allKeys.size} url=${redactApiKey(url)} body=${preview(requestBody)}")
+                logGemini("request score-extract attempt=$attempts/$maxAttempts model=$currentModel key=${currentKeyIndex + 1}/${allKeys.size} url=${redactApiKey(url)}")
 
                 val response = client.newCall(request).execute()
                 val responseText = response.body?.string() ?: throw Exception("Empty response from Gemini API")
                 val attemptMs = System.currentTimeMillis() - attemptStart
-                logGemini("response score-extract attempt=$attempts/$maxAttempts model=$currentModel code=${response.code} elapsedMs=$attemptMs body=${preview(responseText)}")
+                logGemini("response score-extract attempt=$attempts/$maxAttempts model=$currentModel code=${response.code} elapsedMs=$attemptMs body=${compactJson(responseText)}")
 
                 when {
                     response.isSuccessful -> {
@@ -92,6 +93,7 @@ class GeminiRepository {
                         val nextModel = findNextModel(currentModel, availableModels)
                         if (nextModel != null) {
                             logGemini("rotate-model score-extract http=${response.code} from=$currentModel to=$nextModel resetKey=1/${allKeys.size} attempt=$attempts/$maxAttempts")
+                            onModelExhausted?.invoke(currentModel)
                             currentModel = nextModel
                             currentKeyIndex = 0
                             onModelChanged?.invoke(nextModel)
@@ -136,7 +138,7 @@ class GeminiRepository {
                     val request = Request.Builder().url(url).build()
                     val response = client.newCall(request).execute()
                     val responseText = response.body?.string() ?: ""
-                    logGemini("response list-models api=$apiVersion code=${response.code} body=${preview(responseText)}")
+                    logGemini("response list-models api=$apiVersion code=${response.code} body=${compactJson(responseText)}")
                     if (response.isSuccessful) {
                         val json = JSONObject(responseText)
                         val models = json.optJSONArray("models")
@@ -330,13 +332,24 @@ class GeminiRepository {
     }
 
     private fun logGemini(message: String) {
-        Log.d(TAG, "GEMINI $message")
+        val full = "GEMINI $message"
+        if (full.length <= 3800) {
+            Log.d(TAG, full)
+        } else {
+            val chunks = full.chunked(3800)
+            chunks.forEachIndexed { i, chunk -> Log.d(TAG, "[${i + 1}/${chunks.size}] $chunk") }
+        }
     }
 
     private fun redactApiKey(url: String): String = url.replace(Regex("key=[^&]+"), "key=REDACTED")
 
-    private fun preview(text: String, maxLength: Int = 320): String {
-        val compact = text.replace(Regex("\\s+"), " ").trim()
-        return if (compact.length <= maxLength) compact else compact.take(maxLength) + "..."
+    private fun compactJson(text: String): String = try {
+        JSONObject(text).toString()
+    } catch (_: Exception) {
+        try {
+            JSONArray(text).toString()
+        } catch (_: Exception) {
+            text.replace(Regex("\\s+"), " ").trim()
+        }
     }
 }

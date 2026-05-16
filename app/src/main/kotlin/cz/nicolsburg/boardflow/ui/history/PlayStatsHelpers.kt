@@ -538,6 +538,7 @@ fun List<LoggedPlay>.playInsights(play: LoggedPlay): List<PlayInsight> {
             if (result.size >= 2) return result
             val name  = player.name.trim()
             val score = player.score.trim().toIntOrNull() ?: return@forEach
+            if (score <= 0) return@forEach
             val previousBest = prior.flatMap { it.players }
                 .filter { it.name.trim().equals(name, ignoreCase = true) }
                 .mapNotNull { it.score.trim().toIntOrNull() }

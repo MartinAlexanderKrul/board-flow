@@ -33,14 +33,14 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
                     val endpoint = if (currentModel.contains("/")) currentModel else "v1beta/models/$currentModel"
                     val url = "https://generativelanguage.googleapis.com/$endpoint:generateContent?key=$currentApiKey"
                     val requestBody = buildRequestBody(request)
-                    logGemini("request chronicle attempt=$attempts/$MAX_ATTEMPTS model=$currentModel key=${currentKeyIndex + 1}/${allKeys.size} url=${redactApiKey(url)} body=${preview(requestBody)}")
+                    logGemini("request chronicle attempt=$attempts/$MAX_ATTEMPTS model=$currentModel key=${currentKeyIndex + 1}/${allKeys.size} url=${redactApiKey(url)} body=${compactJson(requestBody)}")
                     val httpRequest = Request.Builder()
                         .url(url)
                         .post(requestBody.toRequestBody("application/json".toMediaType()))
                         .build()
                     val response = client.newCall(httpRequest).execute()
                     val body = response.body?.string().orEmpty()
-                    logGemini("response chronicle attempt=$attempts/$MAX_ATTEMPTS model=$currentModel code=${response.code} body=${preview(body)}")
+                    logGemini("response chronicle attempt=$attempts/$MAX_ATTEMPTS model=$currentModel code=${response.code} body=${compactJson(body)}")
                     when {
                         response.isSuccessful -> return@runCatching parseChronicleLine(body)
                         response.code == 429 || response.code == 503 -> {
@@ -55,6 +55,7 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
                             val nextModel = findNextModel(currentModel, config.availableModels)
                             if (nextModel != null) {
                                 logGemini("rotate-model chronicle http=${response.code} from=$currentModel to=$nextModel resetKey=1/${allKeys.size} attempt=$attempts/$MAX_ATTEMPTS")
+                                config.onModelExhausted?.invoke(currentModel)
                                 currentModel = nextModel
                                 currentKeyIndex = 0
                                 delay(1000)
@@ -72,114 +73,108 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
 
     private fun buildRequestBody(request: ChronicleRequest): String {
         val prompt = """
-            Write one short tabletop memory line.
+        Write one short chronicle line for a remembered board game session.
 
-            Use ONLY the concrete details provided.
-            Prefer the quote when present.
-            Do not add generic board game imagery.
-            Do not mention dice, quests, adventure, heroes, victory, defeat, twists, turns, unless those words appear in the input.
-            Do not soften negative quotes.
-            Do not invent what happened.
-            Do not summarize the game.
-            Capture the emotional truth of the session.
+        The line should feel:
+        - natural
+        - grounded
+        - memorable
+        - concise
+        - human
 
-            Style:
-            - understated
-            - specific
-            - dry if the quote is negative
-            - premium but natural
-            - max 110 characters
+        The best lines feel like remembered fragments from the table, not reviews or prose.
 
-            Additional constraints:
-            - Avoid using the game name or player names unless absolutely necessary.
-            - Avoid repeating mood words exactly as written; translate the feeling into fresher language.
-            - Use player colors only if they help and stay concrete.
-            - If the quote does not fit naturally, do not use it.
-			
-			Write one short premium tabletop chronicle line for a saved board game session.
+        Prefer:
+        - texture
+        - pacing
+        - reactions
+        - atmosphere
+        - table feeling
 
-			Your job:
-			Capture the emotional memory of the session in one concise line.
+        Use the provided details creatively but carefully.
 
-			Very important:
-			Be specific, not generic.
-			Use the supplied details directly when useful.
-			Do NOT invent gameplay events.
-			Do NOT invent story details.
-			Do NOT add fantasy narration.
-			Do NOT sound like marketing copy.
-			Do NOT summarize the game itself.
-			Do NOT explain the mood.
-			Do NOT mention AI.
+        You MAY:
+        - lightly transform mood words into natural language
+        - lightly infer atmosphere from the game title if obvious
+        - use one subtle metaphor
+        - use the quote directly if it feels memorable
+        - sound conversational
+        - sound slightly dry or playful
 
-			Theme handling:
-			You MAY lightly infer atmosphere from the game title if the game is well known.
-			Use at most ONE subtle thematic metaphor.
-			Keep the metaphor understated.
-			If unsure about the game theme, use neutral tabletop language instead.
-			Never invent lore, locations, creatures, factions, or characters.
+        You MUST NOT:
+        - invent gameplay events
+        - invent lore or fantasy story details
+        - sound epic or cinematic
+        - sound like marketing copy
+        - explain the game
+        - explain the mood
+        - summarize the session
+        - use generic board game filler phrases
 
-			Tone:
-			reflective
-			understated
-			human
-			emotionally observant
-			premium
-			concise
-			sometimes dry or honest
+        Avoid phrases like:
+        - epic battle
+        - unforgettable adventure
+        - twists and turns
+        - victory was claimed
+        - dice rolled
+        - legendary
+        - competitive energy
+        - exciting game
+        - thrilling session
 
-			Good qualities:
-			feels like a remembered moment
-			sounds natural
-			feels personal
-			slightly poetic is okay
-			grounded is better than dramatic
+        Good examples:
+        {"chronicleLine":"Fast hands and a table that never slowed down."}
+        {"chronicleLine":"The current carried this one faster than expected."}
+        {"chronicleLine":"Martin’s verdict came early: “I didn’t like it.”"}
+        {"chronicleLine":"One of those sessions that stayed sharp all night."}
+        {"chronicleLine":"Quick turns, loud reactions, immediate rematch energy."}
+        {"chronicleLine":"The table barely paused between turns."}
+        {"chronicleLine":"Shan and Marsh barely let the table breathe."}
 
-			Avoid:
-			epic language
-			“quest”
-			“adventure”
-			“heroes”
-			“battle”
-			“legendary”
-			“unforgettable”
-			“twists and turns”
-			“dice rolled”
-			“victory”
-			“defeat”
-			generic board game narration
-			
-			Generation rules:
-			If a quote exists:
-			Prefer building around the quote or its emotional meaning.
-			Preserve negative or blunt tone honestly.
-			Do not soften criticism.
-			If moods exist but no quote:
-			Create a short atmospheric reflection.
-			Keep it grounded and subtle.
-			If both exist:
-			Combine them naturally without sounding written by AI.
-			If the input is emotionally flat:
-			Keep the output simple and restrained.
+        Bad examples:
+        {"chronicleLine":"A legendary battle unfolded through twists and turns."}
+        {"chronicleLine":"A competitive and exciting game was enjoyed by all."}
+        {"chronicleLine":"Heroes embarked on an unforgettable adventure."}
+        {"chronicleLine":"The competitive energy flowed throughout the session."}
 
-            Return JSON only:
-            {"chronicleLine":"..."}
+        Rules:
+        - One sentence only
+        - Prefer 50-90 characters
+        - Hard max 120 characters
+        - Return ONLY valid JSON
+        - Format exactly:
+          {"chronicleLine":"..."}
 
-            Input:
-            Game: ${request.gameName.ifBlank { "Unknown" }}
-            Moods: ${request.moods.joinToString(", ").ifBlank { "None" }}
-            Quote: ${request.quote.ifBlank { "None" }}
-            Players: ${request.playerNames.joinToString(", ").ifBlank { "None" }}
-            Colors: ${request.playerColors.joinToString(", ").ifBlank { "None" }}
-        """.trimIndent()
+        Input:
+        Game: ${request.gameName.ifBlank { "Unknown" }}
+        Moods: ${request.moods.joinToString(", ").ifBlank { "None" }}
+        Quote: ${request.quote.ifBlank { "None" }}
+        Players: ${request.playerNames.joinToString(", ").ifBlank { "None" }}
+        Colors: ${request.playerColors.joinToString(", ").ifBlank { "None" }}
+    """.trimIndent()
 
         return JSONObject().apply {
-            put("contents", JSONArray().put(JSONObject().put("parts", JSONArray().put(JSONObject().put("text", prompt)))))
-            put("generationConfig", JSONObject().apply {
-                put("temperature", 0.65)
-                put("maxOutputTokens", 96)
-                put("responseMimeType", "application/json")
-            })
+            put(
+                "contents",
+                JSONArray().put(
+                    JSONObject().put(
+                        "parts",
+                        JSONArray().put(
+                            JSONObject().put("text", prompt)
+                        )
+                    )
+                )
+            )
+
+            put(
+                "generationConfig",
+                JSONObject().apply {
+                    put("temperature", 1.0)
+                    put("topP", 0.95)
+                    put("maxOutputTokens", 96)
+                    put("responseMimeType", "application/json")
+                }
+            )
         }.toString()
     }
 
@@ -220,13 +215,24 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
     }
 
     private fun logGemini(message: String) {
-        Log.d(TAG, "GEMINI $message")
+        val full = "GEMINI $message"
+        if (full.length <= 3800) {
+            Log.d(TAG, full)
+        } else {
+            val chunks = full.chunked(3800)
+            chunks.forEachIndexed { i, chunk -> Log.d(TAG, "[${i + 1}/${chunks.size}] $chunk") }
+        }
     }
 
     private fun redactApiKey(url: String): String = url.replace(Regex("key=[^&]+"), "key=REDACTED")
 
-    private fun preview(text: String, maxLength: Int = 320): String {
-        val compact = text.replace(Regex("\\s+"), " ").trim()
-        return if (compact.length <= maxLength) compact else compact.take(maxLength) + "..."
+    private fun compactJson(text: String): String = try {
+        JSONObject(text).toString()
+    } catch (_: Exception) {
+        try {
+            JSONArray(text).toString()
+        } catch (_: Exception) {
+            text.replace(Regex("\\s+"), " ").trim()
+        }
     }
 }

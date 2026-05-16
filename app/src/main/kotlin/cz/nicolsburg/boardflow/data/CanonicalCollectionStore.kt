@@ -91,6 +91,27 @@ class CanonicalCollectionStore private constructor(
         dao.upsertPlayMemory(PlayMemoryEntity(id = playId, memoryJson = memory.toJsonString()))
     }
 
+    suspend fun removeMoodFromAllMemories(mood: String) {
+        val all = dao.getAllPlayMemories()
+        val toUpsert = mutableListOf<PlayMemoryEntity>()
+        val toDelete = mutableListOf<String>()
+        for (entity in all) {
+            val memory = entity.memoryJson.toSessionMemoryOrNull() ?: continue
+            val newMoods = memory.moods.filter { !it.equals(mood, ignoreCase = true) }
+            if (newMoods.size == memory.moods.size) continue
+            val newMemory = memory.copy(moods = newMoods)
+            if (newMoods.isEmpty() && newMemory.quote.isBlank() && newMemory.note.isBlank() && newMemory.chronicleLine.isBlank())
+                toDelete.add(entity.id)
+            else
+                toUpsert.add(entity.copy(memoryJson = newMemory.toJsonString()))
+        }
+        if (toUpsert.isEmpty() && toDelete.isEmpty()) return
+        db.withTransaction {
+            toUpsert.forEach { dao.upsertPlayMemory(it) }
+            toDelete.forEach { dao.deletePlayMemory(it) }
+        }
+    }
+
     suspend fun replaceAllPlayMemories(plays: List<LoggedPlay>) {
         val entities = plays.mapNotNull { play ->
             play.memory?.toJsonString()?.takeIf { it.isNotBlank() }?.let {
@@ -198,6 +219,9 @@ private interface CanonicalCollectionDao {
 
     @Query("SELECT * FROM play_memories")
     suspend fun getAllPlayMemories(): List<PlayMemoryEntity>
+
+    @Query("DELETE FROM play_memories WHERE id = :playId")
+    suspend fun deletePlayMemory(playId: String)
 
     @Query("DELETE FROM play_memories")
     suspend fun clearAllPlayMemories()

@@ -68,7 +68,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -215,6 +217,7 @@ fun HistoryScreen(
     val postingPlayId by viewModel.postingPlayId.collectAsState()
     val bggPlaysCacheAgeMinutes by viewModel.bggPlaysCacheAgeMinutes.collectAsState()
     val customMoods by viewModel.customMoods.collectAsState()
+    val moodUsageOrder by viewModel.moodUsageOrder.collectAsState()
     val chroniclePendingPlayIds by viewModel.chroniclePendingPlayIds.collectAsState()
     val chronicleEnabled by viewModel.chronicleEnabled.collectAsState()
 
@@ -494,6 +497,7 @@ fun HistoryScreen(
             onPlayAgain = { selectedPlay = null; onPlayAgain(play) },
             onViewGame = { g -> selectedGame = g },
             customMoods = customMoods,
+            moodUsageOrder = moodUsageOrder,
             isChroniclePending = chroniclePendingPlayIds.contains(play.id),
             chronicleEnabled = chronicleEnabled,
             onEnsureChronicle = {
@@ -1512,6 +1516,7 @@ private fun PlayDetailsDialog(
     onSaveMemory: (cz.nicolsburg.boardflow.model.SessionMemory) -> Unit = {},
     onEnsureChronicle: () -> Unit = {},
     customMoods: List<String> = emptyList(),
+    moodUsageOrder: List<String> = emptyList(),
     isChroniclePending: Boolean = false,
     chronicleEnabled: Boolean = true
 ) {
@@ -1521,7 +1526,7 @@ private fun PlayDetailsDialog(
     val chronicle = memory?.chronicleLine?.takeIf { chronicleEnabled && it.isNotBlank() }
     val hasMemoryInput = memory?.let { it.moods.isNotEmpty() || it.quote.isNotBlank() } == true
 
-    LaunchedEffect(play.id, chronicle, hasMemoryInput, chronicleEnabled) {
+    LaunchedEffect(play.id, chronicleEnabled) {
         if (chronicleEnabled && chronicle == null && hasMemoryInput) onEnsureChronicle()
     }
 
@@ -1774,6 +1779,7 @@ private fun PlayDetailsDialog(
                     PlayMemorySection(
                         memory = play.memory,
                         customMoods = customMoods,
+                        moodUsageOrder = moodUsageOrder,
                         isChroniclePending = isChroniclePending,
                         onSaveMemory = onSaveMemory
                     )
@@ -1983,7 +1989,7 @@ private fun EditPlayDialog(
     var date by rememberSaveable(play.id) { mutableStateOf(play.date) }
     var duration by rememberSaveable(play.id) { mutableStateOf(if (play.durationMinutes > 0) play.durationMinutes.toString() else "") }
     var location by rememberSaveable(play.id) { mutableStateOf(play.location) }
-    var comments by rememberSaveable(play.id) { mutableStateOf(play.comments) }
+    var comments by rememberSaveable(play.id) { mutableStateOf(play.comments.trimMemorySuffix()) }
     var editPlayers by rememberSaveable(play.id, stateSaver = PlayerResultListSaver) { mutableStateOf(play.players) }
     var collapsedPlayers by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { true }) }
     var playerRowKeys by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { java.util.UUID.randomUUID().toString() }) }
@@ -2347,11 +2353,17 @@ private fun PlayMemorySection(
     memory: cz.nicolsburg.boardflow.model.SessionMemory?,
     onSaveMemory: (cz.nicolsburg.boardflow.model.SessionMemory) -> Unit,
     customMoods: List<String> = emptyList(),
+    moodUsageOrder: List<String> = emptyList(),
     isChroniclePending: Boolean = false
 ) {
     val presetMoods = listOf("Chill", "Intense", "Chaotic", "Cozy", "Competitive", "Legendary")
-    val moods = remember(customMoods) {
-        (presetMoods + customMoods.filter { c -> presetMoods.none { it.equals(c, ignoreCase = true) } }).distinct()
+    val moods = remember(customMoods, moodUsageOrder) {
+        val all = (presetMoods + customMoods.filter { c -> presetMoods.none { it.equals(c, ignoreCase = true) } }).distinct()
+        val orderIndex = { mood: String ->
+            val idx = moodUsageOrder.indexOfFirst { it.equals(mood, ignoreCase = true) }
+            if (idx == -1) Int.MAX_VALUE else idx
+        }
+        all.sortedBy { orderIndex(it) }
     }
 
     val hasMemory = memory?.run {
@@ -2414,6 +2426,13 @@ private fun PlayMemorySection(
                     draftMoods = if (draftMoods.contains(mood)) draftMoods - mood else draftMoods + mood
                 },
                 onCustomTextChange = { draftCustomText = it },
+                onAddCustomMood = {
+                    val mood = draftCustomText.trim()
+                    if (mood.isNotBlank()) {
+                        draftMoods = (draftMoods + mood).distinct()
+                        draftCustomText = ""
+                    }
+                },
                 onQuoteChange = { draftQuote = it },
                 onSave = {
                     val extra = draftCustomText.trim()
@@ -2582,6 +2601,18 @@ private fun MemoryChip(label: String, highlighted: Boolean) {
 }
 
 @Composable
+private fun MoodExpandChip(label: String, onClick: () -> Unit) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelSmall.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 5.dp)
+    )
+}
+
+@Composable
 private fun MemorySelectableChip(label: String, selected: Boolean, onClick: () -> Unit) {
     val bg = if (selected) MaterialTheme.colorScheme.tertiaryContainer
              else Color.Transparent
@@ -2612,6 +2643,7 @@ private fun MemoryEditor(
     draftQuote: String,
     onToggleMood: (String) -> Unit,
     onCustomTextChange: (String) -> Unit,
+    onAddCustomMood: () -> Unit,
     onQuoteChange: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit
@@ -2624,41 +2656,77 @@ private fun MemoryEditor(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                moods.forEach { mood ->
-                    MemorySelectableChip(
-                        label = mood,
-                        selected = draftMoods.contains(mood),
-                        onClick = { onToggleMood(mood) }
-                    )
+            val extraDraftMoods = draftMoods.filter { d -> moods.none { it.equals(d, ignoreCase = true) } }
+            val allMoods = moods + extraDraftMoods
+            var moodsExpanded by remember { mutableStateOf(false) }
+            val collapsedLimit = 8
+            val selectedMoods = allMoods.filter { m -> draftMoods.any { it.equals(m, ignoreCase = true) } }
+            val unselectedMoods = allMoods.filter { m -> draftMoods.none { it.equals(m, ignoreCase = true) } }
+            val visibleUnselected = if (moodsExpanded) unselectedMoods
+                                    else unselectedMoods.take((collapsedLimit - selectedMoods.size).coerceAtLeast(0))
+            val hiddenCount = unselectedMoods.size - visibleUnselected.size
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    (selectedMoods + visibleUnselected).forEach { mood ->
+                        MemorySelectableChip(
+                            label = mood,
+                            selected = draftMoods.any { it.equals(mood, ignoreCase = true) },
+                            onClick = { onToggleMood(mood) }
+                        )
+                    }
+                }
+                if (hiddenCount > 0) {
+                    MoodExpandChip(label = "+$hiddenCount more", onClick = { moodsExpanded = true })
+                } else if (moodsExpanded && unselectedMoods.size > (collapsedLimit - selectedMoods.size).coerceAtLeast(0)) {
+                    MoodExpandChip(label = "Show less", onClick = { moodsExpanded = false })
                 }
             }
 
-            OutlinedTextField(
-                value = draftCustomText,
-                onValueChange = { if (it.length <= 40) onCustomTextChange(it) },
-                placeholder = {
-                    Text(
-                        "Add another mood…",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                OutlinedTextField(
+                    value = draftCustomText,
+                    onValueChange = { if (it.length <= 40) onCustomTextChange(it) },
+                    placeholder = {
+                        Text(
+                            "Add another mood…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    keyboardActions = KeyboardActions(onDone = { if (draftCustomText.isNotBlank()) onAddCustomMood() }),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
                     )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
                 )
-            )
+                IconButton(
+                    onClick = onAddCustomMood,
+                    enabled = draftCustomText.isNotBlank()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add mood",
+                        tint = if (draftCustomText.isNotBlank())
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    )
+                }
+            }
 
             OutlinedTextField(
                 value = draftQuote,

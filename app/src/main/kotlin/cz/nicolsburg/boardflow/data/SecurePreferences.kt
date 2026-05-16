@@ -78,6 +78,28 @@ class SecurePreferences(context: Context) {
         }
     }
 
+    // --- Mood usage order (most-recently-used first, covers both presets and custom) ---
+    fun recordMoodsUsed(moods: List<String>) {
+        val current = getMoodUsageOrder().toMutableList()
+        moods.reversed().forEach { mood ->
+            current.removeAll { it.equals(mood, ignoreCase = true) }
+            current.add(0, mood)
+        }
+        val json = JSONArray()
+        current.forEach { json.put(it) }
+        prefs.edit().putString(KEY_MOOD_USAGE_ORDER, json.toString()).apply()
+    }
+
+    fun getMoodUsageOrder(): List<String> {
+        val raw = prefs.getString(KEY_MOOD_USAGE_ORDER, "[]") ?: "[]"
+        return try {
+            val array = JSONArray(raw)
+            (0 until array.length()).map { array.getString(it) }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     // --- Available Gemini models cache ---
     fun saveAvailableModels(models: List<String>) {
         val json = JSONArray()
@@ -93,6 +115,11 @@ class SecurePreferences(context: Context) {
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    fun removeAvailableModel(model: String) {
+        val current = getAvailableModels().toMutableList()
+        if (current.remove(model)) saveAvailableModels(current)
     }
 
     fun getNextModel(currentModel: String): String? {
@@ -566,6 +593,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_GAME_RECOGNITION_HINTS  = "game_recognition_hints"
         private const val KEY_PLAYER_RECOGNITION_HINTS = "player_recognition_hints"
         private const val KEY_CUSTOM_MOODS             = "custom_moods"
+        private const val KEY_MOOD_USAGE_ORDER         = "mood_usage_order"
         private const val KEY_CHRONICLE_ENABLED       = "chronicle_enabled"
         private const val KEY_GEMINI_EXTRA_KEYS        = "gemini_api_keys_extra"
     }
