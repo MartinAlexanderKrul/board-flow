@@ -77,6 +77,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
@@ -118,6 +119,7 @@ private enum class TabMode(val label: String) {
 @Composable
 fun CollectionScreen(
     syncViewModel: SyncViewModel,
+    googleSyncEnabled: Boolean = BuildConfig.GOOGLE_SYNC_ENABLED,
     historyPlays: List<LoggedPlay> = emptyList(),
     players: List<Player> = emptyList(),
     onLogPlay: (gameId: Int, gameName: String, thumbnailUrl: String?) -> Unit = { _, _, _ -> },
@@ -279,6 +281,7 @@ fun CollectionScreen(
     selectedGame?.let { game ->
         GameDetailsDialog(
             game = game,
+            googleSyncEnabled = googleSyncEnabled,
             onDismiss = { selectedGame = null; sleevesReturnGame = null },
             historyPlays = historyPlays,
             players = players,
@@ -620,7 +623,7 @@ private fun GameCard(
 ) {
     val context = LocalContext.current
     val bggUrl = bggSleevesUrl(game)
-    val driveUrl = game.shareUrl?.takeIf { it.isNotBlank() }
+    val driveUrl = game.shareUrl?.takeIf { it.isNotBlank() && BuildConfig.GOOGLE_SYNC_ENABLED }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()

@@ -3,7 +3,6 @@
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services)
 }
 
 import com.android.build.gradle.internal.api.BaseVariantOutputImpl
@@ -42,6 +41,23 @@ android {
         )
     }
 
+    flavorDimensions += "edition"
+
+    productFlavors {
+        create("public") {
+            dimension = "edition"
+            applicationId = "cz.nicolsburg.boardflow"
+            versionName = "1.0.0"
+            buildConfigField("Boolean", "GOOGLE_SYNC_ENABLED", "false")
+        }
+
+        create("private") {
+            dimension = "edition"
+            applicationId = "cz.nicolsburg.boardflow.private"
+            buildConfigField("Boolean", "GOOGLE_SYNC_ENABLED", "true")
+        }
+    }
+
     signingConfigs {
                         getByName("debug") {
                             // Uses default debug keystore, which should be registered in Google Cloud for debug sign-in
@@ -59,7 +75,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
         }
@@ -107,8 +123,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -122,6 +136,7 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.security.crypto)
+    implementation("com.google.code.gson:gson:2.10.1")
 
     implementation(libs.camera.core)
     implementation(libs.camera.camera2)
@@ -129,18 +144,14 @@ dependencies {
     implementation(libs.camera.view)
     implementation(libs.accompanist.permissions)
 
-    // Google Sign-In + API clients
-    implementation(libs.play.services.auth)
-    implementation(libs.googleid)
-    implementation(libs.google.api.client.android) {
-        exclude(group = "org.apache.httpcomponents")
-    }
-    implementation(libs.google.api.services.drive) {
-        exclude(group = "org.apache.httpcomponents")
-    }
-    implementation(libs.google.api.services.sheets) {
-        exclude(group = "org.apache.httpcomponents")
-    }
+    // Google Sign-In + API clients (private edition only)
+    add("privateImplementation", libs.androidx.credentials)
+    add("privateImplementation", libs.androidx.credentials.play.services.auth)
+    add("privateImplementation", libs.play.services.auth)
+    add("privateImplementation", libs.googleid)
+    add("privateImplementation", libs.google.api.client.android)
+    add("privateImplementation", libs.google.api.services.drive)
+    add("privateImplementation", libs.google.api.services.sheets)
 
     // ZXing QR generation
     implementation(libs.zxing.core)
@@ -156,4 +167,8 @@ dependencies {
 
     // Jetpack Glance — home-screen widgets
     implementation(libs.androidx.glance.appwidget)
+}
+
+configurations.named("privateImplementation") {
+    exclude(group = "org.apache.httpcomponents")
 }

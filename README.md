@@ -222,6 +222,41 @@ Backups can include:
 
 Import is selective: only fields present in the backup JSON are applied; missing fields do not overwrite existing values. Recognition templates from a backup fully replace the existing templates on device (bulk replace, not merge).
 
+## Build Flavors
+
+The app is split into two product flavors built from a single module:
+
+| Flavor | App name | Application ID | Google sync |
+|--------|----------|---------------|-------------|
+| `public` | Board Flow | `cz.nicolsburg.boardflow` | Disabled |
+| `private` | BoardFlow Private | `cz.nicolsburg.boardflow.private` | Enabled (Drive + Sheets) |
+
+Both flavors share the `main` source set. Flavor-specific source sets override it:
+
+- `app/src/private/` — real `GoogleAuthManager` and `GoogleApiClient` implementations; dark-navy launcher icon background; `default_web_client_id` string for OAuth
+- `app/src/public/` — stub no-op implementations of the same classes; standard launcher icon background
+
+`BuildConfig.GOOGLE_SYNC_ENABLED` is `true` only in the private flavor. All sync-related UI is guarded by this flag. The five `SyncViewModel` functions that construct `GoogleApiClient` (`connectExistingSpreadsheet`, `createSpreadsheetFromBgg`, `syncCsv`, `createFolders`, `syncBgg`) also guard themselves with an early return when the flag is false.
+
+Google Sign-In does **not** use the `google-services.json` / `com.google.gms.google-services` plugin. The OAuth web client ID is manually declared in `app/src/private/res/values/strings.xml` as `default_web_client_id`.
+
+### Running both flavors in Android Studio
+
+Open the **Build Variants** panel (View → Tool Windows → Build Variants) and select:
+
+- `privateDebug` — private app with Google sync, debug signing
+- `publicDebug` — public app without Google sync, debug signing
+- `privateRelease` / `publicRelease` — signed release builds
+
+Both flavors install as separate apps (different application IDs) and can coexist on the same device.
+
+From the terminal:
+
+```sh
+./gradlew.bat :app:installPrivateDebug
+./gradlew.bat :app:installPublicDebug
+```
+
 ## Architecture
 
 Primary entry points:
@@ -231,7 +266,7 @@ Primary entry points:
 
 Core modules:
 
-- `auth/GoogleAuthManager.kt`
+- `auth/GoogleAuthManager.kt` — in `main/` only the interface shape; real implementation in `private/`, no-op stub in `public/`
 - `core/di/AppContainer.kt`
 - `core/navigation/AppRoutes.kt`
 - `AppViewModel.kt`
@@ -283,6 +318,25 @@ High-level ownership:
   - image preloading (`BggImageCache`)
 
 ## Package Layout
+
+Flavor-specific source roots:
+
+```text
+app/src/private/
+  kotlin/cz/nicolsburg/boardflow/
+    auth/GoogleAuthManager.kt   (real Google Sign-In implementation)
+    data/GoogleApiClient.kt     (real Drive + Sheets implementation)
+  res/
+    drawable/ic_launcher_background.xml  (dark-navy background #162244)
+    values/strings.xml          (app_name, default_web_client_id)
+
+app/src/public/
+  kotlin/cz/nicolsburg/boardflow/
+    auth/GoogleAuthManager.kt   (no-op stub — logs "unavailable")
+    data/GoogleApiClient.kt     (stub — throws UnsupportedOperationException)
+  res/
+    values/strings.xml          (app_name only)
+```
 
 Main source root:
 
@@ -430,23 +484,30 @@ Current app behavior intentionally includes:
 
 ## Build
 
-From repo root:
+From repo root (substitute `Private`/`Public` as needed):
 
 ```sh
-./gradlew.bat :app:compileDebugKotlin
-./gradlew.bat :app:assembleDebug
+# Compile check
+./gradlew.bat :app:compilePrivateDebugKotlin
+./gradlew.bat :app:compilePublicDebugKotlin
+
+# Assemble APK
+./gradlew.bat :app:assemblePrivateDebug
+./gradlew.bat :app:assemblePublicDebug
 ```
 
-Debug APK output:
+APK output paths:
 
 ```text
-app/build/outputs/apk/debug/board-flow-debug.apk
+app/build/outputs/apk/private/debug/board-flow-privateDebug.apk
+app/build/outputs/apk/public/debug/board-flow-publicDebug.apk
 ```
 
 Install on a connected device/emulator:
 
 ```sh
-./gradlew.bat :app:installDebug
+./gradlew.bat :app:installPrivateDebug
+./gradlew.bat :app:installPublicDebug
 ```
 
 ## Configuration
@@ -460,26 +521,29 @@ Set in Settings as needed:
 - Gemini API key
 - Gemini model endpoint
 
-Google sign-in / Sheets / Drive also require valid Firebase / Google Cloud OAuth setup:
+Google sign-in / Sheets / Drive (private flavor only) require valid Google Cloud OAuth setup:
 
-- `google-services.json`
-- Android + Web OAuth clients
-- correct SHA fingerprints for debug/release
+- Android OAuth client with the correct package name (`cz.nicolsburg.boardflow.private`) and SHA fingerprints for debug/release
+- Web OAuth client — its client ID is stored as `default_web_client_id` in `app/src/private/res/values/strings.xml`
 
-Compile success does not guarantee runtime Google auth success if that external setup is wrong.
+No `google-services.json` or `com.google.gms.google-services` plugin is used.
+
+Compile success does not guarantee runtime Google auth success if the OAuth client setup or SHA fingerprints are wrong.
 
 ## Verification
 
-Recommended local verification after meaningful changes:
+Recommended local verification after meaningful changes (both flavors must pass):
 
 ```sh
-./gradlew.bat :app:compileDebugKotlin
+./gradlew.bat :app:compilePrivateDebugKotlin
+./gradlew.bat :app:compilePublicDebugKotlin
 ```
 
-Use this too when startup/resources/packaging changed:
+Use assemble when startup/resources/packaging changed:
 
 ```sh
-./gradlew.bat :app:assembleDebug
+./gradlew.bat :app:assemblePrivateDebug
+./gradlew.bat :app:assemblePublicDebug
 ```
 
 ## Text Encoding

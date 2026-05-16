@@ -38,12 +38,31 @@ BoardFlow currently supports all of the following:
 
 When changing the app, keep those flows in mind. A fix in one area often has consequences for history, roster matching, sync, or backup behavior.
 
+## Build Flavors
+
+The app uses Android product flavors. There is **one module** (`app/`) with three source sets:
+
+| Source set | Purpose |
+|---|---|
+| `main` | All shared code and resources |
+| `private` | Real `GoogleAuthManager` + `GoogleApiClient`; dark-navy icon; OAuth client ID string |
+| `public` | No-op stubs for the same two classes; standard icon |
+
+`BuildConfig.GOOGLE_SYNC_ENABLED` is `true` only in the private flavor. Verify both flavors after any change:
+
+```sh
+./gradlew.bat :app:compilePrivateDebugKotlin
+./gradlew.bat :app:compilePublicDebugKotlin
+```
+
+No `google-services.json` or Firebase plugin is used. The OAuth web client ID lives in `app/src/private/res/values/strings.xml`.
+
 ## Fast Start
 
 If you are new to the repo, do not start with a whole-codebase read. Start here:
 
 - `README.md`
-  - current product behavior, runtime storage model, major screen flows
+  - current product behavior, flavor architecture, runtime storage model, major screen flows
 - `app/src/main/kotlin/cz/nicolsburg/boardflow/ui/app/AppShell.kt`
   - top-level navigation, scaffold, cross-screen routing
 - `app/src/main/kotlin/cz/nicolsburg/boardflow/AppViewModel.kt`
@@ -54,8 +73,8 @@ If you are new to the repo, do not start with a whole-codebase read. Start here:
   - live Room-backed store
 - `app/src/main/kotlin/cz/nicolsburg/boardflow/data/BggRepository.kt`
   - BGG search, collection, play history, log/edit/delete flows
-- `app/src/main/kotlin/cz/nicolsburg/boardflow/data/GoogleApiClient.kt`
-  - Sheets / Drive sync
+- `app/src/private/kotlin/cz/nicolsburg/boardflow/data/GoogleApiClient.kt`
+  - Sheets / Drive sync (private flavor only; public flavor has a stub in `app/src/public/`)
 
 Prefer targeted inspection of those files over broad exploration unless the issue clearly spans multiple layers.
 
@@ -75,7 +94,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - consumes `pendingHistoryNavigation` requests from `AppViewModel`
   - consumes `pendingWidgetQuickScan` to navigate to the scan flow when the widget is tapped
 - `auth/GoogleAuthManager.kt`
-  - Google account selection / sign-in orchestration
+  - Google account selection / sign-in orchestration (real implementation in `private/` source set; no-op stub in `public/` source set)
 - `core/di/AppContainer.kt`
   - lightweight manual DI container
 - `core/navigation/AppRoutes.kt`

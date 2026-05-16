@@ -69,6 +69,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
@@ -102,6 +103,7 @@ private object GameDetailTokens {
 @Composable
 fun GameDetailsDialog(
     game: GameItem,
+    googleSyncEnabled: Boolean = BuildConfig.GOOGLE_SYNC_ENABLED,
     onDismiss: () -> Unit,
     historyPlays: List<LoggedPlay> = emptyList(),
     players: List<Player> = emptyList(),
@@ -118,7 +120,7 @@ fun GameDetailsDialog(
         catch (_: Exception) { SleeveManufacturer.AUTO }
     }
     val bggUrl = bggSleevesUrl(game)
-    val driveUrl = game.shareUrl?.takeIf { it.isNotBlank() }
+    val driveUrl = game.shareUrl?.takeIf { it.isNotBlank() && googleSyncEnabled }
     val hasExternalButtons = bggUrl != null || driveUrl != null
     val gameObjectId = remember(game) { game.objectId.toIntOrNull()?.takeIf { it > 0 } }
     val overviewStats = remember(game) { overviewStats(game) }

@@ -122,11 +122,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _recentGames.value = prefs.getRecentGames()
         if (_allGames.value.isNotEmpty()) return
         viewModelScope.launch {
-            val cachedCollection = container.canonicalCollectionStore.getLightweightGames()
+            val cachedCollection = container.canonicalCollectionStore.getAllGames()
             if (cachedCollection.isNotEmpty()) {
-                _allGames.value = cachedCollection
-                if (!isBggSearchActive) _searchResults.value = cachedCollection
-                _collectionLoaded.value = true
+                updateFromCollection(cachedCollection)
             } else {
                 if (!isBggSearchActive) _searchResults.value = _recentGames.value
             }
@@ -160,31 +158,26 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             _collectionLoaded.value = false
             return
         }
-        val bggGames = games.mapNotNull { item ->
-            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
-            BggGame(
-                id = id,
-                name = item.identity.name,
-                yearPublished = item.yearPublished?.toString(),
-                thumbnailUrl = item.thumbnailUrl
-            )
-        }.sortedBy { it.name }
+        val bggGames = games.toSearchGames()
         if (bggGames.isEmpty()) return
         _allGames.value = bggGames
         if (!isBggSearchActive) _searchResults.value = bggGames
-        val ownedGames = games.filter { it.isOwned }.mapNotNull { item ->
-            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
-            BggGame(
-                id = id,
-                name = item.identity.name,
-                yearPublished = item.yearPublished?.toString(),
-                thumbnailUrl = item.thumbnailUrl
-            )
-        }.sortedBy { it.name }
+        val ownedGames = games.filter { it.isOwned }.toSearchGames()
         _ownedGames.value = ownedGames
         if (!isLogPlayBggSearchActive) _logPlaySearchResults.value = ownedGames.ifEmpty { _recentGames.value }
         _collectionLoaded.value = true
     }
+
+    private fun List<GameItem>.toSearchGames(): List<BggGame> =
+        mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            BggGame(
+                id = id,
+                name = item.name,
+                yearPublished = item.yearPublished?.toString(),
+                thumbnailUrl = item.thumbnailUrl
+            )
+        }.sortedBy { it.name }
 
     fun filterGames(query: String) {
         if (query.isBlank()) {
@@ -233,17 +226,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             return
         }
         viewModelScope.launch {
-            val owned = container.canonicalCollectionStore.getLightweightOwnedGames()
-            _ownedGames.value = owned
-            if (!isLogPlayBggSearchActive) {
-                _logPlaySearchResults.value = owned.ifEmpty { _recentGames.value }
-            }
-            // Also seed the global collection if not yet loaded
-            if (_allGames.value.isEmpty()) {
-                val all = container.canonicalCollectionStore.getLightweightGames()
-                if (all.isNotEmpty()) {
-                    _allGames.value = all
-                    _collectionLoaded.value = true
+            val cachedCollection = container.canonicalCollectionStore.getAllGames()
+            if (cachedCollection.isNotEmpty()) {
+                updateFromCollection(cachedCollection)
+            } else {
+                _ownedGames.value = emptyList()
+                if (!isLogPlayBggSearchActive) {
+                    _logPlaySearchResults.value = _recentGames.value
                 }
             }
         }
@@ -1192,10 +1181,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 _collectionLoaded.value = false
             } else {
                 container.canonicalCollectionStore.replaceAllGames(importedCollection)
-                val lightweightGames = container.canonicalCollectionStore.getLightweightGames()
-                _allGames.value = lightweightGames
-                _searchResults.value = lightweightGames
-                _collectionLoaded.value = true
+                updateFromCollection(importedCollection)
             }
             container.canonicalCollectionStore.replaceLoggedPlays(imported.loggedPlays)
             _playHistory.value = imported.loggedPlays

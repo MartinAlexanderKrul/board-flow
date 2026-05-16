@@ -65,7 +65,7 @@ import java.util.Locale
 import kotlin.math.abs
 
 // ══════════════════════════════════════════════════════════════════════════════
-// InsightsGlanceWidget — 6 responsive layout tiers
+// MainGlanceWidget — 6 responsive layout tiers
 //
 //  TINY     width< 100, height< 120  (≈1×1)         game name + camera
 //  SMALL    width≥ 100, height< 120  (≈2×1)         game + day + camera
@@ -88,7 +88,7 @@ import kotlin.math.abs
 //   3×3+ (240×240) → LARGE(200×230=46000) beats EXPANDED(24000)
 // ══════════════════════════════════════════════════════════════════════════════
 
-class InsightsGlanceWidget : GlanceAppWidget() {
+class MainGlanceWidget : GlanceAppWidget() {
 
     companion object {
         // ── Responsive breakpoints ───────────────────────────────────────────
@@ -99,10 +99,11 @@ class InsightsGlanceWidget : GlanceAppWidget() {
         val EXPANDED = DpSize(200.dp, 120.dp)   // ≈3×2 / 4×2+ wide + medium
         val LARGE    = DpSize(200.dp, 230.dp)   // ≈3×3+ wide + very tall
 
-        const val ACTION_ROTATE   = "cz.nicolsburg.boardflow.ACTION_ROTATE_INSIGHT"
+        const val ACTION_ROTATE    = "cz.nicolsburg.boardflow.ACTION_ROTATE_INSIGHT"
+        const val ACTION_QUICK_SCAN = "cz.nicolsburg.boardflow.ACTION_QUICK_SCAN"
         internal const val INTERVAL_MS = 5 * 60 * 1000L
 
-        private const val PREFS_NAME   = "InsightsWidgetPrefs"
+        private const val PREFS_NAME   = "MainWidgetPrefs"
         private const val KEY_LAST_DAY = "last_day"
         private const val KEY_LAST_TXT = "last_text"
 
@@ -1087,7 +1088,7 @@ class QuickScanCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         context.startActivity(
             Intent(context, MainActivity::class.java).apply {
-                action = QuickScanWidget.ACTION_QUICK_SCAN
+                action = MainGlanceWidget.ACTION_QUICK_SCAN
                 flags  = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
         )
@@ -1095,19 +1096,18 @@ class QuickScanCallback : ActionCallback {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// InsightsWidget — BroadcastReceiver registered in AndroidManifest.xml.
-// Class name kept as "InsightsWidget" for manifest / home-screen compatibility.
+// MainWidget — BroadcastReceiver registered in AndroidManifest.xml.
 // ══════════════════════════════════════════════════════════════════════════════
 
-class InsightsWidget : GlanceAppWidgetReceiver() {
+class MainWidget : GlanceAppWidgetReceiver() {
 
-    override val glanceAppWidget: GlanceAppWidget = InsightsGlanceWidget()
+    override val glanceAppWidget: GlanceAppWidget = MainGlanceWidget()
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         when (intent.action) {
-            InsightsGlanceWidget.ACTION_ROTATE -> {
-                MainScope().launch { InsightsGlanceWidget().updateAll(context) }
+            MainGlanceWidget.ACTION_ROTATE -> {
+                MainScope().launch { MainGlanceWidget().updateAll(context) }
             }
             AppWidgetManager.ACTION_APPWIDGET_UPDATE,
             AppWidgetManager.ACTION_APPWIDGET_ENABLED -> scheduleRotation(context)
@@ -1118,8 +1118,8 @@ class InsightsWidget : GlanceAppWidgetReceiver() {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         am.setInexactRepeating(
             AlarmManager.ELAPSED_REALTIME,
-            SystemClock.elapsedRealtime() + InsightsGlanceWidget.INTERVAL_MS,
-            InsightsGlanceWidget.INTERVAL_MS,
+            SystemClock.elapsedRealtime() + MainGlanceWidget.INTERVAL_MS,
+            MainGlanceWidget.INTERVAL_MS,
             rotationIntent(context)
         )
     }
@@ -1127,8 +1127,8 @@ class InsightsWidget : GlanceAppWidgetReceiver() {
     private fun rotationIntent(context: Context): PendingIntent =
         PendingIntent.getBroadcast(
             context, 2,
-            Intent(context, InsightsWidget::class.java).apply {
-                action = InsightsGlanceWidget.ACTION_ROTATE
+            Intent(context, MainWidget::class.java).apply {
+                action = MainGlanceWidget.ACTION_ROTATE
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

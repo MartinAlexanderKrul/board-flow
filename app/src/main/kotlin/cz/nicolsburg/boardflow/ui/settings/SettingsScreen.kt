@@ -116,6 +116,7 @@ private enum class SettingsSection(val title: String) {
 fun SettingsScreen(
     viewModel: AppViewModel,
     syncViewModel: SyncViewModel,
+    googleSyncEnabled: Boolean = BuildConfig.GOOGLE_SYNC_ENABLED,
     onSignIn: () -> Unit,
     onSignOut: () -> Unit,
     onActiveTabChange: (String?) -> Unit = {}
@@ -213,7 +214,7 @@ fun SettingsScreen(
         )
     }
 
-    if (showGoogleSignOutConfirm) {
+    if (googleSyncEnabled && showGoogleSignOutConfirm) {
         BoardFlowConfirmationDialog(
             title = "Sign out of Google?",
             message = "Google Sheets and Drive sync will be unavailable until you sign in again.",
@@ -277,7 +278,7 @@ fun SettingsScreen(
         )
     }
 
-    if (showSheetModal) {
+    if (googleSyncEnabled && showSheetModal) {
         SpreadsheetConnectDialog(
             currentSheetName = spreadsheetTitle.ifBlank { null },
             onDismiss = { showSheetModal = false },
@@ -351,65 +352,71 @@ fun SettingsScreen(
                 item {
                     SectionHeader(
                         title = "Accounts",
-                        subtitle = "Sign in to Google for Sheets sync, then add your BGG account."
+                        subtitle = if (googleSyncEnabled) {
+                            "Sign in to Google for Sheets sync, then add your BGG account."
+                        } else {
+                            "Add your BGG account for collection refresh and play posting."
+                        }
                     )
                 }
 
                 item { SettingsSectionLabel("Connections") }
 
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.CloudDone,
-                        title = "Google",
-                        subtitle = "Required for Sheets sync and Drive folders."
-                    ) {
-                        if (googleAccount != null) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    googleAccount?.name.orEmpty(),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                BoardFlowOutlinedButton(onClick = { showGoogleSignOutConfirm = true }) { Text("Sign out") }
-                            }
-                            HorizontalDivider()
-                            // Google Sheets sub-section
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.GridOn,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Google Sheets", style = MaterialTheme.typography.labelLarge)
+                if (googleSyncEnabled) {
+                    item {
+                        SettingsCard(
+                            icon = Icons.Default.CloudDone,
+                            title = "Google",
+                            subtitle = "Required for Sheets sync and Drive folders."
+                        ) {
+                            if (googleAccount != null) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
                                     Text(
-                                        if (spreadsheetId.isNotBlank())
-                                            spreadsheetTitle.ifBlank { "…${spreadsheetId.takeLast(8)}" }
-                                        else "No sheet selected",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (spreadsheetId.isNotBlank()) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                                        googleAccount?.name.orEmpty(),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        style = MaterialTheme.typography.bodyMedium
                                     )
+                                    BoardFlowOutlinedButton(onClick = { showGoogleSignOutConfirm = true }) { Text("Sign out") }
                                 }
-                                BoardFlowInlineAction(onClick = { showSheetModal = true }) {
-                                    Text(
-                                        if (spreadsheetId.isNotBlank()) "Change" else "Connect",
-                                        color = MaterialTheme.colorScheme.primary
+                                HorizontalDivider()
+                                // Google Sheets sub-section
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.GridOn,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
                                     )
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Google Sheets", style = MaterialTheme.typography.labelLarge)
+                                        Text(
+                                            if (spreadsheetId.isNotBlank())
+                                                spreadsheetTitle.ifBlank { "…${spreadsheetId.takeLast(8)}" }
+                                            else "No sheet selected",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (spreadsheetId.isNotBlank()) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    BoardFlowInlineAction(onClick = { showSheetModal = true }) {
+                                        Text(
+                                            if (spreadsheetId.isNotBlank()) "Change" else "Connect",
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
-                            }
-                        } else {
-                            BoardFlowButton(onClick = onSignIn, modifier = Modifier.fillMaxWidth()) {
-                                Text("Sign in with Google")
+                            } else {
+                                BoardFlowButton(onClick = onSignIn, modifier = Modifier.fillMaxWidth()) {
+                                    Text("Sign in with Google")
+                                }
                             }
                         }
                     }

@@ -57,6 +57,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import cz.nicolsburg.boardflow.AppViewModel
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.R
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.core.navigation.AppRoutes
@@ -100,6 +101,7 @@ fun BoardFlowApp(
     onRequestSignOut: () -> Unit,
     onRequestCsvPick: () -> Unit
 ) {
+    val googleSyncEnabled = BuildConfig.GOOGLE_SYNC_ENABLED
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -129,7 +131,7 @@ fun BoardFlowApp(
     }
 
     LaunchedEffect(account?.name, spreadsheetId, hasBggCredentials) {
-        if (!startupSilentSyncRequested && account != null && spreadsheetId.isNotBlank() && hasBggCredentials) {
+        if (googleSyncEnabled && !startupSilentSyncRequested && account != null && spreadsheetId.isNotBlank() && hasBggCredentials) {
             startupSilentSyncRequested = true
             syncViewModel.refreshCollectionSilentlyOnStartup(forceRefresh = true)
         }
@@ -220,7 +222,7 @@ fun BoardFlowApp(
         currentRoute == AppRoutes.HISTORY -> activeTabLabel ?: "Play History"
         currentRoute == AppRoutes.QR_IMPORT -> "Import Play"
         currentRoute == AppRoutes.COLLECTION -> activeTabLabel ?: "My Collection"
-        currentRoute == AppRoutes.SYNC -> "Sync to Sheets"
+        currentRoute == AppRoutes.SYNC -> if (googleSyncEnabled) "Sync to Sheets" else "Sync"
         currentRoute == AppRoutes.SETTINGS -> activeTabLabel ?: "Settings"
         isScan || isReview -> selectedGameName
         else -> ""
@@ -375,6 +377,7 @@ fun BoardFlowApp(
             composable(AppRoutes.COLLECTION) {
                 CollectionScreen(
                     syncViewModel = syncViewModel,
+                    googleSyncEnabled = googleSyncEnabled,
                     historyPlays = historyPlays,
                     players = players,
                     onLogPlay = { gameId, gameName, thumbnailUrl ->
@@ -428,6 +431,7 @@ fun BoardFlowApp(
             composable(AppRoutes.SYNC) {
                 SyncScreen(
                     syncViewModel = syncViewModel,
+                    googleSyncEnabled = googleSyncEnabled,
                     onPickCsv = onRequestCsvPick,
                     onSpreadsheetChanged = syncViewModel::setSpreadsheetId,
                     onSignIn = onRequestSignIn,
@@ -446,6 +450,7 @@ fun BoardFlowApp(
                 SettingsScreen(
                     viewModel = appViewModel,
                     syncViewModel = syncViewModel,
+                    googleSyncEnabled = googleSyncEnabled,
                     onSignIn = onRequestSignIn,
                     onSignOut = onRequestSignOut,
                     onActiveTabChange = { activeTabLabel = it }

@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.model.LogEntry
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
@@ -111,6 +112,7 @@ private fun List<LogEntry>.deriveSummary(): LogSummary? {
 @Composable
 fun SyncScreen(
     syncViewModel: SyncViewModel,
+    googleSyncEnabled: Boolean = BuildConfig.GOOGLE_SYNC_ENABLED,
     onPickCsv: () -> Unit,
     onSpreadsheetChanged: (String) -> Unit,
     onSignIn: () -> Unit = {},
@@ -128,10 +130,11 @@ fun SyncScreen(
     val lastSyncedAt by syncViewModel.lastSyncedAt.collectAsState()
 
     val hasConfiguredSheet = spreadsheetId.isNotBlank()
-    val googleConnected = account != null
-    val canSync = googleConnected && hasConfiguredSheet && hasBggCredentials
+    val googleConnected = googleSyncEnabled && account != null
+    val canSync = googleSyncEnabled && googleConnected && hasConfiguredSheet && hasBggCredentials
 
     val syncHint = when {
+        !googleSyncEnabled -> null
         !hasBggCredentials && !googleConnected -> "Set up BGG and sign in to Google first"
         !hasBggCredentials -> "Set up your BGG account first"
         !googleConnected -> "Sign in to Google first"
@@ -182,7 +185,7 @@ fun SyncScreen(
         }
     }
 
-    if (showSheetModal) {
+    if (googleSyncEnabled && showSheetModal) {
         SpreadsheetConnectDialog(
             currentSheetName = spreadsheetTitle.ifBlank { null },
             onDismiss = { showSheetModal = false },
@@ -199,7 +202,7 @@ fun SyncScreen(
         )
     }
 
-    if (showGoogleModal) {
+    if (googleSyncEnabled && showGoogleModal) {
         GoogleManageDialog(
             accountEmail = account?.name,
             onDismiss = { showGoogleModal = false },
@@ -286,14 +289,19 @@ fun SyncScreen(
             ) {
                 // ── Readiness hub (status + actions) ──────────────────────
                 ReadinessHub(
+                    googleSyncEnabled = googleSyncEnabled,
                     googleConnected = googleConnected,
                     googleLabel = account?.name.orEmpty(),
                     bggConnected = hasBggCredentials,
                     sheetConnected = hasConfiguredSheet,
                     sheetLabel = sheetDisplayLabel,
-                    onManageGoogle = { showGoogleModal = true },
+                    onManageGoogle = {
+                        if (googleSyncEnabled) showGoogleModal = true
+                    },
                     onEditBgg = { showBggModal = true },
-                    onChangeSheet = { showSheetModal = true }
+                    onChangeSheet = {
+                        if (googleSyncEnabled) showSheetModal = true
+                    }
                 )
 
                 // ── Step 1 — BGG ──────────────────────────────────────────
@@ -327,7 +335,7 @@ fun SyncScreen(
                 }
 
                 // ── Step 2 — Google Sheets (only when signed in to Google) ──
-                AnimatedVisibility(visible = googleConnected) {
+                AnimatedVisibility(visible = googleSyncEnabled && googleConnected) {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         HorizontalDivider()
 
@@ -422,6 +430,7 @@ fun SyncScreen(
 
 @Composable
 private fun ReadinessHub(
+    googleSyncEnabled: Boolean,
     googleConnected: Boolean,
     googleLabel: String,
     bggConnected: Boolean,
@@ -437,14 +446,16 @@ private fun ReadinessHub(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-            ActionStatusRow(
-                label = "Google",
-                connected = googleConnected,
-                detail = if (googleConnected) googleLabel else "Not signed in",
-                actionLabel = if (googleConnected) "Manage" else "Sign in",
-                onAction = onManageGoogle
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), thickness = 0.5.dp)
+            if (googleSyncEnabled) {
+                ActionStatusRow(
+                    label = "Google",
+                    connected = googleConnected,
+                    detail = if (googleConnected) googleLabel else "Not signed in",
+                    actionLabel = if (googleConnected) "Manage" else "Sign in",
+                    onAction = onManageGoogle
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), thickness = 0.5.dp)
+            }
             ActionStatusRow(
                 label = "BGG",
                 connected = bggConnected,
@@ -452,18 +463,20 @@ private fun ReadinessHub(
                 actionLabel = if (bggConnected) "Edit" else "Set up",
                 onAction = onEditBgg
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), thickness = 0.5.dp)
-            ActionStatusRow(
-                label = "Sheet",
-                connected = sheetConnected,
-                detail = if (sheetConnected) sheetLabel else "No sheet selected",
-                actionLabel = when {
-                    sheetConnected -> "Change"
-                    googleConnected -> "Connect"
-                    else -> null
-                },
-                onAction = if (sheetConnected || googleConnected) onChangeSheet else null
-            )
+            if (googleSyncEnabled) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), thickness = 0.5.dp)
+                ActionStatusRow(
+                    label = "Sheet",
+                    connected = sheetConnected,
+                    detail = if (sheetConnected) sheetLabel else "No sheet selected",
+                    actionLabel = when {
+                        sheetConnected -> "Change"
+                        googleConnected -> "Connect"
+                        else -> null
+                    },
+                    onAction = if (sheetConnected || googleConnected) onChangeSheet else null
+                )
+            }
         }
     }
 }

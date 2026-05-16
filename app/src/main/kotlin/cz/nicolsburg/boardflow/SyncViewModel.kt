@@ -139,7 +139,9 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         securePrefs.saveSleevesExcludedGameIds(emptySet())
     }
 
-    fun connectExistingSpreadsheet(account: Account, input: String) = runSync("Connect spreadsheet") {
+    fun connectExistingSpreadsheet(account: Account, input: String) {
+        if (!BuildConfig.GOOGLE_SYNC_ENABLED) return
+        runSync("Connect spreadsheet") {
         val resolvedId = extractSheetId(input).trim()
         require(resolvedId.isNotBlank()) { "Paste a Google Sheets URL or spreadsheet ID first." }
         entry("Google Sheets", "Checking spreadsheet access", LogEntry.Type.INFO)
@@ -155,9 +157,12 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         applySpreadsheet(details)
         entry("Connected", details.title, LogEntry.Type.DONE)
         loadCollection(account)
+        }
     }
 
-    fun createSpreadsheetFromBgg(account: Account) = runSync("Create spreadsheet from BGG") {
+    fun createSpreadsheetFromBgg(account: Account) {
+        if (!BuildConfig.GOOGLE_SYNC_ENABLED) return
+        runSync("Create spreadsheet from BGG") {
         val username = requireBggCredentials().username
         val collection = loadBggCollection(forceRefresh = true)
         val details = GoogleApiClient.createSpreadsheet(
@@ -174,9 +179,11 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         if (isActive) {
             loadCollection(account, forceRefresh = true)
         }
+        }
     }
 
-    fun syncCsv(account: Account, resolver: ContentResolver, csvUri: Uri) =
+    fun syncCsv(account: Account, resolver: ContentResolver, csvUri: Uri) {
+        if (!BuildConfig.GOOGLE_SYNC_ENABLED) return
         runSync("CSV Sync - tab: ${_sheetTabName.value}") {
             entry("CSV", "Reading file", LogEntry.Type.INFO)
             val rows = CsvParser.parse(resolver, csvUri)
@@ -224,8 +231,11 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             }.joinToString(", ")
             entry("Sync complete", summary, if (stopped) LogEntry.Type.ERROR else LogEntry.Type.DONE)
         }
+    }
 
-    fun createFolders(account: Account, saveQrToGallery: Boolean) = runSync("Create Folders & QR Codes") {
+    fun createFolders(account: Account, saveQrToGallery: Boolean) {
+        if (!BuildConfig.GOOGLE_SYNC_ENABLED) return
+        runSync("Create Folders & QR Codes") {
         entry("Google Sheets", "Reading sheet", LogEntry.Type.INFO)
         val api = GoogleApiClient(getApplication(), account, _spreadsheetId.value, _sheetTabName.value)
         val rows = api.readGameRows()
@@ -298,15 +308,19 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             if (failed > 0) add("$failed failed")
         }.joinToString(", ").ifBlank { "Nothing to do" }
         entry("Done", summary, if (failed > 0) LogEntry.Type.ERROR else LogEntry.Type.DONE)
+        }
     }
 
-    fun syncBgg(account: Account, forceRefresh: Boolean) = runSync("BGG API Sync") {
+    fun syncBgg(account: Account, forceRefresh: Boolean) {
+        if (!BuildConfig.GOOGLE_SYNC_ENABLED) return
+        runSync("BGG API Sync") {
         require(_spreadsheetId.value.isNotBlank()) { "Set a spreadsheet ID before syncing." }
         val collection = loadBggCollection(forceRefresh)
         val api = GoogleApiClient(getApplication(), account, _spreadsheetId.value, _sheetTabName.value)
         syncCollectionToSheet(api, collection)
         if (isActive) {
             loadCollection(account, forceRefresh = true)
+        }
         }
     }
 
@@ -505,13 +519,26 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val cache = BggCache(getApplication())
         if (!forceRefresh && cache.exists(credentials.username)) {
             entry("BGG", "Loading from cache", LogEntry.Type.INFO)
-            return cache.load(credentials.username)
+            val cached = cache.load(credentials.username)
+            if (cached.none { it.bggbestplayers.isBlank() && it.bggrecplayers.isBlank() && it.bggrecagerange.isBlank() }) {
+                return cached
+            }
+            entry("BGG", "Refreshing cached game details", LogEntry.Type.INFO)
+            return enrichBggCollectionDetails(cached, BggApiClient(BuildConfig.BGG_XML_API_TOKEN))
+                .also { cache.save(credentials.username, it) }
         }
         if (forceRefresh) cache.delete(credentials.username)
         entry("BGG", "Fetching collection", LogEntry.Type.INFO)
         val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
         val games = client.fetchCollection(credentials.username, credentials.password)
         entry("BGG", "${games.size} games, fetching details", LogEntry.Type.INFO)
+        return enrichBggCollectionDetails(games, client).also { cache.save(credentials.username, it) }
+    }
+
+    private suspend fun enrichBggCollectionDetails(
+        games: List<BggApiClient.BggGame>,
+        client: BggApiClient
+    ): List<BggApiClient.BggGame> {
         return try {
             val thingDetails = client.fetchThingDetails(games.map { it.objectid })
             val enriched = games.map { game ->
@@ -524,7 +551,6 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     bgglanguagedependence = detail.bgglanguagedependence.ifBlank { game.bgglanguagedependence }
                 )
             }
-            cache.save(credentials.username, enriched)
             entry("BGG", "${enriched.size} games fetched", LogEntry.Type.INFO)
             enriched
         } catch (e: Exception) {
