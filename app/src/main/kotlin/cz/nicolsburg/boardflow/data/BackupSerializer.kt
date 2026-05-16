@@ -5,6 +5,7 @@ import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.GameRecognitionHint
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
+import cz.nicolsburg.boardflow.model.PlayerRecognitionHint
 import cz.nicolsburg.boardflow.model.PlayerResult
 import org.json.JSONArray
 import org.json.JSONObject
@@ -23,6 +24,7 @@ object BackupSerializer {
         bggUsername: String,
         bggPassword: String,
         geminiApiKey: String,
+        geminiExtraApiKeys: List<String>,
         geminiModelEndpoint: String,
         appTheme: String,
         statsPlayScope: String,
@@ -35,6 +37,8 @@ object BackupSerializer {
         recentGames: List<BggGame>,
         availableModels: List<String>,
         recognitionHints: List<GameRecognitionHint>,
+        playerRecognitionHints: List<PlayerRecognitionHint>,
+        customMoods: List<String>,
         collectionSnapshot: List<GameItem>,
         loggedPlays: List<LoggedPlay>,
         cachedBggPlays: List<LoggedPlay>
@@ -61,6 +65,7 @@ object BackupSerializer {
             root.put("secureSettings", JSONObject().apply {
                 put("bggPassword", bggPassword)
                 put("geminiApiKey", geminiApiKey)
+                put("geminiExtraApiKeys", JSONArray().also { arr -> geminiExtraApiKeys.forEach { arr.put(it) } })
             })
         }
         root.put("players", JSONArray().also { arr ->
@@ -123,6 +128,18 @@ object BackupSerializer {
                 })
             }
         })
+        root.put("playerRecognitionHints", JSONArray().also { arr ->
+            playerRecognitionHints.forEach { h ->
+                arr.put(JSONObject().apply {
+                    put("scannedNameNormalized", h.scannedNameNormalized)
+                    put("confirmedRosterPlayerId", h.confirmedRosterPlayerId)
+                    put("playerDisplayName", h.playerDisplayName)
+                    put("timesConfirmed", h.timesConfirmed)
+                    put("lastConfirmedAt", h.lastConfirmedAt)
+                })
+            }
+        })
+        root.put("customMoods", JSONArray().also { arr -> customMoods.forEach { arr.put(it) } })
         root.put("collectionSnapshots", JSONObject().also { snapshots ->
             snapshots.put(CANONICAL_SNAPSHOT_ID, JSONArray().also { arr ->
                 collectionSnapshot.forEach { game -> arr.put(gameItemToJson(game)) }
@@ -140,6 +157,8 @@ object BackupSerializer {
         onRecentGamesJson: (String) -> Unit,
         onAvailableModelsJson: (String) -> Unit,
         onRecognitionHints: (List<GameRecognitionHint>) -> Unit = {},
+        onPlayerRecognitionHints: (List<PlayerRecognitionHint>) -> Unit = {},
+        onCustomMoods: (List<String>) -> Unit = {},
         clearLegacyCachedCollection: () -> Unit
     ): ImportedBackupData {
         val root = JSONObject(json)
@@ -178,6 +197,25 @@ object BackupSerializer {
                 }.getOrNull()
             }
             if (hints.isNotEmpty()) onRecognitionHints(hints)
+        }
+        root.optJSONArray("playerRecognitionHints")?.let { arr ->
+            val hints = (0 until arr.length()).mapNotNull { i ->
+                runCatching {
+                    val obj = arr.getJSONObject(i)
+                    PlayerRecognitionHint(
+                        scannedNameNormalized   = obj.getString("scannedNameNormalized"),
+                        confirmedRosterPlayerId = obj.getString("confirmedRosterPlayerId"),
+                        playerDisplayName       = obj.getString("playerDisplayName"),
+                        timesConfirmed          = obj.getInt("timesConfirmed"),
+                        lastConfirmedAt         = obj.getLong("lastConfirmedAt")
+                    )
+                }.getOrNull()
+            }
+            if (hints.isNotEmpty()) onPlayerRecognitionHints(hints)
+        }
+        root.optJSONArray("customMoods")?.let { arr ->
+            val moods = (0 until arr.length()).map { arr.getString(it) }.filter { it.isNotBlank() }
+            if (moods.isNotEmpty()) onCustomMoods(moods)
         }
 
         val importedLoggedPlays = root.optJSONArray("loggedPlays")?.let { arr ->

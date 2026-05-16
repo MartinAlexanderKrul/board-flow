@@ -37,29 +37,33 @@ class GeminiRepository {
         apiKey: String,
         modelName: String = "gemini-flash-latest",
         availableModels: List<String> = emptyList(),
+        availableApiKeys: List<String> = emptyList(),
         onModelChanged: ((String) -> Unit)? = null
     ): Result<ExtractedPlay> = withContext(Dispatchers.IO) {
         runCatching {
             val startTime = System.currentTimeMillis()
-            logGemini("request score-extract start initialModel=$modelName file=${imageFile.name} size=${imageFile.length()}B availableModels=${availableModels.size}")
+            logGemini("request score-extract start initialModel=$modelName file=${imageFile.name} size=${imageFile.length()}B availableModels=${availableModels.size} availableApiKeys=${availableApiKeys.size}")
 
             val base64Image = encodeImageToBase64(imageFile)
             val requestBody = buildRequestJson(base64Image)
+            val allKeys = listOf(apiKey) + availableApiKeys
             var currentModel = modelName
+            var currentKeyIndex = 0
             var attempts = 0
             val maxAttempts = 10
 
             while (attempts < maxAttempts) {
                 attempts++
+                val currentApiKey = allKeys[currentKeyIndex]
                 val fullEndpoint = if (currentModel.contains("/")) currentModel else "v1beta/models/$currentModel"
-                val url = "https://generativelanguage.googleapis.com/$fullEndpoint:generateContent?key=$apiKey"
+                val url = "https://generativelanguage.googleapis.com/$fullEndpoint:generateContent?key=$currentApiKey"
                 val request = Request.Builder()
                     .url(url)
                     .post(requestBody.toRequestBody("application/json".toMediaType()))
                     .build()
 
                 val attemptStart = System.currentTimeMillis()
-                logGemini("request score-extract attempt=$attempts/$maxAttempts model=$currentModel url=${redactApiKey(url)} body=${preview(requestBody)}")
+                logGemini("request score-extract attempt=$attempts/$maxAttempts model=$currentModel key=${currentKeyIndex + 1}/${allKeys.size} url=${redactApiKey(url)} body=${preview(requestBody)}")
 
                 val response = client.newCall(request).execute()
                 val responseText = response.body?.string() ?: throw Exception("Empty response from Gemini API")
@@ -74,17 +78,28 @@ class GeminiRepository {
                     }
 
                     response.code == 503 || response.code == 429 -> {
-                        val nextModel = findNextModel(currentModel, availableModels)
-                        if (nextModel != null && attempts < maxAttempts) {
-                            logGemini("retry score-extract http=${response.code} from=$currentModel to=$nextModel attempt=$attempts/$maxAttempts")
-                            currentModel = nextModel
-                            onModelChanged?.invoke(nextModel)
-                            delay(1000)
-                            continue
-                        } else {
+                        if (attempts >= maxAttempts) {
                             logGemini("failure score-extract http=${response.code} no-fallback attempts=$attempts")
                             throw Exception("All models are currently experiencing high demand (${response.code}). Please try again in a moment.")
                         }
+                        val nextKeyIndex = currentKeyIndex + 1
+                        if (nextKeyIndex < allKeys.size) {
+                            logGemini("rotate-key score-extract http=${response.code} model=$currentModel key=${nextKeyIndex + 1}/${allKeys.size} attempt=$attempts/$maxAttempts")
+                            currentKeyIndex = nextKeyIndex
+                            delay(1000)
+                            continue
+                        }
+                        val nextModel = findNextModel(currentModel, availableModels)
+                        if (nextModel != null) {
+                            logGemini("rotate-model score-extract http=${response.code} from=$currentModel to=$nextModel resetKey=1/${allKeys.size} attempt=$attempts/$maxAttempts")
+                            currentModel = nextModel
+                            currentKeyIndex = 0
+                            onModelChanged?.invoke(nextModel)
+                            delay(1000)
+                            continue
+                        }
+                        logGemini("failure score-extract http=${response.code} no-fallback attempts=$attempts")
+                        throw Exception("All models are currently experiencing high demand (${response.code}). Please try again in a moment.")
                     }
 
                     else -> {

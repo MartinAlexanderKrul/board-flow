@@ -115,6 +115,21 @@ class SecurePreferences(context: Context) {
     fun hasCredentials(): Boolean = bggUsername.isNotBlank() && bggPassword.isNotBlank()
     fun hasGeminiKey(): Boolean = geminiApiKey.isNotBlank()
 
+    // --- Additional Gemini API keys (backup rotation on 429) ---
+    fun saveGeminiExtraApiKeys(keys: List<String>) {
+        val json = JSONArray()
+        keys.forEach { json.put(it) }
+        prefs.edit().putString(KEY_GEMINI_EXTRA_KEYS, json.toString()).apply()
+    }
+
+    fun getGeminiExtraApiKeys(): List<String> {
+        val raw = prefs.getString(KEY_GEMINI_EXTRA_KEYS, "[]") ?: "[]"
+        return try {
+            val array = JSONArray(raw)
+            (0 until array.length()).map { array.getString(it) }.filter { it.isNotBlank() }
+        } catch (e: Exception) { emptyList() }
+    }
+
     fun clearLegacyCollectionArtifacts() {
         prefs.edit().apply {
             remove(KEY_COLLECTION)
@@ -451,6 +466,7 @@ class SecurePreferences(context: Context) {
             bggUsername = bggUsername,
             bggPassword = bggPassword,
             geminiApiKey = geminiApiKey,
+            geminiExtraApiKeys = getGeminiExtraApiKeys(),
             geminiModelEndpoint = geminiModelEndpoint,
             appTheme = appTheme,
             statsPlayScope = statsPlayScope,
@@ -463,6 +479,8 @@ class SecurePreferences(context: Context) {
             recentGames = getRecentGames(),
             availableModels = getAvailableModels(),
             recognitionHints = loadGameRecognitionHints(),
+            playerRecognitionHints = loadPlayerRecognitionHints(),
+            customMoods = getCustomMoods(),
             collectionSnapshot = collectionSnapshot ?: emptyList(),
             loggedPlays = loggedPlays ?: emptyList(),
             cachedBggPlays = cachedBggPlays ?: emptyList()
@@ -491,6 +509,9 @@ class SecurePreferences(context: Context) {
             onSecureSettings = { s ->
                 if (s.has("bggPassword")) bggPassword = s.getString("bggPassword")
                 if (s.has("geminiApiKey")) geminiApiKey = s.getString("geminiApiKey")
+                s.optJSONArray("geminiExtraApiKeys")?.let { arr ->
+                    saveGeminiExtraApiKeys((0 until arr.length()).map { arr.getString(it) }.filter { it.isNotBlank() })
+                }
             },
             onPlayers = { players -> savePlayers(players) },
             onRecentGamesJson = { jsonArray -> prefs.edit().putString(KEY_RECENT_GAMES, jsonArray).apply() },
@@ -542,5 +563,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_PLAYER_RECOGNITION_HINTS = "player_recognition_hints"
         private const val KEY_CUSTOM_MOODS             = "custom_moods"
         private const val KEY_CHRONICLE_ENABLED       = "chronicle_enabled"
+        private const val KEY_GEMINI_EXTRA_KEYS        = "gemini_api_keys_extra"
     }
 }

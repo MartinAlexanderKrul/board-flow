@@ -22,35 +22,51 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
     override suspend fun generate(request: ChronicleRequest, config: ChronicleAiConfig): Result<String> =
         withContext(Dispatchers.IO) {
             runCatching {
+                val allKeys = listOf(config.apiKey) + config.availableApiKeys
                 var currentModel = config.modelName
-                repeat(MAX_ATTEMPTS) { attemptIndex ->
+                var currentKeyIndex = 0
+                var attempts = 0
+
+                while (attempts < MAX_ATTEMPTS) {
+                    attempts++
+                    val currentApiKey = allKeys[currentKeyIndex]
                     val endpoint = if (currentModel.contains("/")) currentModel else "v1beta/models/$currentModel"
-                    val url = "https://generativelanguage.googleapis.com/$endpoint:generateContent?key=${config.apiKey}"
+                    val url = "https://generativelanguage.googleapis.com/$endpoint:generateContent?key=$currentApiKey"
                     val requestBody = buildRequestBody(request)
-                    logGemini("request chronicle attempt=${attemptIndex + 1}/$MAX_ATTEMPTS model=$currentModel url=${redactApiKey(url)} body=${preview(requestBody)}")
+                    logGemini("request chronicle attempt=$attempts/$MAX_ATTEMPTS model=$currentModel key=${currentKeyIndex + 1}/${allKeys.size} url=${redactApiKey(url)} body=${preview(requestBody)}")
                     val httpRequest = Request.Builder()
                         .url(url)
                         .post(requestBody.toRequestBody("application/json".toMediaType()))
                         .build()
                     val response = client.newCall(httpRequest).execute()
                     val body = response.body?.string().orEmpty()
-                    logGemini("response chronicle attempt=${attemptIndex + 1}/$MAX_ATTEMPTS model=$currentModel code=${response.code} body=${preview(body)}")
+                    logGemini("response chronicle attempt=$attempts/$MAX_ATTEMPTS model=$currentModel code=${response.code} body=${preview(body)}")
                     when {
                         response.isSuccessful -> return@runCatching parseChronicleLine(body)
                         response.code == 429 || response.code == 503 -> {
-                            val nextModel = findNextModel(currentModel, config.availableModels)
-                            if (nextModel != null && nextModel != currentModel && attemptIndex < MAX_ATTEMPTS - 1) {
-                                logGemini("retry chronicle model-busy from=$currentModel to=$nextModel")
-                                currentModel = nextModel
-                                delay(600)
-                            } else {
-                                throw IllegalStateException("Chronicle model unavailable (${response.code})")
+                            if (attempts >= MAX_ATTEMPTS) throw IllegalStateException("All models are currently experiencing high demand (${response.code}). Please try again in a moment.")
+                            val nextKeyIndex = currentKeyIndex + 1
+                            if (nextKeyIndex < allKeys.size) {
+                                logGemini("rotate-key chronicle http=${response.code} model=$currentModel key=${nextKeyIndex + 1}/${allKeys.size} attempt=$attempts/$MAX_ATTEMPTS")
+                                currentKeyIndex = nextKeyIndex
+                                delay(1000)
+                                continue
                             }
+                            val nextModel = findNextModel(currentModel, config.availableModels)
+                            if (nextModel != null) {
+                                logGemini("rotate-model chronicle http=${response.code} from=$currentModel to=$nextModel resetKey=1/${allKeys.size} attempt=$attempts/$MAX_ATTEMPTS")
+                                currentModel = nextModel
+                                currentKeyIndex = 0
+                                delay(1000)
+                                continue
+                            }
+                            throw IllegalStateException("All models are currently experiencing high demand (${response.code}). Please try again in a moment.")
                         }
-                        else -> throw IllegalStateException("Chronicle request failed (${response.code})")
+                        else -> throw IllegalStateException("Chronicle API error ${response.code} (using $currentModel):\n$body")
                     }
                 }
-                throw IllegalStateException("Chronicle request exhausted retries")
+
+                throw IllegalStateException("Chronicle failed after $MAX_ATTEMPTS attempts")
             }
         }
 
@@ -200,7 +216,7 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
 
     private companion object {
         private const val TAG = "Chronicle"
-        private const val MAX_ATTEMPTS = 4
+        private const val MAX_ATTEMPTS = 10
     }
 
     private fun logGemini(message: String) {

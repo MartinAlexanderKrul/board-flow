@@ -695,6 +695,72 @@ fun SettingsScreen(
                                 }
                             }
                         }
+                        var extraKeys by remember { mutableStateOf(prefs.getGeminiExtraApiKeys()) }
+                        var newExtraKey by remember { mutableStateOf("") }
+                        if (extraKeys.isNotEmpty() || apiKey.isNotBlank()) {
+                            Text(
+                                "Backup API keys",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+                            )
+                            Text(
+                                "If the primary key hits a rate limit and all models are exhausted, the app rotates to the next key.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            extraKeys.forEachIndexed { index, key ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    OutlinedTextField(
+                                        value = key,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        singleLine = true,
+                                        visualTransformation = PasswordVisualTransformation(),
+                                        modifier = Modifier.weight(1f),
+                                        label = { Text("Backup key ${index + 1}") }
+                                    )
+                                    IconButton(onClick = {
+                                        val updated = extraKeys.toMutableList().also { it.removeAt(index) }
+                                        extraKeys = updated
+                                        prefs.saveGeminiExtraApiKeys(updated)
+                                    }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Remove backup key")
+                                    }
+                                }
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedTextField(
+                                    value = newExtraKey,
+                                    onValueChange = { newExtraKey = it },
+                                    singleLine = true,
+                                    label = { Text("Add backup key") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                    visualTransformation = PasswordVisualTransformation(),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = {
+                                        val trimmed = newExtraKey.trim()
+                                        if (trimmed.isNotBlank()) {
+                                            val updated = extraKeys + trimmed
+                                            extraKeys = updated
+                                            prefs.saveGeminiExtraApiKeys(updated)
+                                            newExtraKey = ""
+                                        }
+                                    },
+                                    enabled = newExtraKey.isNotBlank()
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = "Add backup key")
+                                }
+                            }
+                        }
                         var modelPickerOpen by remember { mutableStateOf(false) }
                         if (availableModels?.isNotEmpty() == true) {
                             BoardFlowPickerField(

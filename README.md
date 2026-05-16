@@ -30,6 +30,7 @@ BoardFlow combines several related workflows in one app:
 - export and import app data backups
 - detect record moments after a play (first win, new high score, win streak)
 - gamification layer: rarity-tiered insights, game mastery levels, period reviews, and animated observation cards
+- session memory: capture moods and a quote for any logged play; generate an AI chronicle line (a single atmospheric sentence) using Gemini, with a deterministic offline fallback; chronicles persist independently of BGG sync in a dedicated `play_memories` table
 
 ## Main User Flows
 
@@ -173,6 +174,8 @@ Behavior:
 - clear cached collection data
 - AI section shows saved recognition template count; templates can be viewed (tap), edited or deleted (long press), and bulk-cleared with confirmation
 - AI section shows saved player recognition hint count; hints can be bulk-cleared with confirmation
+- AI section includes a Chronicles toggle (on by default); when off, chronicle generation is cancelled and chronicle cards are hidden throughout the app
+- AI section includes a Mood Templates manager: custom moods saved from session memory can be viewed, renamed, and deleted
 
 ## Data Model And Storage
 
@@ -187,6 +190,7 @@ It stores:
 - canonical merged collection snapshot (`GameItem` records)
 - local logged plays
 - cached BGG play history
+- session memories (`play_memories` table, keyed by play ID; overlay applies to both local and BGG-cached plays on read; never cleared by BGG sync)
 
 ### Preferences / Secrets
 
@@ -203,16 +207,18 @@ It stores:
 - per-game insight key cache
 - AI game recognition templates (`GameRecognitionHint` list: normalized titles, category fingerprints, confirmation count)
 - AI player recognition hints (`PlayerRecognitionHint` list: normalized scanned name, confirmed roster player ID, display name, timesConfirmed, lastConfirmedAt)
+- chronicle enabled flag (`chronicle_enabled`; default true)
+- custom mood templates (`custom_moods`; JSON array of user-defined mood labels)
 
 ### Import / Export
 
-`data/BackupSerializer.kt` handles backup JSON import/export (current format version 3).
+`data/BackupSerializer.kt` handles backup JSON import/export (current format version 4).
 
 Backups can include:
 
 - collection snapshot (full `GameItem` array)
-- local logged plays
-- cached BGG plays
+- local logged plays (including embedded `memory` JSON per play)
+- cached BGG plays (including embedded `memory` JSON per play)
 - player roster
 - recent games
 - sleeve exclusions
@@ -314,6 +320,12 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
     QrGenerator.kt
     ScanImageQualityAnalyzer.kt
     SecurePreferences.kt
+    SessionMemoryJson.kt
+    chronicle/
+      ChronicleLineGenerator.kt  (interface + ChronicleRequest, ChronicleAiConfig)
+      FallbackChronicleComposer.kt
+      GeminiChronicleLineGenerator.kt
+      SessionChronicleService.kt  (plan + compose; ChroniclePlan data class)
   model/
     Models.kt          (BggGame, PlayerResult, LoggedPlay, GameItem, Player, ...)
     SleeveDatabase.kt  (SleeveManufacturer enum, SleeveEntry, SleeveDatabase object)
@@ -406,6 +418,7 @@ Used for:
 Used for:
 
 - AI-assisted score extraction from images
+- Chronicle generation: given a play's game name, players, moods, and quote, Gemini produces a single atmospheric sentence (max 110 chars) capturing the emotional tone of the session; retries up to 4 times on 429/503, falls back to the next model on rate-limit, and degrades gracefully to a deterministic offline fallback (`FallbackChronicleComposer`) when offline or after timeout
 
 The app supports:
 

@@ -26,6 +26,8 @@ BoardFlow currently supports all of the following:
 - game detail drill-ins with history and player links
 - expansion / sibling title detection and display in log flow; `RelatedGamesBanner` shows the first 6 related games by default with a "Show all (N)" / "Show less" toggle and `animateContentSize` smooth expand; 2–5 related titles are shown without a toggle
 - record moment detection after logging (first win, new high score, win streak)
+- session memory: per-play mood chips (multi-select, preset + custom) and quote capture from `PlayDetailsDialog`
+- chronicle generation: AI-generated single atmospheric sentence per session using Gemini, with deterministic offline fallback; stored in `play_memories` Room table; persists independently of BGG sync; togglable via Settings > AI
 - history tabs for plays, stats, and players
 - signature-based deduplication of local and BGG plays
 - QR code play sharing and import
@@ -90,10 +92,11 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `pendingWidgetQuickScan` StateFlow consumed by AppShell to navigate to scan on widget tap
   - editable log state integration (shared between log and edit flows)
   - roster and player alias management; fuzzy matching with Levenshtein distance
-  - local play history and cached BGG history merge and deduplication (signature-based)
+  - local play history and cached BGG history merge and deduplication (signature-based); sorted by date DESC, id DESC
   - play post/edit/delete flows (local and BGG)
   - local outbox posting for unposted plays (per-play and bulk)
   - record moment detection (first win, new high score, win streak)
+  - session memory and chronicle: `savePlayMemory()` persists moods/quote to `play_memories` and triggers chronicle generation; `ensureChronicleForPlay()` auto-generates when opening a play with memory but no chronicle; concurrency managed via `chronicleJobs`, `chronicleInFlightSourceKeys`, `chronicleGenerationLock`; `chroniclePendingPlayIds: StateFlow<Set<String>>` drives the `...` placeholder; `chronicleEnabled: StateFlow<Boolean>` gates all generation and display; custom mood management: `addCustomMoodIfNew`, `deleteCustomMood`, `renameCustomMood`
   - expansion / sibling title detection (`GameRelations`); `findRelatedGames` uses `isExpansionOf()` helper supporting both separator-based (`"Root: Sub"`) and space-prefix-based (`"Root Sub"`) expansion names; detects when the selected game is itself a space-separated expansion and treats its prefix as the base
   - cross-tab navigation requests (`pendingHistoryNavigation`)
   - import/export and backup restore
@@ -114,9 +117,11 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `GoogleApiClient.kt` -- Sheets / Drive API
   - `GeminiRepository.kt` -- AI extraction (scores + game detection), model discovery, fallback cycling; debug-logged under TAG "Gemini"; sets `ExtractedPlay.modelUsed` to the winning model name and `ExtractedPlay.isMalformed = true` when JSON parsing fails
   - `ScanImageQualityAnalyzer.kt` -- local pre-Gemini image readability checks; does not persist image, player, or score data
-  - `CanonicalCollectionStore.kt` -- Room-backed live source of truth
-  - `BackupSerializer.kt` -- backup JSON import/export (format version 3; includes `recognitionHints`)
-  - `SecurePreferences.kt` -- encrypted preferences (credentials, settings, roster, session, recognition hints)
+  - `CanonicalCollectionStore.kt` -- Room-backed live source of truth (DB v4); `getBggPlaysCache()` and `getLoggedPlays()` apply the `play_memories` overlay on read, with `parseMemoryFromNotes()` as fallback for plays with `$$mood:`/`$$quote:` lines in comments
+  - `SessionMemoryJson.kt` -- `toSessionMemoryOrNull()`, `toJsonString()`, `parseMemoryFromNotes()` extension functions
+  - `chronicle/` -- chronicle service pipeline: `SessionChronicleService` (plan + compose), `GeminiChronicleLineGenerator` (Gemini API, 4 retries, model fallback, 2.5 s timeout), `FallbackChronicleComposer` (deterministic offline fallback), `ChronicleLineGenerator` interface, `ChronicleRequest` and `ChronicleAiConfig` data classes
+  - `BackupSerializer.kt` -- backup JSON import/export (format version 4; includes `memory` JSON per play)
+  - `SecurePreferences.kt` -- encrypted preferences (credentials, settings, roster, session, recognition hints, `chronicle_enabled`, `custom_moods`)
   - `QrGenerator.kt` -- QR code PNG generation and gallery save
   - `PlayShareSerializer.kt` -- play encode/decode for QR sharing
   - `BggImageCache.kt` -- thumbnail preload after sync
@@ -124,7 +129,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `BggPlaySync.kt` -- top-level BGG play cache refresh function
   - `CsvParser.kt` -- CSV row parsing for sync
 - `model/`
-  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, `GameRecognitionHint`, `PlayerRecognitionHint`, `GameCandidate`, ...); `ExtractedPlay` carries `isMalformed: Boolean` (parse failed, partial data) and `modelUsed: String?` (Gemini model that produced the response)
+  - `Models.kt` -- all core data classes (`GameItem`, `LoggedPlay`, `Player`, `SessionContext`, `RecordMoment`, `GameRecognitionHint`, `PlayerRecognitionHint`, `GameCandidate`, ...); `ExtractedPlay` carries `isMalformed: Boolean` (parse failed, partial data) and `modelUsed: String?` (Gemini model that produced the response); `SessionMemory` carries moods, quote, `chronicleLine`, `chronicleSourceKey`, `chronicleCreatedAt`; `trimMemorySuffix()` strips `$$mood:`/`$$quote:` lines from BGG comments for display
   - `SleeveDatabase.kt` -- `SleeveManufacturer` enum, `SleeveEntry`, `SleeveDatabase` object
 - `ui/`
   - screens and shared Compose UI helpers
@@ -142,6 +147,7 @@ It stores:
 - canonical merged collection snapshot (`GameItem` records)
 - local logged plays
 - cached BGG play history
+- session memories (`play_memories` table, keyed by play ID; applied as an overlay on read; never cleared by BGG sync; fallback parses `$$mood:`/`$$quote:` from BGG notes when no entry exists)
 
 ### Preferences / Settings
 
@@ -159,18 +165,20 @@ It stores:
 - per-game insight key cache
 - AI recognition templates (`game_recognition_hints` key; JSON array of `GameRecognitionHint` objects)
 - AI player recognition hints (`player_recognition_hints` key; JSON array of `PlayerRecognitionHint` objects: scannedNameNormalized, confirmedRosterPlayerId, playerDisplayName, timesConfirmed, lastConfirmedAt)
+- chronicle enabled flag (`chronicle_enabled`; boolean; default true)
+- custom mood templates (`custom_moods`; JSON array of user-defined mood label strings)
 
 Do not move live collection/history state back into large JSON blobs in preferences.
 
 ### Backup Format
 
-`BackupSerializer` owns import/export JSON (format version 3).
+`BackupSerializer` owns import/export JSON (format version 4).
 
 Backups can contain:
 
 - collection snapshot (full `GameItem` array under `collectionSnapshots.__canonical_collection__`)
-- local logged plays
-- cached BGG plays
+- local logged plays (including embedded `memory` JSON object per play)
+- cached BGG plays (including embedded `memory` JSON object per play)
 - player roster
 - recent games
 - sleeve exclusions
@@ -273,6 +281,8 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - manages import/export (backup includes recognition templates since format v3)
 - can clear cached collection
 - AI section: view / edit / delete individual recognition templates; bulk-clear all templates with confirmation
+- AI section: Chronicles toggle (on by default); turning it off cancels all in-flight generation jobs and hides chronicle cards throughout the app
+- AI section: Mood Templates manager (`CustomMoodsDialog`) — view, rename (`EditMoodDialog`), and delete custom moods saved during session memory entry
 
 ### AI Game Recognition
 

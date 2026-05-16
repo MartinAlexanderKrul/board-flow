@@ -91,6 +91,9 @@ Source: `ui/history/HistoryScreen.kt`
 - Loading list: `ShimmerPlayCard` placeholders.
 - Empty state: centered "No play history".
 - `PlayDetailsDialog`: animated play details dialog with thumbnail/backdrop, stats, insights, player rows, share, edit, play again, delete, and game/player deep links. Edit and Play again actions use paired `BoardFlowTonalButton`s on one row.
+  - `ChronicleInsightCard`: golden-bordered card (`Color(0xFFF0A500)` accent, `AutoStories` icon) shown above insight strips. Displays the generated chronicle line, or a `...` placeholder when generation is pending. Hidden entirely when Chronicles are disabled in Settings.
+  - `PlayMemorySection`: session memory area below the Chronicle card. Switches between `MemoryEmptyState` ("Capture this session" prompt), `MemoryDisplay` (amber mood chips in a `FlowRow` + attributed quote), and `MemoryEditor` (see below).
+  - `MemoryEditor`: inline mood editor with a `FlowRow` of toggleable `MemorySelectableChip`s (preset + custom), an additive "Add another mood…" `OutlinedTextField`, a quote `OutlinedTextField`, and a "Save memory" `BoardFlowTonalButton` with a `Check` icon.
 - Nested `PlayerDetailDialog`: opened from player rows inside play details.
 - `SharePlayQrDialog`: animated dialog showing a generated QR code and share image / done actions.
 - `EditPlayDialog`: animated play edit dialog with metadata fields, player editor cards, date picker, notes, and save.
@@ -206,6 +209,9 @@ Source: `ui/settings/SettingsScreen.kt`
 - Recognition template item `DropdownMenu`: long-press menu with Edit and Delete.
 - `EditTemplateDialog`: `AnimatedDialog` for editing template scoring categories; title only, no close button.
 - Category chips: removable `SuggestionChip` entries in template editing.
+- Chronicles toggle: `SettingsCard` with `AutoStories` icon and a `Switch`. When off, all in-flight chronicle generation is cancelled and chronicle cards are hidden app-wide.
+- `CustomMoodsDialog`: `AnimatedDialog` listing user-saved mood labels as amber `CircleShape` chips. Each chip has Edit and Delete `TextButton`s; live-updates via `customMoods` StateFlow.
+- `EditMoodDialog`: `AnimatedDialog` with a pre-filled `OutlinedTextField` (40 char max) and a `BoardFlowButton` with `Check` icon to save.
 - Import/export status text surfaces: inline success/error messages.
 
 ## Sync

@@ -497,6 +497,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             container.geminiRepo.extractScoresFromImage(
                 imageFile = imageFile, apiKey = prefs.geminiApiKey,
                 modelName = effectiveModel(), availableModels = prefs.getAvailableModels(),
+                availableApiKeys = prefs.getGeminiExtraApiKeys(),
                 onModelChanged = { newModel ->
                     sessionModel = newModel
                     sessionModelExpiry = System.currentTimeMillis() + 5 * 60 * 1000L
@@ -582,6 +583,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                             apiKey = prefs.geminiApiKey,
                             modelName = effectiveModel(),
                             availableModels = prefs.getAvailableModels(),
+                            availableApiKeys = prefs.getGeminiExtraApiKeys(),
                             onModelChanged = { newModel ->
                                 sessionModel = newModel
                                 sessionModelExpiry = System.currentTimeMillis() + 5 * 60 * 1000L
@@ -995,7 +997,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 ChronicleAiConfig(
                     apiKey = prefs.geminiApiKey,
                     modelName = prefs.geminiModelEndpoint,
-                    availableModels = prefs.getAvailableModels()
+                    availableModels = prefs.getAvailableModels(),
+                    availableApiKeys = prefs.getGeminiExtraApiKeys()
                 )
             } else {
                 null

@@ -199,6 +199,67 @@ Stats string: plays, games, new players (players appearing for the first time ac
 
 ---
 
+---
+
+## Session Memory and Chronicle
+
+**Status: Shipped**
+
+A personal journaling layer attached to any logged play. Users can capture the emotional tone of a session through moods and a memorable quote. The app then generates a single atmospheric sentence — a chronicle line — that preserves the feeling of that session. Not a gameplay summary; a memory.
+
+### Memory Input
+
+Users open a play's details and tap "Capture this session" (or Edit) to enter:
+
+- **Moods** — multi-select chips from preset labels plus any custom moods the user has saved. Typing into the "Add another mood" field appends a new mood without requiring it to match an existing chip.
+- **Quote** — a free-text memorable line from the session (max 100 chars).
+
+Moods are saved to `SecurePreferences` as `custom_moods` the first time they appear and are available as chips in all future sessions.
+
+### Chronicle Generation
+
+After saving moods or a quote, the app generates a chronicle line:
+
+1. `SessionChronicleService.plan()` computes a `sourceKey` (SHA-256 of game name, player names, colors, moods, quote). If the key matches the existing chronicle's source key, no re-generation is triggered.
+2. If generation is needed, the memory is persisted immediately and a background coroutine is launched.
+3. `GeminiChronicleLineGenerator` calls the Gemini API with a detailed prompt. Retries up to 4 times on 429/503; falls back to the next model on rate limit.
+4. If Gemini fails or the device is offline, `FallbackChronicleComposer` produces a deterministic output derived from the source key — the same session always produces the same fallback line.
+5. The final `chronicleLine` (max 110 chars) is persisted to the `play_memories` table and overlaid on load.
+
+### UI Surfaces
+
+- **`MemorySection`** in `PlayDetailsDialog`: shows moods as amber chips and the quote with a `—` prefix. An Edit button opens the memory editor.
+- **`ChronicleInsightCard`**: golden-bordered card with `AutoStories` icon, appears above insights in `PlayDetailsDialog`. Shows `...` while generation is pending.
+- **Auto-trigger**: opening `PlayDetailsDialog` for a play that has moods/quote but no chronicle calls `ensureChronicleForPlay()`, so chronicles are generated without requiring the user to re-save.
+
+### Persistence
+
+Chronicles are stored in the `play_memories` Room table (DB version 4, migration 3→4). This table is untouched by BGG sync. On read, both `getLoggedPlays()` and `getBggPlaysCache()` apply the overlay. If no DB entry exists, `parseMemoryFromNotes()` falls back to reading `$$mood:` and `$$quote:` lines written to the play's BGG comments field.
+
+### Enable / Disable
+
+A Chronicles toggle in Settings > AI (default: on). Turning it off immediately cancels all in-flight generation jobs and hides chronicle cards everywhere. Stored as `chronicle_enabled` in `SecurePreferences`.
+
+### Data Model
+
+`SessionMemory` fields relevant to Chronicle:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `moods` | `List<String>` | Selected mood labels |
+| `quote` | `String` | Memorable line from session |
+| `chronicleLine` | `String` | Generated memory sentence (max 110 chars) |
+| `chronicleSourceKey` | `String` | SHA-256 of inputs; prevents duplicate generation |
+| `chronicleCreatedAt` | `Long?` | Timestamp of generation |
+
+BGG notes format (appended to play comments, stripped on display):
+```
+$$mood: chaotic, tense
+$$quote: I had no idea what I was doing
+```
+
+---
+
 ## Architecture Map
 
 ```

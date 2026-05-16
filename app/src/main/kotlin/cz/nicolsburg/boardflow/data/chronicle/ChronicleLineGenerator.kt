@@ -11,7 +11,8 @@ data class ChronicleRequest(
 data class ChronicleAiConfig(
     val apiKey: String,
     val modelName: String,
-    val availableModels: List<String>
+    val availableModels: List<String>,
+    val availableApiKeys: List<String> = emptyList()
 )
 
 interface ChronicleLineGenerator {
