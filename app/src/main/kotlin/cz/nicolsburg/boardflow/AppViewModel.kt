@@ -117,14 +117,19 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // --- Network ---
     fun isOnline(): Boolean = container.isOnline()
 
-    // --- Session constraints (transient, not persisted) ---
-    private val _timeAvailableMinutes = MutableStateFlow<Int?>(null)
-    val timeAvailableMinutes: StateFlow<Int?> = _timeAvailableMinutes.asStateFlow()
-    private val _complexityCap = MutableStateFlow<Float?>(null)
-    val complexityCap: StateFlow<Float?> = _complexityCap.asStateFlow()
+    // --- Pending players (upfront selection before game pick) ---
+    private val _pendingPlayers = MutableStateFlow<List<String>>(emptyList())
+    val pendingPlayers: StateFlow<List<String>> = _pendingPlayers.asStateFlow()
 
-    fun setTimeAvailable(minutes: Int?) { _timeAvailableMinutes.value = minutes }
-    fun setComplexityCap(cap: Float?) { _complexityCap.value = cap }
+    fun addPendingPlayer(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank() || _pendingPlayers.value.any { it.equals(trimmed, ignoreCase = true) }) return
+        _pendingPlayers.value = _pendingPlayers.value + trimmed
+    }
+
+    fun removePendingPlayer(name: String) {
+        _pendingPlayers.value = _pendingPlayers.value.filter { !it.equals(name, ignoreCase = true) }
+    }
 
     // --- Game search ---
     private val _recentGames = MutableStateFlow<List<BggGame>>(emptyList())
@@ -327,6 +332,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             pending != null -> {
                 _editablePlayers.value = pending.players.map { it.copy(score = "0", isWinner = false) }
                 _logPlayPrefill = LogPlayPrefill(location = pending.location)
+            }
+            _pendingPlayers.value.isNotEmpty() -> {
+                _editablePlayers.value = _pendingPlayers.value.map { PlayerResult(name = it, score = "0", isWinner = false) }
             }
             _sessionContext.value?.isRecent() == true && _sessionContext.value?.gameId == game.id -> {
                 val session = _sessionContext.value!!
@@ -724,6 +732,20 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun deletePlayer(id: String) { _players.value = _players.value.filter { it.id != id }; prefs.savePlayers(_players.value) }
 
+    private fun stampPlayerLastPlayed(players: List<PlayerResult>, playedAt: Long) {
+        val names = players.map { it.name.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+        val updated = _players.value.map { roster ->
+            val matches = (listOf(roster.displayName) + roster.aliases).any { it.trim().lowercase() in names }
+            if (matches && (roster.lastPlayedAt == null || playedAt > roster.lastPlayedAt)) {
+                roster.copy(lastPlayedAt = playedAt)
+            } else roster
+        }
+        if (updated != _players.value) {
+            _players.value = updated
+            prefs.savePlayers(updated)
+        }
+    }
+
     // --- Custom moods ---
     private val _customMoods = MutableStateFlow(prefs.getCustomMoods())
     val customMoods: StateFlow<List<String>> = _customMoods.asStateFlow()
@@ -765,6 +787,35 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun loadPlayHistory() {
         viewModelScope.launch {
             _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            backfillPlayerLastPlayed()
+        }
+    }
+
+    private fun backfillPlayerLastPlayed() {
+        val roster = _players.value.takeIf { it.isNotEmpty() } ?: return
+        if (roster.none { it.lastPlayedAt == null }) return
+        val history = _playHistory.value.takeIf { it.isNotEmpty() } ?: return
+
+        val latestByName = mutableMapOf<String, Long>()
+        history.forEach { play ->
+            val ts = play.playedAt
+                ?: play.date.toLocalDateOrNull()?.toEpochDay()?.times(86400000L)
+                ?: return@forEach
+            play.players.forEach { pr ->
+                val key = pr.name.trim().lowercase()
+                if (key.isNotBlank()) latestByName[key] = maxOf(latestByName[key] ?: 0L, ts)
+            }
+        }
+
+        val updated = roster.map { player ->
+            if (player.lastPlayedAt != null) return@map player
+            val names = (listOf(player.displayName) + player.aliases).map { it.trim().lowercase() }
+            val ts = names.mapNotNull { latestByName[it] }.maxOrNull() ?: return@map player
+            player.copy(lastPlayedAt = ts)
+        }
+        if (updated != roster) {
+            _players.value = updated
+            prefs.savePlayers(updated)
         }
     }
     fun clearPlayHistory() {
@@ -1229,6 +1280,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 prefs.addRecentGame(game)
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                 savePlayerHintsFromCurrentPlay()
+                stampPlayerLastPlayed(playersSnapshot, playedAt)
                 cancelBackgroundRetry()
                 _logPlayHasUnsavedChanges.value = false
                 onSuccess(mainPlay)
@@ -1318,6 +1370,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         _postResult.value = "Logged main play. Saved ${locallySavedExtras.size} extra game(s) locally for later BGG sync."
                     }
                     savePlayerHintsFromCurrentPlay()
+                    stampPlayerLastPlayed(normalizedPlayers, playedAt)
                     cancelBackgroundRetry()
                     _logPlayHasUnsavedChanges.value = false
                     _postLoading.value = false
@@ -1716,8 +1769,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _sessionBannerDismissed.value = false
         _changeGameSession = null
         _changeGameSessionActive.value = false
-        _timeAvailableMinutes.value = null
-        _complexityCap.value = null
+        _pendingPlayers.value = emptyList()
         prefs.clearSessionContext()
     }
 
@@ -1883,31 +1935,23 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun getLogPlayRecommendations(): List<RecommendationLane> {
-        val allOwned = _collectionItems.value.filter { it.isOwned }
-        if (allOwned.isEmpty()) return emptyList()
+        val owned = _collectionItems.value.filter { it.isOwned }
+        if (owned.isEmpty()) return emptyList()
 
-        val timeFilter = _timeAvailableMinutes.value
-        val complexityFilter = _complexityCap.value
-
-        val owned = allOwned.filter { item ->
-            val fitsTime = timeFilter == null || item.playingTime == null || item.playingTime!! <= timeFilter
-            val fitsComplexity = complexityFilter == null || item.weight == null || item.weight!! <= complexityFilter
-            fitsTime && fitsComplexity
+        val pendingNames = _pendingPlayers.value
+        val effectivePlayers: List<String> = when {
+            pendingNames.isNotEmpty() -> pendingNames
+            else -> _sessionContext.value?.players?.map { it.name }.orEmpty()
         }
-
-        val playerCount = _sessionContext.value?.players?.size?.takeIf { it > 0 }
-        val groupNames = _sessionContext.value?.players
-            ?.map { it.name.trim().lowercase() }
-            ?.filter { it.isNotBlank() }
-            ?.toSet()
-            .orEmpty()
+        val playerCount = effectivePlayers.size.takeIf { it > 0 }
+        val groupNames = effectivePlayers.map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
         val history = historyPlays.value
         val gameById = _allGames.value.associateBy { it.id }
         val lanes = buildList {
             buildBestForTonightLane(owned, gameById, playerCount)?.let(::add)
             buildGroupFavoritesLane(owned, gameById, groupNames, playerCount)?.let(::add)
             buildNeglectedFavoritesLane(owned, gameById, history, playerCount)?.let(::add)
-            buildQuickOptionLane(owned, gameById, playerCount, timeFilter)?.let(::add)
+            buildQuickOptionLane(owned, gameById, playerCount)?.let(::add)
         }
         return lanes.filter { it.picks.isNotEmpty() }
     }
@@ -2009,25 +2053,21 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private fun buildQuickOptionLane(
         owned: List<GameItem>,
         gameById: Map<Int, BggGame>,
-        playerCount: Int?,
-        timeFilter: Int? = null
+        playerCount: Int?
     ): RecommendationLane? {
-        val ceiling = timeFilter ?: 60
         val picks = owned.mapNotNull { item ->
             val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
             if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
             val time = item.playingTime ?: return@mapNotNull null
-            if (time <= 0 || time > ceiling) return@mapNotNull null
-            val score = (ceiling + 10 - time).coerceAtLeast(0) / 10.0 + playerCountFitScore(item, playerCount)
+            if (time <= 0 || time > 60) return@mapNotNull null
+            val score = (70 - time).coerceAtLeast(0) / 10.0 + playerCountFitScore(item, playerCount)
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
-            ScoredRecommendation(game, score, "Fits in about $time min")
+            ScoredRecommendation(game, score, "Quick to table at about $time min")
         }.sortedByDescending { it.score }
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        val title = if (timeFilter != null) "Fits Your Time" else "Quick To Table"
-        val subtitle = if (timeFilter != null) "Under $timeFilter min for this group" else "Shorter picks for this group size"
-        return RecommendationLane("quick_option", title, subtitle, picks)
+        return RecommendationLane("quick_option", "Quick To Table", "Shorter picks for this group size", picks)
     }
 
     private fun scoreGamesForGroup(

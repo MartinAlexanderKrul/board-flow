@@ -218,6 +218,7 @@ class SecurePreferences(context: Context) {
                 put("displayName", p.displayName)
                 put("aliases", JSONArray().also { arr -> p.aliases.forEach { arr.put(it) } })
                 put("bggUsername", p.bggUsername)
+                p.lastPlayedAt?.let { put("lastPlayedAt", it) }
             })
         }
         prefs.edit().putString(KEY_PLAYERS, json.toString()).apply()
@@ -234,7 +235,8 @@ class SecurePreferences(context: Context) {
                     id = obj.getString("id"),
                     displayName = obj.getString("displayName"),
                     aliases = (0 until aliasArr.length()).map { aliasArr.getString(it) },
-                    bggUsername = obj.optString("bggUsername", "")
+                    bggUsername = obj.optString("bggUsername", ""),
+                    lastPlayedAt = obj.optLong("lastPlayedAt", 0L).takeIf { it > 0L }
                 )
             }
         } catch (e: Exception) { emptyList() }

@@ -10,7 +10,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -18,9 +20,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material3.*
@@ -80,7 +85,9 @@ fun NewPlayScreen(
     val changeGameActive by viewModel.changeGameSessionActive.collectAsState()
     val collectionItems by viewModel.collectionItems.collectAsState()
     val historyPlays by viewModel.historyPlays.collectAsState()
-    val recommendationLanes = remember(query, sessionContext, collectionItems, historyPlays) {
+    val pendingPlayers by viewModel.pendingPlayers.collectAsState()
+    val rosterPlayers by viewModel.players.collectAsState()
+    val recommendationLanes = remember(query, sessionContext, collectionItems, historyPlays, pendingPlayers) {
         if (query.isBlank()) viewModel.getLogPlayRecommendations() else emptyList()
     }
 
@@ -160,6 +167,16 @@ fun NewPlayScreen(
                     }
                 }
             )
+
+            if (query.isBlank() && !changeGameActive) {
+                Spacer(Modifier.height(4.dp))
+                PlayingWithRow(
+                    pendingPlayers = pendingPlayers,
+                    rosterPlayers = rosterPlayers,
+                    onAdd = viewModel::addPendingPlayer,
+                    onRemove = viewModel::removePendingPlayer
+                )
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -454,6 +471,144 @@ private fun RecommendationRow(
                 modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
             )
+        }
+    }
+}
+
+@Composable
+private fun PlayingWithRow(
+    pendingPlayers: List<String>,
+    rosterPlayers: List<cz.nicolsburg.boardflow.model.Player>,
+    onAdd: (String) -> Unit,
+    onRemove: (String) -> Unit
+) {
+    var pickerExpanded by remember { mutableStateOf(false) }
+    var customName by remember { mutableStateOf("") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                "Playing:",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+            pendingPlayers.forEach { name ->
+                InputChip(
+                    selected = false,
+                    onClick = { onRemove(name) },
+                    label = { Text(name, style = MaterialTheme.typography.labelSmall) },
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Remove $name",
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                )
+            }
+            SuggestionChip(
+                onClick = { pickerExpanded = !pickerExpanded },
+                label = {
+                    Text(
+                        if (pendingPlayers.isEmpty()) "Who's playing?" else "+ Add",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                },
+                icon = {
+                    Icon(
+                        Icons.Default.People,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            )
+        }
+
+        AnimatedVisibility(visible = pickerExpanded) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val available = remember(rosterPlayers, pendingPlayers) {
+                        rosterPlayers
+                            .filter { p -> pendingPlayers.none { it.equals(p.displayName, ignoreCase = true) } }
+                            .sortedByDescending { it.lastPlayedAt ?: 0L }
+                    }
+                    if (available.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            available.forEach { player ->
+                                SuggestionChip(
+                                    onClick = { onAdd(player.displayName) },
+                                    label = {
+                                        Text(
+                                            player.displayName,
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = customName,
+                            onValueChange = { customName = it },
+                            placeholder = {
+                                Text("Type a name…", style = MaterialTheme.typography.bodySmall)
+                            },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.bodySmall,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                            ),
+                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                                onDone = {
+                                    if (customName.isNotBlank()) {
+                                        onAdd(customName.trim())
+                                        customName = ""
+                                    }
+                                }
+                            )
+                        )
+                        IconButton(
+                            onClick = {
+                                if (customName.isNotBlank()) {
+                                    onAdd(customName.trim())
+                                    customName = ""
+                                }
+                            },
+                            enabled = customName.isNotBlank()
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add player",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

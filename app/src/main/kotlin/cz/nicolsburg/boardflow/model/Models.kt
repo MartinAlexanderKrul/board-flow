@@ -242,7 +242,8 @@ data class Player(
     val id: String,
     val displayName: String,
     val aliases: List<String>,
-    val bggUsername: String = ""
+    val bggUsername: String = "",
+    val lastPlayedAt: Long? = null
 )
 
 data class GameRelations(
