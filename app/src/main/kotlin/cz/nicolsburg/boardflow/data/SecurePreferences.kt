@@ -254,9 +254,11 @@ class SecurePreferences(context: Context) {
             })
         }
         val json = JSONObject().apply {
+            put("sessionId", ctx.sessionId)
             put("gameId", ctx.gameId)
             put("gameName", ctx.gameName)
             put("location", ctx.location)
+            put("startedAt", ctx.startedAt)
             put("lastPlayTimestamp", ctx.lastPlayTimestamp)
             put("players", playersArr)
         }
@@ -280,11 +282,13 @@ class SecurePreferences(context: Context) {
                 )
             }
             cz.nicolsburg.boardflow.model.SessionContext(
+                sessionId         = json.optString("sessionId").ifBlank { java.util.UUID.randomUUID().toString() },
                 gameId            = json.getInt("gameId"),
                 gameName          = json.getString("gameName"),
                 players           = players,
                 location          = json.optString("location", ""),
-                lastPlayTimestamp = json.getLong("lastPlayTimestamp")
+                startedAt         = json.optLong("startedAt", json.optLong("lastPlayTimestamp", System.currentTimeMillis())),
+                lastPlayTimestamp = json.optLong("lastPlayTimestamp", System.currentTimeMillis())
             )
         } catch (_: Exception) { null }
     }

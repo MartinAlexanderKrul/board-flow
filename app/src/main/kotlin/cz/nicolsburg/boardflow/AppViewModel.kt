@@ -20,6 +20,7 @@ import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.GameRelations
 import cz.nicolsburg.boardflow.model.LogPlayPrefill
 import cz.nicolsburg.boardflow.model.LoggedPlay
+import cz.nicolsburg.boardflow.model.PlaySession
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.model.RecordMoment
@@ -1095,14 +1096,31 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _pendingImportedPlay = MutableStateFlow<LoggedPlay?>(null)
     val pendingImportedPlay: StateFlow<LoggedPlay?> = _pendingImportedPlay.asStateFlow()
 
-    fun postPlay(date: LocalDate, durationMinutes: Int, location: String, comments: String, quantity: Int = 1, incomplete: Boolean = false, nowInStats: Boolean = true, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun postPlay(date: LocalDate, durationMinutes: Int, location: String, comments: String, quantity: Int = 1, incomplete: Boolean = false, nowInStats: Boolean = true, onSuccess: (LoggedPlay) -> Unit, onError: (String) -> Unit) {
         val game = selectedGame ?: run { onError("No game selected"); return }
         val normalizedPlayers = normalizePlayersForPosting(_editablePlayers.value)
         if (!isOnline()) {
             val playersSnapshot = normalizedPlayers
             playersSnapshot.forEach { recordPlayerName(it.name) }
-            val mainPlay = LoggedPlay(id = UUID.randomUUID().toString(), gameId = game.id, gameName = game.name, date = date.toString(), players = playersSnapshot, durationMinutes = durationMinutes, location = location, postedToBgg = false, comments = comments, quantity = quantity, incomplete = incomplete, nowInStats = nowInStats)
             viewModelScope.launch {
+                val playedAt = System.currentTimeMillis()
+                val session = resolveSessionForNewPlay(date, location, playedAt)
+                val mainPlay = LoggedPlay(
+                    id = UUID.randomUUID().toString(),
+                    gameId = game.id,
+                    gameName = game.name,
+                    date = date.toString(),
+                    playedAt = playedAt,
+                    sessionId = session.id,
+                    players = playersSnapshot,
+                    durationMinutes = durationMinutes,
+                    location = location,
+                    postedToBgg = false,
+                    comments = comments,
+                    quantity = quantity,
+                    incomplete = incomplete,
+                    nowInStats = nowInStats
+                )
                 container.canonicalCollectionStore.saveLoggedPlay(mainPlay)
                 val extras = _additionalGames.value; _additionalGames.value = emptyList()
                 extras.forEach { extra ->
@@ -1112,6 +1130,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                             gameId = extra.id,
                             gameName = extra.name,
                             date = date.toString(),
+                            playedAt = playedAt,
+                            sessionId = session.id,
                             players = playersSnapshot,
                             durationMinutes = durationMinutes,
                             location = location,
@@ -1123,12 +1143,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         )
                     )
                 }
+                saveSession(session.id, session.startedAt, game, playersSnapshot, location, playedAt)
                 prefs.addRecentGame(game)
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                 savePlayerHintsFromCurrentPlay()
                 cancelBackgroundRetry()
                 _logPlayHasUnsavedChanges.value = false
-                onSuccess()
+                onSuccess(mainPlay)
             }
             return
         }
@@ -1139,6 +1160,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             val playerBggUsernames = buildBggUsernameMap(normalizedPlayers)
             container.bggRepository.logPlay(gameId = game.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments, quantity = quantity, incomplete = incomplete, nowInStats = nowInStats)
                 .onSuccess { savedPlayId ->
+                    val playedAt = System.currentTimeMillis()
+                    val session = resolveSessionForNewPlay(date, location, playedAt)
                     normalizedPlayers.forEach { recordPlayerName(it.name) }
                     val postedPlays = mutableListOf<LoggedPlay>()
                     val locallySavedExtras = mutableListOf<LoggedPlay>()
@@ -1147,6 +1170,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         gameId = game.id,
                         gameName = game.name,
                         date = date.toString(),
+                        playedAt = playedAt,
+                        sessionId = session.id,
                         players = normalizedPlayers,
                         durationMinutes = durationMinutes,
                         location = location,
@@ -1167,6 +1192,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                                     gameId = extra.id,
                                     gameName = extra.name,
                                     date = date.toString(),
+                                    playedAt = playedAt,
+                                    sessionId = session.id,
                                     players = normalizedPlayers,
                                     durationMinutes = durationMinutes,
                                     location = location,
@@ -1185,6 +1212,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                                     gameId = extra.id,
                                     gameName = extra.name,
                                     date = date.toString(),
+                                    playedAt = playedAt,
+                                    sessionId = session.id,
                                     players = normalizedPlayers,
                                     durationMinutes = durationMinutes,
                                     location = location,
@@ -1199,6 +1228,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                             }
                     }
                     _additionalGames.value = emptyList()
+                    saveSession(session.id, session.startedAt, game, normalizedPlayers, location, playedAt)
                     prefs.addRecentGame(game)
                     _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                     addOptimisticBggPlays(postedPlays)
@@ -1209,9 +1239,24 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     cancelBackgroundRetry()
                     _logPlayHasUnsavedChanges.value = false
                     _postLoading.value = false
-                    onSuccess()
+                    onSuccess(mainPlay)
                 }.onFailure { _postLoading.value = false; onError(it.message ?: "Failed to log play") }
         }
+    }
+
+    private suspend fun resolveSessionForNewPlay(date: LocalDate, location: String, playedAt: Long): PlaySession {
+        val activeContext = _sessionContext.value?.takeIf { it.isActive() }
+        val sessionId = activeContext?.sessionId ?: UUID.randomUUID().toString()
+        val startedAt = activeContext?.startedAt ?: playedAt
+        val session = PlaySession(
+            id = sessionId,
+            startedAt = startedAt,
+            endedAt = playedAt,
+            sessionDate = date.toString(),
+            location = location
+        )
+        container.canonicalCollectionStore.savePlaySession(session)
+        return session
     }
 
     private fun buildBggUsernameMap(players: List<PlayerResult>): Map<Int, String> {
@@ -1524,13 +1569,15 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _sessionContext.value = if (ctx != null && ctx.isActive()) ctx else null
     }
 
-    fun saveSession(game: BggGame, players: List<PlayerResult>, location: String) {
+    fun saveSession(sessionId: String, sessionStartedAt: Long, game: BggGame, players: List<PlayerResult>, location: String, lastPlayTimestamp: Long = System.currentTimeMillis()) {
         val ctx = SessionContext(
+            sessionId          = sessionId,
             gameId            = game.id,
             gameName          = game.name,
             players           = players,
             location          = location,
-            lastPlayTimestamp = System.currentTimeMillis()
+            startedAt         = sessionStartedAt,
+            lastPlayTimestamp = lastPlayTimestamp
         )
         _sessionContext.value = ctx
         prefs.saveSessionContext(ctx)

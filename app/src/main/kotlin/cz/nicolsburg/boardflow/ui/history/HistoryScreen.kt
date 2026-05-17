@@ -113,6 +113,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowTonalButton
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
+import cz.nicolsburg.boardflow.model.deriveSessionHub
 import cz.nicolsburg.boardflow.model.trimMemorySuffix
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import androidx.compose.animation.AnimatedVisibility
@@ -251,6 +252,7 @@ fun HistoryScreen(
     val pendingHistoryNavigation by viewModel.pendingHistoryNavigation.collectAsState()
     var playToDelete by remember { mutableStateOf<LoggedPlay?>(null) }
     var selectedPlay by remember { mutableStateOf<LoggedPlay?>(null) }
+    var sessionHubAnchor by remember { mutableStateOf<LoggedPlay?>(null) }
     var selectedGame by remember { mutableStateOf<GameItem?>(null) }
     var editingPlay by remember { mutableStateOf<LoggedPlay?>(null) }
     var playToShare by remember { mutableStateOf<LoggedPlay?>(null) }
@@ -495,6 +497,10 @@ fun HistoryScreen(
             onDeletePlay = { playToDelete = play },
             onShareQr = { playToShare = play },
             onPlayAgain = { selectedPlay = null; onPlayAgain(play) },
+            onOpenSessionHub = {
+                selectedPlay = null
+                sessionHubAnchor = play
+            },
             onViewGame = { g -> selectedGame = g },
             customMoods = customMoods,
             moodUsageOrder = moodUsageOrder,
@@ -511,6 +517,22 @@ fun HistoryScreen(
                     selectedPlay = selectedPlay?.takeIf { it.id == play.id }?.copy(memory = savedMemory)
                 }
                 selectedPlay = selectedPlay?.copy(memory = memory) ?: play.copy(memory = memory)
+            }
+        )
+    }
+
+    sessionHubAnchor?.let { anchor ->
+        SessionHubDialog(
+            session = historyPlays.deriveSessionHub(anchor),
+            players = players,
+            onDismiss = { sessionHubAnchor = null },
+            onOpenPlay = { play ->
+                sessionHubAnchor = null
+                selectedPlay = play
+            },
+            onPlayAgain = { play ->
+                sessionHubAnchor = null
+                onPlayAgain(play)
             }
         )
     }
@@ -1512,6 +1534,7 @@ private fun PlayDetailsDialog(
     onDeletePlay: () -> Unit,
     onShareQr: () -> Unit,
     onPlayAgain: () -> Unit = {},
+    onOpenSessionHub: () -> Unit = {},
     onViewGame: ((GameItem) -> Unit)? = null,
     onSaveMemory: (cz.nicolsburg.boardflow.model.SessionMemory) -> Unit = {},
     onEnsureChronicle: () -> Unit = {},
@@ -1556,6 +1579,7 @@ private fun PlayDetailsDialog(
             }
         }.take(2)
     }
+    val sessionHub = remember(play, historyPlays) { historyPlays.deriveSessionHub(play) }
     AnimatedDialog(
         onDismissRequest = onDismiss,
         backdrop = {
@@ -1700,6 +1724,44 @@ private fun PlayDetailsDialog(
                             if (visibleComments != null) add("Comment" to visibleComments)
                         }
                     )
+                }
+
+                if (sessionHub.plays.size > 1 || sessionHub.totalLoggedPlays > 1) {
+                    item {
+                        Surface(
+                            shape = MaterialTheme.shapes.medium,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text(
+                                        "Session Hub",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        "${sessionHub.uniqueGames} games • ${sessionHub.totalLoggedPlays} logged plays • ${sessionHub.uniquePlayerNames.size} players",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                BoardFlowTonalButton(onClick = onOpenSessionHub) {
+                                    Text("Open")
+                                }
+                            }
+                        }
+                    }
                 }
 
                 item {
@@ -2427,7 +2489,7 @@ private fun PlayMemorySection(
                 },
                 onCustomTextChange = { draftCustomText = it },
                 onAddCustomMood = {
-                    val mood = draftCustomText.trim()
+                    val mood = draftCustomText.trim().lowercase().replaceFirstChar { it.uppercaseChar() }
                     if (mood.isNotBlank()) {
                         draftMoods = (draftMoods + mood).distinct()
                         draftCustomText = ""
@@ -2435,7 +2497,7 @@ private fun PlayMemorySection(
                 },
                 onQuoteChange = { draftQuote = it },
                 onSave = {
-                    val extra = draftCustomText.trim()
+                    val extra = draftCustomText.trim().lowercase().replaceFirstChar { it.uppercaseChar() }
                     val finalMoods = (draftMoods + if (extra.isNotBlank()) listOf(extra) else emptyList()).distinct()
                     onSaveMemory(cz.nicolsburg.boardflow.model.SessionMemory(moods = finalMoods, quote = draftQuote.trim()))
                     draftCustomText = ""

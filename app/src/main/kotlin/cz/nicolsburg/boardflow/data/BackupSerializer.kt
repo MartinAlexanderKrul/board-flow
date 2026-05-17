@@ -44,7 +44,7 @@ object BackupSerializer {
         cachedBggPlays: List<LoggedPlay>
     ): String {
         val root = JSONObject()
-        root.put("version", 4)
+        root.put("version", 5)
         root.put("exportDate", java.time.LocalDate.now().toString())
         root.put("includesSensitiveData", includeSensitiveData)
         root.put("settings", JSONObject().apply {
@@ -247,6 +247,8 @@ object BackupSerializer {
         put("gameId", p.gameId)
         put("gameName", p.gameName)
         put("date", p.date)
+        p.playedAt?.let { put("playedAt", it) }
+        p.sessionId?.takeIf { it.isNotBlank() }?.let { put("sessionId", it) }
         put("durationMinutes", p.durationMinutes)
         put("location", p.location)
         put("postedToBgg", p.postedToBgg)
@@ -276,6 +278,8 @@ object BackupSerializer {
             gameId = obj.getInt("gameId"),
             gameName = obj.getString("gameName"),
             date = obj.getString("date"),
+            playedAt = obj.opt("playedAt")?.toString()?.toLongOrNull(),
+            sessionId = obj.optString("sessionId").ifBlank { null },
             players = (0 until pa.length()).map { j ->
                 val p = pa.getJSONObject(j)
                 PlayerResult(

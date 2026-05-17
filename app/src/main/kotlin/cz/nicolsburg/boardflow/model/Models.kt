@@ -59,6 +59,8 @@ data class LoggedPlay(
     val gameId: Int,
     val gameName: String,
     val date: String,
+    val playedAt: Long? = null,
+    val sessionId: String? = null,
     val players: List<PlayerResult>,
     val durationMinutes: Int,
     val location: String,
@@ -69,6 +71,137 @@ data class LoggedPlay(
     val nowInStats: Boolean = true,
     val memory: SessionMemory? = null
 )
+
+data class PlaySession(
+    val id: String,
+    val startedAt: Long,
+    val endedAt: Long,
+    val sessionDate: String,
+    val location: String
+)
+
+data class SessionHubWinner(
+    val playerName: String,
+    val wins: Int
+)
+
+data class SessionHub(
+    val anchorPlayId: String,
+    val date: String,
+    val location: String,
+    val plays: List<LoggedPlay>,
+    val totalLoggedPlays: Int,
+    val uniqueGames: Int,
+    val uniquePlayerNames: List<String>,
+    val totalDurationMinutes: Int,
+    val winners: List<SessionHubWinner>,
+    val moods: List<String>,
+    val quotes: List<String>
+) {
+    val anchorPlay: LoggedPlay
+        get() = plays.firstOrNull { it.id == anchorPlayId } ?: plays.first()
+}
+
+fun List<LoggedPlay>.deriveSessionHub(anchor: LoggedPlay): SessionHub {
+    val explicitSessionId = anchor.sessionId?.takeIf { it.isNotBlank() }
+    val anchorDate = anchor.date
+    val anchorLocation = anchor.location.normalizeSessionLocation()
+    val anchorPlayers = anchor.normalizedSessionPlayers()
+
+    val sessionPlays = filter { play ->
+        when {
+            explicitSessionId != null -> play.sessionId == explicitSessionId
+            else -> play.date == anchorDate && play.belongsToDerivedSession(
+                anchorId = anchor.id,
+                anchorLocation = anchorLocation,
+                anchorPlayers = anchorPlayers
+            )
+        }
+    }.ifEmpty { listOf(anchor) }
+
+    val uniquePlayerNames = linkedSetOf<String>().apply {
+        sessionPlays.forEach { play ->
+            play.players.forEach { player ->
+                val trimmed = player.name.trim()
+                if (trimmed.isNotBlank()) add(trimmed)
+            }
+        }
+    }.toList()
+
+    val winnerCounts = linkedMapOf<String, Int>()
+    sessionPlays.forEach { play ->
+        play.players.filter { it.isWinner }.forEach { winner ->
+            val name = winner.name.trim()
+            if (name.isNotBlank()) {
+                winnerCounts[name] = (winnerCounts[name] ?: 0) + 1
+            }
+        }
+    }
+
+    val moods = linkedSetOf<String>().apply {
+        sessionPlays.forEach { play ->
+            play.memory?.moods?.forEach { mood ->
+                val trimmed = mood.trim()
+                if (trimmed.isNotBlank()) add(trimmed)
+            }
+        }
+    }.toList()
+
+    val quotes = linkedSetOf<String>().apply {
+        sessionPlays.forEach { play ->
+            play.memory?.quote?.trim()?.takeIf { it.isNotBlank() }?.let(::add)
+        }
+    }.toList()
+
+    return SessionHub(
+        anchorPlayId = anchor.id,
+        date = anchorDate,
+        location = anchor.location.trim(),
+        plays = sessionPlays,
+        totalLoggedPlays = sessionPlays.sumOf { it.quantity.coerceAtLeast(1) },
+        uniqueGames = sessionPlays.map { it.gameId }.distinct().size,
+        uniquePlayerNames = uniquePlayerNames,
+        totalDurationMinutes = sessionPlays.sumOf { it.durationMinutes.coerceAtLeast(0) },
+        winners = winnerCounts.entries
+            .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key.lowercase() })
+            .map { SessionHubWinner(playerName = it.key, wins = it.value) },
+        moods = moods,
+        quotes = quotes
+    )
+}
+
+private fun LoggedPlay.belongsToDerivedSession(
+    anchorId: String,
+    anchorLocation: String,
+    anchorPlayers: Set<String>
+): Boolean {
+    if (id == anchorId) return true
+
+    val playPlayers = normalizedSessionPlayers()
+    val sharedPlayers = playPlayers.intersect(anchorPlayers).size
+    val playerThreshold = when {
+        anchorPlayers.isEmpty() || playPlayers.isEmpty() -> 0
+        anchorPlayers.size == 1 || playPlayers.size == 1 -> 1
+        else -> 2
+    }
+
+    val playLocation = location.normalizeSessionLocation()
+    val bothHaveLocation = anchorLocation.isNotBlank() && playLocation.isNotBlank()
+
+    return when {
+        bothHaveLocation -> playLocation == anchorLocation && sharedPlayers >= playerThreshold
+        anchorLocation.isBlank() && playLocation.isBlank() -> sharedPlayers >= playerThreshold
+        else -> false
+    }
+}
+
+private fun LoggedPlay.normalizedSessionPlayers(): Set<String> =
+    players.mapNotNull { player ->
+        player.name.trim().lowercase().takeIf { it.isNotBlank() }
+    }.toSet()
+
+private fun String.normalizeSessionLocation(): String =
+    trim().lowercase()
 
 fun String.trimMemorySuffix(): String {
     fun String.isMemoryLine() = startsWith("\$\$mood:") || startsWith("\$\$quote:") || isBlank()
@@ -235,14 +368,16 @@ data class SpreadsheetDetails(
 )
 
 data class SessionContext(
+    val sessionId: String,
     val gameId: Int,
     val gameName: String,
     val players: List<PlayerResult>,
     val location: String,
+    val startedAt: Long,
     val lastPlayTimestamp: Long
 ) {
     fun isActive(): Boolean =
-        System.currentTimeMillis() - lastPlayTimestamp < 4L * 60 * 60 * 1000
+        System.currentTimeMillis() - lastPlayTimestamp < 6L * 60 * 60 * 1000
 
     fun isRecent(): Boolean =
         System.currentTimeMillis() - lastPlayTimestamp < 60L * 60 * 1000

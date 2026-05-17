@@ -52,9 +52,12 @@ import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.GameCandidate
 import cz.nicolsburg.boardflow.model.GameRelations
+import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.RecordMoment
 import cz.nicolsburg.boardflow.model.ScanRecognitionResult
 import cz.nicolsburg.boardflow.model.SessionContext
+import cz.nicolsburg.boardflow.model.deriveSessionHub
+import cz.nicolsburg.boardflow.ui.history.SessionHubDialog
 import cz.nicolsburg.boardflow.model.Player as BggPlayer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
@@ -70,7 +73,8 @@ import java.time.ZoneOffset
 
 private data class PostSaveInfo(
     val sessionContext: SessionContext,
-    val record: RecordMoment?
+    val record: RecordMoment?,
+    val anchorPlay: LoggedPlay
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
@@ -89,6 +93,7 @@ fun LogPlayScreen(
     val gameRelations   by viewModel.gameRelations.collectAsState()
     val additionalGames by viewModel.additionalGames.collectAsState()
     val rosterPlayers   by viewModel.players.collectAsState()
+    val historyPlays    by viewModel.historyPlays.collectAsState()
     val gameCandidates        by viewModel.gameCandidates.collectAsState()
     val scanRecognitionResult by viewModel.scanRecognitionResult.collectAsState()
     val scanStartedWithGame   by viewModel.scanStartedWithGame.collectAsState()
@@ -117,6 +122,7 @@ fun LogPlayScreen(
     // Snapshot kept alive so the exit fade animation has content to render.
     var lastPostSaveInfo by remember { mutableStateOf<PostSaveInfo?>(null) }
     if (postSaveInfo != null) lastPostSaveInfo = postSaveInfo
+    var sessionHubInfo by remember { mutableStateOf<PostSaveInfo?>(null) }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -258,19 +264,20 @@ fun LogPlayScreen(
                 quantity = quantity,
                 incomplete = incomplete,
                 nowInStats = nowInStats,
-                onSuccess = {
+                onSuccess = { savedPlay ->
                     val game = viewModel.selectedGame
                     if (game != null) {
                         val ctx = SessionContext(
+                            sessionId = savedPlay.sessionId ?: java.util.UUID.randomUUID().toString(),
                             gameId = game.id,
                             gameName = game.name,
                             players = players,
                             location = location,
-                            lastPlayTimestamp = System.currentTimeMillis()
+                            startedAt = savedPlay.playedAt ?: System.currentTimeMillis(),
+                            lastPlayTimestamp = savedPlay.playedAt ?: System.currentTimeMillis()
                         )
-                        viewModel.saveSession(game, players, location)
                         val record = viewModel.detectRecord(game.id, game.name, players)
-                        postSaveInfo = PostSaveInfo(ctx, record)
+                        postSaveInfo = PostSaveInfo(ctx, record, savedPlay)
                     } else {
                         onPosted()
                     }
@@ -500,6 +507,7 @@ fun LogPlayScreen(
         ) {
             PostSaveCard(
                 info = info,
+                onOpenSessionHub = { sessionHubInfo = info },
                 onPlayAgain = {
                     viewModel.setupPlayAgain(info.sessionContext)
                     date = LocalDate.now().toString()
@@ -522,6 +530,25 @@ fun LogPlayScreen(
                 }
             )
         }
+    }
+
+    sessionHubInfo?.let { info ->
+        SessionHubDialog(
+            session = historyPlays.deriveSessionHub(info.anchorPlay),
+            players = rosterPlayers,
+            onDismiss = { sessionHubInfo = null },
+            onPlayAgain = { play ->
+                viewModel.setupPlayAgainFromPlay(play)
+                sessionHubInfo = null
+                postSaveInfo = null
+                date = LocalDate.now().toString()
+                location = play.location
+                duration = ""
+                comments = ""
+                errorMsg = null
+                focusFirstScore = true
+            }
+        )
     }
 }
 
@@ -1028,6 +1055,7 @@ private fun CompactSwitchRow(
 @Composable
 private fun PostSaveCard(
     info: PostSaveInfo,
+    onOpenSessionHub: () -> Unit,
     onPlayAgain: () -> Unit,
     onChangeGame: () -> Unit,
     onDone: () -> Unit
@@ -1154,6 +1182,9 @@ private fun PostSaveCard(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        BoardFlowSecondaryButton(onClick = onOpenSessionHub, modifier = Modifier.fillMaxWidth()) {
+                            Text("Open session hub")
+                        }
                         BoardFlowButton(onClick = onPlayAgain, modifier = Modifier.fillMaxWidth()) {
                             Text("Play again")
                         }

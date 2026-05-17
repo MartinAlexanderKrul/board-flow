@@ -84,10 +84,12 @@ fun NewPlayScreen(
             sessionContext?.let { ctx ->
                 SessionContinueBanner(
                     context   = ctx,
-                    onUse     = {
+                    onPlayAgain = {
                         viewModel.setupPlayAgain(ctx)
                         onPlayAgain()
                     },
+                    onContinueWithAnotherGame = { viewModel.setupChangeGameSession(ctx) },
+                    onStartNew = { viewModel.clearSession() },
                     onDismiss = { viewModel.dismissSessionBannerForSession() }
                 )
             }
@@ -412,7 +414,9 @@ private fun FastScrollBar(
 @Composable
 private fun SessionContinueBanner(
     context: SessionContext,
-    onUse: () -> Unit,
+    onPlayAgain: () -> Unit,
+    onContinueWithAnotherGame: () -> Unit,
+    onStartNew: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val playerNames = context.players.take(3).joinToString(", ") { it.name.trim() }
@@ -433,31 +437,44 @@ private fun SessionContinueBanner(
         color  = MaterialTheme.colorScheme.surfaceVariant,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                Text(
-                    "Continue last session?",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (subtitle.isNotBlank()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Text(
-                        subtitle,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "Keep this session going?",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    if (subtitle.isNotBlank()) {
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                    BoardFlowCloseGlyph(contentDescription = "Dismiss", modifier = Modifier.size(14.dp), iconSize = 14.dp)
                 }
             }
-            TextButton(onClick = onUse) { Text("Use") }
-            BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                BoardFlowCloseGlyph(contentDescription = "Dismiss", modifier = Modifier.size(14.dp), iconSize = 14.dp)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextButton(onClick = onPlayAgain) { Text("Play again") }
+                TextButton(onClick = onContinueWithAnotherGame) { Text("Another game") }
+                TextButton(onClick = onStartNew) { Text("Start new") }
             }
         }
     }

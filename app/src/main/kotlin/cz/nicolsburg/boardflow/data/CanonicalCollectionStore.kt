@@ -17,6 +17,7 @@ import androidx.room.withTransaction
 import androidx.room.migration.Migration
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
+import cz.nicolsburg.boardflow.model.PlaySession
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.model.SessionMemory
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -56,6 +57,13 @@ class CanonicalCollectionStore private constructor(
 
     suspend fun saveLoggedPlay(play: LoggedPlay) {
         dao.upsertLoggedPlay(LoggedPlayEntity.fromModel(play))
+    }
+
+    suspend fun getRecentPlaySession(windowStartAt: Long): PlaySession? =
+        dao.getRecentPlaySession(windowStartAt)?.toModel()
+
+    suspend fun savePlaySession(session: PlaySession) {
+        dao.upsertPlaySession(PlaySessionEntity.fromModel(session))
     }
 
     suspend fun replaceLoggedPlays(plays: List<LoggedPlay>) {
@@ -150,7 +158,7 @@ class CanonicalCollectionStore private constructor(
                         CanonicalCollectionDatabase::class.java,
                         "boardflow_collection.db"
                     )
-                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                         .build()
                 ).also { INSTANCE = it }
             }
@@ -180,6 +188,12 @@ private interface CanonicalCollectionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertLoggedPlay(play: LoggedPlayEntity)
+
+    @Query("SELECT * FROM play_sessions WHERE endedAt >= :windowStartAt ORDER BY endedAt DESC LIMIT 1")
+    suspend fun getRecentPlaySession(windowStartAt: Long): PlaySessionEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPlaySession(session: PlaySessionEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllLoggedPlays(plays: List<LoggedPlayEntity>)
@@ -228,8 +242,8 @@ private interface CanonicalCollectionDao {
 }
 
 @Database(
-    entities = [CanonicalGameEntity::class, LoggedPlayEntity::class, BggCachedPlayEntity::class, StoreMetadataEntity::class, PlayMemoryEntity::class],
-    version = 4,
+    entities = [CanonicalGameEntity::class, LoggedPlayEntity::class, BggCachedPlayEntity::class, StoreMetadataEntity::class, PlayMemoryEntity::class, PlaySessionEntity::class],
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(CanonicalCollectionConverters::class)
@@ -242,6 +256,55 @@ private data class PlayMemoryEntity(
     @PrimaryKey val id: String,
     val memoryJson: String
 )
+
+@Entity(tableName = "play_sessions", indices = [Index(value = ["endedAt"])])
+private data class PlaySessionEntity(
+    @PrimaryKey val id: String,
+    val startedAt: Long,
+    val endedAt: Long,
+    val sessionDate: String,
+    val location: String
+) {
+    fun toModel(): PlaySession = PlaySession(
+        id = id,
+        startedAt = startedAt,
+        endedAt = endedAt,
+        sessionDate = sessionDate,
+        location = location
+    )
+
+    companion object {
+        fun fromModel(session: PlaySession): PlaySessionEntity = PlaySessionEntity(
+            id = session.id,
+            startedAt = session.startedAt,
+            endedAt = session.endedAt,
+            sessionDate = session.sessionDate,
+            location = session.location
+        )
+    }
+}
+
+private val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `logged_plays` ADD COLUMN `playedAt` INTEGER")
+        db.execSQL("ALTER TABLE `logged_plays` ADD COLUMN `sessionId` TEXT")
+        db.execSQL("ALTER TABLE `bgg_cached_plays` ADD COLUMN `playedAt` INTEGER")
+        db.execSQL("ALTER TABLE `bgg_cached_plays` ADD COLUMN `sessionId` TEXT")
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `play_sessions` (
+                `id` TEXT NOT NULL,
+                `startedAt` INTEGER NOT NULL,
+                `endedAt` INTEGER NOT NULL,
+                `sessionDate` TEXT NOT NULL,
+                `location` TEXT NOT NULL,
+                PRIMARY KEY(`id`)
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_play_sessions_endedAt` ON `play_sessions` (`endedAt`)")
+    }
+}
 
 private val MIGRATION_3_4 = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -449,6 +512,8 @@ private data class LoggedPlayEntity(
     val gameId: Int,
     val gameName: String,
     val date: String,
+    val playedAt: Long? = null,
+    val sessionId: String? = null,
     val players: List<PlayerResult>,
     val durationMinutes: Int,
     val location: String,
@@ -464,6 +529,8 @@ private data class LoggedPlayEntity(
         gameId = gameId,
         gameName = gameName,
         date = date,
+        playedAt = playedAt,
+        sessionId = sessionId,
         players = players,
         durationMinutes = durationMinutes,
         location = location,
@@ -481,6 +548,8 @@ private data class LoggedPlayEntity(
             gameId = play.gameId,
             gameName = play.gameName,
             date = play.date,
+            playedAt = play.playedAt,
+            sessionId = play.sessionId,
             players = play.players,
             durationMinutes = play.durationMinutes,
             location = play.location,
@@ -500,6 +569,8 @@ private data class BggCachedPlayEntity(
     val gameId: Int,
     val gameName: String,
     val date: String,
+    val playedAt: Long? = null,
+    val sessionId: String? = null,
     val players: List<PlayerResult>,
     val durationMinutes: Int,
     val location: String,
@@ -514,6 +585,8 @@ private data class BggCachedPlayEntity(
         gameId = gameId,
         gameName = gameName,
         date = date,
+        playedAt = playedAt,
+        sessionId = sessionId,
         players = players,
         durationMinutes = durationMinutes,
         location = location,
@@ -530,6 +603,8 @@ private data class BggCachedPlayEntity(
             gameId = play.gameId,
             gameName = play.gameName,
             date = play.date,
+            playedAt = play.playedAt,
+            sessionId = play.sessionId,
             players = play.players,
             durationMinutes = play.durationMinutes,
             location = play.location,
