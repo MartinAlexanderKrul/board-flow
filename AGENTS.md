@@ -71,7 +71,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
 - `ui/app/AppShell.kt`
   - app scaffold
   - header
-  - bottom nav (5 tabs: NewPlay, History, Collection, Players, Settings)
+  - bottom nav (5 tabs: NewPlay, History, Collection, Sync, Settings)
   - screen routing
   - cross-screen deep-link style callbacks between Collection, History, Players, and Log Play
   - consumes `pendingHistoryNavigation` requests from `AppViewModel`

@@ -1,6 +1,7 @@
 ﻿package cz.nicolsburg.boardflow.data
 
 import android.util.Log
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.LoggedPlay
@@ -47,9 +48,15 @@ class BggRepository {
 
     private val client = OkHttpClient.Builder()
         .cookieJar(cookieJar)
-        .addInterceptor(HttpLoggingInterceptor { Log.d(TAG, it.replace('\n', ' ')) }.apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
+        .addInterceptor(
+            HttpLoggingInterceptor { Log.d(TAG, it.replace('\n', ' ')) }.apply {
+                level = if (BuildConfig.DEBUG) {
+                    HttpLoggingInterceptor.Level.BODY
+                } else {
+                    HttpLoggingInterceptor.Level.NONE
+                }
+            }
+        )
         .build()
 
     suspend fun searchGames(query: String, xmlApiToken: String, exact: Boolean = false): Result<List<BggGame>> = withContext(Dispatchers.IO) {

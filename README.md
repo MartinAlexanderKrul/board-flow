@@ -156,8 +156,8 @@ Screen involved:
 Sections:
 
 - `Accounts`
-- `Appearance`
-- `AI`
+- `Preferences`
+- `Scan`
 - `Data`
 
 Behavior:
@@ -375,6 +375,10 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
       DailyInsightWidget.kt
 ```
 
+Notes:
+
+- `ui/players/PlayersScreen.kt` still exists, but the current `AppShell` routes player-focused UX through `History` -> `Players` rather than a standalone Players destination in the bottom navigation.
+
 ## UI Surface Inventory
 
 For a screen-by-screen map of dialogs, popups, bottom sheets, cards, dropdowns, banners, lists, and related UI surfaces, see [`docs/UI_SURFACES.md`](docs/UI_SURFACES.md).
@@ -382,6 +386,10 @@ For a screen-by-screen map of dialogs, popups, bottom sheets, cards, dropdowns, 
 ## Gamification System
 
 For the full reference on rarity tiers, insight categories, mastery levels, animations, and period reviews, see [`docs/GAMIFICATION.md`](docs/GAMIFICATION.md).
+
+## Project Audit
+
+For the latest repo audit covering documentation drift, security risks, and notable behavior bugs, see [`docs/PROJECT_AUDIT.md`](docs/PROJECT_AUDIT.md).
 
 ## External Integrations
 

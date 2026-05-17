@@ -131,7 +131,7 @@ Covers BGG XML API and sleeve data fetching.
 
 | Keyword | Level | Meaning |
 |---------|-------|---------|
-| *(HTTP body lines)* | `d` | OkHttp body-level logging interceptor |
+| `-->` / `<--` request lines | `d` | OkHttp basic request/response logging in debug builds only; headers carrying tokens/cookies are redacted |
 | `ThingDetail id=` | `i` | Game detail fetched: weight, player counts, age, language dep |
 | `Fetching BGG sleeves for gameId=` | `i` | Sleeve page fetch started |
 | `BGG sleeves HTTP N` | `w` | Non-200 from sleeve HTML page |
@@ -163,7 +163,7 @@ Covers BGG login, play logging, and play deletion.
 
 | Keyword | Level | Meaning |
 |---------|-------|---------|
-| *(HTTP body lines)* | `d` | OkHttp body-level logging interceptor |
+| `-->` / `<--` request lines | `d` | OkHttp basic request/response logging in debug builds only; headers carrying tokens/cookies are redacted |
 | `Login success for` | `i` | Session cookie obtained |
 | `Play logged: gameId=` | `i` | Play saved on BGG; logs game, date, player count, returned play ID |
 | `Delete play confirmation step` | `i` | First delete POST response snippet |

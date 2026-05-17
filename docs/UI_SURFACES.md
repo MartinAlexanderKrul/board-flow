@@ -177,6 +177,8 @@ Source: `ui/collection/SleevesScreen.kt`
 
 Source: `ui/players/PlayersScreen.kt`
 
+This screen currently exists in source but is not wired into `AppShell`; player-oriented navigation currently lands in `History` -> `Players`.
+
 - Players list: `LazyColumn` of `PlayerListItem`.
 - `PlayerListItem`: `SectionCard` with identity, aliases, play summary, favorite game, and edit icon.
 - Floating add button: opens `AddPlayerDialog`.

@@ -32,11 +32,6 @@ android {
 
         buildConfigField(
             "String",
-            "BGG_PASSWORD",
-            buildConfigString((System.getenv("BGG_PASSWORD") ?: localProperty("BGG_PASSWORD")).trim())
-        )
-        buildConfigField(
-            "String",
             "BGG_XML_API_TOKEN",
             buildConfigString((System.getenv("BGG_XML_API_TOKEN") ?: localProperty("BGG_XML_API_TOKEN")).trim())
         )
