@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,11 +42,12 @@ import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.SessionHub
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
-import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTonalButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -70,7 +72,7 @@ fun SessionHubDialog(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        "Session Hub",
+                        buildSessionTitle(session),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -111,22 +113,26 @@ fun SessionHubDialog(
 
             item {
                 Spacer(Modifier.height(4.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     session.plays.firstOrNull()?.let { latest ->
                         onPlayAgain?.let { callback ->
-                            BoardFlowButton(
+                            BoardFlowTonalButton(
                                 onClick = { callback(latest) },
-                                modifier = Modifier.fillMaxWidth()
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                             ) {
-                                Text("Play this session again")
+                                Icon(
+                                    Icons.Default.EmojiEvents,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.92f)
+                                )
+                                Spacer(Modifier.width(5.dp))
+                                Text("Play this session again", style = MaterialTheme.typography.labelLarge)
                             }
                         }
-                    }
-                    BoardFlowTonalButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Close")
                     }
                 }
             }
@@ -137,10 +143,14 @@ fun SessionHubDialog(
 @Composable
 private fun SessionHubSummaryCard(session: SessionHub) {
     Surface(
+        modifier = Modifier.fillMaxWidth(),
         shape = BoardFlowSurfaceTokens.ContentCardShape,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
     ) {
+        val totalPoints = session.plays.sumOf { play ->
+            play.players.sumOf { p -> p.score.trim().toIntOrNull() ?: 0 }
+        }
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -155,6 +165,9 @@ private fun SessionHubSummaryCard(session: SessionHub) {
                 if (session.totalDurationMinutes > 0) {
                     SummaryChip(Icons.Default.Schedule, "${session.totalDurationMinutes} min")
                 }
+                if (totalPoints > 0) {
+                    SummaryChip(Icons.Default.Star, "$totalPoints pts")
+                }
                 if (session.location.isNotBlank()) {
                     SummaryChip(Icons.Default.LocationOn, session.location)
                 }
@@ -163,8 +176,7 @@ private fun SessionHubSummaryCard(session: SessionHub) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SummaryRow("Games played", session.uniqueGames.toString())
-                SummaryRow("Entries", session.plays.size.toString())
+                SummaryRow("Games played", session.totalLoggedPlays.toString())
                 if (session.winners.isNotEmpty()) {
                     SummaryRow(
                         "Standouts",
@@ -181,6 +193,7 @@ private fun SessionHubSummaryCard(session: SessionHub) {
 @Composable
 private fun SessionHubMemoryCard(session: SessionHub) {
     Surface(
+        modifier = Modifier.fillMaxWidth(),
         shape = BoardFlowSurfaceTokens.ContentCardShape,
         color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.20f),
         border = BorderStroke(0.5.dp, Color(0xFFF0A500).copy(alpha = 0.20f))
@@ -200,7 +213,7 @@ private fun SessionHubMemoryCard(session: SessionHub) {
                     tint = Color(0xFFF0A500)
                 )
                 Text(
-                    "Session memory",
+                    "Session Highlights",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.82f)
                 )
@@ -299,21 +312,27 @@ private fun SessionHubPlayCard(
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 play.players.forEach { player ->
                     val displayName = resolveSessionDisplayName(player.name, players)
-                    val score = player.score.trim().ifBlank { "—" }
-                    Text(
-                        buildString {
-                            append(displayName)
-                            if (player.isWinner) append(" ★")
-                            append("  ")
-                            append(score)
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (player.isWinner) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                    val score = player.score.trim().takeIf { it.isNotBlank() && it != "0" }
+                    val playerColor = if (player.isWinner) MaterialTheme.colorScheme.primary
+                                      else MaterialTheme.colorScheme.onSurfaceVariant
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (player.isWinner) {
+                            Icon(
+                                Icons.Default.EmojiEvents,
+                                contentDescription = "Winner",
+                                tint = playerColor,
+                                modifier = Modifier.size(12.dp)
+                            )
                         }
-                    )
+                        Text(
+                            if (score != null) "$displayName  $score" else displayName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = playerColor
+                        )
+                    }
                 }
             }
         }
@@ -366,6 +385,12 @@ private fun SummaryRow(label: String, value: String) {
         )
     }
 }
+
+private fun buildSessionTitle(session: SessionHub): String =
+    runCatching {
+        val dow = LocalDate.parse(session.date).dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+        "${dow}'s session"
+    }.getOrDefault("Session")
 
 private fun buildSessionSubtitle(session: SessionHub): String {
     val parts = mutableListOf<String>()

@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
@@ -1553,32 +1554,6 @@ private fun PlayDetailsDialog(
         if (chronicleEnabled && chronicle == null && hasMemoryInput) onEnsureChronicle()
     }
 
-    val insights = remember(play, historyPlays) {
-        buildList {
-            addAll(historyPlays.playInsights(play))
-            if (isEmpty()) {
-                val firstPlayCount = play.players.count { it.isNew }
-                if (firstPlayCount > 0) {
-                    add(PlayInsight(
-                        if (firstPlayCount == 1) "One player marked this as a first play."
-                        else "$firstPlayCount players marked this as a first play."
-                    ))
-                }
-                val ratedCount = play.players.count {
-                    it.rating.trim().toIntOrNull()?.let { rating -> rating > 0 } == true
-                }
-                if (ratedCount > 0) {
-                    add(PlayInsight(
-                        if (ratedCount == 1) "One player left a rating for this session."
-                        else "$ratedCount players left ratings for this session."
-                    ))
-                }
-                if (play.quantity > 1) {
-                    add(PlayInsight("Logged as ${play.quantity} sessions."))
-                }
-            }
-        }.take(2)
-    }
     val sessionHub = remember(play, historyPlays) { historyPlays.deriveSessionHub(play) }
     AnimatedDialog(
         onDismissRequest = onDismiss,
@@ -1694,22 +1669,15 @@ private fun PlayDetailsDialog(
                     }
                 }
 
-                if (chronicle != null || (chronicleEnabled && hasMemoryInput && isChroniclePending) || insights.isNotEmpty()) {
+                if (sessionHub.plays.size > 1 || sessionHub.totalLoggedPlays > 1 || hasMemoryInput || chronicle != null) {
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            when {
-                                chronicle != null -> ChronicleInsightCard(
-                                    chronicle = chronicle
-                                )
-                                chronicleEnabled && hasMemoryInput && isChroniclePending -> ChronicleInsightCard(
-                                    chronicle = "...",
-                                    isPlaceholder = true
-                                )
-                            }
-                            insights.forEach { insight ->
-                                PlayInsightStrip(insight = insight)
-                            }
-                        }
+                        SessionHubPreviewCard(
+                            sessionHub = sessionHub,
+                            memory = memory,
+                            chronicle = chronicle,
+                            isChroniclePending = chronicleEnabled && hasMemoryInput && isChroniclePending,
+                            onClick = onOpenSessionHub
+                        )
                     }
                 }
 
@@ -1717,50 +1685,13 @@ private fun PlayDetailsDialog(
                     val visibleComments = remember(play.comments) {
                         play.comments.trimMemorySuffix().takeIf { it.isNotBlank() }
                     }
-                    DetailSection(
-                        rows = buildList {
-                            if (play.quantity > 1) add("Played" to "${play.quantity} times")
-                            if (play.incomplete) add("Status" to "Incomplete play")
-                            if (visibleComments != null) add("Comment" to visibleComments)
-                        }
-                    )
-                }
-
-                if (sessionHub.plays.size > 1 || sessionHub.totalLoggedPlays > 1) {
-                    item {
-                        Surface(
-                            shape = MaterialTheme.shapes.medium,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                                ) {
-                                    Text(
-                                        "Session Hub",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text(
-                                        "${sessionHub.uniqueGames} games • ${sessionHub.totalLoggedPlays} logged plays • ${sessionHub.uniquePlayerNames.size} players",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                BoardFlowTonalButton(onClick = onOpenSessionHub) {
-                                    Text("Open")
-                                }
-                            }
-                        }
+                    val detailRows = buildList {
+                        if (play.quantity > 1) add("Played" to "${play.quantity} times")
+                        if (play.incomplete) add("Status" to "Incomplete play")
+                        if (visibleComments != null) add("Comment" to visibleComments)
+                    }
+                    if (detailRows.isNotEmpty()) {
+                        DetailSection(rows = detailRows)
                     }
                 }
 
@@ -2459,7 +2390,7 @@ private fun PlayMemorySection(
                     tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                 )
                 Text(
-                    "Memory",
+                    "Highlights",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
                 )
@@ -2535,7 +2466,7 @@ private fun MemoryEmptyState(onAdd: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
             )
             Text(
-                "Capture this session",
+                "Add highlights",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
             )
@@ -2602,46 +2533,93 @@ private fun MemoryDisplay(
 }
 
 @Composable
-private fun ChronicleInsightCard(
-    chronicle: String,
-    isPlaceholder: Boolean = false
+private fun SessionHubPreviewCard(
+    sessionHub: cz.nicolsburg.boardflow.model.SessionHub,
+    memory: cz.nicolsburg.boardflow.model.SessionMemory?,
+    chronicle: String?,
+    isChroniclePending: Boolean,
+    onClick: () -> Unit
 ) {
+    val title = remember(sessionHub.date) {
+        runCatching {
+            val dow = LocalDate.parse(sessionHub.date).dayOfWeek
+                .getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+            "${dow}'s session"
+        }.getOrDefault("Session")
+    }
+    val subtitle = buildString {
+        append("${sessionHub.totalLoggedPlays} ${if (sessionHub.totalLoggedPlays == 1) "game" else "games"}")
+        append(" · ${sessionHub.uniquePlayerNames.size} ${if (sessionHub.uniquePlayerNames.size == 1) "player" else "players"}")
+        sessionHub.location.takeIf { it.isNotBlank() }?.let { append(" · $it") }
+    }
+    val highlightLine = chronicle
+        ?: memory?.quote?.trim()?.takeIf { it.isNotBlank() }
+        ?: if (isChroniclePending) "Composing the session chronicle..." else null
+
     Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = if (isPlaceholder) 0.18f else 0.28f),
-        border = BorderStroke(
-            0.5.dp,
-            Color(0xFFF0A500).copy(alpha = if (isPlaceholder) 0.14f else 0.22f)
-        )
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.14f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Icon(
-                    Icons.Default.AutoStories,
+                    Icons.AutoMirrored.Filled.ArrowForwardIos,
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = Color(0xFFF0A500).copy(alpha = if (isPlaceholder) 0.58f else 0.72f)
-                )
-                Text(
-                    if (isPlaceholder) "Table Memory" else "Chronicle",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.82f)
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
                 )
             }
-            Text(
-                chronicle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = if (isPlaceholder) 0.68f else 0.92f),
-                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-            )
+
+            highlightLine?.let { line ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        Icons.Default.AutoStories,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(top = 2.dp)
+                            .size(13.dp),
+                        tint = Color(0xFFF0A500).copy(alpha = 0.72f)
+                    )
+                    Text(
+                        line.let { if (chronicle == null && !isChroniclePending) "“$it”" else it },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isChroniclePending) 0.56f else 0.78f),
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    )
+                }
+            }
         }
     }
 }
@@ -2833,7 +2811,7 @@ private fun MemoryEditor(
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
                     )
                     Spacer(Modifier.width(5.dp))
-                    Text("Save memory", style = MaterialTheme.typography.labelLarge)
+                    Text("Save highlights", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

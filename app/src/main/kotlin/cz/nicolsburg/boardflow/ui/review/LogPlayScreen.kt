@@ -536,7 +536,7 @@ fun LogPlayScreen(
         SessionHubDialog(
             session = historyPlays.deriveSessionHub(info.anchorPlay),
             players = rosterPlayers,
-            onDismiss = { sessionHubInfo = null },
+            onDismiss = { sessionHubInfo = null; postSaveInfo = null },
             onPlayAgain = { play ->
                 viewModel.setupPlayAgainFromPlay(play)
                 sessionHubInfo = null
