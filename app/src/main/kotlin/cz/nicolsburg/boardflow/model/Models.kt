@@ -39,6 +39,18 @@ data class GameCandidate(
     val templateOverlap: Int = 0
 )
 
+data class RecommendationPick(
+    val game: BggGame,
+    val reason: String
+)
+
+data class RecommendationLane(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val picks: List<RecommendationPick>
+)
+
 data class BggCredentials(
     val username: String,
     val password: String

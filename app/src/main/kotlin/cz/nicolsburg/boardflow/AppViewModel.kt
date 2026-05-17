@@ -22,6 +22,8 @@ import cz.nicolsburg.boardflow.model.LogPlayPrefill
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.PlaySession
 import cz.nicolsburg.boardflow.model.Player
+import cz.nicolsburg.boardflow.model.RecommendationLane
+import cz.nicolsburg.boardflow.model.RecommendationPick
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.model.RecordMoment
 import cz.nicolsburg.boardflow.model.SessionContext
@@ -42,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class AppViewModel(private val container: AppContainer) : ViewModel() {
@@ -1846,6 +1849,226 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(5)
     }
 
+    fun getLogPlayRecommendations(): List<RecommendationLane> {
+        val owned = _collectionItems.value.filter { it.isOwned }
+        if (owned.isEmpty()) return emptyList()
+
+        val playerCount = _sessionContext.value?.players?.size?.takeIf { it > 0 }
+        val groupNames = _sessionContext.value?.players
+            ?.map { it.name.trim().lowercase() }
+            ?.filter { it.isNotBlank() }
+            ?.toSet()
+            .orEmpty()
+        val history = historyPlays.value
+        val gameById = _allGames.value.associateBy { it.id }
+        val lanes = buildList {
+            buildBestForTonightLane(owned, gameById, playerCount)?.let(::add)
+            buildGroupFavoritesLane(owned, gameById, groupNames, playerCount)?.let(::add)
+            buildNeglectedFavoritesLane(owned, gameById, history, playerCount)?.let(::add)
+            buildQuickOptionLane(owned, gameById, playerCount)?.let(::add)
+        }
+        return lanes.filter { it.picks.isNotEmpty() }
+    }
+
+    fun getPostSaveRecommendations(anchorPlay: LoggedPlay, limit: Int = 3): List<RecommendationPick> {
+        val owned = _collectionItems.value.filter { it.isOwned && it.objectId.toIntOrNull() != anchorPlay.gameId }
+        if (owned.isEmpty()) return emptyList()
+        val gameById = _allGames.value.associateBy { it.id }
+        val groupNames = anchorPlay.players.map { it.name.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+        val playerCount = anchorPlay.players.size.takeIf { it > 0 }
+        val history = historyPlays.value
+
+        val exactGroup = scoreGamesForGroup(owned, groupNames, playerCount)
+            .filter { it.score > 0.85 }
+            .sortedByDescending { it.score }
+        val rematch = owned.mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
+            val rematchScore = scoreRematchCandidate(anchorPlay, item, history)
+            if (rematchScore <= 0.0) return@mapNotNull null
+            val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
+            ScoredRecommendation(game, rematchScore, "Good rematch for this table")
+        }.sortedByDescending { it.score }
+
+        return (exactGroup + rematch)
+            .distinctBy { it.game.id }
+            .take(limit)
+            .map { RecommendationPick(it.game, it.reason) }
+    }
+
+    private data class ScoredRecommendation(
+        val game: BggGame,
+        val score: Double,
+        val reason: String
+    )
+
+    private fun buildBestForTonightLane(
+        owned: List<GameItem>,
+        gameById: Map<Int, BggGame>,
+        playerCount: Int?
+    ): RecommendationLane? {
+        if (playerCount == null) return null
+        val picks = owned.mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            val fit = playerCountFitScore(item, playerCount)
+            if (fit <= 0.0) return@mapNotNull null
+            val recencyPenalty = recentlyPlayedPenalty(id)
+            val score = fit + recencyPenalty + (item.numPlays ?: 0).coerceAtMost(12) * 0.04
+            val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
+            ScoredRecommendation(game, score, recommendationReasonForPlayerCount(item, playerCount))
+        }.sortedByDescending { it.score }
+            .take(3)
+            .map { RecommendationPick(it.game, it.reason) }
+        if (picks.isEmpty()) return null
+        return RecommendationLane("best_tonight", "Best For Tonight", "$playerCount players at the table", picks)
+    }
+
+    private fun buildGroupFavoritesLane(
+        owned: List<GameItem>,
+        gameById: Map<Int, BggGame>,
+        groupNames: Set<String>,
+        playerCount: Int?
+    ): RecommendationLane? {
+        if (groupNames.isEmpty()) return null
+        val picks = scoreGamesForGroup(owned, groupNames, playerCount)
+            .sortedByDescending { it.score }
+            .take(3)
+            .map { RecommendationPick(it.game, it.reason) }
+        if (picks.isEmpty()) return null
+        return RecommendationLane("group_favorites", "Great With This Group", "Based on your shared history", picks)
+    }
+
+    private fun buildNeglectedFavoritesLane(
+        owned: List<GameItem>,
+        gameById: Map<Int, BggGame>,
+        history: List<LoggedPlay>,
+        playerCount: Int?
+    ): RecommendationLane? {
+        val playsByGame = history.groupBy { it.gameId }
+        val today = LocalDate.now()
+        val picks = owned.mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
+            val plays = playsByGame[id].orEmpty()
+            if (plays.size < 2) return@mapNotNull null
+            val lastPlayed = plays.mapNotNull { it.date.toLocalDateOrNull() }.maxOrNull() ?: return@mapNotNull null
+            val daysSince = ChronoUnit.DAYS.between(lastPlayed, today).toInt()
+            if (daysSince < 21) return@mapNotNull null
+            val score = plays.size * 0.45 + (daysSince / 14.0)
+            val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
+            ScoredRecommendation(game, score, "You play it often, but not lately")
+        }.sortedByDescending { it.score }
+            .take(3)
+            .map { RecommendationPick(it.game, it.reason) }
+        if (picks.isEmpty()) return null
+        return RecommendationLane("neglected_favorites", "Neglected Favorites", "Loved before, due for a return", picks)
+    }
+
+    private fun buildQuickOptionLane(
+        owned: List<GameItem>,
+        gameById: Map<Int, BggGame>,
+        playerCount: Int?
+    ): RecommendationLane? {
+        val picks = owned.mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
+            val time = item.playingTime ?: return@mapNotNull null
+            if (time <= 0 || time > 60) return@mapNotNull null
+            val score = (70 - time).coerceAtLeast(0) / 10.0 + playerCountFitScore(item, playerCount)
+            val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
+            ScoredRecommendation(game, score, "Quick to table at about ${time} min")
+        }.sortedByDescending { it.score }
+            .take(3)
+            .map { RecommendationPick(it.game, it.reason) }
+        if (picks.isEmpty()) return null
+        return RecommendationLane("quick_option", "Quick To Table", "Shorter picks for this group size", picks)
+    }
+
+    private fun scoreGamesForGroup(
+        owned: List<GameItem>,
+        groupNames: Set<String>,
+        playerCount: Int?
+    ): List<ScoredRecommendation> {
+        val history = historyPlays.value
+        val gameById = _allGames.value.associateBy { it.id }
+        return owned.mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
+            val matchingPlays = history.filter { play ->
+                if (play.gameId != id) return@filter false
+                val playNames = play.players.map { it.name.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+                val overlap = playNames.intersect(groupNames).size
+                overlap >= groupOverlapThreshold(groupNames.size, playNames.size)
+            }
+            if (matchingPlays.isEmpty()) return@mapNotNull null
+            val avgOverlap = matchingPlays.map { play ->
+                val playNames = play.players.map { it.name.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+                playNames.intersect(groupNames).size.toDouble()
+            }.average()
+            val score = matchingPlays.size * 0.7 + avgOverlap + recentlyPlayedPenalty(id)
+            val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
+            ScoredRecommendation(game, score, "Played ${matchingPlays.size}x with this group")
+        }.filter { it.score > 0.0 }
+    }
+
+    private fun scoreRematchCandidate(anchorPlay: LoggedPlay, item: GameItem, history: List<LoggedPlay>): Double {
+        val relationBonus = when {
+            item.name.equals(anchorPlay.gameName, ignoreCase = true) -> 1.5
+            item.name.contains(anchorPlay.gameName, ignoreCase = true) ||
+                anchorPlay.gameName.contains(item.name, ignoreCase = true) -> 1.0
+            else -> 0.0
+        }
+        val sameGroupPlays = history.count { play ->
+            val anchorNames = anchorPlay.players.map { it.name.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+            val playNames = play.players.map { it.name.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+            play.gameId == item.objectId.toIntOrNull() && playNames.intersect(anchorNames).size >= groupOverlapThreshold(anchorNames.size, playNames.size)
+        }
+        return relationBonus + sameGroupPlays * 0.35
+    }
+
+    private fun recentlyPlayedPenalty(gameId: Int): Double {
+        val lastPlayed = historyPlays.value
+            .filter { it.gameId == gameId }
+            .mapNotNull { it.date.toLocalDateOrNull() }
+            .maxOrNull() ?: return 0.0
+        val days = ChronoUnit.DAYS.between(lastPlayed, LocalDate.now()).toInt()
+        return when {
+            days < 7 -> -1.4
+            days < 21 -> -0.6
+            days > 90 -> 0.9
+            else -> 0.0
+        }
+    }
+
+    private fun fitsPlayerCount(item: GameItem, playerCount: Int?): Boolean =
+        playerCount == null || playerCountFitScore(item, playerCount) > 0.0
+
+    private fun playerCountFitScore(item: GameItem, playerCount: Int?): Double {
+        if (playerCount == null) return 0.5
+        val min = item.minPlayers
+        val max = item.maxPlayers
+        if (min != null && playerCount < min) return 0.0
+        if (max != null && playerCount > max) return 0.0
+        return when {
+            min != null && max != null && playerCount in min..max -> 1.4
+            min != null || max != null -> 1.0
+            else -> 0.4
+        }
+    }
+
+    private fun recommendationReasonForPlayerCount(item: GameItem, playerCount: Int): String =
+        when {
+            item.minPlayers != null && item.maxPlayers != null ->
+                "Fits ${item.minPlayers}-${item.maxPlayers} players"
+            else -> "Good fit for $playerCount players"
+        }
+
+    private fun groupOverlapThreshold(groupSize: Int, playSize: Int): Int = when {
+        groupSize <= 1 || playSize <= 1 -> 1
+        minOf(groupSize, playSize) <= 2 -> 2
+        else -> 3
+    }
+
     private fun normalizePlayersForPosting(players: List<PlayerResult>): List<PlayerResult> {
         return players.map { player ->
             val trimmedName = player.name.trim()
@@ -1996,6 +2219,9 @@ private fun LoggedPlay.historyCorrelationKey(): String {
         normalizedPlayers
     ).joinToString("||")
 }
+
+private fun String.toLocalDateOrNull(): LocalDate? =
+    runCatching { LocalDate.parse(this) }.getOrNull()
 
 private fun String.isLikelyLocalUuid(): Boolean {
     return Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")

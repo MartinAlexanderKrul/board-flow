@@ -19,10 +19,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.model.BggGame
+import cz.nicolsburg.boardflow.model.RecommendationLane
+import cz.nicolsburg.boardflow.model.RecommendationPick
 import cz.nicolsburg.boardflow.model.SessionContext
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.Icon
@@ -73,6 +78,11 @@ fun NewPlayScreen(
     val sessionBannerVisible by viewModel.sessionBannerVisible.collectAsState()
     val sessionContext by viewModel.sessionContext.collectAsState()
     val changeGameActive by viewModel.changeGameSessionActive.collectAsState()
+    val collectionItems by viewModel.collectionItems.collectAsState()
+    val historyPlays by viewModel.historyPlays.collectAsState()
+    val recommendationLanes = remember(query, sessionContext, collectionItems, historyPlays) {
+        if (query.isBlank()) viewModel.getLogPlayRecommendations() else emptyList()
+    }
 
     LaunchedEffect(Unit) { viewModel.loadLogPlayGames() }
 
@@ -245,6 +255,17 @@ fun NewPlayScreen(
                                 end = if (showScrollBar) 20.dp else 0.dp
                             )
                         ) {
+                            if (recommendationLanes.isNotEmpty() && query.isBlank()) {
+                                item {
+                                    RecommendationsSection(
+                                        lanes = recommendationLanes,
+                                        onSelect = { game ->
+                                            viewModel.selectGame(game)
+                                            onGameSelected(game)
+                                        }
+                                    )
+                                }
+                            }
                             items(results) { game ->
                                 GameRow(game = game, onClick = {
                                     viewModel.selectGame(game)
@@ -296,6 +317,122 @@ fun NewPlayScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun RecommendationsSection(
+    lanes: List<RecommendationLane>,
+    onSelect: (BggGame) -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(true) }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.padding(bottom = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded }
+                .padding(vertical = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    "Good picks right now",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    if (expanded) "Tap to collapse" else "Tap to expand",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                lanes.forEach { lane ->
+                    Surface(
+                        shape = BoardFlowSurfaceTokens.ContentCardShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    lane.title,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    lane.subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            lane.picks.forEach { pick ->
+                                RecommendationRow(pick = pick, onClick = { onSelect(pick.game) })
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecommendationRow(
+    pick: RecommendationPick,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    pick.game.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    pick.reason,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+            )
         }
     }
 }

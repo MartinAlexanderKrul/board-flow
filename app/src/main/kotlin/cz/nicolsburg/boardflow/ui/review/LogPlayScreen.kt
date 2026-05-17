@@ -66,6 +66,7 @@ import cz.nicolsburg.boardflow.model.GameCandidate
 import cz.nicolsburg.boardflow.model.GameRelations
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.RecordMoment
+import cz.nicolsburg.boardflow.model.RecommendationPick
 import cz.nicolsburg.boardflow.model.ScanRecognitionResult
 import cz.nicolsburg.boardflow.model.SessionContext
 import cz.nicolsburg.boardflow.model.deriveSessionHub
@@ -524,6 +525,9 @@ fun LogPlayScreen(
         exit    = fadeOut(tween(160))
     ) {
         val info = lastPostSaveInfo ?: return@AnimatedVisibility
+        val nextRecommendations = remember(info.anchorPlay, historyPlays) {
+            viewModel.getPostSaveRecommendations(info.anchorPlay)
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -536,6 +540,7 @@ fun LogPlayScreen(
             )
             PostSaveCard(
                 info = info,
+                nextRecommendations = nextRecommendations,
                 onOpenSessionHub = { sessionHubInfo = info },
                 onPlayAgain = {
                     viewModel.setupPlayAgain(info.sessionContext)
@@ -1090,12 +1095,14 @@ private fun CompactSwitchRow(
 @Composable
 private fun PostSaveCard(
     info: PostSaveInfo,
+    nextRecommendations: List<RecommendationPick>,
     onOpenSessionHub: () -> Unit,
     onPlayAgain: () -> Unit,
     onChangeGame: () -> Unit,
     onDone: () -> Unit
 ) {
     var animIn by remember { mutableStateOf(false) }
+    var recommendationsExpanded by rememberSaveable { mutableStateOf(true) }
     LaunchedEffect(Unit) { animIn = true }
 
     val players = info.sessionContext.players
@@ -1233,6 +1240,62 @@ private fun PostSaveCard(
                     }
 
                     // Ghost dismiss — de-emphasised so the eye skips it unless intended
+                    if (nextRecommendations.isNotEmpty()) {
+                        Spacer(Modifier.height(14.dp))
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { recommendationsExpanded = !recommendationsExpanded },
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Try next",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Icon(
+                                    if (recommendationsExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            AnimatedVisibility(visible = recommendationsExpanded) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    nextRecommendations.take(2).forEach { pick ->
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f))
+                                        ) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                                            ) {
+                                                Text(
+                                                    pick.game.name,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                Text(
+                                                    pick.reason,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
                         Text("Done", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
                     }
