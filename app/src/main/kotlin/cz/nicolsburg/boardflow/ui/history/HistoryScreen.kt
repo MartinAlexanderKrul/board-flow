@@ -216,6 +216,7 @@ fun HistoryScreen(
     val players by viewModel.players.collectAsState()
     val statsPlayScope by viewModel.statsPlayScope.collectAsState()
     val deletingPlayId by viewModel.deletingBggPlayId.collectAsState()
+    val bggDeleteError by viewModel.bggDeleteError.collectAsState()
     val editPlayLoading by viewModel.editPlayLoading.collectAsState()
     val postingPlayId by viewModel.postingPlayId.collectAsState()
     val bggPlaysCacheAgeMinutes by viewModel.bggPlaysCacheAgeMinutes.collectAsState()
@@ -260,6 +261,12 @@ fun HistoryScreen(
     var playToShare by remember { mutableStateOf<LoggedPlay?>(null) }
     var deleteError by remember { mutableStateOf<String?>(null) }
     var editError by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(bggDeleteError) {
+        if (bggDeleteError != null) {
+            deleteError = bggDeleteError
+            viewModel.clearBggDeleteError()
+        }
+    }
     var navHistory by remember { mutableStateOf(listOf<HistoryNavState>()) }
     var restoredViewingPlayerId by remember { mutableStateOf<String?>(null) }
 
@@ -1038,7 +1045,8 @@ private fun PlaysContent(
                     PlayHistoryCard(
                         play = play,
                         players = players,
-                        onClick = { onOpenPlay(play) }
+                        onClick = { onOpenPlay(play) },
+                        modifier = Modifier.animateItem()
                     )
                 }
             }
@@ -1168,14 +1176,15 @@ private fun PendingPlaysCard(
 private fun PlayHistoryCard(
     play: LoggedPlay,
     players: List<Player>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "cardScale")
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .scale(scale)
             .clip(BoardFlowSurfaceTokens.Shape)

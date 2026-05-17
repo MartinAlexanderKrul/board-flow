@@ -110,6 +110,7 @@ fun BoardFlowApp(
     val historyPlays by appViewModel.historyPlays.collectAsState()
     val players by appViewModel.players.collectAsState()
     val logPlayHasUnsavedChanges by appViewModel.logPlayHasUnsavedChanges.collectAsState()
+    val logPlayPostSaveShowing by appViewModel.logPlayPostSaveShowing.collectAsState()
     val quickScanCorrectionMode by appViewModel.quickScanCorrectionMode.collectAsState()
     val pendingWidgetQuickScan by appViewModel.pendingWidgetQuickScan.collectAsState()
     val pendingWidgetOpenGameId by appViewModel.pendingWidgetOpenGameId.collectAsState()
@@ -260,7 +261,7 @@ fun BoardFlowApp(
     }
 
     val headerBack: (() -> Unit)? = when {
-        isReview -> ({
+        isReview && !logPlayPostSaveShowing -> ({
             requestLeaveLogPlay()
         })
         isScan -> ({

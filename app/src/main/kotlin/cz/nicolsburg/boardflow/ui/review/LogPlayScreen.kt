@@ -11,6 +11,18 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.geometry.Offset
+import cz.nicolsburg.boardflow.model.PlayerResult
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.random.Random
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -203,6 +215,8 @@ fun LogPlayScreen(
         }
     }
 
+    LaunchedEffect(postSaveInfo) { viewModel.setLogPlayPostSaveShowing(postSaveInfo != null) }
+
     BackHandler {
         if (postSaveInfo != null) {
             postSaveInfo = null
@@ -287,7 +301,13 @@ fun LogPlayScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    val contentBlur by animateDpAsState(
+        targetValue    = if (postSaveInfo != null) 18.dp else 0.dp,
+        animationSpec  = tween(200),
+        label          = "contentBlur"
+    )
+
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).blur(contentBlur)) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets(0),
@@ -505,6 +525,10 @@ fun LogPlayScreen(
                 .background(Color.Black.copy(alpha = 0.35f)),
             contentAlignment = Alignment.Center
         ) {
+            FireworksLayer(
+                primaryColor = MaterialTheme.colorScheme.primary,
+                modifier     = Modifier.fillMaxSize()
+            )
             PostSaveCard(
                 info = info,
                 onOpenSessionHub = { sessionHubInfo = info },
@@ -1064,10 +1088,10 @@ private fun PostSaveCard(
 
     val players = info.sessionContext.players
     val winners = players.filter { it.isWinner }
-    val winnerText = winners.joinToString(" & ") { it.name.trim() }
     val primaryMemory = info.record?.displayText ?: when {
-        winners.isNotEmpty() -> "$winnerText wins this one."
-        players.isNotEmpty() -> "Another session recorded."
+        winners.size == 1 -> "${winners.first().name.trim()} takes the crown."
+        winners.size > 1  -> "${winners.joinToString(" & ") { it.name.trim() }} share the victory."
+        players.isNotEmpty() -> "Session recorded. The chronicle grows."
         else -> "This play is part of the record now."
     }
     val hasNumericScores = players.any { it.score.trim().toDoubleOrNull() != null }
@@ -1085,117 +1109,238 @@ private fun PostSaveCard(
     ) {
         AnimatedVisibility(
             visible = animIn,
-            enter = scaleIn(
-                initialScale = 0.95f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness    = Spring.StiffnessMedium
-                )
+            enter = slideInVertically(
+                initialOffsetY = { it / 6 },
+                animationSpec  = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
+            ) + scaleIn(
+                initialScale   = 0.96f,
+                animationSpec  = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
             ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium))
         ) {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape    = RoundedCornerShape(20.dp),
+                border   = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f))
+            ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier            = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Game name
+                    // Game name — all-caps label at the very top
                     if (info.sessionContext.gameName.isNotBlank()) {
                         Text(
-                            info.sessionContext.gameName,
-                            style     = MaterialTheme.typography.labelMedium,
-                            color     = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
+                            info.sessionContext.gameName.uppercase(),
+                            style         = MaterialTheme.typography.labelSmall,
+                            letterSpacing = 1.5.sp,
+                            color         = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
+                            textAlign     = TextAlign.Center
+                        )
+                        Spacer(Modifier.height(16.dp))
+                    }
+
+                    // Hero badge
+                    Box(
+                        modifier            = Modifier
+                            .size(64.dp)
+                            .background(
+                                color  = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                                shape  = CircleShape
+                            ),
+                        contentAlignment    = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.EmojiEvents,
+                            contentDescription = null,
+                            tint               = MaterialTheme.colorScheme.primary,
+                            modifier           = Modifier.size(36.dp)
                         )
                     }
 
-                    Icon(
-                        Icons.Default.EmojiEvents,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(28.dp)
-                    )
+                    Spacer(Modifier.height(16.dp))
+
+                    // Primary message
                     Text(
                         primaryMemory,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style      = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
+                        color      = MaterialTheme.colorScheme.onSurface,
+                        textAlign  = TextAlign.Center,
                         lineHeight = 30.sp
                     )
+
+                    Spacer(Modifier.height(6.dp))
+
+                    // Date — day name adds warmth over a bare date
+                    val dateLabel = buildString {
+                        append(LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM d")))
+                        val location = info.sessionContext.location
+                        if (location.isNotBlank()) append(" · $location")
+                    }
                     Text(
-                        LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy")),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.58f),
+                        dateLabel,
+                        style     = MaterialTheme.typography.labelSmall,
+                        color     = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f),
                         textAlign = TextAlign.Center
                     )
 
-                    // Score table
+                    // Player results
                     if (sortedPlayers.isNotEmpty()) {
-                        HorizontalDivider()
+                        Spacer(Modifier.height(20.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                        Spacer(Modifier.height(12.dp))
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier            = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             sortedPlayers.forEach { player ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    if (player.isWinner) {
-                                        Icon(
-                                            Icons.Default.EmojiEvents,
-                                            contentDescription = null,
-                                            tint     = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(Modifier.width(6.dp))
-                                    } else {
-                                        Spacer(Modifier.width(20.dp))
-                                    }
-                                    Text(
-                                        player.name.trim(),
-                                        style      = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
-                                        color      = if (player.isWinner) MaterialTheme.colorScheme.primary
-                                                     else MaterialTheme.colorScheme.onSurface,
-                                        modifier   = Modifier.weight(1f)
-                                    )
-                                    val score = player.score.trim()
-                                    Text(
-                                        score.ifBlank { "—" },
-                                        style      = if (player.isWinner) MaterialTheme.typography.bodyLarge
-                                                     else MaterialTheme.typography.bodyMedium,
-                                        fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
-                                        color      = if (player.isWinner) MaterialTheme.colorScheme.primary
-                                                     else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                VictoryPlayerRow(player = player)
                             }
                         }
                     }
 
-                    // Actions
-                    HorizontalDivider()
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    Spacer(Modifier.height(24.dp))
+
+                    // Primary CTA — most common next action
+                    BoardFlowButton(onClick = onPlayAgain, modifier = Modifier.fillMaxWidth()) {
+                        Text("Play again")
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    // Secondary CTAs — side-by-side to save height and signal equal priority
+                    Row(
+                        modifier                = Modifier.fillMaxWidth(),
+                        horizontalArrangement   = Arrangement.spacedBy(8.dp)
                     ) {
-                        BoardFlowSecondaryButton(onClick = onOpenSessionHub, modifier = Modifier.fillMaxWidth()) {
-                            Text("Open session hub")
+                        BoardFlowSecondaryButton(onClick = onOpenSessionHub, modifier = Modifier.weight(1f)) {
+                            Text("View session")
                         }
-                        BoardFlowButton(onClick = onPlayAgain, modifier = Modifier.fillMaxWidth()) {
-                            Text("Play again")
-                        }
-                        BoardFlowSecondaryButton(onClick = onChangeGame, modifier = Modifier.fillMaxWidth()) {
+                        BoardFlowSecondaryButton(onClick = onChangeGame, modifier = Modifier.weight(1f)) {
                             Text("Change game")
                         }
-                        TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-                            Text("Done")
-                        }
+                    }
+
+                    // Ghost dismiss — de-emphasised so the eye skips it unless intended
+                    TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+                        Text("Done", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun VictoryPlayerRow(player: PlayerResult) {
+    val isWinner = player.isWinner
+    Surface(
+        shape  = RoundedCornerShape(10.dp),
+        color  = if (isWinner) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        border = if (isWinner) BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f))
+                 else null
+    ) {
+        Row(
+            modifier          = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isWinner) {
+                Icon(
+                    Icons.Default.EmojiEvents,
+                    contentDescription = null,
+                    tint               = MaterialTheme.colorScheme.primary,
+                    modifier           = Modifier.size(14.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+            } else {
+                Spacer(Modifier.width(22.dp))
+            }
+            Text(
+                player.name.trim(),
+                style      = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                color      = if (isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                modifier   = Modifier.weight(1f)
+            )
+            val score = player.score.trim()
+            Text(
+                score.ifBlank { "—" },
+                style      = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                color      = if (isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Fireworks
+// ---------------------------------------------------------------------------
+
+private data class FireParticle(
+    val cx: Float, val cy: Float,
+    val angle: Float, val speed: Float,
+    val color: Color, val radius: Float, val delay: Float
+)
+
+private fun buildFireworks(primary: Color): List<FireParticle> {
+    val rng = Random(42)
+    val palette = listOf(primary, primary, Color.White, Color(0xFFFFF59D))
+    // Five burst origins spread around the screen edges (fractions of canvas size).
+    // Delays are staggered so they pop in sequence rather than all at once.
+    val bursts = listOf(
+        Triple(0.12f, 0.22f, 0.00f),
+        Triple(0.88f, 0.20f, 0.12f),
+        Triple(0.50f, 0.07f, 0.22f),
+        Triple(0.20f, 0.70f, 0.32f),
+        Triple(0.80f, 0.68f, 0.40f),
+    )
+    return buildList {
+        for ((bx, by, bd) in bursts) {
+            repeat(14) { i ->
+                val base = i * (6.2832f / 14f)
+                val jitter = (rng.nextFloat() - 0.5f) * 0.5f
+                add(FireParticle(
+                    cx     = bx,
+                    cy     = by,
+                    angle  = base + jitter,
+                    speed  = 0.4f + rng.nextFloat() * 0.6f,
+                    color  = palette[rng.nextInt(palette.size)],
+                    radius = 3f + rng.nextFloat() * 3.5f,
+                    delay  = bd + rng.nextFloat() * 0.04f
+                ))
+            }
+        }
+    }
+}
+
+@Composable
+private fun FireworksLayer(primaryColor: Color, modifier: Modifier = Modifier) {
+    val particles = remember(primaryColor) { buildFireworks(primaryColor) }
+    val anim = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        anim.animateTo(1f, animationSpec = tween(durationMillis = 1700, easing = LinearEasing))
+    }
+    val p = anim.value
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        for (particle in particles) {
+            val t = ((p - particle.delay) / (1f - particle.delay)).coerceIn(0f, 1f)
+            if (t <= 0f) continue
+            val eased = 1f - (1f - t) * (1f - t)           // ease-out: fast burst, slow settle
+            val dist  = w * 0.22f * particle.speed
+            val dx    = cos(particle.angle) * dist * eased
+            val dy    = sin(particle.angle) * dist * eased + dist * 0.28f * t * t  // gravity
+            val alpha = ((1f - t * t) * 1.5f).coerceIn(0f, 1f)
+            val r     = particle.radius * (1f - t * 0.4f)
+            drawCircle(
+                color  = particle.color.copy(alpha = alpha),
+                radius = r,
+                center = Offset(w * particle.cx + dx, h * particle.cy + dy)
+            )
         }
     }
 }

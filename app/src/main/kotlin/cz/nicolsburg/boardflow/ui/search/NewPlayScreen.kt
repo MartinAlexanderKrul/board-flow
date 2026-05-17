@@ -151,10 +151,12 @@ fun NewPlayScreen(
                 }
             )
 
+            Spacer(Modifier.height(8.dp))
+
             when {
                 loading -> LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
+                    contentPadding = PaddingValues(bottom = 8.dp)
                 ) {
                     items(10) { ShimmerGameRow() }
                 }
@@ -239,7 +241,6 @@ fun NewPlayScreen(
                             state = listState,
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(
-                                top = 8.dp,
                                 bottom = 8.dp,
                                 end = if (showScrollBar) 20.dp else 0.dp
                             )

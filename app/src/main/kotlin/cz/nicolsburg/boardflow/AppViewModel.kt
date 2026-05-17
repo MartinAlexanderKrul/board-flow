@@ -138,6 +138,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _logPlayHasUnsavedChanges = MutableStateFlow(false)
     val logPlayHasUnsavedChanges: StateFlow<Boolean> = _logPlayHasUnsavedChanges.asStateFlow()
 
+    private val _logPlayPostSaveShowing = MutableStateFlow(false)
+    val logPlayPostSaveShowing: StateFlow<Boolean> = _logPlayPostSaveShowing.asStateFlow()
+    fun setLogPlayPostSaveShowing(showing: Boolean) { _logPlayPostSaveShowing.value = showing }
+
     fun loadRecentGames() {
         _recentGames.value = prefs.getRecentGames()
         if (_allGames.value.isNotEmpty()) return
@@ -768,6 +772,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     val bggPlaysError: StateFlow<String?> = _bggPlaysError.asStateFlow()
     private val _deletingBggPlayId = MutableStateFlow<String?>(null)
     val deletingBggPlayId: StateFlow<String?> = _deletingBggPlayId.asStateFlow()
+    private val _bggDeleteError = MutableStateFlow<String?>(null)
+    val bggDeleteError: StateFlow<String?> = _bggDeleteError.asStateFlow()
+    fun clearBggDeleteError() { _bggDeleteError.value = null }
     val historyPlays: StateFlow<List<LoggedPlay>> = combine(_playHistory, _bggPlays) { local, remote ->
         mergeHistorySources(local, remote)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -846,16 +853,29 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val creds = prefs.getCredentials() ?: run { onError("BGG credentials not set"); return }
         val username = prefs.bggUsername.trim()
         if (username.isBlank()) { onError("BGG username not set"); return }
-        _deletingBggPlayId.value = playId
+
+        // Optimistic removal: remove from both in-memory state flows immediately so the UI
+        // updates without waiting for the BGG network round-trip.
+        val deletedPlay = _bggPlays.value.firstOrNull { it.id == playId }
+        _bggPlays.value = _bggPlays.value.filter { it.id != playId }
+        _playHistory.value = _playHistory.value.filter { local ->
+            local.id != playId && (deletedPlay == null || local.signatureKey() != deletedPlay.signatureKey())
+        }
+        clearActiveSessionIfAny()
+        onSuccess()
+
         viewModelScope.launch {
-            val deletedPlay = (_bggPlays.value + container.canonicalCollectionStore.getBggPlaysCache())
-                .firstOrNull { it.id == playId }
-            container.bggRepository.login(creds)
-                .onFailure {
-                    _deletingBggPlayId.value = null
-                    onError(it.message ?: "Login failed")
-                    return@launch
-                }
+            suspend fun restore() {
+                deletedPlay?.let { _bggPlays.value = listOf(it) + _bggPlays.value }
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            }
+
+            container.bggRepository.login(creds).onFailure {
+                restore()
+                _bggDeleteError.value = it.message ?: "Login failed"
+                return@launch
+            }
+
             val deleteResult = container.bggRepository.deletePlay(playId)
 
             // If delete "failed" with an unexpected-response error, the play may have already
@@ -872,35 +892,23 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                                 removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
                                 pruneLocalPlaysDeletedOnBgg(refreshed)
                                 _bggPlaysCacheAgeMinutes.value = 0L
-                                _deletingBggPlayId.value = null
-                                onSuccess()
                                 return@launch
                             }
                         }
                 }
-                _deletingBggPlayId.value = null
-                onError(deleteResult.exceptionOrNull()?.message ?: "Failed to delete play")
+                restore()
+                _bggDeleteError.value = deleteResult.exceptionOrNull()?.message ?: "Failed to delete play"
                 return@launch
             }
 
-            // Delete was accepted — verify BGG confirms it's gone, then clean up locally.
+            // Delete accepted — refresh cache and clean up local DB copies.
             container.bggRepository.getPlays(username)
                 .onSuccess { refreshed ->
-                    if (refreshed.any { it.id == playId }) {
-                        _deletingBggPlayId.value = null
-                        onError("BGG did not confirm the delete yet. Please refresh and try again.")
-                    } else {
-                        container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
-                        _bggPlays.value = container.canonicalCollectionStore.getBggPlaysCache()
-                        removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
-                        _bggPlaysCacheAgeMinutes.value = 0L
-                        _deletingBggPlayId.value = null
-                        onSuccess()
-                    }
-                }
-                .onFailure { error ->
-                    _deletingBggPlayId.value = null
-                    onError(error.message ?: "Deleted on BGG, but failed to refresh history")
+                    container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+                    _bggPlays.value = container.canonicalCollectionStore.getBggPlaysCache()
+                    removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
+                    pruneLocalPlaysDeletedOnBgg(refreshed)
+                    _bggPlaysCacheAgeMinutes.value = 0L
                 }
         }
     }
@@ -1073,9 +1081,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             runCatching {
                 container.canonicalCollectionStore.deleteLoggedPlay(playId)
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+                clearActiveSessionIfAny()
             }.onSuccess { onSuccess() }
                 .onFailure { onError(it.message ?: "Failed to delete local play") }
         }
+    }
+
+    private fun clearActiveSessionIfAny() {
+        if (_sessionContext.value != null) clearSession()
     }
 
     private suspend fun removeLocalCopyOfDeletedBggPlay(playId: String, deletedPlay: LoggedPlay?) {
