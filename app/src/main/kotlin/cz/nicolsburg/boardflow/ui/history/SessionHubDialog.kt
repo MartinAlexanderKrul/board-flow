@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -141,15 +142,13 @@ fun SessionHubDialog(
                                 modifier = Modifier.weight(1f)
                             )
                             if (session.sessionId != null && onRenameSession != null) {
-                                TextButton(onClick = { isEditingTitle = true }) {
+                                IconButton(onClick = { isEditingTitle = true }) {
                                     Icon(
                                         Icons.Default.Edit,
-                                        contentDescription = null,
+                                        contentDescription = "Edit",
                                         modifier = Modifier.size(15.dp),
                                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                                     )
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("Edit")
                                 }
                             }
                         }
@@ -192,8 +191,9 @@ fun SessionHubDialog(
             item {
                 Spacer(Modifier.height(4.dp))
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     onPlayAgain?.let { callback ->
                         BoardFlowTonalButton(

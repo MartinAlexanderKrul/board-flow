@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -98,7 +99,8 @@ fun LogPlayScreen(
     onChangeGame: () -> Unit,
     onNavigateBack: () -> Unit,
     onDiscard: () -> Unit = onNavigateBack,
-    onChooseGame: () -> Unit = {}
+    onChooseGame: () -> Unit = {},
+    onPickRecommendation: (BggGame) -> Unit = {}
 ) {
     val players         by viewModel.editablePlayers.collectAsState()
     val posting         by viewModel.postLoading.collectAsState()
@@ -556,6 +558,12 @@ fun LogPlayScreen(
                     viewModel.setupChangeGameSession(info.sessionContext)
                     postSaveInfo = null
                     onChangeGame()
+                },
+                onPickRecommendation = { game ->
+                    viewModel.setupChangeGameSession(info.sessionContext)
+                    viewModel.selectGame(game)
+                    postSaveInfo = null
+                    onPickRecommendation(game)
                 },
                 onDone = {
                     postSaveInfo = null
@@ -1099,6 +1107,7 @@ private fun PostSaveCard(
     onOpenSessionHub: () -> Unit,
     onPlayAgain: () -> Unit,
     onChangeGame: () -> Unit,
+    onPickRecommendation: (BggGame) -> Unit,
     onDone: () -> Unit
 ) {
     var animIn by remember { mutableStateOf(false) }
@@ -1271,23 +1280,35 @@ private fun PostSaveCard(
                                         Surface(
                                             shape = RoundedCornerShape(12.dp),
                                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
-                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f))
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
+                                            modifier = Modifier.clickable { onPickRecommendation(pick.game) }
                                         ) {
-                                            Column(
+                                            Row(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .padding(horizontal = 12.dp, vertical = 10.dp),
-                                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                                                verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                Text(
-                                                    pick.game.name,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                                Text(
-                                                    pick.reason,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                Column(
+                                                    modifier = Modifier.weight(1f),
+                                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                                ) {
+                                                    Text(
+                                                        pick.game.name,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                    Text(
+                                                        pick.reason,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                                Icon(
+                                                    Icons.Default.ChevronRight,
+                                                    contentDescription = "Log ${pick.game.name}",
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                                 )
                                             }
                                         }

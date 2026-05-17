@@ -217,6 +217,7 @@ fun HistoryScreen(
     val statsPlayScope by viewModel.statsPlayScope.collectAsState()
     val deletingPlayId by viewModel.deletingBggPlayId.collectAsState()
     val bggDeleteError by viewModel.bggDeleteError.collectAsState()
+    val bggEditError by viewModel.bggEditError.collectAsState()
     val editPlayLoading by viewModel.editPlayLoading.collectAsState()
     val postingPlayId by viewModel.postingPlayId.collectAsState()
     val bggPlaysCacheAgeMinutes by viewModel.bggPlaysCacheAgeMinutes.collectAsState()
@@ -266,6 +267,12 @@ fun HistoryScreen(
         if (bggDeleteError != null) {
             deleteError = bggDeleteError
             viewModel.clearBggDeleteError()
+        }
+    }
+    LaunchedEffect(bggEditError) {
+        if (bggEditError != null) {
+            editError = bggEditError
+            viewModel.clearBggEditError()
         }
     }
     LaunchedEffect(sessionHubAnchor?.sessionId) {

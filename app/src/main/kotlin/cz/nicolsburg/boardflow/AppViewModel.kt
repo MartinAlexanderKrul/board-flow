@@ -117,6 +117,15 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // --- Network ---
     fun isOnline(): Boolean = container.isOnline()
 
+    // --- Session constraints (transient, not persisted) ---
+    private val _timeAvailableMinutes = MutableStateFlow<Int?>(null)
+    val timeAvailableMinutes: StateFlow<Int?> = _timeAvailableMinutes.asStateFlow()
+    private val _complexityCap = MutableStateFlow<Float?>(null)
+    val complexityCap: StateFlow<Float?> = _complexityCap.asStateFlow()
+
+    fun setTimeAvailable(minutes: Int?) { _timeAvailableMinutes.value = minutes }
+    fun setComplexityCap(cap: Float?) { _complexityCap.value = cap }
+
     // --- Game search ---
     private val _recentGames = MutableStateFlow<List<BggGame>>(emptyList())
     private val _allGames = MutableStateFlow<List<BggGame>>(emptyList())
@@ -778,6 +787,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _bggDeleteError = MutableStateFlow<String?>(null)
     val bggDeleteError: StateFlow<String?> = _bggDeleteError.asStateFlow()
     fun clearBggDeleteError() { _bggDeleteError.value = null }
+    private val _bggEditError = MutableStateFlow<String?>(null)
+    val bggEditError: StateFlow<String?> = _bggEditError.asStateFlow()
+    fun clearBggEditError() { _bggEditError.value = null }
     val historyPlays: StateFlow<List<LoggedPlay>> = combine(_playHistory, _bggPlays) { local, remote ->
         mergeHistorySources(local, remote)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -1353,44 +1365,28 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
+        val normalizedPlayers = normalizePlayersForPosting(players)
+        val memory = play.memory
+        val moodText = memory?.moods?.filter { it.isNotBlank() }?.joinToString(", ") ?: ""
+        val quoteText = memory?.quote?.trim() ?: ""
+        val finalComments = buildMemoryComments(comments, moodText, quoteText)
+        val updatedPlay = play.copy(
+            date = date,
+            durationMinutes = durationMinutes,
+            location = location,
+            comments = finalComments,
+            players = normalizedPlayers
+        )
+
+        // Optimistic in-memory update so UI reflects changes immediately.
+        _bggPlays.value = _bggPlays.value.map {
+            if (it.id == play.id || it.signatureKey() == play.signatureKey()) updatedPlay else it
+        }
+        _playHistory.value = _playHistory.value.map { if (it.id == play.id) updatedPlay else it }
+
         viewModelScope.launch {
-            _editPlayLoading.value = true
-            try {
-                val normalizedPlayers = normalizePlayersForPosting(players)
-                val memory = play.memory
-                val moodText = memory?.moods?.filter { it.isNotBlank() }?.joinToString(", ") ?: ""
-                val quoteText = memory?.quote?.trim() ?: ""
-                val finalComments = buildMemoryComments(comments, moodText, quoteText)
-                val updatedPlay = play.copy(
-                    date = date,
-                    durationMinutes = durationMinutes,
-                    location = location,
-                    comments = finalComments,
-                    players = normalizedPlayers
-                )
-                if (play.postedToBgg) {
-                    if (!isOnline()) { onError("No internet connection"); return@launch }
-                    val creds = prefs.getCredentials() ?: run { onError("BGG credentials not set"); return@launch }
-                    container.bggRepository.login(creds).getOrThrow()
-                    val bggPlayId = resolveBggPlayIdForEdit(play) ?: run {
-                        onError("Refresh BGG history before editing this posted play.")
-                        return@launch
-                    }
-                    val savedPlayId = container.bggRepository.logPlay(
-                        gameId = play.gameId,
-                        date = LocalDate.parse(date),
-                        players = normalizedPlayers,
-                        playerBggUsernames = buildBggUsernameMap(normalizedPlayers),
-                        durationMinutes = durationMinutes,
-                        location = location,
-                        comments = finalComments,
-                        quantity = play.quantity,
-                        incomplete = play.incomplete,
-                        nowInStats = play.nowInStats,
-                        playId = bggPlayId
-                    ).getOrThrow()
-                    updateCachedBggPlay(play, updatedPlay.copy(id = savedPlayId ?: bggPlayId, postedToBgg = true))
-                }
+            // Persist to local DB.
+            runCatching {
                 container.canonicalCollectionStore.updateLoggedPlay(play.id) {
                     it.copy(
                         date = date,
@@ -1402,11 +1398,46 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 }
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                 normalizedPlayers.forEach { recordPlayerName(it.name) }
-                onSuccess()
-            } catch (e: Exception) {
+            }.onFailure { e ->
+                // Revert optimistic update on local DB failure.
+                _bggPlays.value = _bggPlays.value.map { if (it.id == updatedPlay.id) play else it }
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                 onError(e.message ?: "Failed to update play")
-            } finally {
-                _editPlayLoading.value = false
+                return@launch
+            }
+
+            onSuccess()
+
+            // BGG sync runs in the background — the dialog is already closed.
+            if (!play.postedToBgg) return@launch
+            if (!isOnline()) {
+                _bggEditError.value = "Play updated locally. Connect to BGG to sync."
+                return@launch
+            }
+            val creds = prefs.getCredentials() ?: run {
+                _bggEditError.value = "BGG credentials not set. Local changes saved."
+                return@launch
+            }
+            runCatching {
+                container.bggRepository.login(creds).getOrThrow()
+                val bggPlayId = resolveBggPlayIdForEdit(play)
+                    ?: throw Exception("Refresh BGG history before editing this posted play.")
+                val savedPlayId = container.bggRepository.logPlay(
+                    gameId = play.gameId,
+                    date = LocalDate.parse(date),
+                    players = normalizedPlayers,
+                    playerBggUsernames = buildBggUsernameMap(normalizedPlayers),
+                    durationMinutes = durationMinutes,
+                    location = location,
+                    comments = finalComments,
+                    quantity = play.quantity,
+                    incomplete = play.incomplete,
+                    nowInStats = play.nowInStats,
+                    playId = bggPlayId
+                ).getOrThrow()
+                updateCachedBggPlay(play, updatedPlay.copy(id = savedPlayId ?: bggPlayId, postedToBgg = true))
+            }.onFailure { e ->
+                _bggEditError.value = e.message ?: "BGG sync failed. Local changes saved."
             }
         }
     }
@@ -1685,6 +1716,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _sessionBannerDismissed.value = false
         _changeGameSession = null
         _changeGameSessionActive.value = false
+        _timeAvailableMinutes.value = null
+        _complexityCap.value = null
         prefs.clearSessionContext()
     }
 
@@ -1850,8 +1883,17 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun getLogPlayRecommendations(): List<RecommendationLane> {
-        val owned = _collectionItems.value.filter { it.isOwned }
-        if (owned.isEmpty()) return emptyList()
+        val allOwned = _collectionItems.value.filter { it.isOwned }
+        if (allOwned.isEmpty()) return emptyList()
+
+        val timeFilter = _timeAvailableMinutes.value
+        val complexityFilter = _complexityCap.value
+
+        val owned = allOwned.filter { item ->
+            val fitsTime = timeFilter == null || item.playingTime == null || item.playingTime!! <= timeFilter
+            val fitsComplexity = complexityFilter == null || item.weight == null || item.weight!! <= complexityFilter
+            fitsTime && fitsComplexity
+        }
 
         val playerCount = _sessionContext.value?.players?.size?.takeIf { it > 0 }
         val groupNames = _sessionContext.value?.players
@@ -1865,7 +1907,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             buildBestForTonightLane(owned, gameById, playerCount)?.let(::add)
             buildGroupFavoritesLane(owned, gameById, groupNames, playerCount)?.let(::add)
             buildNeglectedFavoritesLane(owned, gameById, history, playerCount)?.let(::add)
-            buildQuickOptionLane(owned, gameById, playerCount)?.let(::add)
+            buildQuickOptionLane(owned, gameById, playerCount, timeFilter)?.let(::add)
         }
         return lanes.filter { it.picks.isNotEmpty() }
     }
@@ -1967,21 +2009,25 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private fun buildQuickOptionLane(
         owned: List<GameItem>,
         gameById: Map<Int, BggGame>,
-        playerCount: Int?
+        playerCount: Int?,
+        timeFilter: Int? = null
     ): RecommendationLane? {
+        val ceiling = timeFilter ?: 60
         val picks = owned.mapNotNull { item ->
             val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
             if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
             val time = item.playingTime ?: return@mapNotNull null
-            if (time <= 0 || time > 60) return@mapNotNull null
-            val score = (70 - time).coerceAtLeast(0) / 10.0 + playerCountFitScore(item, playerCount)
+            if (time <= 0 || time > ceiling) return@mapNotNull null
+            val score = (ceiling + 10 - time).coerceAtLeast(0) / 10.0 + playerCountFitScore(item, playerCount)
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
-            ScoredRecommendation(game, score, "Quick to table at about ${time} min")
+            ScoredRecommendation(game, score, "Fits in about $time min")
         }.sortedByDescending { it.score }
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("quick_option", "Quick To Table", "Shorter picks for this group size", picks)
+        val title = if (timeFilter != null) "Fits Your Time" else "Quick To Table"
+        val subtitle = if (timeFilter != null) "Under $timeFilter min for this group" else "Shorter picks for this group size"
+        return RecommendationLane("quick_option", title, subtitle, picks)
     }
 
     private fun scoreGamesForGroup(

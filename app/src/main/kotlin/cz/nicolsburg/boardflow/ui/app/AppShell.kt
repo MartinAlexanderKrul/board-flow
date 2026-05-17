@@ -501,6 +501,16 @@ fun BoardFlowApp(
                     onChooseGame = {
                         appViewModel.enterQuickScanCorrectionMode()
                         navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false)
+                    },
+                    onPickRecommendation = { game ->
+                        if (appViewModel.isOnline()) {
+                            navController.navigate(AppRoutes.scan(game.id, game.name))
+                        } else {
+                            appViewModel.setExtractedPlayManual()
+                            navController.navigate(AppRoutes.LOG_PLAY) {
+                                popUpTo(AppRoutes.LOG_PLAY) { inclusive = true }
+                            }
+                        }
                     }
                 )
             }

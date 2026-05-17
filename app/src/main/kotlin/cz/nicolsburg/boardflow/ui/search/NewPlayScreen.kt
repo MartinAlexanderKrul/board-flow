@@ -255,7 +255,7 @@ fun NewPlayScreen(
                                 end = if (showScrollBar) 20.dp else 0.dp
                             )
                         ) {
-                            if (recommendationLanes.isNotEmpty() && query.isBlank()) {
+                            if (query.isBlank() && (recommendationLanes.isNotEmpty() || collectionItems.any { it.isOwned })) {
                                 item {
                                     RecommendationsSection(
                                         lanes = recommendationLanes,
@@ -357,34 +357,54 @@ private fun RecommendationsSection(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+
         AnimatedVisibility(visible = expanded) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                lanes.forEach { lane ->
+                if (lanes.isEmpty()) {
                     Surface(
                         shape = BoardFlowSurfaceTokens.ContentCardShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f))
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(
-                                    lane.title,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    lane.subtitle,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            lane.picks.forEach { pick ->
-                                RecommendationRow(pick = pick, onClick = { onSelect(pick.game) })
+                            Text(
+                                "No games match your current filters",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                } else {
+                    lanes.forEach { lane ->
+                        Surface(
+                            shape = BoardFlowSurfaceTokens.ContentCardShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f))
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        lane.title,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        lane.subtitle,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                lane.picks.forEach { pick ->
+                                    RecommendationRow(pick = pick, onClick = { onSelect(pick.game) })
+                                }
                             }
                         }
                     }
@@ -393,6 +413,7 @@ private fun RecommendationsSection(
         }
     }
 }
+
 
 @Composable
 private fun RecommendationRow(
