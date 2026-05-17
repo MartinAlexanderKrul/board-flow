@@ -204,6 +204,7 @@ fun HistoryScreen(
     viewModel: AppViewModel,
     onActiveTabChange: (String?) -> Unit = {},
     onPlayAgain: (cz.nicolsburg.boardflow.model.LoggedPlay) -> Unit = {},
+    onPlayAgainSession: (cz.nicolsburg.boardflow.model.SessionHub) -> Unit = {},
     onImportQr: () -> Unit = {}
 ) {
     val historyPlays by viewModel.historyPlays.collectAsState()
@@ -531,9 +532,9 @@ fun HistoryScreen(
                 sessionHubAnchor = null
                 selectedPlay = play
             },
-            onPlayAgain = { play ->
+            onPlayAgain = { session ->
                 sessionHubAnchor = null
-                onPlayAgain(play)
+                onPlayAgainSession(session)
             }
         )
     }

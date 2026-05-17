@@ -56,7 +56,7 @@ fun SessionHubDialog(
     players: List<Player>,
     onDismiss: () -> Unit,
     onOpenPlay: ((LoggedPlay) -> Unit)? = null,
-    onPlayAgain: ((LoggedPlay) -> Unit)? = null
+    onPlayAgain: ((SessionHub) -> Unit)? = null
 ) {
     AnimatedDialog(onDismissRequest = onDismiss) {
         LazyColumn(
@@ -117,21 +117,19 @@ fun SessionHubDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    session.plays.firstOrNull()?.let { latest ->
-                        onPlayAgain?.let { callback ->
-                            BoardFlowTonalButton(
-                                onClick = { callback(latest) },
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.EmojiEvents,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.92f)
-                                )
-                                Spacer(Modifier.width(5.dp))
-                                Text("Play this session again", style = MaterialTheme.typography.labelLarge)
-                            }
+                    onPlayAgain?.let { callback ->
+                        BoardFlowTonalButton(
+                            onClick = { callback(session) },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.EmojiEvents,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.92f)
+                            )
+                            Spacer(Modifier.width(5.dp))
+                            Text("Play this session again", style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }

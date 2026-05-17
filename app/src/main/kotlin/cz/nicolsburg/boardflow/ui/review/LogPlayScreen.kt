@@ -150,6 +150,8 @@ fun LogPlayScreen(
     }
 
     val gameName = viewModel.selectedGame?.name ?: "Unknown game"
+    val headerGameName = if (additionalGames.isEmpty()) gameName
+        else (listOf(gameName) + additionalGames.map { it.name }).joinToString(" + ")
 
     LaunchedEffect(extractedPlay?.date) {
         extractedPlay?.date?.takeIf { it.isNotBlank() }?.let { date = it }
@@ -203,8 +205,6 @@ fun LogPlayScreen(
 
     BackHandler {
         if (postSaveInfo != null) {
-            // Treat back as "Done" from post-save card
-            viewModel.clearSession()
             postSaveInfo = null
             onPosted()
         } else {
@@ -368,7 +368,7 @@ fun LogPlayScreen(
                         }
                     SessionDetailsCard(
                         title = "Log Play",
-                        gameName = gameName,
+                        gameName = headerGameName,
                         detectedGameHint = detectedGameHint,
                         date = date,
                         duration = duration,
@@ -524,7 +524,6 @@ fun LogPlayScreen(
                     onChangeGame()
                 },
                 onDone = {
-                    viewModel.clearSession()
                     postSaveInfo = null
                     onPosted()
                 }
@@ -537,12 +536,12 @@ fun LogPlayScreen(
             session = historyPlays.deriveSessionHub(info.anchorPlay),
             players = rosterPlayers,
             onDismiss = { sessionHubInfo = null; postSaveInfo = null },
-            onPlayAgain = { play ->
-                viewModel.setupPlayAgainFromPlay(play)
+            onPlayAgain = { session ->
+                viewModel.setupPlayAgainFromSession(session.plays)
                 sessionHubInfo = null
                 postSaveInfo = null
                 date = LocalDate.now().toString()
-                location = play.location
+                location = session.plays.firstOrNull()?.location ?: ""
                 duration = ""
                 comments = ""
                 errorMsg = null

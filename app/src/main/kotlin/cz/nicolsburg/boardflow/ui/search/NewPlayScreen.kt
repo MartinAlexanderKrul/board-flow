@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,10 +43,12 @@ import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.SessionContext
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.BorderStroke
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTonalButton
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
@@ -95,6 +98,36 @@ fun NewPlayScreen(
             }
         }
 
+        // Change game notice — same slot and size as the session banner
+        AnimatedVisibility(visible = changeGameActive) {
+            Surface(
+                shape = BoardFlowSurfaceTokens.ContentCardShape,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.SwapHoriz,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+                    )
+                    Text(
+                        "Changing game — players from the last game will be kept",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -117,15 +150,6 @@ fun NewPlayScreen(
                     }
                 }
             )
-
-            AnimatedVisibility(visible = changeGameActive) {
-                Text(
-                    "Changing game — players from last game will be kept",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-                )
-            }
 
             when {
                 loading -> LazyColumn(
@@ -434,47 +458,58 @@ private fun SessionContinueBanner(
     }
 
     Surface(
-        color  = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier.fillMaxWidth()
+        shape = BoardFlowSurfaceTokens.ContentCardShape,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        "Keep this session going?",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        "Continue this session?",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     if (subtitle.isNotBlank()) {
                         Text(
                             subtitle,
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                    BoardFlowCloseGlyph(contentDescription = "Dismiss", modifier = Modifier.size(14.dp), iconSize = 14.dp)
+                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    BoardFlowCloseGlyph(contentDescription = "Dismiss", modifier = Modifier.size(13.dp), iconSize = 13.dp)
                 }
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TextButton(onClick = onPlayAgain) { Text("Play again") }
-                TextButton(onClick = onContinueWithAnotherGame) { Text("Another game") }
-                TextButton(onClick = onStartNew) { Text("Start new") }
+                BoardFlowTonalButton(
+                    onClick = onPlayAgain,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                ) { Text("Play again", style = MaterialTheme.typography.labelLarge) }
+                BoardFlowTonalButton(
+                    onClick = onContinueWithAnotherGame,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                ) { Text("Another game", style = MaterialTheme.typography.labelLarge) }
+                BoardFlowTonalButton(
+                    onClick = onStartNew,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                ) { Text("Start new", style = MaterialTheme.typography.labelLarge) }
             }
         }
     }

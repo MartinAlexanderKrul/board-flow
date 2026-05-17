@@ -378,6 +378,10 @@ fun BoardFlowApp(
                         appViewModel.setupPlayAgainFromPlay(play)
                         navController.navigate(AppRoutes.LOG_PLAY)
                     },
+                    onPlayAgainSession = { session ->
+                        appViewModel.setupPlayAgainFromSession(session.plays)
+                        navController.navigate(AppRoutes.LOG_PLAY)
+                    },
                     onImportQr = {
                         navController.navigate(AppRoutes.QR_IMPORT)
                     }

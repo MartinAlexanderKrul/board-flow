@@ -1580,6 +1580,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             lastPlayTimestamp = lastPlayTimestamp
         )
         _sessionContext.value = ctx
+        _sessionBannerDismissed.value = false
         prefs.saveSessionContext(ctx)
     }
 
@@ -1617,16 +1618,21 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _changeGameSessionActive.value = true
     }
 
-    fun setupPlayAgainFromPlay(play: LoggedPlay) {
-        val game = BggGame(play.gameId, play.gameName, null, null)
-        selectedGame = game
-        _editablePlayers.value = play.players.map { it.copy(score = "0", isWinner = false) }
+    fun setupPlayAgainFromSession(plays: List<LoggedPlay>) {
+        val first = plays.firstOrNull() ?: return
+        val primaryGame = BggGame(first.gameId, first.gameName, null, null)
+        selectedGame = primaryGame
+        _editablePlayers.value = first.players.map { it.copy(score = "0", isWinner = false) }
         _extractedPlay.value = null
-        _additionalGames.value = emptyList()
-        _gameRelations.value = findRelatedGames(game, _allGames.value)
-        _logPlayPrefill = LogPlayPrefill(location = play.location)
+        _additionalGames.value = plays.drop(1)
+            .distinctBy { it.gameId }
+            .map { BggGame(it.gameId, it.gameName, null, null) }
+        _gameRelations.value = findRelatedGames(primaryGame, _allGames.value)
+        _logPlayPrefill = LogPlayPrefill(location = first.location)
         _logPlayHasUnsavedChanges.value = false
     }
+
+    fun setupPlayAgainFromPlay(play: LoggedPlay) = setupPlayAgainFromSession(listOf(play))
 
     fun setupLogPlayById(gameId: Int, gameName: String, thumbnailUrl: String?) {
         val game = BggGame(gameId, gameName, null, thumbnailUrl)
