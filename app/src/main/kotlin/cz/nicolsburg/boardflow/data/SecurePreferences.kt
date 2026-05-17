@@ -7,6 +7,8 @@ import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.GameRecognitionHint
+import cz.nicolsburg.boardflow.model.Challenge
+import cz.nicolsburg.boardflow.model.ChallengeType
 import cz.nicolsburg.boardflow.model.PlayerRecognitionHint
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
@@ -237,6 +239,48 @@ class SecurePreferences(context: Context) {
                     aliases = (0 until aliasArr.length()).map { aliasArr.getString(it) },
                     bggUsername = obj.optString("bggUsername", ""),
                     lastPlayedAt = obj.optLong("lastPlayedAt", 0L).takeIf { it > 0L }
+                )
+            }
+        } catch (e: Exception) { emptyList() }
+    }
+
+    // --- Challenges ---
+    fun saveChallenges(challenges: List<Challenge>) {
+        val json = JSONArray()
+        challenges.forEach { c ->
+            json.put(JSONObject().apply {
+                put("id", c.id)
+                put("title", c.title)
+                put("type", c.type.name)
+                put("targetCount", c.targetCount)
+                c.gameId?.let { put("gameId", it) }
+                c.gameName?.let { put("gameName", it) }
+                c.startDate?.let { put("startDate", it) }
+                c.endDate?.let { put("endDate", it) }
+                put("createdAt", c.createdAt)
+            })
+        }
+        prefs.edit().putString(KEY_CHALLENGES, json.toString()).apply()
+    }
+
+    fun getChallenges(): List<Challenge> {
+        val json = prefs.getString(KEY_CHALLENGES, "[]") ?: "[]"
+        return try {
+            val array = JSONArray(json)
+            (0 until array.length()).mapNotNull { i ->
+                val obj = array.getJSONObject(i)
+                val type = runCatching { ChallengeType.valueOf(obj.getString("type")) }.getOrNull()
+                    ?: return@mapNotNull null
+                Challenge(
+                    id = obj.getString("id"),
+                    title = obj.getString("title"),
+                    type = type,
+                    targetCount = obj.getInt("targetCount"),
+                    gameId = obj.optInt("gameId", -1).takeIf { it > 0 },
+                    gameName = obj.optString("gameName", "").takeIf { it.isNotBlank() },
+                    startDate = obj.optString("startDate", "").takeIf { it.isNotBlank() },
+                    endDate = obj.optString("endDate", "").takeIf { it.isNotBlank() },
+                    createdAt = obj.optLong("createdAt", System.currentTimeMillis())
                 )
             }
         } catch (e: Exception) { emptyList() }
@@ -604,5 +648,6 @@ class SecurePreferences(context: Context) {
         private const val KEY_MOOD_USAGE_ORDER         = "mood_usage_order"
         private const val KEY_CHRONICLE_ENABLED       = "chronicle_enabled"
         private const val KEY_GEMINI_EXTRA_KEYS        = "gemini_api_keys_extra"
+        private const val KEY_CHALLENGES               = "challenges"
     }
 }

@@ -11,6 +11,9 @@ import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
 import cz.nicolsburg.boardflow.data.chronicle.ChronicleAiConfig
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
 import cz.nicolsburg.boardflow.model.BggGame
+import cz.nicolsburg.boardflow.model.Challenge
+import cz.nicolsburg.boardflow.model.ChallengeProgress
+import cz.nicolsburg.boardflow.model.ChallengeType
 import cz.nicolsburg.boardflow.model.ExtractedPlay
 import cz.nicolsburg.boardflow.model.GameCandidate
 import cz.nicolsburg.boardflow.model.GameRecognitionHint
@@ -731,6 +734,44 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun deletePlayer(id: String) { _players.value = _players.value.filter { it.id != id }; prefs.savePlayers(_players.value) }
+
+    // --- Challenges ---
+    private val _challenges = MutableStateFlow<List<Challenge>>(emptyList())
+    val challenges: StateFlow<List<Challenge>> = _challenges.asStateFlow()
+
+    fun loadChallenges() { _challenges.value = prefs.getChallenges() }
+
+    fun addChallenge(challenge: Challenge) {
+        val updated = _challenges.value + challenge
+        _challenges.value = updated
+        prefs.saveChallenges(updated)
+    }
+
+    fun deleteChallenge(id: String) {
+        val updated = _challenges.value.filter { it.id != id }
+        _challenges.value = updated
+        prefs.saveChallenges(updated)
+    }
+
+    fun getChallengeProgressList(): List<ChallengeProgress> {
+        val history = _playHistory.value
+        return _challenges.value.map { challenge ->
+            val plays = history.filter { play ->
+                val afterStart = challenge.startDate == null || play.date >= challenge.startDate
+                val beforeEnd = challenge.endDate == null || play.date <= challenge.endDate
+                afterStart && beforeEnd
+            }
+            val count = when (challenge.type) {
+                ChallengeType.PLAY_N_TIMES ->
+                    plays.sumOf { it.quantity.coerceAtLeast(1) }
+                ChallengeType.PLAY_SPECIFIC_GAME ->
+                    plays.filter { it.gameId == challenge.gameId }.sumOf { it.quantity.coerceAtLeast(1) }
+                ChallengeType.PLAY_N_DISTINCT ->
+                    plays.map { it.gameId }.distinct().size
+            }
+            ChallengeProgress(challenge, count)
+        }
+    }
 
     private fun stampPlayerLastPlayed(players: List<PlayerResult>, playedAt: Long) {
         val names = players.map { it.name.trim().lowercase() }.filter { it.isNotBlank() }.toSet()

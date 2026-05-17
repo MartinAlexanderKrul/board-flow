@@ -469,6 +469,33 @@ sealed class ScanRecognitionResult {
     object LowConfidence : ScanRecognitionResult()
 }
 
+enum class ChallengeType(val label: String) {
+    PLAY_N_TIMES("Play N plays"),
+    PLAY_SPECIFIC_GAME("Play a game N times"),
+    PLAY_N_DISTINCT("Play N different games")
+}
+
+data class Challenge(
+    val id: String,
+    val title: String,
+    val type: ChallengeType,
+    val targetCount: Int,
+    val gameId: Int? = null,
+    val gameName: String? = null,
+    val startDate: String? = null,
+    val endDate: String? = null,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+data class ChallengeProgress(
+    val challenge: Challenge,
+    val currentCount: Int
+) {
+    val isComplete: Boolean get() = currentCount >= challenge.targetCount
+    val fraction: Float
+        get() = (currentCount.toFloat() / challenge.targetCount.coerceAtLeast(1)).coerceIn(0f, 1f)
+}
+
 data class LogPlayPrefill(
     val location: String,
     val durationSuggestion: String = ""

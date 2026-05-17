@@ -13,6 +13,7 @@ object AppRoutes {
     const val QR_IMPORT = "qr_import"
     const val PLAY_IMPORT = "play_import?data={data}"
     const val LOG_PLAY = "log_play"
+    const val CHALLENGES = "challenges"
 
     fun scan(gameId: Int, gameName: String): String =
         "scan/$gameId/${URLEncoder.encode(gameName, "UTF-8")}"

@@ -74,6 +74,7 @@ import cz.nicolsburg.boardflow.ui.history.QrPlayImportScreen
 import cz.nicolsburg.boardflow.ui.review.LogPlayScreen
 import cz.nicolsburg.boardflow.ui.scan.ScanScreen
 import cz.nicolsburg.boardflow.ui.search.NewPlayScreen
+import cz.nicolsburg.boardflow.ui.challenges.ChallengesScreen
 import cz.nicolsburg.boardflow.ui.settings.SettingsScreen
 import cz.nicolsburg.boardflow.ui.sync.SyncScreen
 
@@ -128,6 +129,7 @@ fun BoardFlowApp(
         appViewModel.loadCachedBggPlays()
         appViewModel.loadSessionContext()
         appViewModel.loadPlayers()
+        appViewModel.loadChallenges()
     }
 
     LaunchedEffect(account?.name, spreadsheetId, hasBggCredentials) {
@@ -235,6 +237,7 @@ fun BoardFlowApp(
         currentRoute == AppRoutes.COLLECTION -> activeTabLabel ?: "My Collection"
         currentRoute == AppRoutes.SYNC -> "Sync to Sheets"
         currentRoute == AppRoutes.SETTINGS -> activeTabLabel ?: "Settings"
+        currentRoute == AppRoutes.CHALLENGES -> "Challenges"
         isScan || isReview -> selectedGameName
         else -> ""
     }
@@ -367,6 +370,13 @@ fun BoardFlowApp(
                         appViewModel.exitQuickScanCorrectionMode()
                         val game = appViewModel.selectedGame
                         navController.navigate(AppRoutes.scan(game?.id ?: 0, game?.name ?: ""))
+                    },
+                    onOpenChallenges = {
+                        navController.navigate(AppRoutes.CHALLENGES) {
+                            popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }
@@ -467,6 +477,10 @@ fun BoardFlowApp(
                     onSignOut = onRequestSignOut,
                     onActiveTabChange = { activeTabLabel = it }
                 )
+            }
+
+            composable(AppRoutes.CHALLENGES) {
+                ChallengesScreen(viewModel = appViewModel)
             }
 
             composable(
