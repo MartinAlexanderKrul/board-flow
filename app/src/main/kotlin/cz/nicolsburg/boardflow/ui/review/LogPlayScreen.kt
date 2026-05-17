@@ -135,6 +135,11 @@ fun LogPlayScreen(
     var lastPostSaveInfo by remember { mutableStateOf<PostSaveInfo?>(null) }
     if (postSaveInfo != null) lastPostSaveInfo = postSaveInfo
     var sessionHubInfo by remember { mutableStateOf<PostSaveInfo?>(null) }
+    var sessionHubTitle by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(sessionHubInfo?.anchorPlay?.sessionId) {
+        sessionHubTitle = viewModel.getSessionTitle(sessionHubInfo?.anchorPlay?.sessionId)
+    }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -557,9 +562,16 @@ fun LogPlayScreen(
 
     sessionHubInfo?.let { info ->
         SessionHubDialog(
-            session = historyPlays.deriveSessionHub(info.anchorPlay),
+            session = historyPlays.deriveSessionHub(info.anchorPlay, sessionHubTitle),
             players = rosterPlayers,
             onDismiss = { sessionHubInfo = null; postSaveInfo = null },
+            onRenameSession = { sessionId, title ->
+                viewModel.renameSession(
+                    sessionId = sessionId,
+                    newTitle = title,
+                    onSuccess = { savedTitle -> sessionHubTitle = savedTitle.ifBlank { null } }
+                )
+            },
             onPlayAgain = { session ->
                 viewModel.setupPlayAgainFromSession(session.plays)
                 sessionHubInfo = null

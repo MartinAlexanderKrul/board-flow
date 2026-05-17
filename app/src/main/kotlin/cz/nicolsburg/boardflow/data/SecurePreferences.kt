@@ -258,6 +258,7 @@ class SecurePreferences(context: Context) {
             put("gameId", ctx.gameId)
             put("gameName", ctx.gameName)
             put("location", ctx.location)
+            put("title", ctx.title)
             put("startedAt", ctx.startedAt)
             put("lastPlayTimestamp", ctx.lastPlayTimestamp)
             put("players", playersArr)
@@ -287,6 +288,7 @@ class SecurePreferences(context: Context) {
                 gameName          = json.getString("gameName"),
                 players           = players,
                 location          = json.optString("location", ""),
+                title             = json.optString("title", ""),
                 startedAt         = json.optLong("startedAt", json.optLong("lastPlayTimestamp", System.currentTimeMillis())),
                 lastPlayTimestamp = json.optLong("lastPlayTimestamp", System.currentTimeMillis())
             )

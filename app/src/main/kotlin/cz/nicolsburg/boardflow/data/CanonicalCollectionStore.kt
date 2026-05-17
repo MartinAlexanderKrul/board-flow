@@ -62,6 +62,9 @@ class CanonicalCollectionStore private constructor(
     suspend fun getRecentPlaySession(windowStartAt: Long): PlaySession? =
         dao.getRecentPlaySession(windowStartAt)?.toModel()
 
+    suspend fun getPlaySession(sessionId: String): PlaySession? =
+        dao.getPlaySession(sessionId)?.toModel()
+
     suspend fun savePlaySession(session: PlaySession) {
         dao.upsertPlaySession(PlaySessionEntity.fromModel(session))
     }
@@ -158,7 +161,7 @@ class CanonicalCollectionStore private constructor(
                         CanonicalCollectionDatabase::class.java,
                         "boardflow_collection.db"
                     )
-                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                         .build()
                 ).also { INSTANCE = it }
             }
@@ -191,6 +194,9 @@ private interface CanonicalCollectionDao {
 
     @Query("SELECT * FROM play_sessions WHERE endedAt >= :windowStartAt ORDER BY endedAt DESC LIMIT 1")
     suspend fun getRecentPlaySession(windowStartAt: Long): PlaySessionEntity?
+
+    @Query("SELECT * FROM play_sessions WHERE id = :sessionId LIMIT 1")
+    suspend fun getPlaySession(sessionId: String): PlaySessionEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertPlaySession(session: PlaySessionEntity)
@@ -243,7 +249,7 @@ private interface CanonicalCollectionDao {
 
 @Database(
     entities = [CanonicalGameEntity::class, LoggedPlayEntity::class, BggCachedPlayEntity::class, StoreMetadataEntity::class, PlayMemoryEntity::class, PlaySessionEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(CanonicalCollectionConverters::class)
@@ -263,14 +269,16 @@ private data class PlaySessionEntity(
     val startedAt: Long,
     val endedAt: Long,
     val sessionDate: String,
-    val location: String
+    val location: String,
+    val title: String = ""
 ) {
     fun toModel(): PlaySession = PlaySession(
         id = id,
         startedAt = startedAt,
         endedAt = endedAt,
         sessionDate = sessionDate,
-        location = location
+        location = location,
+        title = title
     )
 
     companion object {
@@ -279,8 +287,15 @@ private data class PlaySessionEntity(
             startedAt = session.startedAt,
             endedAt = session.endedAt,
             sessionDate = session.sessionDate,
-            location = session.location
+            location = session.location,
+            title = session.title
         )
+    }
+}
+
+private val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `play_sessions` ADD COLUMN `title` TEXT NOT NULL DEFAULT ''")
     }
 }
 

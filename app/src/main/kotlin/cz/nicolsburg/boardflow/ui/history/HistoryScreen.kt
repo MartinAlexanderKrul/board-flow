@@ -256,6 +256,7 @@ fun HistoryScreen(
     var playToDelete by remember { mutableStateOf<LoggedPlay?>(null) }
     var selectedPlay by remember { mutableStateOf<LoggedPlay?>(null) }
     var sessionHubAnchor by remember { mutableStateOf<LoggedPlay?>(null) }
+    var sessionHubTitle by remember { mutableStateOf<String?>(null) }
     var selectedGame by remember { mutableStateOf<GameItem?>(null) }
     var editingPlay by remember { mutableStateOf<LoggedPlay?>(null) }
     var playToShare by remember { mutableStateOf<LoggedPlay?>(null) }
@@ -266,6 +267,9 @@ fun HistoryScreen(
             deleteError = bggDeleteError
             viewModel.clearBggDeleteError()
         }
+    }
+    LaunchedEffect(sessionHubAnchor?.sessionId) {
+        sessionHubTitle = viewModel.getSessionTitle(sessionHubAnchor?.sessionId)
     }
     var navHistory by remember { mutableStateOf(listOf<HistoryNavState>()) }
     var restoredViewingPlayerId by remember { mutableStateOf<String?>(null) }
@@ -532,9 +536,16 @@ fun HistoryScreen(
 
     sessionHubAnchor?.let { anchor ->
         SessionHubDialog(
-            session = historyPlays.deriveSessionHub(anchor),
+            session = historyPlays.deriveSessionHub(anchor, sessionHubTitle),
             players = players,
             onDismiss = { sessionHubAnchor = null },
+            onRenameSession = { sessionId, title ->
+                viewModel.renameSession(
+                    sessionId = sessionId,
+                    newTitle = title,
+                    onSuccess = { savedTitle -> sessionHubTitle = savedTitle.ifBlank { null } }
+                )
+            },
             onOpenPlay = { play ->
                 sessionHubAnchor = null
                 selectedPlay = play
@@ -1679,16 +1690,14 @@ private fun PlayDetailsDialog(
                     }
                 }
 
-                if (sessionHub.plays.size > 1 || sessionHub.totalLoggedPlays > 1 || hasMemoryInput || chronicle != null) {
-                    item {
-                        SessionHubPreviewCard(
-                            sessionHub = sessionHub,
-                            memory = memory,
-                            chronicle = chronicle,
-                            isChroniclePending = chronicleEnabled && hasMemoryInput && isChroniclePending,
-                            onClick = onOpenSessionHub
-                        )
-                    }
+                item {
+                    SessionHubPreviewCard(
+                        sessionHub = sessionHub,
+                        memory = memory,
+                        chronicle = chronicle,
+                        isChroniclePending = chronicleEnabled && hasMemoryInput && isChroniclePending,
+                        onClick = onOpenSessionHub
+                    )
                 }
 
                 item {

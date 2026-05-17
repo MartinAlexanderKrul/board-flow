@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
@@ -29,9 +31,17 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,9 +65,15 @@ fun SessionHubDialog(
     session: SessionHub,
     players: List<Player>,
     onDismiss: () -> Unit,
+    onRenameSession: ((sessionId: String, title: String) -> Unit)? = null,
     onOpenPlay: ((LoggedPlay) -> Unit)? = null,
     onPlayAgain: ((SessionHub) -> Unit)? = null
 ) {
+    var isEditingTitle by remember(session.sessionId) { mutableStateOf(false) }
+    var draftTitle by remember(session.sessionId, session.title) { mutableStateOf(session.title.orEmpty()) }
+    LaunchedEffect(session.title) {
+        if (!isEditingTitle) draftTitle = session.title.orEmpty()
+    }
     AnimatedDialog(onDismissRequest = onDismiss) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
@@ -71,11 +87,73 @@ fun SessionHubDialog(
                         .padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        buildSessionTitle(session),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    if (isEditingTitle && session.sessionId != null && onRenameSession != null) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                value = draftTitle,
+                                onValueChange = { draftTitle = it.take(48) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                label = { Text("Session title") },
+                                placeholder = { Text(buildSessionTitle(session)) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f),
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent
+                                )
+                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TextButton(onClick = {
+                                    isEditingTitle = false
+                                    draftTitle = session.title.orEmpty()
+                                }) {
+                                    Text("Cancel")
+                                }
+                                BoardFlowTonalButton(onClick = {
+                                    onRenameSession(session.sessionId, draftTitle)
+                                    isEditingTitle = false
+                                }) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
+                                    )
+                                    Spacer(Modifier.width(5.dp))
+                                    Text("Save title", style = MaterialTheme.typography.labelLarge)
+                                }
+                            }
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                buildSessionTitle(session),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (session.sessionId != null && onRenameSession != null) {
+                                TextButton(onClick = { isEditingTitle = true }) {
+                                    Icon(
+                                        Icons.Default.Edit,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(15.dp),
+                                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Edit")
+                                }
+                            }
+                        }
+                    }
                     Text(
                         buildSessionSubtitle(session),
                         style = MaterialTheme.typography.bodySmall,
@@ -385,7 +463,7 @@ private fun SummaryRow(label: String, value: String) {
 }
 
 private fun buildSessionTitle(session: SessionHub): String =
-    runCatching {
+    session.title?.takeIf { it.isNotBlank() } ?: runCatching {
         val dow = LocalDate.parse(session.date).dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
         "${dow}'s session"
     }.getOrDefault("Session")

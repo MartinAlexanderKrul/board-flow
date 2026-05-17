@@ -77,7 +77,8 @@ data class PlaySession(
     val startedAt: Long,
     val endedAt: Long,
     val sessionDate: String,
-    val location: String
+    val location: String,
+    val title: String = ""
 )
 
 data class SessionHubWinner(
@@ -87,6 +88,8 @@ data class SessionHubWinner(
 
 data class SessionHub(
     val anchorPlayId: String,
+    val sessionId: String?,
+    val title: String?,
     val date: String,
     val location: String,
     val plays: List<LoggedPlay>,
@@ -102,7 +105,7 @@ data class SessionHub(
         get() = plays.firstOrNull { it.id == anchorPlayId } ?: plays.first()
 }
 
-fun List<LoggedPlay>.deriveSessionHub(anchor: LoggedPlay): SessionHub {
+fun List<LoggedPlay>.deriveSessionHub(anchor: LoggedPlay, sessionTitle: String? = null): SessionHub {
     val explicitSessionId = anchor.sessionId?.takeIf { it.isNotBlank() }
     val anchorDate = anchor.date
     val anchorLocation = anchor.location.normalizeSessionLocation()
@@ -155,6 +158,8 @@ fun List<LoggedPlay>.deriveSessionHub(anchor: LoggedPlay): SessionHub {
 
     return SessionHub(
         anchorPlayId = anchor.id,
+        sessionId = explicitSessionId,
+        title = sessionTitle?.trim()?.ifBlank { null },
         date = anchorDate,
         location = anchor.location.trim(),
         plays = sessionPlays,
@@ -373,6 +378,7 @@ data class SessionContext(
     val gameName: String,
     val players: List<PlayerResult>,
     val location: String,
+    val title: String = "",
     val startedAt: Long,
     val lastPlayTimestamp: Long
 ) {

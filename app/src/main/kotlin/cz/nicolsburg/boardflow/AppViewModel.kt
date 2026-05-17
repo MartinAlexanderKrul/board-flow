@@ -784,6 +784,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             _bggPlaysLoading.value = true; _bggPlaysError.value = null
             cz.nicolsburg.boardflow.data.refreshBggPlayCache(prefs, container.canonicalCollectionStore, container.bggRepository)
                 .onSuccess { rawPlays ->
+                    val reconciled = reconcileSessionMetadataForRemote(rawPlays)
+                    container.canonicalCollectionStore.saveBggPlaysCache(reconciled)
                     val withMemory = container.canonicalCollectionStore.getBggPlaysCache()
                     _bggPlays.value = mergeBggPlayLists(withMemory)
                     reconcilePendingLocalPlays(_bggPlays.value)
@@ -798,9 +800,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun loadCachedBggPlays() {
         viewModelScope.launch {
             val cached = container.canonicalCollectionStore.getBggPlaysCache()
+            val reconciled = reconcileSessionMetadataForRemote(cached)
+            if (reconciled != cached) {
+                container.canonicalCollectionStore.saveBggPlaysCache(reconciled)
+            }
             _bggPlaysCacheAgeMinutes.value = container.canonicalCollectionStore.getBggPlaysCacheAgeMinutes()
-            if (cached.isNotEmpty()) {
-                _bggPlays.value = mergeBggPlayLists(_bggPlays.value, cached)
+            if (reconciled.isNotEmpty()) {
+                _bggPlays.value = mergeBggPlayLists(_bggPlays.value, reconciled)
                 reconcilePendingLocalPlays(_bggPlays.value)
             }
         }
@@ -814,10 +820,51 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private fun addOptimisticBggPlays(plays: List<LoggedPlay>) {
         if (plays.isEmpty()) return
         viewModelScope.launch {
-            _bggPlays.value = mergeBggPlayLists(plays, _bggPlays.value)
+            val reconciled = reconcileSessionMetadataForRemote(plays)
+            _bggPlays.value = mergeBggPlayLists(reconciled, _bggPlays.value)
             container.canonicalCollectionStore.saveBggPlaysCache(_bggPlays.value)
             reconcilePendingLocalPlays(_bggPlays.value)
             _bggPlaysCacheAgeMinutes.value = 0L
+        }
+    }
+
+    private suspend fun reconcileSessionMetadataForRemote(remote: List<LoggedPlay>): List<LoggedPlay> {
+        if (remote.isEmpty()) return remote
+        val localKnown = container.canonicalCollectionStore.getLoggedPlays()
+            .filter { !it.sessionId.isNullOrBlank() || it.playedAt != null }
+        val cachedKnown = container.canonicalCollectionStore.getBggPlaysCache()
+            .filter { !it.sessionId.isNullOrBlank() || it.playedAt != null }
+        val inMemoryKnown = _bggPlays.value.filter { !it.sessionId.isNullOrBlank() || it.playedAt != null }
+        val known = (localKnown + cachedKnown + inMemoryKnown)
+            .distinctBy { "${it.id}||${it.signatureKey()}" }
+
+        if (known.isEmpty()) return remote
+
+        val signatureMatches = known.groupBy { it.signatureKey() }
+        val correlationMatches = known.groupBy { it.historyCorrelationKey() }
+
+        fun preferredCandidate(candidates: List<LoggedPlay>): LoggedPlay? =
+            candidates.maxWithOrNull(
+                compareBy<LoggedPlay>(
+                    { if (!it.sessionId.isNullOrBlank()) 1 else 0 },
+                    { if (it.playedAt != null) 1 else 0 },
+                    { if (it.postedToBgg) 1 else 0 },
+                    { if (!it.id.isLikelyLocalUuid()) 1 else 0 }
+                )
+            )
+
+        return remote.map { play ->
+            val candidate = preferredCandidate(signatureMatches[play.signatureKey()].orEmpty())
+                ?: preferredCandidate(correlationMatches[play.historyCorrelationKey()].orEmpty())
+                ?: return@map play
+            if (play.sessionId == candidate.sessionId && play.playedAt == candidate.playedAt) {
+                play
+            } else {
+                play.copy(
+                    sessionId = play.sessionId ?: candidate.sessionId,
+                    playedAt = play.playedAt ?: candidate.playedAt
+                )
+            }
         }
     }
 
@@ -861,7 +908,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _playHistory.value = _playHistory.value.filter { local ->
             local.id != playId && (deletedPlay == null || local.signatureKey() != deletedPlay.signatureKey())
         }
-        clearActiveSessionIfAny()
+        clearActiveSessionIfMatchingPlay(deletedPlay)
         onSuccess()
 
         viewModelScope.launch {
@@ -887,7 +934,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     container.bggRepository.getPlays(username)
                         .onSuccess { refreshed ->
                             if (!refreshed.any { it.id == playId }) {
-                                container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+                                val reconciled = reconcileSessionMetadataForRemote(refreshed)
+                                container.canonicalCollectionStore.saveBggPlaysCache(reconciled)
                                 _bggPlays.value = container.canonicalCollectionStore.getBggPlaysCache()
                                 removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
                                 pruneLocalPlaysDeletedOnBgg(refreshed)
@@ -904,7 +952,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             // Delete accepted — refresh cache and clean up local DB copies.
             container.bggRepository.getPlays(username)
                 .onSuccess { refreshed ->
-                    container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+                    val reconciled = reconcileSessionMetadataForRemote(refreshed)
+                    container.canonicalCollectionStore.saveBggPlaysCache(reconciled)
                     _bggPlays.value = container.canonicalCollectionStore.getBggPlaysCache()
                     removeLocalCopyOfDeletedBggPlay(playId, deletedPlay)
                     pruneLocalPlaysDeletedOnBgg(refreshed)
@@ -1079,16 +1128,21 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun deleteLocalPlay(playId: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
             runCatching {
+                val deletedPlay = container.canonicalCollectionStore.getLoggedPlays().firstOrNull { it.id == playId }
                 container.canonicalCollectionStore.deleteLoggedPlay(playId)
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
-                clearActiveSessionIfAny()
+                clearActiveSessionIfMatchingPlay(deletedPlay)
             }.onSuccess { onSuccess() }
                 .onFailure { onError(it.message ?: "Failed to delete local play") }
         }
     }
 
-    private fun clearActiveSessionIfAny() {
-        if (_sessionContext.value != null) clearSession()
+    private fun clearActiveSessionIfMatchingPlay(play: LoggedPlay?) {
+        val activeSessionId = _sessionContext.value?.sessionId?.takeIf { it.isNotBlank() } ?: return
+        val deletedSessionId = play?.sessionId?.takeIf { it.isNotBlank() } ?: return
+        if (activeSessionId == deletedSessionId) {
+            clearSession()
+        }
     }
 
     private suspend fun removeLocalCopyOfDeletedBggPlay(playId: String, deletedPlay: LoggedPlay?) {
@@ -1156,7 +1210,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         )
                     )
                 }
-                saveSession(session.id, session.startedAt, game, playersSnapshot, location, playedAt)
+                saveSession(session.id, session.startedAt, game, playersSnapshot, location, playedAt, session.title)
                 prefs.addRecentGame(game)
                 _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                 savePlayerHintsFromCurrentPlay()
@@ -1241,7 +1295,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                             }
                     }
                     _additionalGames.value = emptyList()
-                    saveSession(session.id, session.startedAt, game, normalizedPlayers, location, playedAt)
+                    saveSession(session.id, session.startedAt, game, normalizedPlayers, location, playedAt, session.title)
                     prefs.addRecentGame(game)
                     _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
                     addOptimisticBggPlays(postedPlays)
@@ -1266,7 +1320,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             startedAt = startedAt,
             endedAt = playedAt,
             sessionDate = date.toString(),
-            location = location
+            location = location,
+            title = activeContext?.title.orEmpty()
         )
         container.canonicalCollectionStore.savePlaySession(session)
         return session
@@ -1366,7 +1421,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
         val refreshed = container.bggRepository.getPlays(username).getOrNull() ?: return null
         if (refreshed.isNotEmpty()) {
-            container.canonicalCollectionStore.saveBggPlaysCache(refreshed)
+            val reconciled = reconcileSessionMetadataForRemote(refreshed)
+            container.canonicalCollectionStore.saveBggPlaysCache(reconciled)
             val withMemory = container.canonicalCollectionStore.getBggPlaysCache()
             _bggPlays.value = mergeBggPlayLists(withMemory, _bggPlays.value)
             _bggPlaysCacheAgeMinutes.value = 0L
@@ -1387,8 +1443,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             it.id == originalPlay.id || it.signatureKey() == originalSignature
         }
         val merged = mergeBggPlayLists(listOf(updatedPlay), remoteWithoutOriginal, cachedWithoutOriginal)
-        _bggPlays.value = merged
-        container.canonicalCollectionStore.saveBggPlaysCache(merged)
+        val reconciled = reconcileSessionMetadataForRemote(merged)
+        _bggPlays.value = reconciled
+        container.canonicalCollectionStore.saveBggPlaysCache(reconciled)
         _bggPlaysCacheAgeMinutes.value = 0L
     }
 
@@ -1582,19 +1639,42 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _sessionContext.value = if (ctx != null && ctx.isActive()) ctx else null
     }
 
-    fun saveSession(sessionId: String, sessionStartedAt: Long, game: BggGame, players: List<PlayerResult>, location: String, lastPlayTimestamp: Long = System.currentTimeMillis()) {
+    fun saveSession(sessionId: String, sessionStartedAt: Long, game: BggGame, players: List<PlayerResult>, location: String, lastPlayTimestamp: Long = System.currentTimeMillis(), title: String = "") {
         val ctx = SessionContext(
             sessionId          = sessionId,
             gameId            = game.id,
             gameName          = game.name,
             players           = players,
             location          = location,
+            title             = title,
             startedAt         = sessionStartedAt,
             lastPlayTimestamp = lastPlayTimestamp
         )
         _sessionContext.value = ctx
         _sessionBannerDismissed.value = false
         prefs.saveSessionContext(ctx)
+    }
+
+    suspend fun getSessionTitle(sessionId: String?): String? {
+        if (sessionId.isNullOrBlank()) return null
+        return container.canonicalCollectionStore.getPlaySession(sessionId)?.title?.trim()?.ifBlank { null }
+    }
+
+    fun renameSession(sessionId: String, newTitle: String, onSuccess: (String) -> Unit = {}, onError: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            runCatching {
+                val session = container.canonicalCollectionStore.getPlaySession(sessionId)
+                    ?: throw IllegalStateException("Session not found")
+                val trimmed = newTitle.trim()
+                container.canonicalCollectionStore.savePlaySession(session.copy(title = trimmed))
+                if (_sessionContext.value?.sessionId == sessionId) {
+                    _sessionContext.value = _sessionContext.value?.copy(title = trimmed)
+                    _sessionContext.value?.let { prefs.saveSessionContext(it) }
+                }
+                trimmed
+            }.onSuccess(onSuccess)
+                .onFailure { onError(it.message ?: "Failed to rename session") }
+        }
     }
 
     fun clearSession() {
