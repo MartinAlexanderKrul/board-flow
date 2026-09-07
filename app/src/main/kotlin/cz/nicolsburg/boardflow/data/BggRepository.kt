@@ -497,8 +497,14 @@ class BggRepository {
      * break without notice. Requires a prior [login].
      *
      * Pass the [collectionId] (BGG's `collid`, see [getCollectionId]) for a game already in
-     * the collection; without it BGG creates a new entry. Clearing every flag removes the
-     * game from the collection.
+     * the collection; without it BGG creates a new entry.
+     *
+     * Clearing every flag does NOT remove the game: verified against a live account, the entry
+     * survives with every flag set to 0. Use [deleteCollectionEntry] to remove it.
+     *
+     * Returns the entry's `collid`, but only the one passed in: a successful save answers with
+     * an HTML fragment of the new status labels that carries no id, so a freshly created entry
+     * returns null and has to be re-resolved with [getCollectionId].
      */
     suspend fun setCollectionStatus(
         gameId: Int,
@@ -542,6 +548,38 @@ class BggRepository {
         }
     }
 
+    /**
+     * Removes a collection entry outright. Clearing every status flag only zeroes the entry and
+     * leaves it in the collection, so removal needs this separate `action=delete` call.
+     * Requires a prior [login] and the entry's [collectionId] (see [getCollectionId]).
+     *
+     * A successful delete answers with HTTP 200 and an empty body.
+     */
+    suspend fun deleteCollectionEntry(gameId: Int, collectionId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching<Unit> {
+            require(gameId > 0) { "Invalid game id: $gameId" }
+            require(collectionId.isNotBlank()) { "A collection entry id is required to remove an entry" }
+            val formBody = FormBody.Builder()
+                .add("ajax", "1")
+                .add("action", "delete")
+                .add("objecttype", "thing")
+                .add("objectid", gameId.toString())
+                .add("collid", collectionId)
+                .build()
+            val request = Request.Builder()
+                .url("https://boardgamegeek.com/geekcollection.php")
+                .post(formBody)
+                .addHeader("Referer", "https://boardgamegeek.com/boardgame/$gameId")
+                .addHeader("X-Requested-With", "XMLHttpRequest")
+                .build()
+            val response = client.newCall(request).execute()
+            val body = response.body?.string().orEmpty()
+            if (!response.isSuccessful) throw Exception("Failed to remove collection entry: HTTP ${response.code}")
+            extractCollectionError(body)?.let { throw Exception("BGG rejected collection removal: $it") }
+            Log.i(TAG, "Collection entry removed: gameId=$gameId collid=$collectionId")
+        }
+    }
+
     /** Looks up BGG's `collid` for a game already in [username]'s collection, or null if absent. */
     suspend fun getCollectionId(username: String, gameId: Int): Result<String?> = withContext(Dispatchers.IO) {
         runCatching {
@@ -553,12 +591,18 @@ class BggRepository {
                 val response = client.newCall(Request.Builder().url(url).build()).execute()
                 val body = response.body?.string().orEmpty()
                 when (response.code) {
-                    200 -> return@runCatching parseCollectionId(body)
+                    // A failed lookup must not fall through as "no collid": that would make
+                    // setCollectionStatus create a duplicate entry instead of updating.
+                    200 -> {
+                        extractXmlApiError(body)?.let { throw Exception("Failed to look up collection entry: $it") }
+                        return@runCatching parseCollectionId(body)
+                    }
                     202 -> if (attempt < maxAttempts - 1) {
                         kotlinx.coroutines.delay(2000)
                     } else {
                         throw Exception("Collection still processing. Please try again in a moment.")
                     }
+                    401 -> throw Exception("Cannot read collection for '$username'. Please check your BGG credentials in Settings.")
                     else -> throw Exception("Failed to look up collection entry: HTTP ${response.code}")
                 }
             }
@@ -566,10 +610,33 @@ class BggRepository {
         }
     }
 
+    private val MESSAGEBOX_ERROR = "messagebox error"
+
     private fun Boolean.asBggFlag(): String = if (this) "1" else "0"
+
+    /** BGG answers some bad collection queries with HTTP 200 and an `<errors>` document. */
+    private fun extractXmlApiError(xml: String): String? {
+        if (!xml.contains("<errors")) return null
+        return Regex("<message>(.*?)</message>", RegexOption.DOT_MATCHES_ALL)
+            .find(xml)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotBlank() }
+            ?: "unknown error"
+    }
 
     private fun extractCollectionError(body: String): String? {
         val trimmed = body.trim()
+        // geekcollection.php reports failures as HTTP 200 with an HTML error box rather than
+        // an error status, e.g. "You must login to use the collection utilities." for an
+        // expired session, so a successful HTTP call is not on its own a successful write.
+        if (trimmed.contains(MESSAGEBOX_ERROR, ignoreCase = true)) {
+            val message = Regex(
+                """<div[^>]*class=['"][^'"]*messagebox error[^'"]*['"][^>]*>(.*?)</div>""",
+                setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
+            ).find(trimmed)?.groupValues?.get(1)
+                ?.replace(Regex("<[^>]+>"), "")
+                ?.replace(Regex("""\s+"""), " ")
+                ?.trim()
+            return message?.takeIf { it.isNotBlank() } ?: "collection update was rejected"
+        }
         if (!trimmed.startsWith("{")) return null
         val json = runCatching { JSONObject(trimmed) }.getOrNull() ?: return null
         return sequenceOf("error", "errors", "message")

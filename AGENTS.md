@@ -454,7 +454,13 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - search covers `type=boardgame,boardgameexpansion` so expansions appear alongside base games in external search results
 - the BGG XML API is read-only for collections; `BggRepository.setCollectionStatus` posts to the undocumented `geekcollection.php` endpoint the website's own status checkboxes use (same endpoint family as `rateGame`), so it can break without notice
 - collection writes need the entry's `collid` (`BggRepository.getCollectionId`) or BGG creates a duplicate entry instead of updating the existing one
-- `scripts/bgg_collection_probe.py` verifies that endpoint against a real account (dry run by default); the write path is unverified until someone runs it
+- `geekcollection.php` reports failures as HTTP 200 with an HTML `messagebox error` div (an expired session gives "You must login to use the collection utilities."), so a 2xx alone does not mean the write landed - `extractCollectionError` checks for that box
+- xmlapi2 collection reads need a logged-in session: real usernames return 401 unauthenticated, while an unknown username returns HTTP 200 with an `<errors>` document, so `getCollectionId` treats both as failures rather than "no collid" (a null collid would create a duplicate entry)
+- the write path is confirmed against a live account: `action=savedata` with an empty `collid` created a new entry and the flag showed up in the XML API
+- a successful save answers with an HTML fragment of the new status labels (e.g. `<div class='wanttoplay'>Want To Play</div>`), NOT JSON and with no `collid`, so `setCollectionStatus` returns null for a newly created entry - re-resolve it with `getCollectionId`
+- clearing every status flag does NOT delete a collection entry (verified): it stays with all flags 0. Removal is a separate `action=delete` post with the `collid` (`BggRepository.deleteCollectionEntry`), which answers HTTP 200 with an empty body
+- the eight status flags map to BGG's own checkbox labels as: `own`=Own, `prevowned`=Prev. Owned, `fortrade`=For Trade, `wanttoplay`=Want to Play, `want`=Want in Trade, `wanttobuy`=Want to Buy, `preordered`=Pre-ordered, `wishlist`=Wishlist - note `want` is "Want in Trade", not a general want (see the table on `BggCollectionStatus`)
+- `scripts/bgg_collection_probe.py` exercises all of the above against a real account (dry run by default)
 
 ## History / Roster Notes
 
