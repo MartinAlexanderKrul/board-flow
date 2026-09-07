@@ -129,6 +129,7 @@ fun BoardFlowApp(
     val logPlayHasUnsavedChanges by appViewModel.logPlayHasUnsavedChanges.collectAsState()
     val activeTimer by appViewModel.activeTimer.collectAsState()
     val personalRatings by appViewModel.personalRatings.collectAsState()
+    val collectionStatus by appViewModel.collectionStatus.collectAsState()
     val logPlayPostSaveShowing by appViewModel.logPlayPostSaveShowing.collectAsState()
     val quickScanCorrectionMode by appViewModel.quickScanCorrectionMode.collectAsState()
     val pendingWidgetQuickScan by appViewModel.pendingWidgetQuickScan.collectAsState()
@@ -555,6 +556,17 @@ fun BoardFlowApp(
                     onClearRating = { objectId ->
                         appViewModel.clearGameRating(objectId)
                     },
+                    collectionStatus = collectionStatus,
+                    onLoadCollectionStatus = { gameId ->
+                        appViewModel.loadCollectionStatus(gameId)
+                    },
+                    onSaveCollectionStatus = { gameId, status ->
+                        appViewModel.saveCollectionStatus(gameId, status)
+                    },
+                    onRemoveFromCollection = { gameId ->
+                        appViewModel.removeFromCollection(gameId)
+                    },
+                    onClearCollectionStatus = { appViewModel.clearCollectionStatus() },
                     onMarkAsPlayed = { gameId, gameName ->
                         val oldestYear = historyPlays
                             .mapNotNull { it.date.substringBefore("-").toIntOrNull() }

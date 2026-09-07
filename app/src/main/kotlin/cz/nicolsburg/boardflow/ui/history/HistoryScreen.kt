@@ -243,6 +243,7 @@ fun HistoryScreen(
     val bggPlaysCacheAgeMinutes by viewModel.bggPlaysCacheAgeMinutes.collectAsState()
     val customMoods by viewModel.customMoods.collectAsState()
     val personalRatings by viewModel.personalRatings.collectAsState()
+    val collectionStatus by viewModel.collectionStatus.collectAsState()
     val moodUsageOrder by viewModel.moodUsageOrder.collectAsState()
     val chroniclePendingPlayIds by viewModel.chroniclePendingPlayIds.collectAsState()
     val chronicleEnabled by viewModel.chronicleEnabled.collectAsState()
@@ -632,7 +633,7 @@ fun HistoryScreen(
         val personalRating = personalRatings[g.objectId]
         GameDetailsDialog(
             game = g,
-            onDismiss = { selectedGame = null },
+            onDismiss = { selectedGame = null; viewModel.clearCollectionStatus() },
             historyPlays = historyPlays,
             players = players,
             personalRating = personalRating,
@@ -641,6 +642,13 @@ fun HistoryScreen(
                 viewModel.rateGame(id, g.objectId, rating)
             },
             onClearRating = { viewModel.clearGameRating(g.objectId) },
+            collectionStatus = collectionStatus.takeIf { it.gameId == gameObjectId }
+                ?: cz.nicolsburg.boardflow.model.CollectionStatusUiState(),
+            onLoadCollectionStatus = { gameObjectId?.let(viewModel::loadCollectionStatus) },
+            onSaveCollectionStatus = { status ->
+                gameObjectId?.let { viewModel.saveCollectionStatus(it, status) }
+            },
+            onRemoveFromCollection = { gameObjectId?.let(viewModel::removeFromCollection) },
             onViewHistory = { _ ->
                 if (gameObjectId != null) {
                     navHistory = navHistory + HistoryNavState(

@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LibraryAddCheck
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.QueryStats
@@ -54,6 +55,9 @@ import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -64,6 +68,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,6 +89,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.data.SecurePreferences
+import cz.nicolsburg.boardflow.model.BggCollectionStatus
+import cz.nicolsburg.boardflow.model.CollectionStatusUiState
+import cz.nicolsburg.boardflow.model.activeLabels
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
@@ -123,6 +131,10 @@ fun GameDetailsDialog(
     personalRating: Int? = null,
     onRateGame: (rating: Int) -> Unit = {},
     onClearRating: () -> Unit = {},
+    collectionStatus: CollectionStatusUiState = CollectionStatusUiState(),
+    onLoadCollectionStatus: () -> Unit = {},
+    onSaveCollectionStatus: (BggCollectionStatus) -> Unit = {},
+    onRemoveFromCollection: () -> Unit = {},
     onLogPlay: () -> Unit = {},
     onViewHistory: (Int) -> Unit = {},
     onViewHistoryPlayer: (gameId: Int, playerName: String) -> Unit = { _, _ -> },
@@ -162,7 +174,8 @@ fun GameDetailsDialog(
     }
     val compactChips = headerChips.size > 2 || LocalConfiguration.current.screenWidthDp < 380
     var showRatingPicker by remember { mutableStateOf(false) }
-    val infoSections = remember(overviewStats, ratingStats, game, personalRating) {
+    var showCollectionEditor by remember { mutableStateOf(false) }
+    val infoSections = remember(overviewStats, ratingStats, game, personalRating, collectionStatus) {
         buildList {
             if (overviewStats.isNotEmpty()) {
                 add(InfoSection("Overview", overviewStats.map { stat ->
@@ -188,6 +201,17 @@ fun GameDetailsDialog(
                     onClick = { showRatingPicker = true }
                 )
                 add(InfoSection("Ratings", baseRatingStats + yourRatingStat, setOf("Rank")))
+            }
+            if (gameObjectId != null) {
+                add(InfoSection("Collection", listOf(SectionStat(
+                    label = "BGG status",
+                    value = collectionStatusSummary(collectionStatus),
+                    icon = Icons.Default.LibraryAddCheck,
+                    onClick = {
+                        showCollectionEditor = true
+                        onLoadCollectionStatus()
+                    }
+                ))))
             }
         }
     }
@@ -390,6 +414,141 @@ fun GameDetailsDialog(
                 }
             }
         )
+    }
+
+    if (showCollectionEditor && gameObjectId != null) {
+        CollectionStatusEditorDialog(
+            state = collectionStatus,
+            onDismiss = { showCollectionEditor = false },
+            onSave = { onSaveCollectionStatus(it) },
+            onRemove = { onRemoveFromCollection() }
+        )
+    }
+}
+
+/** One-line summary for the collection row, before and after the entry has been read from BGG. */
+private fun collectionStatusSummary(state: CollectionStatusUiState): String = when {
+    state.loading -> "Loading…"
+    !state.loaded -> "Tap to edit"
+    !state.inCollection -> "Not in collection"
+    else -> state.status.activeLabels().joinToString(", ").ifBlank { "In collection, no status set" }
+}
+
+/**
+ * Editor for the eight status checkboxes BGG's own collection UI exposes, in the site's order.
+ * Edits a local draft so a half-finished set of toggles is never posted; only Save writes.
+ */
+@Composable
+private fun CollectionStatusEditorDialog(
+    state: CollectionStatusUiState,
+    onDismiss: () -> Unit,
+    onSave: (BggCollectionStatus) -> Unit,
+    onRemove: () -> Unit
+) {
+    // Re-seed the draft whenever a fresh entry arrives, but keep edits across recompositions.
+    var draft by remember(state.loaded, state.collectionId) { mutableStateOf(state.status) }
+    val busy = state.loading || state.saving
+    // Close once a write finishes cleanly; a failure keeps the editor open so the error is visible.
+    var sawSaving by remember { mutableStateOf(false) }
+    LaunchedEffect(state.saving) {
+        if (state.saving) {
+            sawSaving = true
+        } else if (sawSaving) {
+            sawSaving = false
+            if (state.error == null) onDismiss()
+        }
+    }
+    AlertDialog(
+        onDismissRequest = { if (!state.saving) onDismiss() },
+        title = { Text("Collection status") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                when {
+                    state.loading -> Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        Text("Reading your collection…", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    !state.loaded -> Text(
+                        state.error ?: "Could not read your collection status.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    else -> {
+                        CollectionFlagRow("Own", draft.own, !state.saving) { draft = draft.copy(own = it) }
+                        CollectionFlagRow("Prev. Owned", draft.previouslyOwned, !state.saving) { draft = draft.copy(previouslyOwned = it) }
+                        CollectionFlagRow("For Trade", draft.forTrade, !state.saving) { draft = draft.copy(forTrade = it) }
+                        CollectionFlagRow("Want to Play", draft.wantToPlay, !state.saving) { draft = draft.copy(wantToPlay = it) }
+                        CollectionFlagRow("Want in Trade", draft.wantInTrade, !state.saving) { draft = draft.copy(wantInTrade = it) }
+                        CollectionFlagRow("Want to Buy", draft.wantToBuy, !state.saving) { draft = draft.copy(wantToBuy = it) }
+                        CollectionFlagRow("Pre-ordered", draft.preordered, !state.saving) { draft = draft.copy(preordered = it) }
+                        CollectionFlagRow("Wishlist", draft.wishlist, !state.saving) { draft = draft.copy(wishlist = it) }
+                        if (draft.wishlist) {
+                            Text(
+                                "Wishlist priority",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                (1..5).forEach { priority ->
+                                    FilterChip(
+                                        selected = draft.wishlistPriority == priority,
+                                        onClick = { draft = draft.copy(wishlistPriority = priority) },
+                                        enabled = !state.saving,
+                                        label = { Text("$priority") }
+                                    )
+                                }
+                            }
+                        }
+                        state.error?.let { message ->
+                            Text(
+                                message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = state.loaded && !busy,
+                onClick = { onSave(draft) }
+            ) { Text(if (state.saving) "Saving…" else "Save") }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Clearing every flag leaves a zeroed entry behind, so removal is its own action.
+                if (state.loaded && state.inCollection) {
+                    TextButton(enabled = !busy, onClick = onRemove) { Text("Remove") }
+                }
+                TextButton(enabled = !state.saving, onClick = onDismiss) { Text("Cancel") }
+            }
+        }
+    )
+}
+
+@Composable
+private fun CollectionFlagRow(
+    label: String,
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled) { onCheckedChange(!checked) },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Checkbox(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
+        Text(label, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
