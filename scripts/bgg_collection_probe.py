@@ -22,11 +22,21 @@ import argparse
 import json
 import os
 import sys
+import re
 import time
 import xml.etree.ElementTree as ET
 from typing import Optional
 
 import requests
+
+try:
+    # Machines behind a TLS-intercepting proxy have the signing CA in the OS trust
+    # store but not in certifi's bundle; truststore makes requests use the OS store.
+    import truststore
+
+    truststore.inject_into_ssl()
+except ImportError:
+    pass
 
 STATUS_FIELDS = [
     "own",
@@ -63,8 +73,16 @@ def fetch_collection_item(username: str, game_id: int) -> Optional[dict]:
         if resp.status_code == 202:
             time.sleep(2)
             continue
+        if resp.status_code == 401:
+            raise RuntimeError(
+                "HTTP 401 from the collection API - BGG requires a logged-in session "
+                "for collection reads, and this one was rejected."
+            )
         resp.raise_for_status()
         root = ET.fromstring(resp.text)
+        if root.tag == "errors":
+            message = root.findtext("error/message") or "unknown error"
+            raise RuntimeError(f"Collection query returned an error: {message}")
         item = root.find("item")
         if item is None:
             return None
@@ -90,6 +108,18 @@ def build_form(game_id: int, collid: Optional[str], flags: dict, wishlist_priori
     if form["wishlist"] == "1":
         form["wishlistpriority"] = str(wishlist_priority)
     return form
+
+
+def response_error(resp: requests.Response) -> Optional[str]:
+    """geekcollection.php reports failures as HTTP 200 with an HTML error box."""
+    match = re.search(
+        r"<div[^>]*class=['\"][^'\"]*messagebox error[^'\"]*['\"][^>]*>(.*?)</div>",
+        resp.text,
+        re.DOTALL | re.IGNORECASE,
+    )
+    if not match:
+        return None
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", match.group(1))).strip() or "rejected"
 
 
 def save_status(game_id: int, form: dict) -> requests.Response:
@@ -166,6 +196,9 @@ def main() -> None:
     print(f"Response: {resp.text[:500]}")
     if not resp.ok:
         sys.exit("Write failed")
+    error = response_error(resp)
+    if error:
+        sys.exit(f"Write rejected by BGG (HTTP 200 but an error box): {error}")
 
     # The XML API is cached separately from the site, so the change can lag a few seconds.
     time.sleep(3)
@@ -187,7 +220,9 @@ def main() -> None:
     restore = save_status(args.game, build_form(
         args.game, restore_collid, original_flags, args.wishlist_priority
     ))
-    print(f"Restored original status: HTTP {restore.status_code}")
+    restore_error = response_error(restore)
+    print(f"Restored original status: HTTP {restore.status_code}"
+          + (f" - REJECTED: {restore_error}" if restore_error else ""))
 
 
 if __name__ == "__main__":

@@ -56,6 +56,24 @@ data class BggCredentials(
     val password: String
 )
 
+/**
+ * The eight status checkboxes BGG's own collection UI exposes. Listed here in the order and
+ * wording the site uses, alongside the `geekcollection.php` form field each one posts as:
+ *
+ * | Property           | Form field   | BGG label     |
+ * |--------------------|--------------|---------------|
+ * | [own]              | `own`        | Own           |
+ * | [previouslyOwned]  | `prevowned`  | Prev. Owned   |
+ * | [forTrade]         | `fortrade`   | For Trade     |
+ * | [wantToPlay]       | `wanttoplay` | Want to Play  |
+ * | [wantInTrade]      | `want`       | Want in Trade |
+ * | [wantToBuy]        | `wanttobuy`  | Want to Buy   |
+ * | [preordered]       | `preordered` | Pre-ordered   |
+ * | [wishlist]         | `wishlist`   | Wishlist      |
+ *
+ * Note that BGG's bare `want` field is "Want in Trade", not a general "want" - it is separate
+ * from both [wantToBuy] and [wishlist]. [wishlistPriority] (1-5) only applies when [wishlist].
+ */
 data class BggCollectionStatus(
     val own: Boolean = false,
     val previouslyOwned: Boolean = false,

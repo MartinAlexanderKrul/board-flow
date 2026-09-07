@@ -103,6 +103,10 @@ captures/
 credentials.json
 tokens/
 
+# scripts/bgg_player_config.json is tracked with blank credentials; put real BGG
+# credentials in this local copy instead so they cannot be committed.
+scripts/bgg_player_config.local.json
+
 # -------------------------------------------------------
 # Maven build output
 # -------------------------------------------------------
