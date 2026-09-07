@@ -11,6 +11,9 @@ import cz.nicolsburg.boardflow.data.GameRecognitionEngine
 import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
 import cz.nicolsburg.boardflow.data.chronicle.ChronicleAiConfig
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
+import cz.nicolsburg.boardflow.model.BggCollectionStatus
+import cz.nicolsburg.boardflow.model.CollectionStatusUiState
+import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.Challenge
 import cz.nicolsburg.boardflow.model.ChallengeProgress
@@ -2489,6 +2492,129 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun clearGameRating(objectId: String) {
         prefs.clearPersonalRating(objectId)
         _personalRatings.value = prefs.loadPersonalRatings()
+    }
+
+    // --- BGG collection status ---
+    // BGG has no documented write API for collections, so this drives the same undocumented
+    // endpoint the site's own status checkboxes use and needs stored credentials.
+    private val _collectionStatus = MutableStateFlow(CollectionStatusUiState())
+    val collectionStatus: StateFlow<CollectionStatusUiState> = _collectionStatus.asStateFlow()
+
+    /** Resets the editor state, e.g. when the game detail dialog closes. */
+    fun clearCollectionStatus() {
+        _collectionStatus.value = CollectionStatusUiState()
+    }
+
+    /** Reads the game's current collection entry. Unauthenticated reads are rejected by BGG. */
+    fun loadCollectionStatus(gameId: Int) {
+        val creds = collectionCredentials(gameId) ?: return
+        _collectionStatus.value = CollectionStatusUiState(gameId = gameId, loading = true)
+        viewModelScope.launch {
+            val repo = container.bggRepository
+            repo.login(creds)
+                .mapCatching { repo.getCollectionEntry(creds.username, gameId).getOrThrow() }
+                .onSuccess { entry ->
+                    _collectionStatus.value = CollectionStatusUiState(
+                        gameId = gameId,
+                        loaded = true,
+                        inCollection = entry != null,
+                        collectionId = entry?.collectionId,
+                        status = entry?.status ?: BggCollectionStatus()
+                    )
+                }
+                .onFailure { error ->
+                    _collectionStatus.value = CollectionStatusUiState(
+                        gameId = gameId,
+                        error = error.message ?: "Could not load collection status"
+                    )
+                }
+        }
+    }
+
+    /**
+     * Saves the status flags. The entry's collid has to be sent or BGG creates a duplicate instead
+     * of updating, and a freshly created entry comes back without one, so it is resolved on both
+     * sides of the write.
+     */
+    fun saveCollectionStatus(gameId: Int, status: BggCollectionStatus) {
+        val creds = collectionCredentials(gameId) ?: return
+        val before = _collectionStatus.value.takeIf { it.gameId == gameId } ?: CollectionStatusUiState(gameId = gameId)
+        _collectionStatus.value = before.copy(saving = true, error = null)
+        viewModelScope.launch {
+            val repo = container.bggRepository
+            repo.login(creds)
+                .mapCatching {
+                    val existingId = before.collectionId
+                        ?: repo.getCollectionEntry(creds.username, gameId).getOrThrow()?.collectionId
+                    repo.setCollectionStatus(gameId, status, existingId).getOrThrow()
+                    existingId ?: repo.getCollectionEntry(creds.username, gameId).getOrThrow()?.collectionId
+                }
+                .onSuccess { savedId ->
+                    _collectionStatus.value = before.copy(
+                        gameId = gameId,
+                        saving = false,
+                        loaded = true,
+                        inCollection = true,
+                        collectionId = savedId,
+                        status = status
+                    )
+                }
+                .onFailure { error ->
+                    _collectionStatus.value = before.copy(
+                        saving = false,
+                        error = error.message ?: "Could not save collection status"
+                    )
+                }
+        }
+    }
+
+    /**
+     * Removes the game from the collection. Clearing every flag only zeroes the entry and leaves it
+     * in place, so removal is its own call and needs the collid.
+     */
+    fun removeFromCollection(gameId: Int) {
+        val creds = collectionCredentials(gameId) ?: return
+        val before = _collectionStatus.value.takeIf { it.gameId == gameId } ?: CollectionStatusUiState(gameId = gameId)
+        val collectionId = before.collectionId
+        if (collectionId.isNullOrBlank()) {
+            _collectionStatus.value = before.copy(error = "This game is not in your BGG collection.")
+            return
+        }
+        _collectionStatus.value = before.copy(saving = true, error = null)
+        viewModelScope.launch {
+            val repo = container.bggRepository
+            repo.login(creds)
+                .mapCatching { repo.deleteCollectionEntry(gameId, collectionId).getOrThrow() }
+                .onSuccess {
+                    _collectionStatus.value = CollectionStatusUiState(gameId = gameId, loaded = true, inCollection = false)
+                }
+                .onFailure { error ->
+                    _collectionStatus.value = before.copy(
+                        saving = false,
+                        error = error.message ?: "Could not remove the game from your collection"
+                    )
+                }
+        }
+    }
+
+    /** Credentials for the collection endpoints, reporting the missing-setup case into the state. */
+    private fun collectionCredentials(gameId: Int): BggCredentials? {
+        val creds = prefs.getCredentials()
+        if (gameId <= 0) {
+            _collectionStatus.value = CollectionStatusUiState(
+                gameId = gameId,
+                error = "This game has no BGG id, so its collection status cannot be edited."
+            )
+            return null
+        }
+        if (creds == null || creds.username.isBlank()) {
+            _collectionStatus.value = CollectionStatusUiState(
+                gameId = gameId,
+                error = "Add your BGG username and password in Settings to edit collection status."
+            )
+            return null
+        }
+        return creds
     }
 
     // --- Session context ---

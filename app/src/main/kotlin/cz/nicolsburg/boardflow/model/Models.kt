@@ -57,6 +57,29 @@ data class BggCredentials(
 )
 
 /**
+ * State for the collection-status editor. [loaded] means BGG has answered, so the editor can show
+ * flags rather than a spinner; [inCollection] tells an existing entry apart from a new one, which
+ * is what decides between updating and creating.
+ */
+data class CollectionStatusUiState(
+    /** The game this state belongs to, so a previous game's status is never shown for another. */
+    val gameId: Int? = null,
+    val loading: Boolean = false,
+    val saving: Boolean = false,
+    val loaded: Boolean = false,
+    val inCollection: Boolean = false,
+    val collectionId: String? = null,
+    val status: BggCollectionStatus = BggCollectionStatus(),
+    val error: String? = null
+)
+
+/** A game's existing collection entry: its `collid` and the status flags currently set. */
+data class BggCollectionEntry(
+    val collectionId: String?,
+    val status: BggCollectionStatus
+)
+
+/**
  * The eight status checkboxes BGG's own collection UI exposes. Listed here in the order and
  * wording the site uses, alongside the `geekcollection.php` form field each one posts as:
  *
@@ -85,6 +108,18 @@ data class BggCollectionStatus(
     val wishlistPriority: Int = 3,
     val preordered: Boolean = false
 )
+
+/** The BGG labels for the flags currently set, in the order BGG's own UI lists them. */
+fun BggCollectionStatus.activeLabels(): List<String> = buildList {
+    if (own) add("Own")
+    if (previouslyOwned) add("Prev. Owned")
+    if (forTrade) add("For Trade")
+    if (wantToPlay) add("Want to Play")
+    if (wantInTrade) add("Want in Trade")
+    if (wantToBuy) add("Want to Buy")
+    if (preordered) add("Pre-ordered")
+    if (wishlist) add("Wishlist")
+}
 
 data class SessionMemory(
     val moods: List<String> = emptyList(),

@@ -461,6 +461,9 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - clearing every status flag does NOT delete a collection entry (verified): it stays with all flags 0. Removal is a separate `action=delete` post with the `collid` (`BggRepository.deleteCollectionEntry`), which answers HTTP 200 with an empty body
 - the eight status flags map to BGG's own checkbox labels as: `own`=Own, `prevowned`=Prev. Owned, `fortrade`=For Trade, `wanttoplay`=Want to Play, `want`=Want in Trade, `wanttobuy`=Want to Buy, `preordered`=Pre-ordered, `wishlist`=Wishlist - note `want` is "Want in Trade", not a general want (see the table on `BggCollectionStatus`)
 - `scripts/bgg_collection_probe.py` exercises all of the above against a real account (dry run by default)
+- the collection editor lives on the game detail dialog: a "Collection" row opens `CollectionStatusEditorDialog`, which reads the entry on open (`AppViewModel.loadCollectionStatus`), edits a local draft so partial toggles are never posted, and writes on Save
+- `CollectionStatusUiState` carries the `gameId` it belongs to and both screens filter on it, so opening a second game never shows the first game's status while the new one loads
+- changing `own` does not refresh the local collection list - it stays stale until the next sync
 
 ## History / Roster Notes
 

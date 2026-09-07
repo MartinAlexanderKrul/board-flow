@@ -2,6 +2,7 @@
 
 import android.util.Log
 import cz.nicolsburg.boardflow.BuildConfig
+import cz.nicolsburg.boardflow.model.BggCollectionEntry
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.BggCredentials
@@ -581,7 +582,16 @@ class BggRepository {
     }
 
     /** Looks up BGG's `collid` for a game already in [username]'s collection, or null if absent. */
-    suspend fun getCollectionId(username: String, gameId: Int): Result<String?> = withContext(Dispatchers.IO) {
+    suspend fun getCollectionId(username: String, gameId: Int): Result<String?> =
+        getCollectionEntry(username, gameId).map { it?.collectionId }
+
+    /**
+     * Reads [username]'s existing collection entry for a game, or null if the game is not in the
+     * collection. `brief=1` carries both the `collid` and the status flags, so this one read backs
+     * both [setCollectionStatus]'s id and a status editor. Needs a prior [login] for a private
+     * collection; unauthenticated reads of a real user come back 401.
+     */
+    suspend fun getCollectionEntry(username: String, gameId: Int): Result<BggCollectionEntry?> = withContext(Dispatchers.IO) {
         runCatching {
             val url = "https://boardgamegeek.com/xmlapi2/collection?username=${
                 java.net.URLEncoder.encode(username, "UTF-8")
@@ -595,7 +605,7 @@ class BggRepository {
                     // setCollectionStatus create a duplicate entry instead of updating.
                     200 -> {
                         extractXmlApiError(body)?.let { throw Exception("Failed to look up collection entry: $it") }
-                        return@runCatching parseCollectionId(body)
+                        return@runCatching parseCollectionEntry(body)
                     }
                     202 -> if (attempt < maxAttempts - 1) {
                         kotlinx.coroutines.delay(2000)
@@ -655,17 +665,43 @@ class BggRepository {
         return Regex("""collid["'\s:=]+(\d+)""").find(trimmed)?.groupValues?.get(1)
     }
 
-    private fun parseCollectionId(xml: String): String? {
+    private fun parseCollectionEntry(xml: String): BggCollectionEntry? {
         val parser = XmlPullParserFactory.newInstance().newPullParser()
         parser.setInput(StringReader(xml))
         var event = parser.eventType
+        var collectionId: String? = null
+        var seenItem = false
         while (event != XmlPullParser.END_DOCUMENT) {
-            if (event == XmlPullParser.START_TAG && parser.name == "item") {
-                return parser.getAttributeValue(null, "collid")?.takeIf { it.isNotBlank() }
+            if (event == XmlPullParser.START_TAG) {
+                when (parser.name) {
+                    "item" -> {
+                        seenItem = true
+                        collectionId = parser.getAttributeValue(null, "collid")?.takeIf { it.isNotBlank() }
+                    }
+                    "status" -> if (seenItem) {
+                        fun flag(name: String) = parser.getAttributeValue(null, name) == "1"
+                        return BggCollectionEntry(
+                            collectionId = collectionId,
+                            status = BggCollectionStatus(
+                                own = flag("own"),
+                                previouslyOwned = flag("prevowned"),
+                                forTrade = flag("fortrade"),
+                                wantInTrade = flag("want"),
+                                wantToPlay = flag("wanttoplay"),
+                                wantToBuy = flag("wanttobuy"),
+                                wishlist = flag("wishlist"),
+                                wishlistPriority = parser.getAttributeValue(null, "wishlistpriority")
+                                    ?.toIntOrNull()?.coerceIn(1, 5) ?: 3,
+                                preordered = flag("preordered")
+                            )
+                        )
+                    }
+                }
             }
             event = parser.next()
         }
-        return null
+        // An item without a <status> child still means the game is in the collection.
+        return if (seenItem) BggCollectionEntry(collectionId, BggCollectionStatus()) else null
     }
 
     private fun parseCollectionResults(xml: String): List<BggGame> {

@@ -78,6 +78,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.SyncViewModel
+import cz.nicolsburg.boardflow.model.BggCollectionStatus
+import cz.nicolsburg.boardflow.model.CollectionStatusUiState
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
@@ -144,6 +146,11 @@ fun CollectionScreen(
     onMarkAsPlayed: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
     onRateGame: (gameId: Int, objectId: String, rating: Int) -> Unit = { _, _, _ -> },
     onClearRating: (objectId: String) -> Unit = {},
+    collectionStatus: CollectionStatusUiState = CollectionStatusUiState(),
+    onLoadCollectionStatus: (gameId: Int) -> Unit = {},
+    onSaveCollectionStatus: (gameId: Int, status: BggCollectionStatus) -> Unit = { _, _ -> },
+    onRemoveFromCollection: (gameId: Int) -> Unit = {},
+    onClearCollectionStatus: () -> Unit = {},
 ) {
     val account by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
@@ -325,9 +332,10 @@ fun CollectionScreen(
 
     selectedGame?.let { game ->
         val personalRating = remember(personalRatings, game.objectId) { personalRatings[game.objectId] }
+        val gameObjectId = remember(game.objectId) { game.objectId.toIntOrNull()?.takeIf { it > 0 } }
         GameDetailsDialog(
             game = game,
-            onDismiss = { selectedGame = null; sleevesReturnGame = null },
+            onDismiss = { selectedGame = null; sleevesReturnGame = null; onClearCollectionStatus() },
             historyPlays = historyPlays,
             players = players,
             personalRating = personalRating,
@@ -336,6 +344,13 @@ fun CollectionScreen(
                 onRateGame(gameId, game.objectId, rating)
             },
             onClearRating = { onClearRating(game.objectId) },
+            collectionStatus = collectionStatus.takeIf { it.gameId == gameObjectId }
+                ?: CollectionStatusUiState(),
+            onLoadCollectionStatus = { gameObjectId?.let(onLoadCollectionStatus) },
+            onSaveCollectionStatus = { status ->
+                gameObjectId?.let { onSaveCollectionStatus(it, status) }
+            },
+            onRemoveFromCollection = { gameObjectId?.let(onRemoveFromCollection) },
             onLogPlay = {
                 selectedGame = null
                 onLogPlay(game.objectId.toIntOrNull() ?: 0, game.name, game.thumbnailUrl)
