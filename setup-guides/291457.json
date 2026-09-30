@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "gameId": 291457,
+  "gameName": "Gloomhaven: Jaws of the Lion",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Jaws of the Lion Learn to Play Guide", "Jaws of the Lion Rules Glossary"]
+  },
+  "players": { "min": 2, "max": 4 },
+  "modules": [
+    { "id": "normal", "name": "Normal", "group": "Difficulty", "defaultEnabled": true },
+    { "id": "easy", "name": "Easy", "group": "Difficulty" },
+    { "id": "hard", "name": "Hard", "group": "Difficulty" },
+    { "id": "very-hard", "name": "Very Hard", "group": "Difficulty" }
+  ],
+  "sections": [
+    {
+      "id": "scenario",
+      "title": "Scenario",
+      "steps": [
+        { "id": "scenario-book", "text": "Open the Scenario Book to your scenario; read the introduction and special rules", "note": "Player count here means the number of characters", "ref": "Learn to Play p.4" },
+        {
+          "id": "scenario-level",
+          "text": "Scenario level = average character level / 2, rounded up{adj}",
+          "amounts": { "adj": { "default": "", "cases": [
+            { "when": { "modules": ["easy"] }, "value": " - 1" },
+            { "when": { "modules": ["hard"] }, "value": " + 1" },
+            { "when": { "modules": ["very-hard"] }, "value": " + 2" }
+          ] } },
+          "note": "It sets monster level, trap damage, gold per money token and bonus XP",
+          "ref": "Glossary p.13"
+        },
+        { "id": "tokens", "text": "Money tokens, treasure tiles and traps as shown in the scenario key", "ref": "Learn to Play p.25, Glossary p.12" },
+        { "id": "element-board", "text": "Element board with all 6 element tokens on Inert", "ref": "Learn to Play p.25" }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "steps": [
+        { "id": "character-mat", "text": "Each player: character mat, attack modifier deck (with perks) and HP dial set for your level", "ref": "Learn to Play p.4" },
+        { "id": "hand", "text": "Choose ability cards up to your hand limit (top right of your mat)", "ref": "Glossary p.10" },
+        { "id": "battle-goals", "text": "Shuffle the battle goals; deal {n} to each character, keep 1 in secret", "amounts": { "n": 2 }, "ref": "Learn to Play p.25" },
+        { "id": "figures", "text": "Character figures on the starting hexes (one per hex); initiative tokens in the middle", "ref": "Learn to Play p.4" }
+      ]
+    },
+    {
+      "id": "monsters",
+      "title": "Monsters",
+      "steps": [
+        { "id": "stat-cards", "text": "For each monster type in the key: stat card in a sleeve showing the scenario level; initiative token", "ref": "Learn to Play p.4, Glossary p.13" },
+        { "id": "ability-decks", "text": "Shuffle each monster's full 8-card ability deck", "ref": "Learn to Play p.25" },
+        { "id": "standees", "text": "Starting room: place standees using the {n}-character row (black = none, white = normal, gold = elite)", "amounts": { "n": { "byPlayers": { "2": "2", "3": "3", "4": "4" } } }, "note": "Randomize the standee numbers", "ref": "Learn to Play p.4" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "reveal-room", "text": "Monsters in a room are set up only when its door opens, and act that round", "ref": "Learn to Play p.14, Glossary p.17" },
+        { "id": "spawn", "text": "Spawned monsters appear at their spawn point (or nearest empty hex) and act that round", "ref": "Learn to Play p.25, Glossary p.19" },
+        { "id": "elements-wane", "text": "Elements wane each round end: Strong, then Waning, then Inert", "ref": "Learn to Play p.25" },
+        { "id": "trap-damage", "text": "Trap \"damage\" = scenario level + 2", "ref": "Glossary p.12" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "card-selection", "text": "Everyone secretly picks 2 ability cards and sets one as the initiative card", "ref": "Learn to Play p.6" },
+        { "id": "monster-cards", "text": "Reveal one ability card per monster type; act in initiative order, lowest first", "ref": "Learn to Play p.7" }
+      ]
+    }
+  ]
+}

@@ -26,6 +26,14 @@
       "path": "271324.json"
     },
     {
+      "gameId": 291457,
+      "gameName": "Gloomhaven: Jaws of the Lion",
+      "gameIds": [291457],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "291457.json"
+    },
+    {
       "gameId": 295947,
       "gameName": "Cascadia",
       "gameIds": [295947, 385318],
