@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "gameId": 162886,
+  "gameName": "Spirit Island",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Spirit Island core rulebook (Greater Than Games)", "Branch & Claw rulebook", "Jagged Earth rulebook", "Nature Incarnate rulebook"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "branch-claw", "name": "Branch & Claw", "bggId": 193065 },
+    { "id": "jagged-earth", "name": "Jagged Earth", "bggId": 262722, "extendsMaxPlayers": 6, "note": "Enables 5-6 players." },
+    { "id": "nature-incarnate", "name": "Nature Incarnate", "bggId": 365137 },
+    { "id": "feather-flame", "name": "Feather & Flame", "bggId": 356510, "note": "New Spirits and Adversaries; no setup changes." }
+  ],
+  "sections": [
+    {
+      "id": "choices",
+      "title": "Choices",
+      "steps": [
+        { "id": "adversary", "text": "Choose an Adversary and/or Scenario first - they change setup", "note": "Optional", "ref": "Core p.6" }
+      ]
+    },
+    {
+      "id": "invader-board",
+      "title": "Invader board",
+      "steps": [
+        { "id": "board", "text": "Invader Board on one side of the play area", "ref": "Core p.6" },
+        { "id": "extension", "text": "Add the Invader Board extension; Beasts, Wilds, Disease and Strife tokens on it", "condition": { "modules": ["branch-claw"] }, "ref": "Branch & Claw p.7" },
+        { "id": "je-tokens", "text": "Beasts, Wilds, Disease, Strife and Badlands tokens in a supply by the island", "condition": { "modules": ["jagged-earth"], "notModules": ["branch-claw"] }, "ref": "Jagged Earth p.6" },
+        { "id": "badlands", "text": "Add Badlands tokens to the supply", "condition": { "modules": ["jagged-earth", "branch-claw"] }, "ref": "Jagged Earth p.6" },
+        { "id": "fear-pool", "text": "{n} Fear markers into the Fear Pool (4 per player)", "amounts": { "n": { "byPlayers": { "1": 4, "2": 8, "3": 12, "4": 16, "5": 20, "6": 24 } } }, "ref": "Core p.6" },
+        { "id": "fear-deck", "text": "Shuffle the Fear cards; 9 on the Fear Deck space with Terror Level dividers 3 and 6 cards from the bottom", "ref": "Core p.6" },
+        { "id": "invader-deck", "text": "Invader Deck from the bottom: 5 random Stage III, 4 Stage II, 3 Stage I - on the Explore space", "ref": "Core p.6" },
+        { "id": "blight-card", "text": "Random Blight card, Healthy Island side up, with the Blight it shows + 1 extra", "note": "Erratum: exactly 1 extra Blight regardless of player count", "ref": "Core p.6" },
+        { "id": "events", "text": "Shuffle the Event deck (a Blight card is now required)", "condition": { "modules": ["branch-claw"] }, "ref": "Branch & Claw p.7" },
+        { "id": "events-je", "text": "Shuffle the Event deck (a Blight card is now required)", "condition": { "modules": ["jagged-earth"], "notModules": ["branch-claw"] }, "ref": "Jagged Earth p.6" },
+        { "id": "strange-madness", "text": "Remove the Event \"A Strange Madness Among the Beasts\" with Russia or Many Minds Move as One", "condition": { "modules": ["branch-claw", "jagged-earth"] }, "ref": "Jagged Earth p.12" }
+      ]
+    },
+    {
+      "id": "island",
+      "title": "Island & supply",
+      "steps": [
+        { "id": "boards", "text": "One random Island Board per player, arranged into the Island", "ref": "Core p.6" },
+        { "id": "populate", "text": "Invaders, Dahan and Blight on each land as its icons show", "ref": "Core p.6" },
+        { "id": "beasts-disease", "text": "On each board: a Beasts token in the lowest-numbered land with no Setup icons, a Disease token in land #2", "condition": { "modules": ["branch-claw"] }, "ref": "Branch & Claw p.7" },
+        { "id": "beasts-disease-je", "text": "On each board: a Beasts token in the lowest-numbered land with no Setup icons, a Disease token in land #2", "condition": { "modules": ["jagged-earth"], "notModules": ["branch-claw"] }, "ref": "Jagged Earth p.6" },
+        { "id": "powers", "text": "Shuffle the Minor and Major Power decks by the board, room for discards", "ref": "Core p.6" },
+        { "id": "supply", "text": "Energy, Cities, Towns, Explorers and Dahan within everyone's reach", "ref": "Core p.6" }
+      ]
+    },
+    {
+      "id": "spirits",
+      "title": "Spirits",
+      "steps": [
+        { "id": "spirit", "text": "Each player takes a color's Presence and markers, a Spirit panel and its 4 Unique Powers", "note": "New players: a low-complexity Spirit and its Power Progression card", "ref": "Core p.6" },
+        { "id": "spirit-setup", "text": "Each Spirit on its own board: follow the Setup on the back of its panel", "ref": "Core p.6" },
+        { "id": "incarna", "text": "Spirits with an Incarna place it as their Setup says", "condition": { "modules": ["nature-incarnate"] }, "ref": "Nature Incarnate p.7" },
+        { "id": "presence-track", "text": "Flip the panel; remaining Presence on the dashed circles of the Presence tracks", "ref": "Core p.6" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "thematic", "text": "Thematic boards: place tokens by the Setup icons instead", "condition": { "modules": ["branch-claw"] }, "ref": "Branch & Claw p.7" },
+        { "id": "not-restricted", "text": "Spirits aren't restricted to their starting board after setup", "ref": "Core p.6" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-explore", "text": "Invaders' starting action: reveal the top Invader card, Explore that land type, then move it to Build", "ref": "Core p.6" },
+        { "id": "spirit-phase", "text": "Begin with the first Spirit Phase", "ref": "Core p.6" }
+      ]
+    }
+  ]
+}

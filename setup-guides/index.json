@@ -26,12 +26,28 @@
       "path": "68448.json"
     },
     {
+      "gameId": 162886,
+      "gameName": "Spirit Island",
+      "gameIds": [162886, 193065, 262722, 356510, 365137],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "162886.json"
+    },
+    {
       "gameId": 169786,
       "gameName": "Scythe",
       "gameIds": [169786, 199727, 223555],
       "version": 1,
       "schemaVersion": 1,
       "path": "169786.json"
+    },
+    {
+      "gameId": 170216,
+      "gameName": "Blood Rage",
+      "gameIds": [170216, 174801, 175100],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "170216.json"
     },
     {
       "gameId": 173346,
@@ -64,6 +80,14 @@
       "version": 3,
       "schemaVersion": 1,
       "path": "199792.json"
+    },
+    {
+      "gameId": 237182,
+      "gameName": "Root",
+      "gameIds": [237182, 241386, 272637, 287220, 330149, 428335],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "237182.json"
     },
     {
       "gameId": 244992,
@@ -128,6 +152,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "338960.json"
+    },
+    {
+      "gameId": 342942,
+      "gameName": "Ark Nova",
+      "gameIds": [342942],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "342942.json"
     },
     {
       "gameId": 357563,

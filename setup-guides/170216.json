@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "gameId": 170216,
+  "gameName": "Blood Rage",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Blood Rage rulebook",
+      "Gods of Asgard rules",
+      "Mystics of Midgard rules"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "gods",
+      "name": "Gods of Asgard",
+      "bggId": 174801
+    },
+    {
+      "id": "mystics",
+      "name": "Mystics of Midgard",
+      "bggId": 175100
+    }
+  ],
+  "sections": [
+    {
+      "id": "clans",
+      "title": "Clans",
+      "steps": [
+        {
+          "id": "clan-sheet",
+          "text": "Each player picks a clan sheet; takes its Leader, 8 Warriors (colored bases) and Ship into their reserve",
+          "ref": "p.9"
+        },
+        {
+          "id": "bases",
+          "text": "Keep your clan's spare 2 small and 2 large bases for Monsters",
+          "ref": "p.9"
+        },
+        {
+          "id": "glory",
+          "text": "Glory marker on 0 of the Glory Track",
+          "ref": "p.9"
+        },
+        {
+          "id": "stats",
+          "text": "Clan tokens on the first spot of Rage, Axes and Horns (6/3/4); last token on 6 of the Rage Track",
+          "ref": "p.9"
+        },
+        {
+          "id": "mystic-figures",
+          "text": "Mystic figures (with clan bases) in a common area next to the Monsters",
+          "condition": {
+            "modules": [
+              "mystics"
+            ]
+          },
+          "ref": "Mystics of Midgard rules"
+        },
+        {
+          "id": "mystic-card",
+          "text": "Each player takes their clan's Mystic reference card",
+          "condition": {
+            "modules": [
+              "mystics"
+            ]
+          },
+          "ref": "Mystics of Midgard rules"
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "sheets",
+          "text": "Valhalla sheet and Age Track beside the board",
+          "ref": "p.10"
+        },
+        {
+          "id": "pillage",
+          "text": "Green-bordered Pillage token on Yggdrasil; the other 8 shuffled faceup on the surrounding provinces",
+          "ref": "p.10"
+        },
+        {
+          "id": "ragnarok",
+          "text": "Shuffle the 8 Ragnarok tokens; one on each of the 3 Age Track spots, text up",
+          "ref": "p.10"
+        },
+        {
+          "id": "doom",
+          "text": "Doom token on the province named by the First Age Ragnarok token",
+          "ref": "p.10"
+        },
+        {
+          "id": "destroyed",
+          "text": "Randomly destroy {n}: place those Ragnarok tokens destroyed side up; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "3 provinces",
+                "3": "2 provinces",
+                "4": "1 province"
+              }
+            }
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "gods",
+          "text": "Draw 2 of the 6 god cards; place each god figure by a draw from the leftover Ragnarok tokens",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "Gods of Asgard rules"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        {
+          "id": "mystic-cards",
+          "text": "Shuffle the Mystic Clan Upgrades into their Gods' Gifts decks (under 4 players: leave out the 4+ ones)",
+          "condition": {
+            "modules": [
+              "mystics"
+            ]
+          },
+          "ref": "Mystics of Midgard rules"
+        },
+        {
+          "id": "remove",
+          "text": "Remove {n} from each Age deck",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "all 3+ and 4+ cards",
+                "3": "all 4+ cards",
+                "4": "no cards"
+              }
+            }
+          },
+          "ref": "p.11"
+        },
+        {
+          "id": "decks",
+          "text": "Shuffle the 3 Age decks separately onto the Gods' Gifts spots of the Age Track",
+          "ref": "p.11"
+        },
+        {
+          "id": "monsters",
+          "text": "Monster figures within reach; Saga token on \"Gods' Gifts - Age 1\"",
+          "ref": "p.11"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "destroyed-out",
+          "text": "Destroyed provinces are out of the game - no figures there",
+          "ref": "p.10"
+        },
+        {
+          "id": "first-rotates",
+          "text": "The First Player token passes left at the end of each Age",
+          "ref": "p.11"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The player born furthest north takes the First Player token",
+          "ref": "p.11"
+        },
+        {
+          "id": "draft",
+          "text": "Age 1 begins with the Gods' Gifts draft",
+          "ref": "p.12"
+        }
+      ]
+    }
+  ]
+}

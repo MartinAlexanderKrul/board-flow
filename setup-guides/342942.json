@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 1,
+  "gameId": 342942,
+  "gameName": "Ark Nova",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Ark Nova rulebook (EN)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "map-a",
+      "name": "Map A",
+      "group": "Zoo maps",
+      "defaultEnabled": true,
+      "note": "Recommended for your first game."
+    },
+    {
+      "id": "map-0",
+      "name": "Map 0",
+      "group": "Zoo maps"
+    },
+    {
+      "id": "advanced-maps",
+      "name": "Advanced maps 1-8",
+      "group": "Zoo maps"
+    }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Game board in the middle; Break token on the start space for your player count",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "bonus",
+          "text": "Shuffle the 9 Bonus tiles; {n} faceup on the blank yellow Bonus spaces, box the rest",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "display",
+          "text": "Shuffle the Zoo cards onto the board; deal {n} facedown as the display",
+          "amounts": {
+            "n": 6
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "supply",
+          "text": "The 2 organizers beside the board as the general supply",
+          "ref": "p.4"
+        },
+        {
+          "id": "association",
+          "text": "Association board next to the board; 1 partner zoo per continent and 1 university of each kind on it",
+          "ref": "p.5"
+        },
+        {
+          "id": "conservation",
+          "text": "Shuffle the Base Conservation Project cards; {n} faceup below the Association board",
+          "amounts": {
+            "n": {
+              "default": 3,
+              "byPlayers": {
+                "4": 4
+              }
+            }
+          },
+          "ref": "p.5, p.20"
+        },
+        {
+          "id": "two-player",
+          "text": "2 players: cover with 6 unused-color tokens the left spaces of the conservation cards, the middle of the middle one, the right of the right one, and the 3 left-column donation spaces",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "final-scoring",
+          "text": "Shuffle the Final Scoring cards facedown next to the Association board",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "solo",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-tile",
+          "text": "No Break token: 7 unused-color player tokens on the left column of the solo tile",
+          "ref": "p.20"
+        },
+        {
+          "id": "solo-appeal",
+          "text": "You start with 20 appeal",
+          "ref": "p.20"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "zoo-map",
+          "text": "Take a zoo map: {map}",
+          "amounts": {
+            "map": {
+              "default": "Map A side up",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "map-0"
+                    ]
+                  },
+                  "value": "Map 0 side up"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "advanced-maps"
+                    ]
+                  },
+                  "value": "draw 2 random advanced maps, keep 1"
+                }
+              ]
+            }
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "action-cards",
+          "text": "5 Action cards side I up: Animals in the leftmost slot, the other 4 random",
+          "ref": "p.4"
+        },
+        {
+          "id": "counters",
+          "text": "Counters on appeal, conservation and reputation start spaces (appeal by turn order: 0, 1, 2, 3)",
+          "ref": "p.5"
+        },
+        {
+          "id": "tokens",
+          "text": "7 player tokens on the zoo map's left spaces; the rest beside it",
+          "ref": "p.5"
+        },
+        {
+          "id": "workers",
+          "text": "4 association workers: 1 on the zoo map (active), 3 on the notepad",
+          "ref": "p.5"
+        },
+        {
+          "id": "money",
+          "text": "Take {n} money",
+          "amounts": {
+            "n": 25
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "final-cards",
+          "text": "Draw 2 Final Scoring cards; keep them secret",
+          "ref": "p.5"
+        },
+        {
+          "id": "zoo-cards",
+          "text": "Draw 8 Zoo cards; keep 4, discard 4",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "counters-meet",
+          "text": "The game ends when your appeal and conservation counters meet",
+          "ref": "p.3"
+        },
+        {
+          "id": "solo-blue",
+          "text": "Solo: blue-striped effects replace interactive card effects",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.20"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Random first player; turns go clockwise, one action each",
+          "ref": "p.5"
+        },
+        {
+          "id": "refill",
+          "text": "Reveal the 6 display cards after everyone has chosen their hand",
+          "ref": "p.5"
+        }
+      ]
+    }
+  ]
+}
