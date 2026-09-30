@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "gameId": 410201,
+  "gameName": "Wyrmspan",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Wyrmspan rulebook", "Wyrmspan Automa rulebook", "Dragon Academy rulebook r10"]
+  },
+  "players": { "min": 1, "max": 5 },
+  "modules": [
+    { "id": "academy", "name": "Dragon Academy", "bggId": 453406, "note": "Its cards, guilds, objectives and round tracker merge into the base game permanently." }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        { "id": "guild", "text": "Dragon Guild board with 1 random Dragon Guild tile, side for your player count up", "ref": "p.2" },
+        { "id": "dragons", "text": "Shuffle the dragons; {n} faceup on the card display, deck beside it", "amounts": { "n": 3 }, "ref": "p.2" },
+        { "id": "caves", "text": "Shuffle the cave cards; {n} faceup on the card display, deck beside it", "amounts": { "n": 3 }, "ref": "p.2" },
+        { "id": "round-tracker", "text": "Round marker on Round 1; {n} random objective tiles, random side up, on the round tracker", "amounts": { "n": 4 }, "ref": "p.2" },
+        { "id": "automa-objective", "text": "Solo: redraw the \"Position on Dragon Guild\" objective if it comes up", "condition": { "players": [1] }, "ref": "Automa p.1" },
+        { "id": "supply", "text": "Coins, eggs and all tokens in a public supply", "ref": "p.2" },
+        { "id": "training-tokens", "text": "Training tokens within reach", "condition": { "modules": ["academy"] }, "ref": "Dragon Academy p.2" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "mat", "text": "Each player: a player mat and all pieces of one color (adventurer, 8 markers, guild token)", "ref": "p.2" },
+        { "id": "start-resources", "text": "Each player gains {n} coins, 1 egg, 3 dragons, 3 caves and 3 resources of their choice", "amounts": { "n": 6 }, "ref": "p.2" },
+        { "id": "keep-cards", "text": "Keep 4 of your 6 cards in any mix; discard the other 2", "ref": "p.2" },
+        { "id": "egg", "text": "Your egg on one of the 2 nest icons on your mat", "ref": "p.2" },
+        { "id": "adventurer", "text": "Coins left of your mat; adventurer in Base Camp; guild token on the Dragon Guild's START space", "ref": "p.2" }
+      ]
+    },
+    {
+      "id": "automa",
+      "title": "Solo: Automa",
+      "condition": { "players": [1] },
+      "steps": [
+        { "id": "automa-color", "text": "Automa's guild token on the Dragon Guild START space; 1 of her markers beside the guild board", "ref": "Automa p.1" },
+        { "id": "automa-round-marker", "text": "1 Automa marker between each round on the round tracker; her other 4 markers beside it", "ref": "Automa p.1" },
+        { "id": "automa-deck", "text": "Build the 8-card decision deck for your difficulty; set 1 aside unseen, shuffle the rest facedown", "ref": "Automa p.1-2" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "hand-limits", "text": "End of each of your turns: discard down to 9 coins, 9 cards and 9 resources", "ref": "p.4" },
+        { "id": "passing", "text": "Once you pass, you take no more turns this round", "ref": "p.4" },
+        { "id": "academy-pass", "text": "When you pass, place your adventurer on the round tracker to choose your income", "condition": { "modules": ["academy"] }, "ref": "Dragon Academy p.2" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-player", "text": "Random player gets the start player marker; play is clockwise", "condition": { "minPlayers": 2 }, "ref": "p.2" },
+        { "id": "first-player-solo", "text": "You start every round", "condition": { "players": [1] }, "ref": "Automa p.1" },
+        { "id": "turn", "text": "Each turn: excavate, entice a dragon, or explore a cave - or pass", "ref": "p.4" }
+      ]
+    }
+  ]
+}

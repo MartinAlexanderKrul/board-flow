@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "gameId": 385761,
+  "gameName": "Faraway",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Faraway rulebook (EN; refs are section names)", "People from Below rules (Pandasaurus)"]
+  },
+  "players": { "min": 2, "max": 6 },
+  "modules": [
+    { "id": "advanced", "name": "Advanced variant", "note": "Recommended after at least one game of Faraway." },
+    { "id": "below", "name": "People from Below", "bggId": 425029, "extendsMaxPlayers": 7, "note": "Enables 7 players." }
+  ],
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        { "id": "below-cards", "text": "Add People from Below's Region and Sanctuary cards to their decks", "condition": { "modules": ["below"] }, "ref": "People from Below: Set up" },
+        { "id": "deal", "text": "Shuffle the Region cards; deal {n} facedown to each player", "amounts": { "n": { "default": 3, "cases": [{ "when": { "modules": ["advanced"] }, "value": 5 }] } }, "ref": "Setup" },
+        { "id": "advanced-keep", "text": "Each player keeps 3 and secretly shuffles the other 2 back into the Region deck", "condition": { "modules": ["advanced"] }, "ref": "Setup: Advanced variant" },
+        { "id": "river", "text": "Region deck in the middle; reveal {n} cards", "amounts": { "n": { "byPlayers": { "2": 3, "3": 4, "4": 5, "5": 6, "6": 7, "7": 8 } } }, "note": "One more than the number of players", "ref": "Setup" },
+        { "id": "sanctuaries", "text": "Shuffle the Sanctuary cards into a facedown deck beside the Region deck", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "sanctuary", "text": "Played a higher number than your previous card? Draw 1 Sanctuary + 1 per Clue you have; keep 1 next phase", "ref": "Finding Sanctuaries" },
+        { "id": "pick-order", "text": "Pick new Regions from the middle in order of the number played, lowest first", "ref": "End of the Exploration" },
+        { "id": "leftover", "text": "Remove the last Region in the middle, then reveal players + 1 new cards", "ref": "End of the Exploration" },
+        { "id": "last-round", "text": "Round 8: no new Region card", "ref": "End of the Exploration" },
+        { "id": "scoring", "text": "Score right to left, flipping Regions one at a time; Sanctuaries last", "ref": "Game End" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "play", "text": "Everyone picks a Region from hand and reveals it at the same time, left to right", "ref": "Exploring a Region" }
+      ]
+    }
+  ]
+}

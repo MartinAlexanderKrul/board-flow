@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "gameId": 397598,
+  "gameName": "Dune: Imperium – Uprising",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Dune: Imperium – Uprising main rulebook (23-10-12)",
+      "Uprising rules supplements (23-10-12): Rivals, Six-Player Games",
+      "Rise of Ix, Immortality and Bloodlines rulebooks"
+    ]
+  },
+  "players": { "min": 1, "max": 6, "exclude": [5] },
+  "modules": [
+    { "id": "choam", "name": "CHOAM Module", "note": "Recommended after your first game. Required for 6 players." },
+    { "id": "six", "name": "Six-player teams", "players": { "min": 6, "max": 6 }, "forcedAtPlayers": [6], "requires": ["choam"] },
+    { "id": "streamlined", "name": "Streamlined Rivals", "players": { "min": 2, "max": 2 }, "note": "Recommended for your first two-player game." },
+    { "id": "ix", "name": "Rise of Ix", "note": "Uprising p.18: the Ix Conflict cards are not recommended." },
+    { "id": "immortality", "name": "Immortality" },
+    { "id": "bloodlines", "name": "Bloodlines" },
+    { "id": "novice", "name": "Novice (Mercenary)", "group": "Solo difficulty", "defaultEnabled": true, "players": { "min": 1, "max": 1 } },
+    { "id": "veteran", "name": "Veteran (Sardaukar)", "group": "Solo difficulty", "players": { "min": 1, "max": 1 } },
+    { "id": "expert", "name": "Expert (Mentat)", "group": "Solo difficulty", "players": { "min": 1, "max": 1 } },
+    { "id": "kwisatz", "name": "Expert+ (Kwisatz Haderach)", "group": "Solo difficulty", "players": { "min": 1, "max": 1 } }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "board", "text": "Board with the standard side up; Shield Wall token below the Spice Refinery space", "condition": { "notModules": ["six"] }, "ref": "Uprising p.4" },
+        { "id": "board-six", "text": "Board with the six-player side up; Shield Wall token below the Spice Refinery space", "note": "Great Houses and Fringe Worlds replace the Emperor and Fremen tracks", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" },
+        { "id": "alliances", "text": "Alliance tokens on the Emperor, Guild, Bene Gesserit and Fremen tracks", "condition": { "notModules": ["six"] }, "ref": "Uprising p.4" },
+        { "id": "alliances-six", "text": "All 6 Alliance tokens on their tracks (Fremen and Emperor ones on the Commanders' personal boards)", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" },
+        { "id": "contracts", "text": "Shuffle the {n} contracts facedown; flip 2 faceup beneath the Landsraad Council, the rest in the bank", "amounts": { "n": 20 }, "condition": { "modules": ["choam"] }, "ref": "Uprising p.16" },
+        { "id": "contracts-six", "text": "Before shuffling the contracts, set aside the 2 Sardaukar contracts for Shaddam", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" },
+        { "id": "ix-overlay", "text": "CHOAM overlay folded in half over the top-right corner (covers Assembly Hall and Gather Support); Ix board beside", "note": "Treat the overlay and the Ix board as having one observation post each", "condition": { "modules": ["ix"] }, "ref": "Uprising p.18" },
+        { "id": "ix-tech", "text": "Shuffle the {n} Tech tiles facedown into 3 stacks on the Ix board; flip the top of each", "amounts": { "n": 18 }, "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.3" },
+        { "id": "tleilax-board", "text": "Bene Tleilax board above the Imperium Row, {n} spice on the 4th space of the Tleilaxu track", "amounts": { "n": 2 }, "condition": { "modules": ["immortality"] }, "ref": "Immortality p.4" },
+        { "id": "research-overlay", "text": "Research Station overlay over Uprising's Research Station space", "condition": { "modules": ["immortality"] }, "ref": "Uprising p.18" },
+        { "id": "sardaukar", "text": "Sardaukar Commanders on Sardaukar, Dutiful Service, Deliver Supplies, High Council and Gather Support; 1 more in the bank", "note": "Use either the wood or the plastic ones, not both", "condition": { "modules": ["bloodlines"], "notModules": ["ix", "six"] }, "ref": "Bloodlines p.3" },
+        { "id": "sardaukar-4p", "text": "4 players: another Sardaukar Commander on Assembly Hall", "condition": { "players": [4], "modules": ["bloodlines"], "notModules": ["ix"] }, "ref": "Bloodlines p.3" },
+        { "id": "sardaukar-ix", "text": "Sardaukar Commanders on Sardaukar, Dutiful Service, Deliver Supplies, High Council and Dreadnought; 1 more in the bank", "note": "The CHOAM overlay covers Assembly Hall and Gather Support", "condition": { "modules": ["bloodlines", "ix"], "notModules": ["six"] }, "ref": "Bloodlines p.7" },
+        { "id": "sardaukar-ix-4p", "text": "4 players: another Sardaukar Commander on Tech Negotiation", "condition": { "players": [4], "modules": ["bloodlines", "ix"] }, "ref": "Bloodlines p.7" },
+        { "id": "sardaukar-six", "text": "Sardaukar Commanders on Military Support, Deliver Supplies, High Council, Assembly Hall, Gather Support and the Sardaukar space on the Emperor board; 1 more in the bank", "condition": { "modules": ["bloodlines", "six"] }, "ref": "Bloodlines p.10" },
+        { "id": "sardaukar-skills", "text": "Shuffle the Sardaukar Commander Skills; deal {n} faceup", "amounts": { "n": 4 }, "condition": { "modules": ["bloodlines"], "notModules": ["six"] }, "ref": "Bloodlines p.3" },
+        { "id": "sardaukar-skills-six", "text": "Shuffle the Sardaukar Commander Skills without the 2 \"Fierce\" ones; deal {n} faceup", "amounts": { "n": 4 }, "condition": { "modules": ["bloodlines", "six"] }, "ref": "Bloodlines p.10" }
+      ]
+    },
+    {
+      "id": "conflict",
+      "title": "Conflict deck",
+      "steps": [
+        { "id": "conflict-bloodlines", "text": "Add Bloodlines' Conflict cards to the pool", "condition": { "modules": ["bloodlines"] }, "ref": "Bloodlines p.3" },
+        { "id": "conflict-deck", "text": "Conflict deck from the bottom up: {n}; return the rest unseen", "amounts": { "n": "4 random Conflict III, 5 Conflict II, 1 Conflict I" }, "condition": { "notModules": ["six"] }, "ref": "Uprising p.4" },
+        { "id": "conflict-deck-six", "text": "Conflict deck from the bottom up: {n}; no Conflict I", "amounts": { "n": "4 random Conflict III, 5 Conflict II" }, "note": "The game lasts at most 9 rounds", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards & bank",
+      "steps": [
+        { "id": "no-choam-cards", "text": "Leave out the Intrigue and Imperium cards marked with the CHOAM icon", "condition": { "notModules": ["choam"] }, "ref": "Uprising p.4" },
+        { "id": "choam-cards", "text": "Include the 4 CHOAM Intrigue and 4 CHOAM Imperium cards", "condition": { "modules": ["choam"] }, "ref": "Uprising p.16" },
+        { "id": "expansion-cards", "text": "Optionally shuffle Rise of Ix's Intrigue and Imperium cards into those decks", "condition": { "modules": ["ix"] }, "ref": "Uprising p.18" },
+        { "id": "immortality-cards", "text": "Shuffle Immortality's Intrigue and Imperium cards into those decks", "condition": { "modules": ["immortality"] }, "ref": "Immortality p.4-5" },
+        { "id": "bloodlines-cards", "text": "Shuffle Bloodlines' Intrigue and Imperium cards into those decks", "condition": { "modules": ["bloodlines"] }, "ref": "Bloodlines p.3" },
+        { "id": "intrigue", "text": "Shuffle the Intrigue deck facedown beside the board", "ref": "Uprising p.4" },
+        { "id": "imperium-row", "text": "Shuffle the Imperium deck and reveal {n} cards as the Imperium Row", "amounts": { "n": 5 }, "ref": "Uprising p.4" },
+        { "id": "reserve", "text": "Reserve stacks: Prepare the Way and The Spice Must Flow", "ref": "Uprising p.4" },
+        { "id": "tleilaxu-row", "text": "Reclaimed Forces left of the Bene Tleilax board; shuffle the Tleilaxu deck and deal {n} faceup beside it", "amounts": { "n": 2 }, "condition": { "modules": ["immortality"] }, "ref": "Immortality p.4" },
+        { "id": "bank", "text": "Bank: Solari, spice, water, sandworms and the {n} Maker Hooks tokens", "amounts": { "n": 4 }, "ref": "Uprising p.5" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "teams-six", "text": "Pick Commanders (Muad'Dib, Shaddam) and Allies; Commanders sit opposite, turn order alternates teams", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" },
+        { "id": "leaders", "text": "Each player takes a Leader (Shaddam Corrino IV only with the CHOAM Module)", "condition": { "notModules": ["six"] }, "ref": "Uprising p.4" },
+        { "id": "starting-deck", "text": "Shuffle your 10-card starting deck left of your Leader", "note": "Six players: Commanders use their Commander starting decks", "ref": "Uprising p.5" },
+        { "id": "deck-immortality", "text": "Swap both Dune, the Desert Planet cards for 2 Experimentation", "condition": { "modules": ["immortality"] }, "ref": "Immortality p.5" },
+        { "id": "water", "text": "Take {n} water", "amounts": { "n": 1 }, "ref": "Uprising p.5" },
+        { "id": "agents", "text": "Pick a color: 2 Agents on your Leader, Swordmaster beside the board, Spies in your supply", "condition": { "notModules": ["six"] }, "ref": "Uprising p.5" },
+        { "id": "agents-six", "text": "Allies: 2 Agents on the Leader, Swordmaster beside the board. Commanders: 2 single-arrow Agent tokens; the double-arrow one goes with the Swordmasters", "note": "Swordmaster Bonus tokens go with the Swordmasters", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" },
+        { "id": "score", "text": "Score marker on {n}", "amounts": { "n": { "default": 0, "byPlayers": { "4": 1 } } }, "condition": { "notModules": ["six"] }, "ref": "Uprising p.5" },
+        { "id": "score-six", "text": "Score markers: Commanders on 4 (\"C\"), Allies on 1 (\"A\")", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" },
+        { "id": "combat-marker", "text": "Combat marker on 0 of the Combat track", "ref": "Uprising p.5" },
+        { "id": "influence", "text": "A cube on the bottom of each Influence track", "note": "Six players: Commanders put their cube on their personal board's track instead", "ref": "Uprising p.5" },
+        { "id": "garrison", "text": "{n} troops in your garrison, the rest in your supply", "amounts": { "n": 3 }, "note": "Six players: Commanders have no troops", "ref": "Uprising p.5" },
+        { "id": "ix-player", "text": "Take your 2 dreadnoughts; Freighter disc on the bottom of the Shipping track", "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.3" },
+        { "id": "immortality-player", "text": "Tleilaxu and research discs on the leftmost spaces of their tracks; take a Family Atomics token", "condition": { "modules": ["immortality"] }, "ref": "Immortality p.4-5" },
+        { "id": "objectives", "text": "Shuffle the Objectives (drop those not for your player count); each player draws 1 faceup", "condition": { "notModules": ["six"] }, "ref": "Uprising p.5" },
+        { "id": "objectives-six", "text": "Only Allies draw Objectives; each team must get one Desert Mouse and one Crysknife", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" }
+      ]
+    },
+    {
+      "id": "rivals",
+      "title": "Rivals",
+      "condition": { "maxPlayers": 2 },
+      "steps": [
+        { "id": "rival-cards", "text": "Choose Rival cards: {n}", "amounts": { "n": { "byPlayers": { "1": "2 opponents (Swordmaster value 8+ for a first game)", "2": "1 shared opponent" } } }, "ref": "Rivals p.3" },
+        { "id": "rival-setup", "text": "Each Rival: a color, cubes on each Influence track, {n} troops in its garrison, 2 Agents, 3 Spies and 1 water; Swordmaster beside the board", "amounts": { "n": { "default": 3, "cases": [{ "when": { "players": [1], "modules": ["novice"] }, "value": 0 }] } }, "ref": "Rivals p.3" },
+        { "id": "hagal-deck", "text": "Shuffle the House Hagal deck near the Rivals", "ref": "Rivals p.3" },
+        { "id": "hagal-solo", "text": "Solo: remove the Reshuffle card (marked 2P) first", "condition": { "players": [1] }, "ref": "Rivals p.3" },
+        { "id": "hagal-ix", "text": "Remove Uprising's Accept Contract/Shipping (2), Gather Support (2) and Assembly Hall; add Rise of Ix's Hagal cards for your count except Foldspace/Interstellar Shipping", "condition": { "modules": ["ix"] }, "ref": "Rivals p.6" },
+        { "id": "hagal-immortality", "text": "Solo: remove 1 Uprising Research Station card and add all 4 Immortality Hagal cards", "condition": { "players": [1], "modules": ["immortality"] }, "ref": "Rivals p.6" },
+        { "id": "rival-objectives-2p", "text": "Give the Rival the Ornithopter Objective; deal the other two randomly", "condition": { "players": [2] }, "ref": "Rivals p.3" },
+        { "id": "rival-objectives-solo", "text": "You and your Rivals each get a random Objective", "condition": { "players": [1] }, "ref": "Rivals p.3" },
+        { "id": "novice-intrigue", "text": "You start with an Intrigue card", "condition": { "players": [1], "modules": ["novice"] }, "ref": "Rivals p.3" },
+        { "id": "expert-variants", "text": "Use Brutal Escalation, Expert Deployment and Smart Politics", "condition": { "players": [1], "notModules": ["novice", "veteran"] }, "ref": "Rivals p.3, p.6" },
+        { "id": "kwisatz", "text": "You can't gain a Swordmaster this game", "condition": { "players": [1], "modules": ["kwisatz"] }, "ref": "Rivals p.3" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "game-end", "text": "The game ends after the round in which someone reaches {n} VP (or the Conflict deck runs out)", "amounts": { "n": 10 }, "ref": "Uprising p.6" },
+        { "id": "agent-cards", "text": "You can't send an Agent without a card that allows that space", "ref": "Uprising p.6" },
+        { "id": "rival-turns", "text": "Rivals take Agent turns only, never Reveal turns", "condition": { "maxPlayers": 2 }, "ref": "Rivals p.3" },
+        { "id": "rival-2p-order", "text": "The Rival always acts between the two players and never holds the First Player marker", "condition": { "players": [2] }, "ref": "Rivals p.3" },
+        { "id": "streamlined", "text": "Streamlined: Lady Amber and the Beast can't win; after their Swordmaster, their bonus spice goes to the bank", "condition": { "modules": ["streamlined"] }, "ref": "Rivals p.6" },
+        { "id": "commanders", "text": "Commanders activate one Ally each turn for troops, Influence and swords", "condition": { "modules": ["six"] }, "ref": "Six-Player p.8" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-player", "text": "Whoever's Objective shows the First Player marker takes it", "ref": "Uprising p.5" },
+        { "id": "round-start", "text": "Reveal the top Conflict card; everyone draws {n} cards", "amounts": { "n": 5 }, "ref": "Uprising p.8" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "gameId": 436126,
+  "gameName": "Finspan",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Finspan rulebook r12", "Finspan Automa (Nautoma) rulebook r5", "Sharks & Reefs rulebook r10"]
+  },
+  "players": { "min": 1, "max": 5 },
+  "modules": [
+    { "id": "side-a", "name": "Achievement board side A", "group": "Achievements", "defaultEnabled": true, "note": "Use side A for any game with a first-time player." },
+    { "id": "side-b", "name": "Achievement board side B", "group": "Achievements" },
+    { "id": "sharks", "name": "Sharks & Reefs", "bggId": 468426 }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        { "id": "sharks-combine", "text": "Shuffle the Sharks & Reefs fish and starter fish into their decks; use the new achievement board and add its achievement tiles", "note": "One-time combining; can stay mixed", "condition": { "modules": ["sharks"] }, "ref": "Sharks & Reefs p.2" },
+        { "id": "supply", "text": "All egg/young and school tokens in the general supply", "ref": "p.2" },
+        { "id": "coral", "text": "Coral tokens in the general supply", "condition": { "modules": ["sharks"] }, "ref": "Sharks & Reefs p.2" },
+        { "id": "starter-deck", "text": "Shuffle the {n} starter fish (gray corners) facedown near the supply", "amounts": { "n": 10 }, "ref": "p.2" },
+        { "id": "fish-deck", "text": "Shuffle the fish deck facedown beside them", "ref": "p.2" },
+        { "id": "achievement-a", "text": "Achievement board near the supply, side A up", "condition": { "modules": ["side-a"] }, "ref": "p.2" },
+        { "id": "achievement-b", "text": "Achievement board side B: 1 random tile each for weeks 1, 2 and 3, week lines matching the board", "note": "Side B adds a 3-point bonus for the week's top scorer", "condition": { "modules": ["side-b"] }, "ref": "p.2" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "mat", "text": "Each player: an ocean mat and the {n} divers of one color", "amounts": { "n": 6 }, "ref": "p.2" },
+        { "id": "reef", "text": "Either side of any coral reef overlay over your twilight zone; take a player aid", "condition": { "modules": ["sharks"] }, "ref": "Sharks & Reefs p.2" },
+        { "id": "tokens", "text": "1 egg on each of the 2 starting egg slots and 1 young on the starting young slot", "ref": "p.2" },
+        { "id": "hand", "text": "Take {n} random starter fish, then draw 3 fish; lay them faceup beside your mat as your hand", "amounts": { "n": 2 }, "note": "Your hand is public", "ref": "p.2" }
+      ]
+    },
+    {
+      "id": "nautoma",
+      "title": "Solo: Nautoma",
+      "condition": { "players": [1] },
+      "steps": [
+        { "id": "nautoma-setup", "text": "Set up as for 2 players; side B bonuses count only at difficulty 5", "ref": "Automa p.2" },
+        { "id": "nautoma-divers", "text": "Pick a color for Nautoma and give her those divers, 2 eggs and 1 young", "ref": "Automa p.2" },
+        { "id": "nautoma-deck", "text": "Shuffle the decision cards; set 1 aside unseen, the rest is the decision deck", "ref": "Automa p.2" },
+        { "id": "nautoma-achievements", "text": "3 Nautoma achievement cards by the board, calm or stormy side up for your difficulty", "ref": "Automa p.2" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "weeks", "text": "{n} turns per week, 4 weeks", "amounts": { "n": 6 }, "ref": "p.4" },
+        { "id": "coral-max", "text": "A dive site never holds more than 6 coral", "condition": { "modules": ["sharks"] }, "ref": "Sharks & Reefs p.4" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-player", "text": "Random first player takes the first-player token", "condition": { "minPlayers": 2 }, "ref": "p.2" },
+        { "id": "first-player-solo", "text": "You take the first turn every week", "condition": { "players": [1] }, "ref": "Automa p.2" },
+        { "id": "turn", "text": "Each turn: place a diver to play a fish or to dive", "ref": "p.4" }
+      ]
+    }
+  ]
+}

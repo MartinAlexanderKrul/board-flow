@@ -58,12 +58,44 @@
       "path": "338960.json"
     },
     {
+      "gameId": 385761,
+      "gameName": "Faraway",
+      "gameIds": [385761, 425029],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "385761.json"
+    },
+    {
+      "gameId": 397598,
+      "gameName": "Dune: Imperium – Uprising",
+      "gameIds": [397598],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "397598.json"
+    },
+    {
+      "gameId": 410201,
+      "gameName": "Wyrmspan",
+      "gameIds": [410201, 453406],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "410201.json"
+    },
+    {
       "gameId": 422780,
       "gameName": "Mistborn: The Deckbuilding Game",
       "gameIds": [422780],
       "version": 2,
       "schemaVersion": 1,
       "path": "422780.json"
+    },
+    {
+      "gameId": 436126,
+      "gameName": "Finspan",
+      "gameIds": [436126, 468426],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "436126.json"
     }
   ]
 }
