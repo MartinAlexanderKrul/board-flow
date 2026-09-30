@@ -17,7 +17,9 @@ import cz.nicolsburg.boardflow.data.CsvParser
 import cz.nicolsburg.boardflow.data.GoogleApiClient
 import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.model.BggCredentials
+import cz.nicolsburg.boardflow.model.CollectionStatusUpdate
 import cz.nicolsburg.boardflow.model.GameItem
+import cz.nicolsburg.boardflow.model.withSyncedCollectionEntry
 import cz.nicolsburg.boardflow.model.LogEntry
 import cz.nicolsburg.boardflow.model.SleeveTrackingState
 import cz.nicolsburg.boardflow.model.SpreadsheetDetails
@@ -387,7 +389,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 refreshBggPlayHistory()
                 val built = buildCanonicalCollectionSnapshot(forceRefresh = forceRefresh, refreshSleeves = true)
-                val merged = enrichPlayedGames(built)
+                val merged = applyCollectionStatuses(enrichPlayedGames(built))
                 replaceCollectionSnapshot(merged)
                 _collectionGames.value = merged
                 saveSleevesToSheetIfAvailable(merged)
@@ -423,7 +425,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                         refreshSleeves = true,
                         preferredAccount = _account.value
                     )
-                    val merged = enrichPlayedGames(built)
+                    val merged = applyCollectionStatuses(enrichPlayedGames(built))
                     replaceCollectionSnapshot(merged)
                     _collectionGames.value = merged
                     saveSleevesToSheetIfAvailable(merged)
@@ -464,10 +466,12 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     return@launch
                 }
                 refreshMutex.withLock {
-                    val merged = buildCanonicalCollectionSnapshot(
-                        forceRefresh = forceRefresh,
-                        refreshSleeves = false,
-                        preferredAccount = account
+                    val merged = applyCollectionStatuses(
+                        buildCanonicalCollectionSnapshot(
+                            forceRefresh = forceRefresh,
+                            refreshSleeves = false,
+                            preferredAccount = account
+                        )
                     )
                     replaceCollectionSnapshot(merged)
                     _collectionGames.value = merged
@@ -1113,6 +1117,52 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         if (playedItems.isEmpty()) return snapshot
         entry("Played Games", "${playedItems.size} played games cached", LogEntry.Type.INFO)
         return mergeGameItems(snapshot, playedItems, CollectionUpdateSource.BGG)
+    }
+
+    /**
+     * Records every game's full BGG collection status and `collid` on the snapshot, so the status
+     * editor reads synced data instead of going to BGG each time it opens. Runs after the played
+     * games are added so they get a status too. Fails quietly and returns [games] unchanged; the
+     * editor then falls back to a one-off live read.
+     */
+    private suspend fun applyCollectionStatuses(games: List<GameItem>): List<GameItem> {
+        if (games.isEmpty()) return games
+        val credentials = securePrefs.getCredentials() ?: return games
+        if (credentials.username.isBlank()) return games
+        val entries = try {
+            BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
+                .fetchCollectionStatuses(credentials.username, credentials.password)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            entry("BGG Collection Status", e.message ?: "Could not read collection status", LogEntry.Type.ERROR)
+            return games
+        }
+        entry("BGG Collection Status", "${entries.size} collection entries read", LogEntry.Type.INFO)
+        return games.map { game -> game.withSyncedCollectionEntry(entries[game.objectId]) }
+    }
+
+    /**
+     * Stores a status the editor just saved (or read live) on the local snapshot, so reopening the
+     * game shows it without waiting for the next sync.
+     */
+    fun applyCollectionStatusUpdate(update: CollectionStatusUpdate) {
+        viewModelScope.launch(Dispatchers.IO) {
+            collectionMutex.withLock {
+                val games = readCanonicalSnapshotLocked()
+                val objectId = update.gameId.toString()
+                if (games.none { it.objectId == objectId }) return@withLock
+                val updatedGames = games.map { game ->
+                    if (game.objectId == objectId) {
+                        game.withSyncedCollectionEntry(update.entry, mirrorOwnership = update.userEdit)
+                    } else {
+                        game
+                    }
+                }
+                writeCanonicalSnapshotLocked(updatedGames)
+                _collectionGames.value = updatedGames
+            }
+        }
     }
 
     private suspend fun backfillMissingBggPlayCountsFromHistory(games: List<GameItem>): Pair<List<GameItem>, Int> {

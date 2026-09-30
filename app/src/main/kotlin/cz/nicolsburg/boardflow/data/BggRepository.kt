@@ -51,7 +51,7 @@ class BggRepository {
     private val client = OkHttpClient.Builder()
         .cookieJar(cookieJar)
         .addInterceptor(
-            HttpLoggingInterceptor { Log.d(TAG, it.replace('\n', ' ')) }.apply {
+            HttpLoggingInterceptor { Log.d(TAG, redactBggPassword(it).replace('\n', ' ')) }.apply {
                 level = if (BuildConfig.DEBUG) {
                     HttpLoggingInterceptor.Level.BODY
                 } else {

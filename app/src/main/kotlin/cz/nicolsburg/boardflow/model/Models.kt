@@ -73,6 +73,16 @@ data class CollectionStatusUiState(
     val error: String? = null
 )
 
+/**
+ * A collection status to store on the local snapshot: [entry] null means not in the collection.
+ * [userEdit] is set for a save or removal from the editor, which also updates own / wishlist.
+ */
+data class CollectionStatusUpdate(
+    val gameId: Int,
+    val entry: BggCollectionEntry?,
+    val userEdit: Boolean
+)
+
 /** A game's existing collection entry: its `collid` and the status flags currently set. */
 data class BggCollectionEntry(
     val collectionId: String?,
@@ -119,6 +129,79 @@ fun BggCollectionStatus.activeLabels(): List<String> = buildList {
     if (wantToBuy) add("Want to Buy")
     if (preordered) add("Pre-ordered")
     if (wishlist) add("Wishlist")
+}
+
+/**
+ * The collection status sync writes each game's BGG status into [GameItem.bggValues] under these
+ * keys (the xmlapi2 attribute names). [SYNCED] marks a record whose status came from that sync, so
+ * a blank [COLLID] then really means "not in the collection" rather than "never read".
+ */
+private object CollectionStatusKeys {
+    const val SYNCED = "collectionstatussynced"
+    const val COLLID = "collid"
+    const val OWN = "own"
+    const val PREV_OWNED = "prevowned"
+    const val FOR_TRADE = "fortrade"
+    const val WANT = "want"
+    const val WANT_TO_PLAY = "wanttoplay"
+    const val WANT_TO_BUY = "wanttobuy"
+    const val WISHLIST = "wishlist"
+    const val WISHLIST_PRIORITY = "wishlistpriority"
+    const val PREORDERED = "preordered"
+}
+
+/** True once the collection status sync has recorded this game's status. */
+val GameItem.hasSyncedCollectionStatus: Boolean
+    get() = bggValues[CollectionStatusKeys.SYNCED] == "1"
+
+/** The synced collection entry, or null when the game is not in the collection (or was never synced). */
+fun GameItem.syncedCollectionEntry(): BggCollectionEntry? {
+    if (!hasSyncedCollectionStatus) return null
+    val values = bggValues
+    val collectionId = values[CollectionStatusKeys.COLLID]?.takeIf { it.isNotBlank() } ?: return null
+    fun flag(key: String) = values[key] == "1"
+    return BggCollectionEntry(
+        collectionId = collectionId,
+        status = BggCollectionStatus(
+            own = flag(CollectionStatusKeys.OWN),
+            previouslyOwned = flag(CollectionStatusKeys.PREV_OWNED),
+            forTrade = flag(CollectionStatusKeys.FOR_TRADE),
+            wantInTrade = flag(CollectionStatusKeys.WANT),
+            wantToPlay = flag(CollectionStatusKeys.WANT_TO_PLAY),
+            wantToBuy = flag(CollectionStatusKeys.WANT_TO_BUY),
+            wishlist = flag(CollectionStatusKeys.WISHLIST),
+            wishlistPriority = values[CollectionStatusKeys.WISHLIST_PRIORITY]?.toIntOrNull()?.coerceIn(1, 5) ?: 3,
+            preordered = flag(CollectionStatusKeys.PREORDERED)
+        )
+    )
+}
+
+/**
+ * Records [entry] as this game's synced collection status; null means not in the collection.
+ * With [mirrorOwnership], own and wishlist are also copied into [GameItem.ownership] so the shelf
+ * filters follow a status edit. The sync leaves ownership to the owned/wishlist fetches, which also
+ * keeps games tracked only in the spreadsheet from being flipped to not owned.
+ */
+fun GameItem.withSyncedCollectionEntry(entry: BggCollectionEntry?, mirrorOwnership: Boolean = false): GameItem {
+    val status = entry?.status ?: BggCollectionStatus()
+    fun Boolean.flag() = if (this) "1" else "0"
+    val values = bggValues + mapOf(
+        CollectionStatusKeys.SYNCED to "1",
+        CollectionStatusKeys.COLLID to entry?.collectionId.orEmpty(),
+        CollectionStatusKeys.OWN to status.own.flag(),
+        CollectionStatusKeys.PREV_OWNED to status.previouslyOwned.flag(),
+        CollectionStatusKeys.FOR_TRADE to status.forTrade.flag(),
+        CollectionStatusKeys.WANT to status.wantInTrade.flag(),
+        CollectionStatusKeys.WANT_TO_PLAY to status.wantToPlay.flag(),
+        CollectionStatusKeys.WANT_TO_BUY to status.wantToBuy.flag(),
+        CollectionStatusKeys.WISHLIST to status.wishlist.flag(),
+        CollectionStatusKeys.WISHLIST_PRIORITY to status.wishlistPriority.toString(),
+        CollectionStatusKeys.PREORDERED to status.preordered.flag()
+    )
+    return copy(
+        ownership = if (mirrorOwnership) ownership.copy(isOwned = status.own, isWishlisted = status.wishlist) else ownership,
+        sources = sources.copy(bggValues = values)
+    )
 }
 
 data class SessionMemory(

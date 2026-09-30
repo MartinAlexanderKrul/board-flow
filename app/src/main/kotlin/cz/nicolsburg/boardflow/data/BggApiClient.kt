@@ -2,6 +2,8 @@
 
 import android.util.Log
 import cz.nicolsburg.boardflow.BuildConfig
+import cz.nicolsburg.boardflow.model.BggCollectionEntry
+import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.GameItem
 import okhttp3.logging.HttpLoggingInterceptor
 import kotlinx.coroutines.delay
@@ -20,13 +22,30 @@ class BggApiClient(private val xmlApiToken: String = "") {
     companion object {
         private const val TAG = "BggApiClient"
         private val xmlFactory: DocumentBuilderFactory = DocumentBuilderFactory.newInstance()
+
+        /** BGG's SessionID cookie lives for an hour; renew a little before it runs out. */
+        private const val SESSION_TTL_MS = 50L * 60 * 1000
+
+        private data class Session(val username: String, val cookies: String, val expiresAt: Long)
+
+        /**
+         * One login shared by every client in the process. A refresh builds several clients
+         * (collection, wishlist, status, played games), and BGG answers a quick burst of logins
+         * with HTTP 400 "Invalid username or password" even for valid credentials.
+         */
+        @Volatile private var sharedSession: Session? = null
+        private val loginLock = Any()
+
+        private fun validSession(username: String): Session? = sharedSession?.takeIf {
+            it.username.equals(username, ignoreCase = true) && it.expiresAt > System.currentTimeMillis()
+        }
     }
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(
-            HttpLoggingInterceptor { Log.d(TAG, it.replace('\n', ' ')) }.apply {
+            HttpLoggingInterceptor { Log.d(TAG, redactBggPassword(it).replace('\n', ' ')) }.apply {
                 level = if (BuildConfig.DEBUG) {
                     HttpLoggingInterceptor.Level.BODY
                 } else {
@@ -37,7 +56,6 @@ class BggApiClient(private val xmlApiToken: String = "") {
         .build()
 
     @Volatile private var sessionCookies: String = ""
-    @Volatile private var loggedIn = false
 
     data class SleevePageInfo(
         val status: GameItem.SleeveStatus,
@@ -47,7 +65,16 @@ class BggApiClient(private val xmlApiToken: String = "") {
     )
 
     fun loginIfNeeded(username: String, password: String) {
-        if (loggedIn || password.isBlank()) return
+        if (password.isBlank()) return
+        validSession(username)?.let { sessionCookies = it.cookies; return }
+        synchronized(loginLock) {
+            // Another client may have logged in while this one waited.
+            validSession(username)?.let { sessionCookies = it.cookies; return }
+            login(username, password)
+        }
+    }
+
+    private fun login(username: String, password: String) {
         val body = FormBody.Builder()
             .add("credentials[username]", username)
             .add("credentials[password]", password)
@@ -63,7 +90,7 @@ class BggApiClient(private val xmlApiToken: String = "") {
                 sessionCookies = resp.headers.values("Set-Cookie")
                     .mapNotNull { it.split(";").firstOrNull()?.trim() }
                     .joinToString("; ")
-                loggedIn = true
+                sharedSession = Session(username, sessionCookies, System.currentTimeMillis() + SESSION_TTL_MS)
             } else {
                 throw RuntimeException("BGG login failed HTTP ${resp.code}")
             }
@@ -271,6 +298,46 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
             )
         }
         return games
+    }
+
+    /**
+     * Reads the status flags and `collid` of every entry in [username]'s collection in one
+     * `brief=1` request, keyed by objectid. The owned and wishlist fetches filter on a single
+     * flag, so this is what lets the status editor work off synced data instead of reading BGG
+     * each time it opens. Games absent from the map are not in the collection at all.
+     */
+    suspend fun fetchCollectionStatuses(username: String, password: String? = null): Map<String, BggCollectionEntry> {
+        password?.let { loginIfNeeded(username, it) }
+        val body = fetchWithRetry(
+            "https://boardgamegeek.com/xmlapi2/collection?username=${java.net.URLEncoder.encode(username, "UTF-8")}&brief=1"
+        )
+        // An unknown user comes back as HTTP 200 with an <errors> document rather than an error status.
+        if (body.contains("<errors")) throw RuntimeException("BGG rejected the collection status read")
+        val doc = xmlFactory.newDocumentBuilder().parse(InputSource(StringReader(body)))
+        doc.documentElement.normalize()
+        val items = doc.getElementsByTagName("item")
+        val result = mutableMapOf<String, BggCollectionEntry>()
+        for (i in 0 until items.length) {
+            val item = items.item(i) as? Element ?: continue
+            val id = item.getAttribute("objectid").takeIf { it.isNotBlank() } ?: continue
+            val status = item.getElementsByTagName("status").item(0) as? Element
+            fun flag(name: String) = status?.getAttribute(name) == "1"
+            result[id] = BggCollectionEntry(
+                collectionId = item.getAttribute("collid").takeIf { it.isNotBlank() },
+                status = BggCollectionStatus(
+                    own = flag("own"),
+                    previouslyOwned = flag("prevowned"),
+                    forTrade = flag("fortrade"),
+                    wantInTrade = flag("want"),
+                    wantToPlay = flag("wanttoplay"),
+                    wantToBuy = flag("wanttobuy"),
+                    wishlist = flag("wishlist"),
+                    wishlistPriority = status?.getAttribute("wishlistpriority")?.toIntOrNull()?.coerceIn(1, 5) ?: 3,
+                    preordered = flag("preordered")
+                )
+            )
+        }
+        return result
     }
 
     suspend fun fetchThingDetails(ids: List<String>): Map<String, ThingDetail> {
