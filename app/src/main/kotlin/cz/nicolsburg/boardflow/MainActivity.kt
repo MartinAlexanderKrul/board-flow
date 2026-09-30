@@ -70,6 +70,7 @@ class MainActivity : ComponentActivity() {
                 BoardFlowApp(
                     appViewModel = appViewModel,
                     syncViewModel = syncViewModel,
+                    setupGuideRepository = container.setupGuideRepository,
                     onRequestSignIn = ::launchSignIn,
                     onRequestSignOut = ::launchSignOut,
                     onRequestCsvPick = { csvPickerLauncher.launch("*/*") }

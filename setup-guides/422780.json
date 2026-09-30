@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "gameId": 422780,
+  "gameName": "Mistborn: The Deckbuilding Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Mistborn: The Deckbuilding Game rulebook V1 (1st printing)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "coop", "name": "Co-op vs the Lord Ruler", "forcedAtPlayers": [1], "note": "Always on for solo. No Target and no starting bonuses." }
+  ],
+  "sections": [
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        { "id": "character", "text": "Deal each player a random character card", "ref": "p.5" },
+        { "id": "training-track", "text": "Training track and a cube in your color, cube on the first step", "ref": "p.5" },
+        { "id": "metals", "text": "Set of {n} metal tokens on the marked spaces above the track", "amounts": { "n": 8 }, "ref": "p.5" },
+        { "id": "starter-deck", "text": "Shuffle your character's 4 Training cards with {n} Funding cards as your deck", "amounts": { "n": 6 }, "ref": "p.5" },
+        { "id": "health", "text": "Health dial set to {n}", "amounts": { "n": 36 }, "ref": "p.5" },
+        { "id": "unused", "text": "Put unused player components back in the box, including their Training and Funding cards", "condition": { "maxPlayers": 3 }, "ref": "p.5" }
+      ]
+    },
+    {
+      "id": "table",
+      "title": "Market & Missions",
+      "steps": [
+        { "id": "market", "text": "Shuffle the Market deck and reveal {n} cards in a row: the Market", "amounts": { "n": 6 }, "ref": "p.5" },
+        { "id": "tokens", "text": "Boxings and Atium tokens next to the Market", "ref": "p.5" },
+        { "id": "missions", "text": "Reveal {n} random Mission cards; return the rest", "amounts": { "n": 3 }, "ref": "p.5" },
+        { "id": "mission-cubes", "text": "One cube of each player's color on each Mission, on the image at the right", "ref": "p.5" }
+      ]
+    },
+    {
+      "id": "lord-ruler",
+      "title": "Lord Ruler",
+      "condition": { "modules": ["coop"] },
+      "steps": [
+        { "id": "target-box", "text": "Leave the Target standee in the box", "ref": "p.18" },
+        { "id": "dominance", "text": "Dominance track card in view, Lord Ruler card on top so only its title bar shows", "ref": "p.18" },
+        { "id": "lord-ruler-health", "text": "Lord Ruler health dial set to {n}", "amounts": { "n": 48 }, "ref": "p.18" },
+        { "id": "lord-ruler-deck", "text": "His {n}-card deck next to the Dominance card", "amounts": { "n": 36 }, "ref": "p.18" }
+      ]
+    },
+    {
+      "id": "first-player",
+      "title": "First player",
+      "steps": [
+        {
+          "id": "bonuses",
+          "text": "Pick a first player. Clockwise bonuses: {bonus}",
+          "amounts": { "bonus": { "byPlayers": {
+            "2": "2nd +2 health",
+            "3": "2nd +2 health, 3rd +4 health",
+            "4": "2nd +2 health, 3rd +4 health, 4th +4 health and 1 Boxing"
+          } } },
+          "condition": { "notModules": ["coop"] },
+          "ref": "p.5"
+        },
+        { "id": "target", "text": "Give the Target to the last player in turn order", "condition": { "minPlayers": 3, "notModules": ["coop"] }, "ref": "p.5" },
+        { "id": "first-player-coop", "text": "Pick a random first player; no starting bonuses", "condition": { "minPlayers": 2, "modules": ["coop"] }, "ref": "p.18" },
+        { "id": "draw", "text": "Everyone draws {n} cards", "amounts": { "n": 5 }, "ref": "p.5" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "burn-one", "text": "You start able to Burn only {n} metal per turn", "amounts": { "n": 1 }, "ref": "p.7" },
+        { "id": "end-of-turn", "text": "End of turn: discard everything except Allies, then draw {n}", "amounts": { "n": 5 }, "ref": "p.6" },
+        { "id": "win-competitive", "text": "Win: top of all 3 Mission tracks, last one standing, or 4 Atium on Confrontation", "condition": { "notModules": ["coop"] }, "ref": "p.17" },
+        { "id": "lord-ruler-card", "text": "After drawing your new hand, draw and resolve the top Lord Ruler card", "condition": { "modules": ["coop"] }, "ref": "p.19" },
+        { "id": "coop-lose", "text": "You lose if the Lord Ruler's deck runs out", "condition": { "modules": ["coop"] }, "ref": "p.20" },
+        { "id": "coop-healing", "text": "Edicts heal him 10 for each Mission nobody has completed", "condition": { "modules": ["coop"] }, "ref": "p.20" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-turn", "text": "First player takes a turn: play cards, Burn metals, buy from the Market, attack" },
+        { "id": "first-turn-lord-ruler", "text": "At the end of each turn, that player draws a Lord Ruler card", "condition": { "modules": ["coop"] }, "ref": "p.19" }
+      ]
+    }
+  ]
+}

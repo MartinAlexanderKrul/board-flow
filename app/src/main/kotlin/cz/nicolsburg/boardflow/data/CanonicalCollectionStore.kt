@@ -29,6 +29,9 @@ import cz.nicolsburg.boardflow.model.PlayerRecognitionHint
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.model.SleeveTrackingState
 import cz.nicolsburg.boardflow.model.SessionMemory
+import cz.nicolsburg.boardflow.model.SetupGuideSource
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideIndexEntry
+import cz.nicolsburg.boardflow.data.setupguide.StoredSetupGuide
 import androidx.sqlite.db.SupportSQLiteDatabase
 import org.json.JSONArray
 import org.json.JSONObject
@@ -345,8 +348,43 @@ class CanonicalCollectionStore private constructor(
     suspend fun getLongestSession(countAll: Boolean, afterDate: String): GamePlayRow? =
         dao.getLongestSession(if (countAll) 1 else 0, afterDate)
 
+    // --- Setup guides (downloaded catalog copies and user guides; bundled guides live in assets) ---
+
+    suspend fun getSetupGuides(): List<StoredSetupGuide> =
+        dao.getAllSetupGuides().map { it.toModel() }
+
+    suspend fun getSetupGuide(gameId: Int, source: SetupGuideSource): StoredSetupGuide? =
+        dao.getSetupGuide(gameId, source.name)?.toModel()
+
+    suspend fun saveSetupGuide(guide: StoredSetupGuide) {
+        dao.upsertSetupGuide(SetupGuideEntity.fromModel(guide))
+    }
+
+    suspend fun deleteSetupGuide(gameId: Int, source: SetupGuideSource) {
+        dao.deleteSetupGuide(gameId, source.name)
+    }
+
+    suspend fun clearSetupGuides(source: SetupGuideSource) {
+        dao.clearSetupGuides(source.name)
+    }
+
+    suspend fun getSetupGuideCatalog(): List<SetupGuideIndexEntry> =
+        dao.getSetupGuideCatalog().map { it.toModel() }
+
+    suspend fun getSetupGuideCatalogUpdatedAt(): Long? =
+        dao.getMetadataLong(KEY_SETUP_GUIDE_CATALOG_UPDATED_AT)
+
+    suspend fun replaceSetupGuideCatalog(entries: List<SetupGuideIndexEntry>) {
+        db.withTransaction {
+            dao.clearSetupGuideCatalog()
+            dao.insertSetupGuideCatalog(entries.map { SetupGuideCatalogEntity.fromModel(it) })
+            dao.upsertMetadata(StoreMetadataEntity(KEY_SETUP_GUIDE_CATALOG_UPDATED_AT, System.currentTimeMillis()))
+        }
+    }
+
     companion object {
         private const val KEY_BGG_CACHE_UPDATED_AT = "bgg_cache_updated_at"
+        private const val KEY_SETUP_GUIDE_CATALOG_UPDATED_AT = "setup_guide_catalog_updated_at"
         @Volatile private var INSTANCE: CanonicalCollectionStore? = null
 
         fun getInstance(context: Context): CanonicalCollectionStore {
@@ -357,7 +395,7 @@ class CanonicalCollectionStore private constructor(
                         CanonicalCollectionDatabase::class.java,
                         "boardflow_collection.db"
                     )
-                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                         .build()
                 ).also { INSTANCE = it }
             }
@@ -540,6 +578,30 @@ private interface CanonicalCollectionDao {
     @Query("DELETE FROM sleeve_inventory WHERE genericName = :genericName")
     suspend fun deleteSleeveInventoryEntry(genericName: String)
 
+    @Query("SELECT * FROM setup_guides")
+    suspend fun getAllSetupGuides(): List<SetupGuideEntity>
+
+    @Query("SELECT * FROM setup_guides WHERE gameId = :gameId AND source = :source LIMIT 1")
+    suspend fun getSetupGuide(gameId: Int, source: String): SetupGuideEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertSetupGuide(guide: SetupGuideEntity)
+
+    @Query("DELETE FROM setup_guides WHERE gameId = :gameId AND source = :source")
+    suspend fun deleteSetupGuide(gameId: Int, source: String)
+
+    @Query("DELETE FROM setup_guides WHERE source = :source")
+    suspend fun clearSetupGuides(source: String)
+
+    @Query("SELECT * FROM setup_guide_catalog")
+    suspend fun getSetupGuideCatalog(): List<SetupGuideCatalogEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSetupGuideCatalog(entries: List<SetupGuideCatalogEntity>)
+
+    @Query("DELETE FROM setup_guide_catalog")
+    suspend fun clearSetupGuideCatalog()
+
     // Stats aggregates
     @Query("""
         SELECT
@@ -602,9 +664,11 @@ private interface CanonicalCollectionDao {
         GameRecognitionHintEntity::class,
         PlayerRecognitionHintEntity::class,
         GameSleeveTrackingEntity::class,
-        SleeveInventoryEntity::class
+        SleeveInventoryEntity::class,
+        SetupGuideEntity::class,
+        SetupGuideCatalogEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(CanonicalCollectionConverters::class)
@@ -773,6 +837,103 @@ private val MIGRATION_10_11 = object : Migration(10, 11) {
                 `ownedCount` INTEGER NOT NULL,
                 `updatedAt` INTEGER NOT NULL,
                 PRIMARY KEY(`genericName`)
+            )
+            """.trimIndent()
+        )
+    }
+}
+
+/** A setup guide document stored whole, like `play_memories.memoryJson`; see `SetupGuideJson`. */
+@Entity(tableName = "setup_guides", primaryKeys = ["gameId", "source"])
+private data class SetupGuideEntity(
+    val gameId: Int,
+    val source: String,
+    val guideJson: String,
+    val schemaVersion: Int,
+    val version: Int,
+    val basedOnVersion: Int?,
+    val updatedAt: Long
+) {
+    fun toModel() = StoredSetupGuide(
+        gameId = gameId,
+        source = SetupGuideSource.valueOf(source),
+        guideJson = guideJson,
+        schemaVersion = schemaVersion,
+        version = version,
+        basedOnVersion = basedOnVersion,
+        updatedAt = updatedAt
+    )
+
+    companion object {
+        fun fromModel(model: StoredSetupGuide) = SetupGuideEntity(
+            gameId = model.gameId,
+            source = model.source.name,
+            guideJson = model.guideJson,
+            schemaVersion = model.schemaVersion,
+            version = model.version,
+            basedOnVersion = model.basedOnVersion,
+            updatedAt = model.updatedAt
+        )
+    }
+}
+
+/** Cached copy of the remote `setup-guides/index.json`. */
+@Entity(tableName = "setup_guide_catalog")
+private data class SetupGuideCatalogEntity(
+    @PrimaryKey val gameId: Int,
+    val gameName: String,
+    val gameIds: String,
+    val version: Int,
+    val schemaVersion: Int,
+    val path: String
+) {
+    fun toModel() = SetupGuideIndexEntry(
+        gameId = gameId,
+        gameName = gameName,
+        gameIds = JSONArray(gameIds).let { arr -> (0 until arr.length()).map(arr::getInt).toSet() } + gameId,
+        version = version,
+        schemaVersion = schemaVersion,
+        path = path
+    )
+
+    companion object {
+        fun fromModel(entry: SetupGuideIndexEntry) = SetupGuideCatalogEntity(
+            gameId = entry.gameId,
+            gameName = entry.gameName,
+            gameIds = JSONArray(entry.gameIds.sorted()).toString(),
+            version = entry.version,
+            schemaVersion = entry.schemaVersion,
+            path = entry.path
+        )
+    }
+}
+
+private val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `setup_guides` (
+                `gameId` INTEGER NOT NULL,
+                `source` TEXT NOT NULL,
+                `guideJson` TEXT NOT NULL,
+                `schemaVersion` INTEGER NOT NULL,
+                `version` INTEGER NOT NULL,
+                `basedOnVersion` INTEGER,
+                `updatedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`gameId`, `source`)
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `setup_guide_catalog` (
+                `gameId` INTEGER NOT NULL,
+                `gameName` TEXT NOT NULL,
+                `gameIds` TEXT NOT NULL,
+                `version` INTEGER NOT NULL,
+                `schemaVersion` INTEGER NOT NULL,
+                `path` TEXT NOT NULL,
+                PRIMARY KEY(`gameId`)
             )
             """.trimIndent()
         )

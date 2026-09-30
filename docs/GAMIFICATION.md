@@ -189,7 +189,7 @@ Current supported types:
 
 ### Persistence
 
-Challenges are stored in Room (`challenges` table in `CanonicalCollectionStore`, DB v10).
+Challenges are stored in Room (`challenges` table in `CanonicalCollectionStore`, DB v12).
 
 On first load, `AppViewModel` migrates challenges from `SecurePreferences` to Room if the Room table is empty. `SecurePreferences` retains a legacy copy for backup compatibility.
 

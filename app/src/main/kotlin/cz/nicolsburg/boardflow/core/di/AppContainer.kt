@@ -10,6 +10,9 @@ import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.data.chronicle.FallbackChronicleComposer
 import cz.nicolsburg.boardflow.data.chronicle.GeminiChronicleLineGenerator
 import cz.nicolsburg.boardflow.data.chronicle.SessionChronicleService
+import cz.nicolsburg.boardflow.data.setupguide.BundledSetupGuideSource
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideCatalogClient
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 
 class AppContainer(context: Context) {
     private val appContext = context.applicationContext
@@ -21,6 +24,11 @@ class AppContainer(context: Context) {
     val chronicleService = SessionChronicleService(
         lineGenerator = GeminiChronicleLineGenerator(),
         fallbackComposer = FallbackChronicleComposer()
+    )
+    val setupGuideRepository = SetupGuideRepository(
+        store = canonicalCollectionStore,
+        bundled = BundledSetupGuideSource(appContext),
+        catalog = SetupGuideCatalogClient()
     )
 
     fun isOnline(): Boolean {

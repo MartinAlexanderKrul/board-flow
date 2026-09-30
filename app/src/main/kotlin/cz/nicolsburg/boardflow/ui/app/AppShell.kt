@@ -68,6 +68,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.nicolsburg.boardflow.AppViewModel
 import cz.nicolsburg.boardflow.R
 import cz.nicolsburg.boardflow.SyncViewModel
@@ -92,6 +93,9 @@ import cz.nicolsburg.boardflow.ui.review.LogPlayScreen
 import cz.nicolsburg.boardflow.ui.scan.ScanScreen
 import cz.nicolsburg.boardflow.ui.search.NewPlayScreen
 import cz.nicolsburg.boardflow.ui.settings.SettingsScreen
+import cz.nicolsburg.boardflow.ui.setup.QuickSetupScreen
+import cz.nicolsburg.boardflow.ui.setup.QuickSetupViewModel
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 import cz.nicolsburg.boardflow.ui.sync.SyncScreen
 
 private data class BottomNavTab(
@@ -113,6 +117,7 @@ private object AppChromeTokens {
 fun BoardFlowApp(
     appViewModel: AppViewModel,
     syncViewModel: SyncViewModel,
+    setupGuideRepository: SetupGuideRepository,
     onRequestSignIn: () -> Unit,
     onRequestSignOut: () -> Unit,
     onRequestCsvPick: () -> Unit
@@ -134,6 +139,7 @@ fun BoardFlowApp(
     val quickScanCorrectionMode by appViewModel.quickScanCorrectionMode.collectAsState()
     val pendingWidgetQuickScan by appViewModel.pendingWidgetQuickScan.collectAsState()
     val pendingWidgetOpenGameId by appViewModel.pendingWidgetOpenGameId.collectAsState()
+    val setupGuideAvailability by setupGuideRepository.availability.collectAsState()
     var startupSilentSyncRequested by rememberSaveable { mutableStateOf(false) }
     var showDiscardLogPlayConfirm by rememberSaveable { mutableStateOf(false) }
     var showStopTimerConfirm by rememberSaveable { mutableStateOf(false) }
@@ -157,6 +163,7 @@ fun BoardFlowApp(
         appViewModel.loadPersonalRatings()
         appViewModel.loadPlayers()
         appViewModel.loadChallenges()
+        setupGuideRepository.refreshCatalogIfStale(isOnline = appViewModel.isOnline())
     }
 
     LaunchedEffect(account?.name, spreadsheetId, hasBggCredentials) {
@@ -179,6 +186,21 @@ fun BoardFlowApp(
     // reading synced data instead of going back to BGG.
     LaunchedEffect(Unit) {
         appViewModel.collectionStatusUpdates.collect(syncViewModel::applyCollectionStatusUpdate)
+    }
+
+    // Keep setup guides for owned games available offline once the catalog knows about them.
+    LaunchedEffect(collectionGames, setupGuideAvailability.keys) {
+        val ownedIds = collectionGames.filter { it.isOwned }.mapNotNull { it.objectId.toIntOrNull() }
+        setupGuideRepository.prefetch(ownedIds.filter { it in setupGuideAvailability }, appViewModel.isOnline())
+    }
+
+    fun openQuickSetup(gameId: Int) {
+        // Default the player count to the most recent play of this game (or any game sharing its guide).
+        val guideId = setupGuideAvailability[gameId]?.baseGameId
+        val lastPlayers = historyPlays
+            .firstOrNull { play -> play.gameId == gameId || setupGuideAvailability[play.gameId]?.baseGameId == guideId }
+            ?.players?.size?.takeIf { it > 0 }
+        navController.navigate(AppRoutes.quickSetup(gameId, lastPlayers)) { launchSingleTop = true }
     }
 
     // Reload play data after any sync completes so historyPlays (and Stats) reflect
@@ -268,6 +290,7 @@ fun BoardFlowApp(
     val selectedGameName = appViewModel.selectedGame?.name.orEmpty()
     val isScan = currentRoute?.startsWith("scan/") == true
     val isReview = currentRoute == AppRoutes.LOG_PLAY
+    val isQuickSetup = currentRoute == AppRoutes.QUICK_SETUP
 
     val headerSubtitle = when {
         currentRoute == AppRoutes.NEW_PLAY -> "Log a New Play"
@@ -277,6 +300,7 @@ fun BoardFlowApp(
         currentRoute == AppRoutes.SYNC -> "Sync to Sheets"
         currentRoute == AppRoutes.SETTINGS -> activeTabLabel ?: "Settings"
         currentRoute == AppRoutes.CHALLENGES -> "Challenges"
+        isQuickSetup -> "Quick Setup"
         isScan || isReview -> selectedGameName
         else -> ""
     }
@@ -315,6 +339,7 @@ fun BoardFlowApp(
                 }
             }
         })
+        isQuickSetup -> ({ navController.popBackStack() })
         else -> null
     }
 
@@ -363,7 +388,7 @@ fun BoardFlowApp(
             )
         },
         bottomBar = {
-            if (!isScan && !isReview) {
+            if (!isScan && !isReview && !isQuickSetup) {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
                     modifier = Modifier.fillMaxWidth()
@@ -501,7 +526,9 @@ fun BoardFlowApp(
                     },
                     onImportQr = {
                         navController.navigate(AppRoutes.QR_IMPORT)
-                    }
+                    },
+                    setupGuideAvailability = setupGuideAvailability,
+                    onOpenQuickSetup = ::openQuickSetup
                 )
             }
 
@@ -540,6 +567,8 @@ fun BoardFlowApp(
                             }
                         }
                     },
+                    setupGuideAvailability = setupGuideAvailability,
+                    onOpenQuickSetup = ::openQuickSetup,
                     onViewPlayers = { playerName ->
                         appViewModel.setPendingHistoryFilter(playerFilter = playerName, showPlayersTab = true)
                         scope.launch {
@@ -679,6 +708,26 @@ fun BoardFlowApp(
                             popUpTo(AppRoutes.NEW_PLAY) { inclusive = false }
                         }
                     }
+                )
+            }
+
+            composable(
+                route = AppRoutes.QUICK_SETUP,
+                arguments = listOf(
+                    navArgument(QuickSetupViewModel.ARG_GAME_ID) { type = NavType.IntType },
+                    navArgument(QuickSetupViewModel.ARG_PLAYERS) { type = NavType.IntType; defaultValue = 0 }
+                )
+            ) {
+                val quickSetupViewModel: QuickSetupViewModel = viewModel(
+                    factory = QuickSetupViewModel.factory(setupGuideRepository, appViewModel::isOnline)
+                )
+                QuickSetupScreen(
+                    viewModel = quickSetupViewModel,
+                    onStartGame = { gameId, gameName ->
+                        appViewModel.startPlayTimer(gameId, gameName)
+                        navController.popBackStack()
+                    },
+                    onClose = { navController.popBackStack() }
                 )
             }
 

@@ -91,6 +91,16 @@ android {
 
 }
 
+// Quick Setup guides live in the repo-root setup-guides/ folder, which is also what the remote
+// catalog serves from GitHub. Copy them into a generated asset dir so they ship as
+// assets/setup-guides/*.json inside the APK.
+val copySetupGuideAssets = tasks.register<Copy>("copySetupGuideAssets") {
+    from(rootProject.file("setup-guides")) { include("*.json") }
+    into(layout.buildDirectory.dir("generated/setupGuideAssets/setup-guides"))
+}
+android.sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/setupGuideAssets"))
+tasks.named("preBuild") { dependsOn(copySetupGuideAssets) }
+
 android.applicationVariants.configureEach {
     outputs.configureEach {
         (this as BaseVariantOutputImpl).outputFileName = "board-flow-${name}.apk"
@@ -155,4 +165,8 @@ dependencies {
 
     // WorkManager — background BGG sync and play posting
     implementation(libs.androidx.work.runtime.ktx)
+
+    // JVM unit tests. org.json is an Android stub on the JVM, so tests need the real library.
+    testImplementation(libs.junit)
+    testImplementation(libs.org.json)
 }
