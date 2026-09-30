@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "gameId": 244992,
+  "gameName": "The Mind",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Mind rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "lives",
+          "text": "Put {n} lives and 1 throwing star faceup; the rest to the side",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "p.1"
+        },
+        {
+          "id": "levels",
+          "text": "Stack levels 1-{n} faceup, level 1 on top; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 12,
+                "3": 10,
+                "4": 8
+              }
+            }
+          },
+          "ref": "p.1"
+        },
+        {
+          "id": "deal",
+          "text": "Shuffle the 100 number cards; deal 1 to each player (level 1)",
+          "ref": "p.1"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "no-talk",
+          "text": "No sharing information about your cards - no signals",
+          "ref": "p.1"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "play",
+          "text": "No turns: anyone plays when it feels right, in rising order",
+          "ref": "p.1"
+        }
+      ]
+    }
+  ]
+}

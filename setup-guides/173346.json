@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "gameId": 173346,
+  "gameName": "7 Wonders Duel",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["7 Wonders Duel rulebook", "7 Wonders Duel: Pantheon rulebook"]
+  },
+  "players": { "min": 2, "max": 2 },
+  "modules": [
+    { "id": "pantheon", "name": "Pantheon", "bggId": 202976 }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "board", "text": "Board between the players; conflict pawn on the neutral middle space", "ref": "p.6" },
+        { "id": "military", "text": "The {n} Military tokens faceup on their spaces", "amounts": { "n": 4 }, "ref": "p.6" },
+        { "id": "progress", "text": "Shuffle the Progress tokens; {n} random ones faceup on the board, box the rest", "amounts": { "n": 5 }, "ref": "p.6" },
+        { "id": "coins", "text": "Each player takes {n} coins", "amounts": { "n": 7 }, "ref": "p.6" }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Age decks",
+      "steps": [
+        { "id": "remove-three", "text": "Box {n} random cards from each Age deck, unseen", "amounts": { "n": 3 }, "ref": "p.7" },
+        { "id": "guilds", "text": "Shuffle 3 random Guilds into the Age III deck; box the other Guilds", "condition": { "notModules": ["pantheon"] }, "ref": "p.7" },
+        { "id": "temples", "text": "Age III: no Guilds - shuffle in 3 random Grand Temples instead", "condition": { "modules": ["pantheon"] }, "ref": "Pantheon p.7" }
+      ]
+    },
+    {
+      "id": "wonders",
+      "title": "Wonders",
+      "steps": [
+        { "id": "first-player", "text": "Choose a first player", "ref": "p.7" },
+        { "id": "draft-1", "text": "Reveal 4 random Wonders: first player takes 1, second takes 2, first takes the last", "ref": "p.7" },
+        { "id": "draft-2", "text": "Reveal 4 more and repeat, starting with the second player", "note": "First game: use the Wonders listed on p.7 instead", "ref": "p.7" }
+      ]
+    },
+    {
+      "id": "pantheon",
+      "title": "Pantheon",
+      "condition": { "modules": ["pantheon"] },
+      "steps": [
+        { "id": "mythology-tokens", "text": "Age I structure: {n} random Mythology tokens faceup on the marked spaces", "amounts": { "n": 5 }, "ref": "Pantheon p.6" },
+        { "id": "pantheon-board", "text": "Pantheon board above the base board; shuffle the 5 Mythology decks beside it", "ref": "Pantheon p.6" },
+        { "id": "pantheon-tokens", "text": "Offering tokens, Gate card, Snake token and Minerva pawn beside the Pantheon", "ref": "Pantheon p.6" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "trading", "text": "Buying a resource costs 2 + the opponent's brown/grey production of it", "ref": "p.8" },
+        { "id": "age-two-pantheon", "text": "Age II: Gate card into the empty Pantheon space, reveal the Divinities, 3 Offering tokens on the structure", "condition": { "modules": ["pantheon"] }, "ref": "Pantheon p.7" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "structure", "text": "Lay out the Age I card structure; the first player takes a card" }
+      ]
+    }
+  ]
+}

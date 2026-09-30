@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "gameId": 39856,
+  "gameName": "Dixit",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Dixit rulebook (EN)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "rabbits",
+          "text": "Each player puts a rabbit on 0 of the scoring track",
+          "ref": "p.1"
+        },
+        {
+          "id": "deal",
+          "text": "Shuffle the images; deal {n} to each player; the rest is the draw pile",
+          "amounts": {
+            "n": {
+              "default": 6,
+              "byPlayers": {
+                "3": 7
+              }
+            }
+          },
+          "ref": "p.1"
+        },
+        {
+          "id": "votes",
+          "text": "Each player takes voting tokens 1 to {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": "3",
+                "4": "4",
+                "5": "5",
+                "6": "6"
+              }
+            }
+          },
+          "ref": "p.1"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "three",
+          "text": "3 players: everyone but the storyteller gives 2 cards",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "own-vote",
+          "text": "You can't vote for your own image",
+          "ref": "p.1"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The first player to describe one of their cards aloud is the first storyteller",
+          "ref": "p.1"
+        }
+      ]
+    }
+  ]
+}

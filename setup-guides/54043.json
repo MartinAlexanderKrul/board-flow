@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "gameId": 54043,
+  "gameName": "Jaipur",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Jaipur rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "camels",
+          "text": "3 camel cards faceup between the players",
+          "ref": "p.2"
+        },
+        {
+          "id": "deal",
+          "text": "Shuffle the rest; deal {n} cards to each player; the rest is the deck",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "market",
+          "text": "2 cards from the deck faceup next to the camels (the market)",
+          "ref": "p.2"
+        },
+        {
+          "id": "herd",
+          "text": "Players put the camels from their hands faceup in front of them as their herd",
+          "ref": "p.2"
+        },
+        {
+          "id": "goods-tokens",
+          "text": "Goods tokens: a pile per type, highest value on top, spread out",
+          "ref": "p.2"
+        },
+        {
+          "id": "bonus-tokens",
+          "text": "Bonus tokens: shuffle each of the 3 types into its own pile; camel token beside them",
+          "ref": "p.2"
+        },
+        {
+          "id": "seals",
+          "text": "3 Seals of Excellence within reach",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "either",
+          "text": "On your turn take cards OR sell cards, never both",
+          "ref": "p.2"
+        },
+        {
+          "id": "win",
+          "text": "Win a round to earn a Seal; 2 Seals wins the game",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Pick a starting player",
+          "ref": "p.2"
+        }
+      ]
+    }
+  ]
+}

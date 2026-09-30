@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "gameId": 254640,
+  "gameName": "Just One",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Just One rulebook"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 7
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "deck",
+          "text": "Shuffle the cards; draw {n} as a facedown deck; box the rest",
+          "amounts": {
+            "n": 13
+          },
+          "ref": "p.1"
+        },
+        {
+          "id": "easels",
+          "text": "Each player takes an easel and an erasable marker",
+          "ref": "p.1"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "identical",
+          "text": "Identical or invalid clues are cancelled before the guesser looks",
+          "ref": "p.2"
+        },
+        {
+          "id": "one-word",
+          "text": "Each clue is a single word",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Pick a random first active player",
+          "ref": "p.1"
+        }
+      ]
+    }
+  ]
+}

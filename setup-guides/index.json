@@ -2,12 +2,44 @@
   "schemaVersion": 1,
   "guides": [
     {
+      "gameId": 39856,
+      "gameName": "Dixit",
+      "gameIds": [39856],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "39856.json"
+    },
+    {
+      "gameId": 54043,
+      "gameName": "Jaipur",
+      "gameIds": [54043],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "54043.json"
+    },
+    {
+      "gameId": 68448,
+      "gameName": "7 Wonders",
+      "gameIds": [68448, 92539, 111661, 133993, 154638, 247315],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "68448.json"
+    },
+    {
       "gameId": 169786,
       "gameName": "Scythe",
       "gameIds": [169786, 199727, 223555],
       "version": 1,
       "schemaVersion": 1,
       "path": "169786.json"
+    },
+    {
+      "gameId": 173346,
+      "gameName": "7 Wonders Duel",
+      "gameIds": [173346, 202976],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "173346.json"
     },
     {
       "gameId": 174430,
@@ -32,6 +64,22 @@
       "version": 3,
       "schemaVersion": 1,
       "path": "199792.json"
+    },
+    {
+      "gameId": 244992,
+      "gameName": "The Mind",
+      "gameIds": [244992],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "244992.json"
+    },
+    {
+      "gameId": 254640,
+      "gameName": "Just One",
+      "gameIds": [254640],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "254640.json"
     },
     {
       "gameId": 266192,
@@ -80,6 +128,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "338960.json"
+    },
+    {
+      "gameId": 357563,
+      "gameName": "Akropolis",
+      "gameIds": [357563],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "357563.json"
     },
     {
       "gameId": 366161,

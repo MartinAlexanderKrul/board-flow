@@ -1,0 +1,342 @@
+{
+  "schemaVersion": 1,
+  "gameId": 68448,
+  "gameName": "7 Wonders",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "7 Wonders rulebook (1st edition)",
+      "Leaders, Cities, Babel, Armada and Wonder Pack rulebooks"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 7
+  },
+  "modules": [
+    {
+      "id": "leaders",
+      "name": "Leaders",
+      "bggId": 92539
+    },
+    {
+      "id": "cities",
+      "name": "Cities",
+      "bggId": 111661,
+      "extendsMaxPlayers": 8,
+      "note": "Enables 8 players and team play."
+    },
+    {
+      "id": "babel-tower",
+      "name": "Babel: Tower",
+      "bggId": 154638
+    },
+    {
+      "id": "babel-projects",
+      "name": "Babel: Great Projects"
+    },
+    {
+      "id": "armada",
+      "name": "Armada",
+      "bggId": 247315,
+      "extendsMaxPlayers": 8
+    },
+    {
+      "id": "wonder-pack",
+      "name": "Wonder Pack",
+      "bggId": 133993
+    }
+  ],
+  "sections": [
+    {
+      "id": "decks",
+      "title": "Age decks",
+      "steps": [
+        {
+          "id": "age-cards",
+          "text": "For each Age, keep only the cards for {n} players; box the rest",
+          "amounts": {
+            "n": {
+              "default": "your number of",
+              "byPlayers": {
+                "8": "7"
+              }
+            }
+          },
+          "note": "e.g. 6 players: 3+ to 6+ cards",
+          "ref": "p.3, Cities p.10"
+        },
+        {
+          "id": "cities-cards",
+          "text": "Add {n} random black cards to each Age deck (unseen)",
+          "amounts": {
+            "n": {
+              "default": "1 per player",
+              "byPlayers": {
+                "8": "7"
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "cities"
+            ]
+          },
+          "ref": "Cities p.3"
+        },
+        {
+          "id": "armada-cards",
+          "text": "Shuffle each Armada Age deck; add {n} to the matching Age deck",
+          "amounts": {
+            "n": {
+              "default": "1 per player",
+              "byPlayers": {
+                "8": "7"
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "armada"
+            ]
+          },
+          "ref": "Armada p.5"
+        },
+        {
+          "id": "armada-3p",
+          "text": "3 players: first remove the 5 Armada cards with the 4/5 player icons",
+          "condition": {
+            "players": [
+              3
+            ],
+            "modules": [
+              "armada"
+            ]
+          },
+          "ref": "Armada p.5"
+        },
+        {
+          "id": "guilds",
+          "text": "Age III: keep {n} random Guilds (players + 2), shuffled in",
+          "amounts": {
+            "n": {
+              "default": "players + 2",
+              "byPlayers": {
+                "3": 5,
+                "4": 6,
+                "5": 7,
+                "6": 8,
+                "7": 9,
+                "8": 9
+              }
+            }
+          },
+          "note": "Leaders and Cities Guilds join the pool; the count doesn't change",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "wonders",
+      "title": "Wonders & bank",
+      "steps": [
+        {
+          "id": "wonder-pack",
+          "text": "Add Wonder Pack's 4 Wonders to the Wonder cards",
+          "condition": {
+            "modules": [
+              "wonder-pack"
+            ]
+          },
+          "ref": "Wonder Pack"
+        },
+        {
+          "id": "wonder-cards",
+          "text": "Shuffle the Wonder cards facedown; each player's card sets their board and side",
+          "note": "Side A for your first games",
+          "ref": "p.3"
+        },
+        {
+          "id": "coins",
+          "text": "Each player takes {n} value-1 coins; the rest is the bank",
+          "amounts": {
+            "n": {
+              "default": 3,
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "leaders"
+                    ]
+                  },
+                  "value": 6
+                }
+              ]
+            }
+          },
+          "ref": "p.3, Leaders p.3"
+        },
+        {
+          "id": "conflict",
+          "text": "Conflict tokens next to the bank",
+          "ref": "p.3"
+        },
+        {
+          "id": "cities-tokens",
+          "text": "Debt and Diplomacy tokens with the coins and Conflict tokens",
+          "condition": {
+            "modules": [
+              "cities"
+            ]
+          },
+          "ref": "Cities p.3"
+        },
+        {
+          "id": "two-player",
+          "text": "2 players (\"expert\" variant): add the Free City and Border cards",
+          "note": "Recommended only after a few 3-7 player games",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.7"
+        }
+      ]
+    },
+    {
+      "id": "leaders",
+      "title": "Leaders",
+      "condition": {
+        "modules": [
+          "leaders"
+        ]
+      },
+      "steps": [
+        {
+          "id": "leaders-deal",
+          "text": "Deal each player {n} random Leaders (hidden); box the rest",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "Leaders p.4"
+        },
+        {
+          "id": "leaders-draft",
+          "text": "Draft them: keep 1, pass the rest right, until everyone has 4",
+          "ref": "Leaders p.4"
+        }
+      ]
+    },
+    {
+      "id": "babel",
+      "title": "Babel",
+      "condition": {
+        "modules": [
+          "babel-tower"
+        ]
+      },
+      "steps": [
+        {
+          "id": "babel-board",
+          "text": "Babel board in the middle; shuffle the Babel tiles",
+          "ref": "Babel p.4"
+        },
+        {
+          "id": "babel-draft",
+          "text": "Deal each player {n} Babel tiles and draft them (keep 1, pass right) so everyone keeps 3",
+          "amounts": {
+            "n": 3
+          },
+          "ref": "Babel p.4"
+        }
+      ]
+    },
+    {
+      "id": "armada",
+      "title": "Armada",
+      "condition": {
+        "modules": [
+          "armada"
+        ]
+      },
+      "steps": [
+        {
+          "id": "islands",
+          "text": "Sort the Island cards by level 1-3; shuffle each facedown near the middle",
+          "ref": "Armada p.5"
+        },
+        {
+          "id": "armada-tokens",
+          "text": "Naval Conflict, Incursion and extra Ground Conflict tokens by the base Conflict tokens; extra coins to the bank",
+          "ref": "Armada p.5"
+        },
+        {
+          "id": "dockyards",
+          "text": "Each player: a Dockyard board right of their Wonder, and a Ship of each color on its Start space",
+          "ref": "Armada p.5"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "great-projects",
+          "text": "Babel Great Projects: each Age starts with a random Great Project of that Age in the middle",
+          "condition": {
+            "modules": [
+              "babel-projects"
+            ]
+          },
+          "ref": "Babel p.6"
+        },
+        {
+          "id": "recruitment",
+          "text": "Leaders: a Recruitment phase starts each Age",
+          "condition": {
+            "modules": [
+              "leaders"
+            ]
+          },
+          "ref": "Leaders p.4"
+        },
+        {
+          "id": "teams",
+          "text": "Team play (4, 6 or 8 players): teammates sit side by side and may show hands",
+          "condition": {
+            "modules": [
+              "cities"
+            ]
+          },
+          "ref": "Cities p.10"
+        },
+        {
+          "id": "eight-players",
+          "text": "8 players: deal 7 cards each Age, play 6",
+          "condition": {
+            "players": [
+              8
+            ]
+          },
+          "ref": "Cities p.10"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "deal",
+          "text": "Deal the Age I cards (7 each); everyone picks 1 and reveals at once, then passes left"
+        }
+      ]
+    }
+  ]
+}

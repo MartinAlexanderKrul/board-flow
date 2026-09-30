@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "gameId": 357563,
+  "gameName": "Akropolis",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Akropolis rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "tiles",
+          "text": "Take the City tiles for your player count (see their backs: {n})",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "2+",
+                "3": "2+ and 3+",
+                "4": "2+, 3+ and 4"
+              }
+            }
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "stacks",
+          "text": "Make 11 equal facedown stacks ({n} tiles each)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 5
+              }
+            }
+          },
+          "note": "Longer game: use all tiles (19 stacks at 2, 15 at 3)",
+          "ref": "p.2"
+        },
+        {
+          "id": "site",
+          "text": "Lay the leftover tiles faceup in a line: the Construction Site",
+          "ref": "p.3"
+        },
+        {
+          "id": "start-tiles",
+          "text": "Each player takes a starting tile",
+          "ref": "p.3"
+        },
+        {
+          "id": "chief",
+          "text": "Whoever most recently climbed a hill takes the Chief Architect marker",
+          "ref": "p.3"
+        },
+        {
+          "id": "stones",
+          "text": "Starting Stones clockwise from the first player: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "1, 2",
+                "3": "1, 2, 3",
+                "4": "1, 2, 3, 4"
+              }
+            }
+          },
+          "ref": "p.3"
+        },
+        {
+          "id": "stone-supply",
+          "text": "Remaining Stones nearby",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "site-size",
+          "text": "Each round starts with 2 more tiles in the Construction Site than players",
+          "ref": "p.3"
+        },
+        {
+          "id": "last-tile",
+          "text": "The last tile in the Construction Site is never played",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The Chief Architect goes first, then clockwise",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}
