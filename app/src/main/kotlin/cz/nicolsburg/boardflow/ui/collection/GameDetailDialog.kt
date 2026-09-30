@@ -54,10 +54,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material.icons.filled.WarningAmber
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -92,6 +89,8 @@ import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.CollectionStatusUiState
 import cz.nicolsburg.boardflow.model.activeLabels
+import cz.nicolsburg.boardflow.model.hasSyncedCollectionStatus
+import cz.nicolsburg.boardflow.model.syncedCollectionEntry
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
@@ -99,6 +98,11 @@ import cz.nicolsburg.boardflow.model.SleeveDatabase
 import cz.nicolsburg.boardflow.model.SleeveManufacturer
 import cz.nicolsburg.boardflow.model.SleeveTrackingState
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
+import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
+import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
+import cz.nicolsburg.boardflow.ui.common.BoardFlowDestructiveButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
+import cz.nicolsburg.boardflow.ui.common.BoardFlowPrimaryButton
 import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import cz.nicolsburg.boardflow.ui.history.ContextualInsightStrip
@@ -205,7 +209,7 @@ fun GameDetailsDialog(
             if (gameObjectId != null) {
                 add(InfoSection("Collection", listOf(SectionStat(
                     label = "BGG status",
-                    value = collectionStatusSummary(collectionStatus),
+                    value = collectionStatusSummary(collectionStatus, game, gameObjectId),
                     icon = Icons.Default.LibraryAddCheck,
                     onClick = {
                         showCollectionEditor = true
@@ -368,56 +372,18 @@ fun GameDetailsDialog(
     }
 
     if (showRatingPicker) {
-        AlertDialog(
-            onDismissRequest = { showRatingPicker = false },
-            title = { Text("Rate this game") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        (1..10).forEach { n ->
-                            val selected = personalRating != null && n <= personalRating
-                            Icon(
-                                imageVector = if (selected) Icons.Default.Star else Icons.Default.StarBorder,
-                                contentDescription = "$n",
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .size(28.dp)
-                                    .clickable { onRateGame(n); showRatingPicker = false },
-                                tint = if (selected) MaterialTheme.colorScheme.primary
-                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                            )
-                        }
-                    }
-                    if (personalRating != null) {
-                        Text(
-                            "Current: $personalRating / 10",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (personalRating != null) {
-                        TextButton(onClick = { onClearRating(); showRatingPicker = false }) {
-                            Text("Clear")
-                        }
-                    }
-                    TextButton(onClick = { showRatingPicker = false }) {
-                        Text("Cancel")
-                    }
-                }
-            }
+        RatingPickerDialog(
+            gameName = game.name,
+            personalRating = personalRating,
+            onRate = { onRateGame(it); showRatingPicker = false },
+            onClear = { onClearRating(); showRatingPicker = false },
+            onDismiss = { showRatingPicker = false }
         )
     }
 
     if (showCollectionEditor && gameObjectId != null) {
         CollectionStatusEditorDialog(
+            gameName = game.name,
             state = collectionStatus,
             onDismiss = { showCollectionEditor = false },
             onSave = { onSaveCollectionStatus(it) },
@@ -426,20 +392,121 @@ fun GameDetailsDialog(
     }
 }
 
-/** One-line summary for the collection row, before and after the entry has been read from BGG. */
-private fun collectionStatusSummary(state: CollectionStatusUiState): String = when {
-    state.loading -> "Loading…"
-    !state.loaded -> "Tap to edit"
-    !state.inCollection -> "Not in collection"
-    else -> state.status.activeLabels().joinToString(", ").ifBlank { "In collection, no status set" }
+/**
+ * One-line summary for the collection row. Uses the editor state once it belongs to this game,
+ * otherwise the status recorded by the last sync, so the row is filled in without reading BGG.
+ */
+private fun collectionStatusSummary(state: CollectionStatusUiState, game: GameItem, gameId: Int?): String {
+    val current = state.takeIf { it.gameId != null && it.gameId == gameId }
+    return when {
+        current?.loading == true -> "Loading..."
+        current?.loaded == true -> statusSummary(current.inCollection, current.status)
+        game.hasSyncedCollectionStatus -> game.syncedCollectionEntry()
+            .let { entry -> statusSummary(entry != null, entry?.status ?: BggCollectionStatus()) }
+        else -> "Tap to edit"
+    }
 }
 
+private fun statusSummary(inCollection: Boolean, status: BggCollectionStatus): String = when {
+    !inCollection -> "Not in collection"
+    else -> status.activeLabels().joinToString(", ").ifBlank { "In collection, no status set" }
+}
+
+/** Title block shared by the small editors opened from the game detail dialog. */
+@Composable
+private fun DetailEditorHeader(title: String, subtitle: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun DetailEditorLabel(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+private fun RatingPickerDialog(
+    gameName: String,
+    personalRating: Int?,
+    onRate: (Int) -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            DetailEditorHeader(title = "Rate this game", subtitle = gameName)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    (1..10).forEach { n ->
+                        val selected = personalRating != null && n <= personalRating
+                        Icon(
+                            imageVector = if (selected) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = "$n",
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(CircleShape)
+                                .clickable { onRate(n) }
+                                .padding(vertical = 6.dp)
+                                .size(26.dp),
+                            tint = if (selected) MaterialTheme.colorScheme.primary
+                                   else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
+                    }
+                }
+                Text(
+                    if (personalRating != null) "Current: $personalRating / 10" else "Tap a star to rate",
+                    style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (personalRating != null) {
+                BoardFlowDestructiveButton(onClick = onClear, modifier = Modifier.fillMaxWidth()) {
+                    Text("Clear rating")
+                }
+            }
+        }
+    }
+}
+
+/** BGG's own names for the wishlist priorities. */
+private val WishlistPriorityLabels = mapOf(
+    1 to "Must have",
+    2 to "Love to have",
+    3 to "Like to have",
+    4 to "Thinking about it",
+    5 to "Don't buy this"
+)
+
 /**
- * Editor for the eight status checkboxes BGG's own collection UI exposes, in the site's order.
+ * Editor for the eight status flags BGG's own collection UI exposes, in the site's order.
  * Edits a local draft so a half-finished set of toggles is never posted; only Save writes.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CollectionStatusEditorDialog(
+    gameName: String,
     state: CollectionStatusUiState,
     onDismiss: () -> Unit,
     onSave: (BggCollectionStatus) -> Unit,
@@ -447,7 +514,9 @@ private fun CollectionStatusEditorDialog(
 ) {
     // Re-seed the draft whenever a fresh entry arrives, but keep edits across recompositions.
     var draft by remember(state.loaded, state.collectionId) { mutableStateOf(state.status) }
+    var confirmRemove by remember { mutableStateOf(false) }
     val busy = state.loading || state.saving
+    val editable = state.loaded && !state.saving
     // Close once a write finishes cleanly; a failure keeps the editor open so the error is visible.
     var sawSaving by remember { mutableStateOf(false) }
     LaunchedEffect(state.saving) {
@@ -458,97 +527,136 @@ private fun CollectionStatusEditorDialog(
             if (state.error == null) onDismiss()
         }
     }
-    AlertDialog(
-        onDismissRequest = { if (!state.saving) onDismiss() },
-        title = { Text("Collection status") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                when {
-                    state.loading -> Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        Text("Reading your collection…", style = MaterialTheme.typography.bodyMedium)
-                    }
-                    !state.loaded -> Text(
-                        state.error ?: "Could not read your collection status.",
+    val flags: List<Triple<String, Boolean, (Boolean) -> BggCollectionStatus>> = listOf(
+        Triple("Own", draft.own) { v -> draft.copy(own = v) },
+        Triple("Prev. Owned", draft.previouslyOwned) { v -> draft.copy(previouslyOwned = v) },
+        Triple("For Trade", draft.forTrade) { v -> draft.copy(forTrade = v) },
+        Triple("Want to Play", draft.wantToPlay) { v -> draft.copy(wantToPlay = v) },
+        Triple("Want in Trade", draft.wantInTrade) { v -> draft.copy(wantInTrade = v) },
+        Triple("Want to Buy", draft.wantToBuy) { v -> draft.copy(wantToBuy = v) },
+        Triple("Pre-ordered", draft.preordered) { v -> draft.copy(preordered = v) },
+        Triple("Wishlist", draft.wishlist) { v -> draft.copy(wishlist = v) }
+    )
+
+    AnimatedDialog(onDismissRequest = { if (!state.saving) onDismiss() }) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            DetailEditorHeader(title = "Collection status", subtitle = gameName)
+            when {
+                state.loading -> Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    Text(
+                        "Reading your collection...",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    else -> {
-                        CollectionFlagRow("Own", draft.own, !state.saving) { draft = draft.copy(own = it) }
-                        CollectionFlagRow("Prev. Owned", draft.previouslyOwned, !state.saving) { draft = draft.copy(previouslyOwned = it) }
-                        CollectionFlagRow("For Trade", draft.forTrade, !state.saving) { draft = draft.copy(forTrade = it) }
-                        CollectionFlagRow("Want to Play", draft.wantToPlay, !state.saving) { draft = draft.copy(wantToPlay = it) }
-                        CollectionFlagRow("Want in Trade", draft.wantInTrade, !state.saving) { draft = draft.copy(wantInTrade = it) }
-                        CollectionFlagRow("Want to Buy", draft.wantToBuy, !state.saving) { draft = draft.copy(wantToBuy = it) }
-                        CollectionFlagRow("Pre-ordered", draft.preordered, !state.saving) { draft = draft.copy(preordered = it) }
-                        CollectionFlagRow("Wishlist", draft.wishlist, !state.saving) { draft = draft.copy(wishlist = it) }
-                        if (draft.wishlist) {
-                            Text(
-                                "Wishlist priority",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                }
+                !state.loaded -> Text(
+                    state.error ?: "Could not read your collection status.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                else -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        DetailEditorLabel("Status")
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            flags.forEach { (label, selected, update) ->
+                                BoardFlowFilterChip(
+                                    selected = selected,
+                                    onClick = { draft = update(!selected) },
+                                    enabled = editable,
+                                    label = { Text(label) },
+                                    leadingIcon = if (selected) {
+                                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                    } else null
+                                )
+                            }
+                        }
+                    }
+                    if (draft.wishlist) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            DetailEditorLabel("Wishlist priority")
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 (1..5).forEach { priority ->
-                                    FilterChip(
+                                    BoardFlowFilterChip(
                                         selected = draft.wishlistPriority == priority,
                                         onClick = { draft = draft.copy(wishlistPriority = priority) },
-                                        enabled = !state.saving,
+                                        enabled = editable,
                                         label = { Text("$priority") }
                                     )
                                 }
                             }
-                        }
-                        state.error?.let { message ->
                             Text(
-                                message,
+                                WishlistPriorityLabels[draft.wishlistPriority].orEmpty(),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.padding(top = 8.dp)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                    }
+                    state.error?.let { message ->
+                        Text(
+                            message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+            if (state.loaded) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Clearing every flag leaves a zeroed entry behind, so removal is its own action.
+                    if (state.inCollection) {
+                        BoardFlowDestructiveButton(
+                            onClick = { confirmRemove = true },
+                            enabled = !busy,
+                            modifier = Modifier.weight(1f)
+                        ) { Text("Remove") }
+                    }
+                    BoardFlowPrimaryButton(
+                        onClick = { onSave(draft) },
+                        enabled = !busy,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (state.saving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Saving")
+                        } else {
+                            Text("Save")
                         }
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = state.loaded && !busy,
-                onClick = { onSave(draft) }
-            ) { Text(if (state.saving) "Saving…" else "Save") }
-        },
-        dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Clearing every flag leaves a zeroed entry behind, so removal is its own action.
-                if (state.loaded && state.inCollection) {
-                    TextButton(enabled = !busy, onClick = onRemove) { Text("Remove") }
-                }
-                TextButton(enabled = !state.saving, onClick = onDismiss) { Text("Cancel") }
-            }
         }
-    )
-}
+    }
 
-@Composable
-private fun CollectionFlagRow(
-    label: String,
-    checked: Boolean,
-    enabled: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled) { onCheckedChange(!checked) },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Checkbox(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
-        Text(label, style = MaterialTheme.typography.bodyMedium)
+    if (confirmRemove) {
+        BoardFlowConfirmationDialog(
+            title = "Remove from collection?",
+            message = "$gameName will be removed from your BGG collection along with all of its status flags.",
+            confirmLabel = "Remove",
+            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
+            onConfirm = { confirmRemove = false; onRemove() },
+            onDismiss = { confirmRemove = false }
+        )
     }
 }
 

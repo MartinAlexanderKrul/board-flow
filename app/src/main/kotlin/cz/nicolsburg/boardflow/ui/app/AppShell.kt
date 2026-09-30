@@ -175,6 +175,12 @@ fun BoardFlowApp(
         appViewModel.updateFromCollection(collectionGames)
     }
 
+    // Collection status edits land on the snapshot SyncViewModel owns, so the editor keeps
+    // reading synced data instead of going back to BGG.
+    LaunchedEffect(Unit) {
+        appViewModel.collectionStatusUpdates.collect(syncViewModel::applyCollectionStatusUpdate)
+    }
+
     // Reload play data after any sync completes so historyPlays (and Stats) reflect
     // fresh data. SyncViewModel writes to Room via its own store; AppViewModel's _bggPlays
     // and _playHistory are not notified otherwise. Guard on !syncBusy prevents reads

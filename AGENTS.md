@@ -461,9 +461,10 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - clearing every status flag does NOT delete a collection entry (verified): it stays with all flags 0. Removal is a separate `action=delete` post with the `collid` (`BggRepository.deleteCollectionEntry`), which answers HTTP 200 with an empty body
 - the eight status flags map to BGG's own checkbox labels as: `own`=Own, `prevowned`=Prev. Owned, `fortrade`=For Trade, `wanttoplay`=Want to Play, `want`=Want in Trade, `wanttobuy`=Want to Buy, `preordered`=Pre-ordered, `wishlist`=Wishlist - note `want` is "Want in Trade", not a general want (see the table on `BggCollectionStatus`)
 - `scripts/bgg_collection_probe.py` exercises all of the above against a real account (dry run by default)
-- the collection editor lives on the game detail dialog: a "Collection" row opens `CollectionStatusEditorDialog`, which reads the entry on open (`AppViewModel.loadCollectionStatus`), edits a local draft so partial toggles are never posted, and writes on Save
+- collection refresh reads every entry's status flags and `collid` in one `brief=1` request (`BggApiClient.fetchCollectionStatuses`, applied by `SyncViewModel.applyCollectionStatuses` after played games are added) and stores them in `GameItem.bggValues` (`withSyncedCollectionEntry` / `syncedCollectionEntry` / `hasSyncedCollectionStatus` in `Models.kt`); the sync does not touch `ownership` from this data, so sheet-only games keep their flags
+- the collection editor lives on the game detail dialog: a "Collection" row opens `CollectionStatusEditorDialog` (built on `AnimatedDialog` + BoardFlow chips/buttons, not `AlertDialog`), which reads the synced status (`AppViewModel.loadCollectionStatus`) and only calls BGG when the game has no synced status yet; it edits a local draft so partial toggles are never posted, and writes on Save
+- saves, removals and fallback reads are emitted as `CollectionStatusUpdate` on `AppViewModel.collectionStatusUpdates`; `AppShell` forwards them to `SyncViewModel.applyCollectionStatusUpdate`, which patches the Room snapshot (a user edit also updates own / wishlist, so the shelf follows immediately)
 - `CollectionStatusUiState` carries the `gameId` it belongs to and both screens filter on it, so opening a second game never shows the first game's status while the new one loads
-- changing `own` does not refresh the local collection list - it stays stale until the next sync
 
 ## History / Roster Notes
 

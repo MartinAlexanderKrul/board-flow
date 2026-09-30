@@ -11,8 +11,12 @@ import cz.nicolsburg.boardflow.data.GameRecognitionEngine
 import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
 import cz.nicolsburg.boardflow.data.chronicle.ChronicleAiConfig
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
+import cz.nicolsburg.boardflow.model.BggCollectionEntry
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.CollectionStatusUiState
+import cz.nicolsburg.boardflow.model.CollectionStatusUpdate
+import cz.nicolsburg.boardflow.model.hasSyncedCollectionStatus
+import cz.nicolsburg.boardflow.model.syncedCollectionEntry
 import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.Challenge
@@ -47,9 +51,12 @@ import cz.nicolsburg.boardflow.ui.history.computePlayStats
 import cz.nicolsburg.boardflow.ui.history.filterByTimeRange
 import cz.nicolsburg.boardflow.ui.history.resolveCurrentPlayerName
 import cz.nicolsburg.boardflow.ui.theme.AppTheme
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -2505,9 +2512,31 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _collectionStatus.value = CollectionStatusUiState()
     }
 
-    /** Reads the game's current collection entry. Unauthenticated reads are rejected by BGG. */
+    /**
+     * Statuses to store on the collection snapshot. AppShell forwards them to SyncViewModel, which
+     * owns the snapshot, so the synced status stays current without another sync.
+     */
+    private val _collectionStatusUpdates = MutableSharedFlow<CollectionStatusUpdate>(extraBufferCapacity = 8)
+    val collectionStatusUpdates: SharedFlow<CollectionStatusUpdate> = _collectionStatusUpdates.asSharedFlow()
+
+    /**
+     * Shows the game's collection status from the synced snapshot. BGG is only read when this game
+     * has no synced status yet (before the first sync that records it, or a failed status read).
+     */
     fun loadCollectionStatus(gameId: Int) {
         val creds = collectionCredentials(gameId) ?: return
+        val game = _collectionItems.value.firstOrNull { it.objectId == gameId.toString() }
+        if (game != null && game.hasSyncedCollectionStatus) {
+            val entry = game.syncedCollectionEntry()
+            _collectionStatus.value = CollectionStatusUiState(
+                gameId = gameId,
+                loaded = true,
+                inCollection = entry != null,
+                collectionId = entry?.collectionId,
+                status = entry?.status ?: BggCollectionStatus()
+            )
+            return
+        }
         _collectionStatus.value = CollectionStatusUiState(gameId = gameId, loading = true)
         viewModelScope.launch {
             val repo = container.bggRepository
@@ -2521,6 +2550,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         collectionId = entry?.collectionId,
                         status = entry?.status ?: BggCollectionStatus()
                     )
+                    // Store it so the next open does not have to read BGG again.
+                    _collectionStatusUpdates.tryEmit(CollectionStatusUpdate(gameId, entry, userEdit = false))
                 }
                 .onFailure { error ->
                     _collectionStatus.value = CollectionStatusUiState(
@@ -2558,6 +2589,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         collectionId = savedId,
                         status = status
                     )
+                    _collectionStatusUpdates.tryEmit(CollectionStatusUpdate(gameId, BggCollectionEntry(savedId, status), userEdit = true))
                 }
                 .onFailure { error ->
                     _collectionStatus.value = before.copy(
@@ -2587,6 +2619,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 .mapCatching { repo.deleteCollectionEntry(gameId, collectionId).getOrThrow() }
                 .onSuccess {
                     _collectionStatus.value = CollectionStatusUiState(gameId = gameId, loaded = true, inCollection = false)
+                    _collectionStatusUpdates.tryEmit(CollectionStatusUpdate(gameId, null, userEdit = true))
                 }
                 .onFailure { error ->
                     _collectionStatus.value = before.copy(
