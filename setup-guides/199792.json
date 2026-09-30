@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "gameId": 199792,
-  "aliasGameIds": [476125],
+  "aliasGameIds": [332398, 476125],
   "gameName": "Everdell",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",

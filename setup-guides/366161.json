@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "gameId": 366161,
+  "gameName": "Wingspan Asia",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Wingspan Asia rulebook r9", "Wingspan Asia Automa rules"]
+  },
+  "players": { "min": 1, "max": 2 },
+  "modules": [
+    { "id": "duet", "name": "Duet map", "group": "Goals", "defaultEnabled": true },
+    { "id": "original", "name": "Original goal board", "group": "Goals", "note": "Needs the goal board and tiles from base Wingspan." }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        { "id": "bird-tray", "text": "Shuffle the bird deck beside the bird tray; fill the tray with {n} faceup birds", "amounts": { "n": 3 }, "ref": "p.2" },
+        { "id": "supply", "text": "All food tokens and eggs in the supply", "ref": "p.2" },
+        { "id": "birdfeeder", "text": "Roll the food dice onto the birdfeeder board", "ref": "p.2" },
+        { "id": "bonus-deck", "text": "Shuffle the bonus cards into a deck", "ref": "p.2" },
+        { "id": "duet-goals", "text": "Duet map with {n} random Duet goal tiles (red corners) in the slots below it", "amounts": { "n": 4 }, "condition": { "modules": ["duet"] }, "ref": "p.2" },
+        { "id": "original-goals", "text": "Base game goal board with {n} random goal tiles, random side up", "amounts": { "n": 4 }, "condition": { "modules": ["original"] }, "ref": "p.2" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "mat", "text": "Each player: a player mat (inside section) and {n} action cubes of one color", "amounts": { "n": 8 }, "ref": "p.2" },
+        { "id": "duet-tokens", "text": "A Duet token of your color on each of the 15 bird slots on your mat", "condition": { "modules": ["duet"] }, "ref": "p.2" },
+        { "id": "deal", "text": "Deal each player {n} birds, 2 bonus cards and 5 food (one of each)", "amounts": { "n": 5 }, "ref": "p.2" },
+        { "id": "keep", "text": "Keep 5 of your 10 cards and food in any mix; keep 1 bonus card", "ref": "p.2" }
+      ]
+    },
+    {
+      "id": "automa",
+      "title": "Solo: Automa",
+      "condition": { "players": [1] },
+      "steps": [
+        { "id": "automa-tracker", "text": "Round tracker card showing Round 1 in the Automa's area", "ref": "Automa p.2" },
+        { "id": "automa-duet-tracker", "text": "Duet map tracker card to its right, also Round 1", "condition": { "modules": ["duet"] }, "ref": "Automa p.2" },
+        { "id": "automa-deck", "text": "Shuffle the 10 Automa cards (plus at most 1 special card) facedown as the Automa deck", "ref": "Automa p.2" },
+        { "id": "automa-alliance", "text": "Include the Automasian Alliance card", "condition": { "modules": ["duet"] }, "ref": "Automa p.2" },
+        { "id": "automa-cubes", "text": "Give the Automa action cubes of an unused color and a random Automa-only bonus card", "ref": "Automa p.2" },
+        { "id": "automa-goal-card", "text": "End-of-round goal scoring card, Round 1 up, beside the goal board", "condition": { "modules": ["original"] }, "ref": "Automa p.2" },
+        { "id": "automa-difficulty", "text": "Choose the difficulty level", "ref": "Automa p.6" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "duet-token", "text": "Each time you play a bird, place a Duet token on the Duet map", "condition": { "modules": ["duet"] }, "ref": "p.2" },
+        { "id": "automa-last", "text": "You take the first turn of each round; the Automa takes the last", "condition": { "players": [1] }, "ref": "Automa p.2" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-player", "text": "Random first player takes the first-player token", "condition": { "players": [2] }, "ref": "p.2" },
+        { "id": "turn", "text": "Each turn: play a bird, gain food, lay eggs, or draw birds", "ref": "p.5" }
+      ]
+    }
+  ]
+}

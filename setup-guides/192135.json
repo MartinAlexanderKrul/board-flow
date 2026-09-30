@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "gameId": 192135,
+  "aliasGameIds": [235802],
+  "gameName": "Too Many Bones",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Too Many Bones rulebook v2.2"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "sections": [
+    {
+      "id": "tyrant",
+      "title": "Tyrant & encounters",
+      "steps": [
+        { "id": "battle-mat", "text": "Battle Mat in the middle of the table", "ref": "p.6" },
+        { "id": "tyrant", "text": "Choose or draw a Tyrant; its card, chip and die left of the Battle Mat", "ref": "p.6" },
+        { "id": "day-counter", "text": "Day Counter card and chip (set to 1) below the Tyrant card", "ref": "p.6" },
+        { "id": "tyrant-encounters", "text": "Set aside the Tyrant's own Tyrant Encounters (blue); box the other Tyrant cards", "ref": "p.7" },
+        { "id": "encounter-deck", "text": "Shuffle the {deck} Encounter deck; draw (Tyrant's days - 3) cards and shuffle them with the Tyrant Encounters", "amounts": { "deck": { "default": "General", "byPlayers": { "1": "Solo" } } }, "ref": "p.7" },
+        { "id": "special-encounters", "text": "Special Encounters 001, 002, 003 in order on top of the Encounter deck (story side up), left of the mat", "note": "Optional: Cover Card on top", "ref": "p.7" },
+        { "id": "loot", "text": "Shuffle Loot and Trove Loot separately, chest side up, right of the mat; 4 Lockpicking Dice nearby", "ref": "p.7" },
+        { "id": "baddies", "text": "Baddies of the Tyrant card's types: facedown 1Pt, 5Pt and 20Pt Active Stacks above the mat", "ref": "p.7" }
+      ]
+    },
+    {
+      "id": "gearlocs",
+      "title": "Gearlocs",
+      "steps": [
+        { "id": "gearloc", "text": "Each player: Gearloc Mat, Gearloc Chip on its starting Health Chips, Ini Die and Stat Dice; reference sheet nearby", "ref": "p.7" },
+        { "id": "skill-dice", "text": "Your 16 Skill Dice in a storage tray; starting Skills (circled on the reference sheet) into their mat slots", "ref": "p.7" },
+        { "id": "party-leader", "text": "Pick a Party Leader for tie-breaks and a game mode (Adventurer Mode to start)", "ref": "p.7, p.23" }
+      ]
+    },
+    {
+      "id": "other",
+      "title": "Other components",
+      "steps": [
+        { "id": "dice-pools", "text": "Pools of Atk, Def and Effect Dice plus the D6 below the Battle Mat", "ref": "p.7" },
+        { "id": "lanes", "text": "4 Lane Marker Chips, 4 Baddie Ini Dice and Health Chip stacks above the Battle Mat", "ref": "p.7" },
+        { "id": "round-die", "text": "Round Counter Die on R1 at the top of the Ini Meter; GARG and Baddie Skills Reference nearby", "ref": "p.7" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "goal", "text": "Reach and defeat the Tyrant before the Day Counter runs out", "ref": "p.6" },
+        { "id": "restock", "text": "Out of Baddies in a stack? Reshuffle that stack's defeated Baddies", "ref": "p.7" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-day", "text": "Each day: New Day, Encounter, Reward and Recovery phases", "ref": "p.8" }
+      ]
+    }
+  ]
+}

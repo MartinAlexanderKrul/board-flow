@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "gameId": 169786,
+  "gameName": "Scythe",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Scythe rulebook", "Scythe Automa rulebook", "Invaders from Afar rulebook r6", "The Wind Gambit rulebook"]
+  },
+  "players": { "min": 1, "max": 5 },
+  "modules": [
+    { "id": "invaders", "name": "Invaders from Afar", "bggId": 199727, "extendsMaxPlayers": 7, "note": "Adds Albion and Togawa; enables 6-7 players." },
+    { "id": "airships", "name": "Wind Gambit: Airships", "bggId": 223555 },
+    { "id": "resolutions", "name": "Wind Gambit: Resolutions" }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "encounter-tokens", "text": "An encounter token on each encounter territory ({n} total)", "amounts": { "n": 11 }, "ref": "p.6" },
+        { "id": "supply", "text": "Resources, coins and multiplier tokens in a supply by the board", "ref": "p.6" },
+        { "id": "decks", "text": "Shuffle the combat, encounter and objective decks onto the board", "ref": "p.6" },
+        { "id": "factory", "text": "Deal {n} random Factory cards facedown onto the board; box the rest unseen", "amounts": { "n": { "byPlayers": { "1": 3, "2": 3, "3": 4, "4": 5, "5": 6, "6": 7, "7": 8 } } }, "note": "Players + 1 (solo uses the 2-player setup)", "ref": "p.6, Automa p.2" },
+        { "id": "structure-bonus", "text": "Random structure bonus tile faceup at the bottom of the Popularity Track", "ref": "p.6" },
+        { "id": "airships", "text": "Reveal 1 random aggressive (red) and 1 passive (green) airship tile next to the encounter deck", "condition": { "modules": ["airships"] }, "ref": "Wind Gambit p.3" },
+        { "id": "resolution", "text": "Draw 1 random resolution tile, read it aloud, place it by the Triumph Track", "condition": { "modules": ["resolutions"] }, "ref": "Wind Gambit p.6" }
+      ]
+    },
+    {
+      "id": "factions",
+      "title": "Factions",
+      "steps": [
+        { "id": "invaders-mix", "text": "Mix Albion's and Togawa's faction and player mats into the others", "condition": { "modules": ["invaders"] }, "ref": "Invaders from Afar p.1" },
+        { "id": "deal-mats", "text": "Deal each player a random faction mat and player mat; sit by your home base", "ref": "p.6" },
+        { "id": "big-game-tokens", "text": "6-7 players: Crimea and Polania swap in their replacement ability tokens", "condition": { "minPlayers": 6 }, "ref": "Invaders from Afar p.3" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "tracks", "text": "Power token and popularity token on the levels shown on your mats", "ref": "p.7" },
+        { "id": "starting-cards", "text": "Draw the combat cards, objective cards and coins shown on your mats", "ref": "p.7" },
+        { "id": "units", "text": "Character on your home base; 1 worker on each of the 2 land territories next to it", "ref": "p.7" },
+        { "id": "airship", "text": "Your airship on your home base", "condition": { "modules": ["airships"] }, "ref": "Wind Gambit p.3" },
+        { "id": "player-mat", "text": "Player mat: 6 workers above Produce, 6 tech cubes on the marked boxes, 4 structures and 4 recruits on their spaces, action token beside it", "ref": "p.8" },
+        { "id": "faction-mat", "text": "Faction mat: 6 stars top left, 4 mechs on the mech abilities", "ref": "p.8" }
+      ]
+    },
+    {
+      "id": "automa",
+      "title": "Solo: Automa",
+      "condition": { "players": [1] },
+      "steps": [
+        { "id": "automa-faction", "text": "Give the Automa a faction mat (a home base far from yours is easiest)", "ref": "Automa p.2" },
+        { "id": "automa-cards", "text": "Automa gets the power and combat cards shown on its mat (facedown, unseen) and 5 coins", "ref": "Automa p.2" },
+        { "id": "automa-popularity", "text": "Automa's popularity token on 10; it never moves", "ref": "Automa p.2" },
+        { "id": "automa-units", "text": "Automa's character and 2 workers on the board; mechs, stars and other workers on its mat", "ref": "Automa p.2" },
+        { "id": "automa-tracker", "text": "Pick a star tracker card for the difficulty; tech cube on its \"I\" space", "note": "Start with Autometta", "ref": "Automa p.2" },
+        { "id": "automa-deck", "text": "Shuffle the 19 Automa cards facedown, all facing the same way", "ref": "Automa p.2" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "overlap", "text": "You may start your turn once the player on your right starts a bottom-row action", "condition": { "modules": ["invaders"] }, "ref": "Invaders from Afar p.3" },
+        { "id": "airship-control", "text": "Airships never control territories", "condition": { "modules": ["airships"] }, "ref": "Wind Gambit p.3" },
+        { "id": "resolution-end", "text": "The resolution tile decides when and how the game ends", "condition": { "modules": ["resolutions"] }, "ref": "Wind Gambit p.6" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-player", "text": "Lowest player mat number goes first; play is clockwise", "ref": "p.8" },
+        { "id": "turn", "text": "Each turn: move your action token to a new section and take its top and/or bottom action" }
+      ]
+    }
+  ]
+}

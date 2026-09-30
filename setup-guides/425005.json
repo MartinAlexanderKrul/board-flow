@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "gameId": 425005,
+  "gameName": "Everdell Duo",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Everdell Duo rulebook v0.6"]
+  },
+  "players": { "min": 1, "max": 2 },
+  "modules": [
+    { "id": "competitive", "name": "Competitive", "group": "Mode", "defaultEnabled": true, "players": { "min": 2, "max": 2 } },
+    { "id": "coop", "name": "Co-op / Challenge", "group": "Mode", "forcedAtPlayers": [1], "note": "Campaign chapters and Challenge difficulty add their own setup." }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "board-competitive", "text": "Board with the \"Journey\" side up", "condition": { "modules": ["competitive"] }, "ref": "p.3" },
+        { "id": "board-coop", "text": "Board with the numbered side up (no Journey)", "condition": { "modules": ["coop"] }, "ref": "p.3, p.8" },
+        { "id": "tokens", "text": "Sun and Moon tokens on the first space left of the center path; resources, point and Occupied tokens as the supply", "ref": "p.3" },
+        { "id": "meadow", "text": "Shuffle the Critters and Constructions; fill every Meadow spot left to right, top row first", "ref": "p.3" },
+        { "id": "river", "text": "Shuffle the River tiles facedown; {n} faceup on the River spaces", "amounts": { "n": 2 }, "ref": "p.3" },
+        { "id": "seasons", "text": "4 Season tiles on the right in order winter, spring, summer, autumn - {side}", "amounts": { "side": { "default": "no skunk icon", "cases": [{ "when": { "modules": ["coop"] }, "value": "skunk icon on top" }] } }, "ref": "p.3" },
+        { "id": "events", "text": "1 random tile from each lettered Event set + the Faire tile, shuffled, one on each Event spot", "ref": "p.3" },
+        { "id": "journey", "text": "Journey Event tile on its space on the far right", "condition": { "modules": ["competitive"] }, "ref": "p.3" }
+      ]
+    },
+    {
+      "id": "coop",
+      "title": "Co-op / Challenge",
+      "condition": { "modules": ["coop"] },
+      "steps": [
+        { "id": "skunks", "text": "Place skunk workers for each section (Events, Meadow, Locations) as your chapter or difficulty says, rolling the die for each spot", "note": "Skip the Journey space and the middle handshake spot", "ref": "p.8" },
+        { "id": "challenge-first-skunk", "text": "Challenge: the first skunk goes on the \"A\" Event instead of rolling", "ref": "p.12" },
+        { "id": "sun-moon-coop", "text": "Sun and Moon on the furthest left uncovered Meadow path space", "ref": "p.8" },
+        { "id": "solo-hands", "text": "Solo: you play both mayors; keep the two hands faceup above their reference cards", "condition": { "players": [1] }, "ref": "p.12" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "workers", "text": "3 Hare workers to whoever most recently took a nap; 3 Tortoise workers to the other", "ref": "p.3" },
+        { "id": "cards", "text": "Each player draws {n} cards", "amounts": { "n": 2 }, "ref": "p.3" },
+        { "id": "winter", "text": "Resolve the steps on the Winter season tile", "ref": "p.3, p.7" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "sun-moon", "text": "After every action move the Sun or Moon one space; at the end of its path that action is closed", "ref": "p.4" },
+        { "id": "discard", "text": "Any time on your turn: discard 2 cards for 1 resource", "ref": "p.4" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "turn", "text": "Each turn take 1 action: place a worker, play a card, or pick a card", "ref": "p.4" }
+      ]
+    }
+  ]
+}

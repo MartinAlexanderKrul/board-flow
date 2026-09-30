@@ -2,10 +2,34 @@
   "schemaVersion": 1,
   "guides": [
     {
+      "gameId": 169786,
+      "gameName": "Scythe",
+      "gameIds": [169786, 199727, 223555],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "169786.json"
+    },
+    {
+      "gameId": 174430,
+      "gameName": "Gloomhaven",
+      "gameIds": [174430],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "174430.json"
+    },
+    {
+      "gameId": 192135,
+      "gameName": "Too Many Bones",
+      "gameIds": [192135, 235802],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "192135.json"
+    },
+    {
       "gameId": 199792,
       "gameName": "Everdell",
-      "gameIds": [199792, 259996, 261142, 289056, 289057, 297972, 297973, 332390, 332397, 476125],
-      "version": 2,
+      "gameIds": [199792, 259996, 261142, 289056, 289057, 297972, 297973, 332390, 332397, 332398, 476125],
+      "version": 3,
       "schemaVersion": 1,
       "path": "199792.json"
     },
@@ -58,6 +82,14 @@
       "path": "338960.json"
     },
     {
+      "gameId": 366161,
+      "gameName": "Wingspan Asia",
+      "gameIds": [366161],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "366161.json"
+    },
+    {
       "gameId": 385761,
       "gameName": "Faraway",
       "gameIds": [385761, 425029],
@@ -88,6 +120,14 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "422780.json"
+    },
+    {
+      "gameId": 425005,
+      "gameName": "Everdell Duo",
+      "gameIds": [425005],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "425005.json"
     },
     {
       "gameId": 436126,
