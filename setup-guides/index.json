@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "guides": [
+    {
+      "gameId": 199792,
+      "gameName": "Everdell",
+      "gameIds": [199792, 259996, 289056, 289057, 297972, 297973, 332390, 332397],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "199792.json"
+    },
+    {
+      "gameId": 422780,
+      "gameName": "Mistborn: The Deckbuilding Game",
+      "gameIds": [422780],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "422780.json"
+    }
+  ]
+}

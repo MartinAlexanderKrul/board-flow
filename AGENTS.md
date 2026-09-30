@@ -37,6 +37,7 @@ BoardFlow currently supports all of the following:
 - Drive folder and QR code creation
 - backup export / import
 - session continuation / play-again flows
+- Quick Setup cheat sheets per game (box -> table -> first turn): player-count and expansion/module-aware steps with quantities, a session-only checklist, "Easy to forget" and "Start playing" cards, and a `Start game` action that starts the play timer. Guides are portable JSON in the repo-root `setup-guides/` folder, bundled into the APK and served as a remote catalog from GitHub
 - challenge notifications via `ChallengeNotificationWorker` (WorkManager): deadline warning (3 days out), completion, and streak-broken alerts; gated on `POST_NOTIFICATIONS` permission
 
 When changing the app, keep those flows in mind. A fix in one area often has consequences for history, roster matching, sync, or backup behavior.
@@ -121,7 +122,8 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `GoogleApiClient.kt` -- Sheets / Drive API
   - `GeminiRepository.kt` -- AI extraction (scores + game detection), model discovery, fallback cycling; debug-logged under TAG "Gemini"; sets `ExtractedPlay.modelUsed` to the winning model name and `ExtractedPlay.isMalformed = true` when JSON parsing fails
   - `ScanImageQualityAnalyzer.kt` -- local pre-Gemini image readability checks; does not persist image, player, or score data
-  - `CanonicalCollectionStore.kt` -- Room-backed live source of truth (DB v10); stores canonical games, logged plays, BGG play cache, play sessions, play memories, thumbnail cache, players, challenges, game recognition hints, player recognition hints, and sleeve tracking; `getBggPlaysCache()` and `getLoggedPlays()` apply the `play_memories` overlay on read, with `parseMemoryFromNotes()` as fallback for plays with `$$mood:`/`$$quote:` lines in comments
+  - `CanonicalCollectionStore.kt` -- Room-backed live source of truth (DB v12); stores canonical games, logged plays, BGG play cache, play sessions, play memories, thumbnail cache, players, challenges, game recognition hints, player recognition hints, sleeve tracking, sleeve inventory, and setup guides (`setup_guides`, `setup_guide_catalog`); `getBggPlaysCache()` and `getLoggedPlays()` apply the `play_memories` overlay on read, with `parseMemoryFromNotes()` as fallback for plays with `$$mood:`/`$$quote:` lines in comments
+  - `setupguide/` -- Quick Setup: `SetupGuideJson` (org.json format mapping), `SetupGuideValidator` (structural checks applied to every guide before it is shown or stored), `SetupGuideResolver` (pure: guide + player count + modules -> visible steps with amounts filled in), `SetupGuideIndex`, `BundledSetupGuideSource` (APK assets), `SetupGuideCatalogClient` (GitHub raw, quiet failure), `SetupGuideRepository` (layer resolution USER > newer of BUNDLED/CATALOG, availability map keyed by base/alias/module BGG ids, daily index refresh, prefetch for owned games)
   - `SessionMemoryJson.kt` -- `toSessionMemoryOrNull()`, `toJsonString()`, `parseMemoryFromNotes()` extension functions
   - `chronicle/` -- chronicle service pipeline: `SessionChronicleService` (plan + compose), `GeminiChronicleLineGenerator` (Gemini API, 4 retries, model fallback, 2.5 s timeout), `FallbackChronicleComposer` (deterministic offline fallback), `ChronicleLineGenerator` interface, `ChronicleRequest` and `ChronicleAiConfig` data classes
   - `BackupSerializer.kt` -- backup JSON import/export (format version 7; includes `memory` JSON per play; exports players and challenges from Room)
@@ -160,6 +162,7 @@ It stores:
 - game recognition hints (`game_recognition_hints` table)
 - player recognition hints (`player_recognition_hints` table)
 - sleeve tracking overrides (`game_sleeve_tracking` table)
+- setup guides: downloaded catalog copies and (later) user guides (`setup_guides`), plus the cached remote index (`setup_guide_catalog`); bundled guides are read straight from assets and are not copied into Room
 
 ### Preferences / Settings
 
@@ -260,6 +263,14 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
   - `Stats` -- includes per-player stat profiles and a `HeadToHeadSection` with `BoardFlowPickerField` player selectors
   - `Players`
 - the Plays tab also acts as the outbox surface for unposted local plays
+
+### Quick Setup
+
+- entry: `Setup` button in `GameDetailsDialog` `HeaderSection`, shown when `SetupGuideRepository.availability` has the game's BGG id (base, alias, or a module `bggId`); both Collection and History wire it through `AppShell.openQuickSetup`, which passes the last logged player count as a route argument
+- route `AppRoutes.QUICK_SETUP` (`quick_setup/{gameId}?players={players}`); bottom nav hidden; `QuickSetupViewModel` is nav-scoped and keeps player count, modules and checked step ids in its `SavedStateHandle` only - never persisted, never written into the guide
+- guide content is data, not code: edit `setup-guides/*.json`, bump `version` in the guide and `index.json`, and run `:app:testDebugUnitTest` (`BundledSetupGuidesTest` validates every guide and every configuration). Paraphrase rulebooks; do not paste their text
+- conditions are AND-only; express OR as two steps. Step ids must stay stable so ticks survive configuration changes
+- `Start game` calls `AppViewModel.startPlayTimer` for the guide's base game
 
 ### Collection
 

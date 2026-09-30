@@ -78,6 +78,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cz.nicolsburg.boardflow.SyncViewModel
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideAvailability
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.CollectionStatusUiState
 import cz.nicolsburg.boardflow.model.GameItem
@@ -151,6 +152,8 @@ fun CollectionScreen(
     onSaveCollectionStatus: (gameId: Int, status: BggCollectionStatus) -> Unit = { _, _ -> },
     onRemoveFromCollection: (gameId: Int) -> Unit = {},
     onClearCollectionStatus: () -> Unit = {},
+    setupGuideAvailability: Map<Int, SetupGuideAvailability> = emptyMap(),
+    onOpenQuickSetup: (gameId: Int) -> Unit = {},
 ) {
     val account by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
@@ -354,6 +357,11 @@ fun CollectionScreen(
             onLogPlay = {
                 selectedGame = null
                 onLogPlay(game.objectId.toIntOrNull() ?: 0, game.name, game.thumbnailUrl)
+            },
+            quickSetup = gameObjectId?.let { setupGuideAvailability[it] },
+            onOpenQuickSetup = {
+                selectedGame = null
+                gameObjectId?.let(onOpenQuickSetup)
             },
             onViewHistory = { gameId ->
                 selectedGame = null

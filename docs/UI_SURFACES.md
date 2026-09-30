@@ -227,6 +227,26 @@ Played-but-not-owned games are cached as `GameItem`s during sync
 searchable in Log Play, and open as game info from a play. Sleeves ignore them (sleeve surfaces
 filter on `isOwned`).
 
+## Quick Setup
+
+Source: `ui/setup/QuickSetupScreen.kt`
+
+Main surfaces:
+
+- header with game name, `done / total` steps, progress bar, and `Reset` (with confirmation)
+- `Players` chips (counts only reachable through a module are disabled, with a hint)
+- `Content` chips: `Base game` (fixed) plus the guide's modules; forced or unavailable modules are disabled; notes for enabled modules appear below the chips
+- one `SectionCard` checklist per setup section with per-section progress; quantities in bold primary color
+- accented `Easy to forget` card (bulleted) and `Start playing` card (numbered)
+- attribution line (origin, version, bundled/downloaded/customised)
+- persistent `Start game` bottom button (starts the play timer)
+
+Important behavior:
+
+- the bottom navigation is hidden on this route
+- the screen stays awake while open
+- ticks are session-only; once every step is ticked, the list scrolls to `Start playing`
+
 ## Collection Stats Tab
 
 Source: `ui/collection/CollectionStatsTab.kt`

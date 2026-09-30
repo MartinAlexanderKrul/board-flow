@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "gameId": 199792,
+  "gameName": "Everdell",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Everdell rulebook",
+      "Pearlbrook rulebook",
+      "Spirecrest rulebook",
+      "Bellfaire rulebook",
+      "Newleaf rulebook v5",
+      "Mistwood rulebook v4",
+      "Collector's Edition rule sheet (Legends, Extra! Extra!)"
+    ]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "pearlbrook", "name": "Pearlbrook", "bggId": 259996, "note": "The rulebook recommends not mixing Pearlbrook with other expansion content." },
+    { "id": "spirecrest", "name": "Spirecrest", "bggId": 289056, "note": "The rulebook recommends not mixing Spirecrest with other expansions." },
+    { "id": "bellfaire", "name": "Bellfaire", "bggId": 289057, "extendsMaxPlayers": 6, "note": "Enables 5-6 players." },
+    { "id": "newleaf", "name": "Newleaf", "bggId": 332390, "note": "With the Station board, the rulebook recommends leaving out Pearlbrook and Spirecrest." },
+    { "id": "mistwood", "name": "Mistwood cards", "bggId": 332397, "note": "Special Farms, Corrin Evertail and More Legends." },
+    { "id": "nightweave", "name": "Nightweave's Lair", "players": { "min": 1, "max": 2 }, "note": "Mistwood's AI opponent; she counts as an extra player." },
+    { "id": "player-powers", "name": "Player Powers", "note": "From Bellfaire, Newleaf or Mistwood." },
+    { "id": "legends", "name": "Legends", "bggId": 297972 },
+    { "id": "extra-extra", "name": "Extra! Extra!", "bggId": 297973 }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "place-board", "text": "Place the board and put the Ever Tree on the stump", "ref": "Everdell p.5" },
+        { "id": "supply", "text": "Twigs, resin, pebbles and berries in piles along the river; point and occupied tokens beside the board", "ref": "Everdell p.5" },
+        { "id": "forest-bellfaire", "text": "Shuffle Bellfaire's 4 Forest cards into the Forest deck", "note": "Optional", "condition": { "modules": ["bellfaire"] }, "ref": "Bellfaire p.3" },
+        { "id": "forest-newleaf", "text": "Shuffle Newleaf's 3 Forest cards into the Forest deck", "note": "Optional", "condition": { "modules": ["newleaf"] }, "ref": "Newleaf p.4" },
+        {
+          "id": "forest",
+          "text": "Shuffle the Forest cards and place {n} on the clearings; return the rest",
+          "amounts": {
+            "n": {
+              "default": 4,
+              "byPlayers": { "1": 3, "2": 3 },
+              "cases": [
+                { "when": { "players": [1], "modules": ["nightweave"] }, "value": 3 },
+                { "when": { "players": [2], "modules": ["nightweave"] }, "value": 4 }
+              ]
+            }
+          },
+          "ref": "Everdell p.5, Mistwood p.6"
+        },
+        { "id": "basic-events", "text": "Place the 4 basic Event tiles along the river", "condition": { "notModules": ["pearlbrook"] }, "ref": "Everdell p.5" },
+        { "id": "basic-events-newleaf", "text": "Add Newleaf's 2 basic Events in their spots on the board", "condition": { "modules": ["newleaf"], "notModules": ["pearlbrook"] }, "ref": "Newleaf p.5" },
+        { "id": "flower-festival", "text": "Place the Flower Festival basic Event beside the board", "condition": { "modules": ["bellfaire"], "notModules": ["nightweave"] }, "ref": "Bellfaire p.3" },
+        { "id": "flower-festival-nightweave", "text": "Place the Flower Festival in the middle of the basic Events", "condition": { "modules": ["bellfaire", "nightweave"] }, "ref": "Mistwood p.8" },
+        { "id": "special-events-nightweave", "text": "Remove the \"Everdell Games\" special Event", "condition": { "modules": ["nightweave"] }, "ref": "Mistwood p.6" },
+        { "id": "special-events-pearlbrook", "text": "Include at least 1 Pearlbrook special Event", "condition": { "modules": ["pearlbrook"] }, "ref": "Pearlbrook p.3" },
+        { "id": "special-events-bellfaire", "text": "Mix in Bellfaire's special Events (or use 2 Bellfaire + 2 base)", "condition": { "modules": ["bellfaire"], "notModules": ["nightweave"] }, "ref": "Bellfaire p.3" },
+        { "id": "special-events-bellfaire-nightweave", "text": "Use 2 Bellfaire + 2 base special Events, a Bellfaire Event at each end of the row", "condition": { "modules": ["bellfaire", "nightweave"], "notModules": ["newleaf"] }, "ref": "Mistwood p.8" },
+        { "id": "special-events-newleaf", "text": "Mix in Newleaf's special Events (or use 2 Newleaf + 2 base)", "note": "Consider removing card-dependent base Events such as Flying Doctor Service", "condition": { "modules": ["newleaf"], "notModules": ["nightweave"] }, "ref": "Newleaf p.4" },
+        { "id": "special-events-newleaf-nightweave", "text": "Use only Newleaf and/or Bellfaire special Events", "condition": { "modules": ["newleaf", "nightweave"] }, "ref": "Mistwood p.9" },
+        {
+          "id": "special-events",
+          "text": "Shuffle the special Events and place {n} on the Ever Tree's lower branches; return the rest",
+          "amounts": { "n": { "default": 4, "byPlayers": { "5": 5, "6": 6 } } },
+          "ref": "Everdell p.5, Bellfaire p.5"
+        },
+        { "id": "garland", "text": "Draw {n} Garland Award and place it faceup by the board", "amounts": { "n": 1 }, "condition": { "modules": ["bellfaire"] }, "ref": "Bellfaire p.3" },
+        { "id": "market", "text": "Market board beside the main board, 4 Market tokens on the \"gain\" side", "condition": { "modules": ["bellfaire"], "notModules": ["nightweave"] }, "ref": "Bellfaire p.4" },
+        { "id": "market-nightweave", "text": "Market board beside the main board, 4 Market tokens in a random row on the \"trade\" side", "condition": { "modules": ["bellfaire", "nightweave"] }, "ref": "Mistwood p.8" }
+      ]
+    },
+    {
+      "id": "deck",
+      "title": "Deck & Meadow",
+      "steps": [
+        { "id": "deck-pearlbrook", "text": "Shuffle the Pearlbrook cards into the main deck", "condition": { "modules": ["pearlbrook"] }, "ref": "Pearlbrook p.3" },
+        { "id": "deck-newleaf", "text": "Shuffle the Newleaf Critters and Constructions into the main deck", "condition": { "modules": ["newleaf"] }, "ref": "Newleaf p.4" },
+        { "id": "deck-extra-extra", "text": "Shuffle the Extra! Extra! cards into the main deck", "condition": { "modules": ["extra-extra"] }, "ref": "Collector's rule sheet p.1" },
+        { "id": "deck-farms", "text": "Swap the 8 base Farms for Mistwood's 8 special Farms", "condition": { "modules": ["mistwood"] }, "ref": "Mistwood p.4" },
+        { "id": "deck-corrin", "text": "Shuffle the 5 Corrin Evertail cards into the main deck", "condition": { "modules": ["mistwood"] }, "ref": "Mistwood p.4" },
+        { "id": "meadow", "text": "Shuffle the main deck and deal {n} cards faceup into the Meadow", "amounts": { "n": 8 }, "ref": "Everdell p.5" },
+        { "id": "deck-in-tree", "text": "Put the deck inside the Ever Tree", "ref": "Everdell p.5" }
+      ]
+    },
+    {
+      "id": "pearlbrook",
+      "title": "Pearlbrook",
+      "condition": { "modules": ["pearlbrook"] },
+      "steps": [
+        { "id": "river-board", "text": "River board beside the main board, pearls on the Shoal", "ref": "Pearlbrook p.3" },
+        { "id": "wonders", "text": "Wonder boards under the Ever Tree covering the basic Event costs; Wonders on top", "note": "Basic Events are not used with Pearlbrook", "ref": "Pearlbrook p.3" },
+        { "id": "river-destinations", "text": "Set aside {n} random River Citizens and {n} River Locations, shuffle those 4 and place 1 facedown on each River spot with a pearl on top", "amounts": { "n": 2 }, "ref": "Pearlbrook p.3" },
+        { "id": "ambassadors", "text": "Each player takes a frog Ambassador in their color", "ref": "Pearlbrook p.3" },
+        { "id": "adornments", "text": "Deal each player {n} Adornment cards facedown; return the rest unseen", "amounts": { "n": 2 }, "note": "Adornments don't count toward the hand limit", "ref": "Pearlbrook p.3" }
+      ]
+    },
+    {
+      "id": "spirecrest",
+      "title": "Spirecrest",
+      "condition": { "modules": ["spirecrest"] },
+      "steps": [
+        { "id": "mountain-board", "text": "Place the Mountain board along the lower half of the main board", "ref": "Spirecrest p.2" },
+        { "id": "weather", "text": "Sort the Weather cards by season; 1 random card facedown on each season spot", "ref": "Spirecrest p.2" },
+        { "id": "stormvale", "text": "Remove Stormvale from the Peaks Discovery cards", "condition": { "modules": ["nightweave"] }, "ref": "Mistwood p.8" },
+        { "id": "discovery", "text": "Shuffle the Foothills, Peaks and Ridge Discovery decks separately; place them facedown on their spots", "ref": "Spirecrest p.2" },
+        { "id": "everdell-tiles", "text": "Give each player an Everdell map tile", "ref": "Spirecrest p.2" },
+        {
+          "id": "map-tiles",
+          "text": "Shuffle the map tiles: {n} faceup on the Foothills, {n} facedown on the Peaks and on the Ridge",
+          "amounts": {
+            "n": {
+              "byPlayers": { "1": 2, "2": 3, "3": 4, "4": 5, "5": 6, "6": 7 },
+              "cases": [
+                { "when": { "players": [1], "modules": ["nightweave"] }, "value": 3 },
+                { "when": { "players": [2], "modules": ["nightweave"] }, "value": 4 }
+              ]
+            }
+          },
+          "ref": "Spirecrest p.2, p.6"
+        },
+        { "id": "big-critters", "text": "Big Critters on the Mountain board or nearby", "ref": "Spirecrest p.2" },
+        { "id": "winter-weather", "text": "Reveal the winter Weather card; each player puts a Traveler on the start of the Foothills trail", "ref": "Spirecrest p.2" }
+      ]
+    },
+    {
+      "id": "newleaf",
+      "title": "Newleaf Station",
+      "condition": { "modules": ["newleaf"] },
+      "steps": [
+        { "id": "station-board", "text": "Place the Station board along the right side of the main board", "ref": "Newleaf p.4" },
+        { "id": "visitors", "text": "Shuffle the Visitor cards and split them into 2 faceup stacks on the platform", "ref": "Newleaf p.4" },
+        { "id": "station-cards", "text": "Deal {n} cards from the main deck faceup onto the Station", "amounts": { "n": 3 }, "ref": "Newleaf p.4" },
+        { "id": "train-cars", "text": "Train Car tiles in the bag; draw {n} onto the empty train cars", "amounts": { "n": 3 }, "ref": "Newleaf p.4" },
+        { "id": "golden-tokens", "text": "Each player takes {n} Golden occupied tokens", "amounts": { "n": 3 }, "ref": "Newleaf p.4" },
+        { "id": "tickets", "text": "Each player takes a Ticket (Outbound side up) and a Reservation token (- side up)", "ref": "Newleaf p.4" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "player-powers", "text": "Deal each player {n} Player Powers; each keeps 1", "amounts": { "n": 2 }, "note": "With only Newleaf's or Mistwood's powers, deal 1 each", "condition": { "modules": ["player-powers"] }, "ref": "Bellfaire p.5, Newleaf p.10" },
+        { "id": "workers", "text": "Each player picks a color and takes {n} workers", "amounts": { "n": 2 }, "ref": "Everdell p.5" },
+        { "id": "tree-workers", "text": "Put your other workers on the Ever Tree: 1 spring, 1 summer, 2 autumn", "condition": { "maxPlayers": 4, "notModules": ["player-powers"] }, "ref": "Everdell p.5" },
+        { "id": "tree-workers-powers", "text": "Put your workers on the Ever Tree: 1 summer, 2 autumn - no spring worker", "condition": { "modules": ["player-powers"] }, "ref": "Newleaf p.10" },
+        { "id": "tree-workers-big", "text": "Put your workers on the Ever Tree: 1 summer, 2 autumn - no spring worker", "condition": { "minPlayers": 5, "notModules": ["player-powers"] }, "ref": "Bellfaire p.5" },
+        {
+          "id": "hands",
+          "text": "Deal starting hands in turn order: {n} cards",
+          "amounts": { "n": { "byPlayers": { "2": "5, 6", "3": "5, 6, 7", "4": "5, 6, 7, 8", "5": "5, 5, 6, 6, 7", "6": "5, 5, 6, 6, 7, 7" } } },
+          "condition": { "minPlayers": 2, "notModules": ["nightweave"] },
+          "ref": "Everdell p.5, Bellfaire p.5"
+        },
+        { "id": "hands-solo", "text": "Draw {n} cards", "amounts": { "n": 5 }, "condition": { "players": [1] }, "ref": "Everdell p.15, Mistwood p.6" },
+        { "id": "hands-nightweave", "text": "Each player draws {n} cards", "amounts": { "n": 5 }, "condition": { "players": [2], "modules": ["nightweave"] }, "ref": "Mistwood p.6" },
+        { "id": "legendary", "text": "Deal each player 1 Legendary Critter and 1 Legendary Construction, kept secret", "note": "They don't count toward the hand limit", "condition": { "modules": ["legends"] }, "ref": "Collector's rule sheet p.2" },
+        { "id": "legendary-mistwood", "text": "Deal each player 1 Legendary Critter and 1 Legendary Construction, kept secret", "note": "They don't count toward the hand limit", "condition": { "modules": ["mistwood"], "notModules": ["legends"] }, "ref": "Mistwood p.5" }
+      ]
+    },
+    {
+      "id": "rugwort",
+      "title": "Solo: Rugwort",
+      "condition": { "players": [1], "notModules": ["nightweave"] },
+      "steps": [
+        { "id": "rugwort-color", "text": "Pick a color for Rugwort (he prefers black) and his year of difficulty (1-3)", "ref": "Everdell p.15" },
+        { "id": "rugwort-forest", "text": "Block the top-left Forest card with one Rugwort worker", "ref": "Everdell p.15" },
+        { "id": "rugwort-twigs", "text": "Block the 3-twig space with his other worker", "ref": "Everdell p.15" },
+        { "id": "rugwort-ambassador", "text": "Roll for his Ambassador: 1-2 top River spot, 3-4 second, 5-6 third, 7-8 fourth. He takes its pearl, flip the card, give him 1 more pearl", "condition": { "modules": ["pearlbrook"] }, "ref": "Pearlbrook p.6" },
+        { "id": "rugwort-traveler", "text": "An Everdell Valley tile and his Traveler go in Rugwort's area", "condition": { "modules": ["spirecrest"] }, "ref": "Spirecrest p.6" }
+      ]
+    },
+    {
+      "id": "nightweave",
+      "title": "Nightweave's Lair",
+      "condition": { "modules": ["nightweave"] },
+      "steps": [
+        { "id": "nightweave-boards", "text": "Place both Nightweave boards beside the main board", "ref": "Mistwood p.6" },
+        { "id": "nightweave-die", "text": "Give Nightweave the 8-sided die", "condition": { "notModules": ["newleaf"] }, "ref": "Mistwood p.6" },
+        { "id": "nightweave-die-newleaf", "text": "Give Nightweave the 12-sided die", "note": "She gets no Golden tokens, Ticket or Reservation", "condition": { "modules": ["newleaf"] }, "ref": "Mistwood p.9" },
+        { "id": "nightweave-hand", "text": "Deal Nightweave {n} facedown from the main deck as her hand", "amounts": { "n": { "byPlayers": { "1": "1 card", "2": "2 cards" } } }, "ref": "Mistwood p.6" },
+        { "id": "nightweave-level", "text": "Pick a difficulty 0-4 and put that Scoring card by her boards", "ref": "Mistwood p.6" },
+        { "id": "nightweave-activity-pearlbrook", "text": "Remove the 2 Pearlbrook Activity cards", "condition": { "notModules": ["pearlbrook"] }, "ref": "Mistwood p.7" },
+        { "id": "nightweave-sort", "text": "Sort the Activity cards by season", "ref": "Mistwood p.7" },
+        { "id": "nightweave-winter", "text": "Pick 2 random winter cards with the spider worker: 1 back in the box, 1 aside. Shuffle the other 7 winter cards and put the set-aside card on top", "note": "Her Activity deck starts with 8 cards", "ref": "Mistwood p.7" },
+        { "id": "nightweave-seasons", "text": "Stack the other seasons faceup near her lair; Season token Winter side up", "ref": "Mistwood p.7" },
+        { "id": "nightweave-workers", "text": "Nightweave and 2 spider workers in her lair; the other 6 under Prepare for Season", "ref": "Mistwood p.7" },
+        { "id": "nightweave-ambassador", "text": "Replace her spring spider worker with a frog Ambassador", "condition": { "modules": ["pearlbrook"] }, "ref": "Mistwood p.8" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "hand-limit", "text": "Hand limit is {n} cards", "amounts": { "n": { "default": 8, "byPlayers": { "5": 7, "6": 7 } } }, "ref": "Everdell p.10, Bellfaire p.5" },
+        { "id": "forest-4p", "text": "Second spaces on Forest cards are for 4 players only", "condition": { "notModules": ["bellfaire"] }, "ref": "Everdell p.7" },
+        { "id": "journey", "text": "Journey is only open in autumn", "ref": "Everdell p.8" },
+        { "id": "seasons", "text": "Prepare for spring and autumn: green cards produce. Summer: take up to 2 Meadow cards", "ref": "Everdell p.11" },
+        { "id": "explore", "text": "After every Prepare for Season: Explore - chart, discover, travel", "condition": { "modules": ["spirecrest"] }, "ref": "Spirecrest p.3" },
+        { "id": "river-pearl", "text": "First visitor to a River spot takes its pearl and flips it", "condition": { "modules": ["pearlbrook"] }, "ref": "Pearlbrook p.4" },
+        { "id": "market-one-worker", "text": "Only 1 of your workers on the Market at a time", "condition": { "modules": ["bellfaire"] }, "ref": "Bellfaire p.4" },
+        { "id": "rugwort-turn", "text": "After each card you play, roll the die: Rugwort plays that Meadow card (1 = top-left)", "condition": { "players": [1], "notModules": ["nightweave"] }, "ref": "Everdell p.15" },
+        { "id": "rugwort-powers", "text": "Rugwort keeps all his workers; no Rats power in solo", "condition": { "players": [1], "modules": ["player-powers"], "notModules": ["nightweave"] }, "ref": "Bellfaire p.8" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-player", "text": "The most humble player (5-card hand) goes first; play is clockwise", "condition": { "minPlayers": 2, "notModules": ["nightweave"] }, "ref": "Everdell p.5" },
+        { "id": "first-player-solo", "text": "You go first", "condition": { "players": [1], "notModules": ["nightweave"] } },
+        { "id": "first-player-nightweave", "text": "Nightweave goes first, then turns alternate", "condition": { "modules": ["nightweave"] }, "ref": "Mistwood p.9" },
+        { "id": "one-action", "text": "Each turn: place a worker, play a card, or prepare for season", "ref": "Everdell p.7" }
+      ]
+    }
+  ]
+}

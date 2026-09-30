@@ -102,6 +102,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import cz.nicolsburg.boardflow.AppViewModel
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideAvailability
 import cz.nicolsburg.boardflow.data.PlayShareSerializer
 import cz.nicolsburg.boardflow.data.QrGenerator
 import cz.nicolsburg.boardflow.data.SessionShareSerializer
@@ -221,7 +222,9 @@ fun HistoryScreen(
     ) -> Unit = { _, _, _, _ -> },
     onPlayAgain: (cz.nicolsburg.boardflow.model.LoggedPlay) -> Unit = {},
     onPlayAgainSession: (cz.nicolsburg.boardflow.model.SessionHub) -> Unit = {},
-    onImportQr: () -> Unit = {}
+    onImportQr: () -> Unit = {},
+    setupGuideAvailability: Map<Int, SetupGuideAvailability> = emptyMap(),
+    onOpenQuickSetup: (gameId: Int) -> Unit = {}
 ) {
     val historyPlays by viewModel.historyPlays.collectAsState()
     val collection by viewModel.collection.collectAsState()
@@ -649,6 +652,11 @@ fun HistoryScreen(
                 gameObjectId?.let { viewModel.saveCollectionStatus(it, status) }
             },
             onRemoveFromCollection = { gameObjectId?.let(viewModel::removeFromCollection) },
+            quickSetup = gameObjectId?.let { setupGuideAvailability[it] },
+            onOpenQuickSetup = {
+                selectedGame = null
+                gameObjectId?.let(onOpenQuickSetup)
+            },
             onViewHistory = { _ ->
                 if (gameObjectId != null) {
                     navHistory = navHistory + HistoryNavState(

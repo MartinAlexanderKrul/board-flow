@@ -35,6 +35,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.ExpandLess
@@ -88,6 +89,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideAvailability
 import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.CollectionStatusUiState
@@ -136,6 +138,8 @@ fun GameDetailsDialog(
     onSaveCollectionStatus: (BggCollectionStatus) -> Unit = {},
     onRemoveFromCollection: () -> Unit = {},
     onLogPlay: () -> Unit = {},
+    quickSetup: SetupGuideAvailability? = null,
+    onOpenQuickSetup: () -> Unit = {},
     onViewHistory: (Int) -> Unit = {},
     onViewHistoryPlayer: (gameId: Int, playerName: String) -> Unit = { _, _ -> },
     onViewPlayers: (playerName: String) -> Unit = {},
@@ -264,6 +268,8 @@ fun GameDetailsDialog(
                         gameObjectId = gameObjectId,
                         hasHistory = myStats != null,
                         onLogPlay = onLogPlay,
+                        hasQuickSetup = quickSetup != null,
+                        onOpenQuickSetup = onOpenQuickSetup,
                         onViewHistory = onViewHistory
                     )
                 }
@@ -561,6 +567,8 @@ private fun HeaderSection(
     gameObjectId: Int? = null,
     hasHistory: Boolean = false,
     onLogPlay: () -> Unit = {},
+    hasQuickSetup: Boolean = false,
+    onOpenQuickSetup: () -> Unit = {},
     onViewHistory: (Int) -> Unit = {}
 ) {
     val hasBackdrop = !game.thumbnailUrl.isNullOrBlank()
@@ -658,6 +666,17 @@ private fun HeaderSection(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text("Log Play", style = MaterialTheme.typography.labelMedium)
+                    }
+                    if (hasQuickSetup) {
+                        DialogSecondaryActionButton(onClick = onOpenQuickSetup) {
+                            Icon(
+                                Icons.Default.Checklist,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp).alpha(0.70f)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("Setup", style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                     if (hasHistory) {
                         DialogSecondaryActionButton(onClick = { onViewHistory(gameObjectId) }) {

@@ -101,6 +101,31 @@ Key behavior:
 - game detail acts as a cross-link hub into history and players
 - sleeve data respects per-game exclusions stored in preferences
 - player-count recommendation data includes Best, Recommended, and Not Recommended values
+- games with a setup guide show a `Setup` action that opens Quick Setup (see below)
+
+### Quick Setup
+
+Primary files:
+
+- `ui/setup/QuickSetupScreen.kt`, `ui/setup/QuickSetupViewModel.kt`
+- `data/setupguide/` (`SetupGuideJson`, `SetupGuideResolver`, `SetupGuideValidator`, `SetupGuideRepository`)
+- `setup-guides/` at the repo root (the guide content itself; see `setup-guides/README.md`)
+
+A box -> table -> first turn cheat sheet for games you already know. It is not a rulebook.
+
+- open it from the `Setup` button in the game detail dialog (Collection and Journal). Opening an
+  expansion that a guide lists as a module opens the base game's guide with that module on
+- pick the player count (it defaults to your last logged play) and the expansions/modules, and
+  only the matching steps are shown. Quantities are resolved per configuration and shown in bold
+- setup sections are a checklist. Ticks are session-only (`SavedStateHandle`) and never change the
+  guide. `Reset` clears them. `Easy to forget` and `Start playing` cards follow the checklist
+- `Start game` starts the header play timer (so Log Play later gets the duration) and closes the screen
+- the screen stays awake while open
+- guide layers: USER guides in Room (reserved for later customisation) win. Otherwise the app uses
+  the higher `version` of the bundled asset or the downloaded catalog copy
+- the catalog is the same `setup-guides/` folder served from GitHub (`raw.githubusercontent.com`).
+  The index refreshes at most daily. Guides for owned games are prefetched so they work offline.
+  Network failures are silent
 
 ### Sync
 
@@ -243,8 +268,11 @@ It stores:
 - game recognition hints in `game_recognition_hints`
 - player recognition hints in `player_recognition_hints`
 - sleeve tracking in `game_sleeve_tracking`
+- owned sleeve counts in `sleeve_inventory`
+- downloaded / user setup guides in `setup_guides` (whole JSON documents) and the cached remote
+  guide index in `setup_guide_catalog`
 
-Current DB version: `10`
+Current DB version: `12`
 
 Recent migrations of note:
 
@@ -252,6 +280,8 @@ Recent migrations of note:
 - `7 -> 8`: adds `game_thumbnail_cache`
 - `8 -> 9`: adds `players`, `challenges`, `game_recognition_hints`, `player_recognition_hints`
 - `9 -> 10`: adds `game_sleeve_tracking`
+- `10 -> 11`: adds `sleeve_inventory`
+- `11 -> 12`: adds `setup_guides` and `setup_guide_catalog`
 
 ### SecurePreferences
 

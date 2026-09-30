@@ -15,6 +15,10 @@ object AppRoutes {
     const val SESSION_IMPORT = "session_import?data={data}"
     const val LOG_PLAY = "log_play"
     const val CHALLENGES = "challenges"
+    const val QUICK_SETUP = "quick_setup/{gameId}?players={players}"
+
+    fun quickSetup(gameId: Int, suggestedPlayers: Int? = null): String =
+        "quick_setup/$gameId" + (suggestedPlayers?.let { "?players=$it" } ?: "")
 
     fun scan(gameId: Int, gameName: String): String =
         "scan/$gameId/${URLEncoder.encode(gameName, "UTF-8")}"
