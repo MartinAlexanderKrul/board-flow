@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "gameId": 199042,
+  "gameName": "Harry Potter: Hogwarts Battle",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Harry Potter: Hogwarts Battle rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Game board in the middle; Attack and Influence tokens nearby",
+          "ref": "p.3"
+        },
+        {
+          "id": "game-box",
+          "text": "Open the box for the Game you're playing (and all earlier ones)",
+          "note": "From Game 3 on, follow the extra setup in that Game's box",
+          "ref": "p.2, p.5"
+        },
+        {
+          "id": "locations",
+          "text": "Location cards faceup in the order shown in their upper-right corner",
+          "ref": "p.4"
+        },
+        {
+          "id": "dark-arts",
+          "text": "Shuffle the Dark Arts cards facedown",
+          "ref": "p.4"
+        },
+        {
+          "id": "villains",
+          "text": "Shuffle the Villains facedown; reveal the top one as the active Villain",
+          "note": "Game 1 has only 1 active Villain at a time",
+          "ref": "p.4"
+        },
+        {
+          "id": "hogwarts",
+          "text": "Shuffle the Hogwarts cards (not the Hero starting decks); reveal {n} as the market",
+          "amounts": {
+            "n": 6
+          },
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "hero",
+          "text": "Each player chooses a Hero: oversized Turn Order/Hero card and player board",
+          "ref": "p.4"
+        },
+        {
+          "id": "health",
+          "text": "Health tracker on 10",
+          "ref": "p.2"
+        },
+        {
+          "id": "deck",
+          "text": "Shuffle your Hero's 10-card starting deck; draw {n}",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "dark-arts-first",
+          "text": "Each turn starts with the Location's number of Dark Arts events",
+          "ref": "p.6"
+        },
+        {
+          "id": "lose",
+          "text": "You lose if the Villains control all Locations",
+          "ref": "p.6"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Choose a Hero to go first",
+          "ref": "p.5"
+        }
+      ]
+    }
+  ]
+}

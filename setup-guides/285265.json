@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "gameId": 285265,
+  "gameName": "Rune Stones",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Rune Stones rulebook (EN)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Game board in the middle; all gems and ore as the general supply; die beside it",
+          "ref": "p.2"
+        },
+        {
+          "id": "throne",
+          "text": "Throne on space 65 of the power points track",
+          "ref": "p.2"
+        },
+        {
+          "id": "runes",
+          "text": "{n} of each rune stone type on each of the 8 rune spaces",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 1,
+                "3": 2,
+                "4": 3
+              }
+            }
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "wild-artifacts",
+          "text": "Wild (white) artifacts stacked on the wild smithy",
+          "ref": "p.2"
+        },
+        {
+          "id": "artifacts",
+          "text": "Shuffle the artifacts facedown; one faceup on each smithy",
+          "ref": "p.2"
+        },
+        {
+          "id": "creatures",
+          "text": "Shuffle the creatures; reveal 6 into the display left to right (white dragons go back in)",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-board",
+          "text": "Each player: player board, overview card, druid cards and scoring marker of one color",
+          "ref": "p.2"
+        },
+        {
+          "id": "gems",
+          "text": "Each player takes one gem of each color plus one wild gem",
+          "ref": "p.2"
+        },
+        {
+          "id": "deck",
+          "text": "Shuffle your druid cards as your draw pile; draw {n}",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "score",
+          "text": "Scoring markers on the starting space",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Random first player; each turn summon creatures, use abilities or forge artifacts",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}

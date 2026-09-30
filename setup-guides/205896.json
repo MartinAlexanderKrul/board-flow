@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "gameId": 205896,
+  "gameName": "Rising Sun",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Rising Sun rulebook"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 5
+  },
+  "modules": [
+    {
+      "id": "archway",
+      "name": "Archway",
+      "group": "Season set",
+      "defaultEnabled": true,
+      "note": "Recommended for first games."
+    },
+    {
+      "id": "horseman",
+      "name": "Horseman",
+      "group": "Season set"
+    },
+    {
+      "id": "teapot",
+      "name": "Teapot",
+      "group": "Season set"
+    }
+  ],
+  "sections": [
+    {
+      "id": "clans",
+      "title": "Clans",
+      "steps": [
+        {
+          "id": "clan",
+          "text": "Each player picks a Clan: Clan Screen with a Political/War tile behind it, Political side up",
+          "ref": "p.8"
+        },
+        {
+          "id": "seating",
+          "text": "Sit clockwise in order of Starting Honor Rank (on the screens), lowest first",
+          "ref": "p.8"
+        },
+        {
+          "id": "markers",
+          "text": "One Clan marker on the first Victory Point slot; the other on the Honor Track in Starting Honor Rank order",
+          "ref": "p.8"
+        },
+        {
+          "id": "figures",
+          "text": "Daimyo (black base), 3 Shinto (white bases) and 6 Bushi in your Reserve; your Monster bases, 4 Strongholds and Alliance token beside you",
+          "ref": "p.8"
+        },
+        {
+          "id": "home",
+          "text": "Daimyo, 1 Bushi and 1 Stronghold in your Home Province",
+          "ref": "p.8"
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "shrines",
+          "text": "4 random Shrine tiles faceup left to right; box the other 3",
+          "note": "First game: Amaterasu, Fujin, Hachiman, Tsukuyomi",
+          "ref": "p.9"
+        },
+        {
+          "id": "seasons",
+          "text": "Spring, Summer and Autumn decks: 7 Core cards + the 5 {set} cards each (12 per deck)",
+          "amounts": {
+            "set": {
+              "default": "Archway",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "horseman"
+                    ]
+                  },
+                  "value": "Horseman"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "teapot"
+                    ]
+                  },
+                  "value": "Teapot"
+                }
+              ]
+            }
+          },
+          "ref": "p.9"
+        },
+        {
+          "id": "war-tokens",
+          "text": "War Province tokens sorted by I, II, III into 3 facedown piles of 8",
+          "ref": "p.9"
+        },
+        {
+          "id": "war-numbers",
+          "text": "War Number tokens next to the board",
+          "ref": "p.9"
+        },
+        {
+          "id": "mandates",
+          "text": "Shuffle the 10 Political Mandate tiles facedown in a pile",
+          "ref": "p.9"
+        },
+        {
+          "id": "supply",
+          "text": "Monster figures, Coins and Ronin within reach",
+          "ref": "p.9"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "seating-fixed",
+          "text": "Seating (and play) order never changes",
+          "ref": "p.8"
+        },
+        {
+          "id": "deals",
+          "text": "Deals are never binding; bribes only in Tea Ceremony and Political Phase",
+          "ref": "p.8"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "season",
+          "text": "Start Spring with the Seasonal Setup: prepare for war, set Season cards, income",
+          "ref": "p.10"
+        }
+      ]
+    }
+  ]
+}

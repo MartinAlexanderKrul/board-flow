@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "gameId": 292375,
+  "gameName": "The Great Wall",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Great Wall rulebook (EN), section 12 Setup"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Main board in the middle, side up for your player count",
+          "ref": "p.5"
+        },
+        {
+          "id": "shame",
+          "text": "Shame token pool: {n}; supplies of Wood, Stone, Gold, Chi, Wound, Shame and Honor tokens; Wall levels nearby",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "20",
+                "3": "30",
+                "4": "40"
+              }
+            }
+          },
+          "note": "10 Shame per player",
+          "ref": "p.5"
+        },
+        {
+          "id": "time",
+          "text": "Time token, empty side up, in the Time track slot for your player count",
+          "ref": "p.5"
+        },
+        {
+          "id": "artifacts",
+          "text": "3 random Artifact cards faceup in the Artifact slots; box the rest",
+          "ref": "p.5"
+        },
+        {
+          "id": "horde",
+          "text": "Shuffle the Horde deck on the top side of the board; 1 Horde in each first-row slot",
+          "ref": "p.5"
+        },
+        {
+          "id": "horde-4p",
+          "text": "4 players: 1 more Horde card by the Invasion indicator on the next card's back",
+          "condition": {
+            "players": [
+              4
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "barricades",
+          "text": "9 Barricades, one on each Barricade slot",
+          "ref": "p.5"
+        },
+        {
+          "id": "tactics",
+          "text": "Shuffle the Tactic deck facedown in its slot",
+          "ref": "p.5"
+        },
+        {
+          "id": "advisors",
+          "text": "Advisor deck by the Advisor track; 4 faceup in its slots",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "clan",
+          "text": "Each player: a Clan's 6 Command cards, 8 Clerks, 16 Soldiers (10 Spearmen, 4 Archers, 2 Horsemen), screen, Honor and Tea markers",
+          "ref": "p.5"
+        },
+        {
+          "id": "generals",
+          "text": "Deal 2 Generals and 2 Advisors each; keep 1 General; 1 Advisor active faceup, the other facedown under the General",
+          "ref": "p.5"
+        },
+        {
+          "id": "clerks",
+          "text": "3 Clerks in the Clerk space of the board",
+          "ref": "p.5"
+        },
+        {
+          "id": "start-res",
+          "text": "Take the Resources and Tactic cards shown at the bottom of your General",
+          "ref": "p.5"
+        },
+        {
+          "id": "honor-tea",
+          "text": "Honor marker on 0; Tea markers stacked by the General's Tea value, highest on top",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "fall",
+          "text": "The first Year begins with Fall (skip Spring and Summer)",
+          "ref": "p.5"
+        }
+      ]
+    }
+  ]
+}

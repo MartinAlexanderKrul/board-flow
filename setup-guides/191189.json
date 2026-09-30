@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "gameId": 191189,
+  "gameName": "Aeon's End",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Aeon's End rulebook (2nd edition)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "mat",
+          "text": "Each player picks a player mat and a player number token",
+          "ref": "p.7"
+        },
+        {
+          "id": "deck",
+          "text": "Build your starting hand and deck in the exact order shown on your mat (not shuffled)",
+          "ref": "p.7"
+        },
+        {
+          "id": "breaches",
+          "text": "Take and arrange your breaches (I-IV) as shown on your mat",
+          "ref": "p.7"
+        },
+        {
+          "id": "life",
+          "text": "Each player at 10 life; Gravehold's dial at 30",
+          "ref": "p.7"
+        }
+      ]
+    },
+    {
+      "id": "turn-order",
+      "title": "Turn order deck",
+      "steps": [
+        {
+          "id": "turn-order",
+          "text": "Turn order deck: {n} + 2 nemesis cards, shuffled",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "3 player cards",
+                "2": "2 cards for each player",
+                "3": "1 card per player + the wild card",
+                "4": "1 card per player"
+              }
+            }
+          },
+          "ref": "p.7, p.19"
+        }
+      ]
+    },
+    {
+      "id": "nemesis",
+      "title": "Nemesis",
+      "steps": [
+        {
+          "id": "choose",
+          "text": "Choose a nemesis; set its mat out and read all its additional rules",
+          "ref": "p.9"
+        },
+        {
+          "id": "nemesis-life",
+          "text": "Nemesis life dial to the number on its mat",
+          "ref": "p.9"
+        },
+        {
+          "id": "tiers",
+          "text": "Split the nemesis's 9 cards into tiers 1-3; add random basic cards per tier: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "1 / 3 / 7",
+                "2": "3 / 5 / 7",
+                "3": "5 / 6 / 7",
+                "4": "8 / 7 / 7"
+              }
+            }
+          },
+          "ref": "p.9"
+        },
+        {
+          "id": "stack",
+          "text": "Shuffle each tier separately; stack tier 3 at the bottom, then 2, then 1 on top - never shuffle again",
+          "ref": "p.9"
+        },
+        {
+          "id": "mat-setup",
+          "text": "Follow the setup on the back of the nemesis mat (tier 0 cards and tokens)",
+          "ref": "p.9"
+        }
+      ]
+    },
+    {
+      "id": "supply",
+      "title": "Supply",
+      "steps": [
+        {
+          "id": "supply",
+          "text": "9 supply piles: 3 gems, 2 relics and 4 spells, one name per pile",
+          "note": "Use the randomizers, choose, or use a suggested supply",
+          "ref": "p.10"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "empty",
+          "text": "An empty supply pile is not replaced",
+          "ref": "p.10"
+        },
+        {
+          "id": "solo-ally",
+          "text": "Solo: you are your own ally",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.19"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "draw",
+          "text": "Reveal the top turn order card; that player or the nemesis takes a turn"
+        }
+      ]
+    }
+  ]
+}

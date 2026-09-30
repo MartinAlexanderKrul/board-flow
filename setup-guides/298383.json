@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 1,
+  "gameId": 298383,
+  "gameName": "Golem",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Golem rulebook (EN)",
+      "Golem Automa rulebook"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Main board in the middle; Synagogue board and structure beside it (tray lined up with its actions)",
+          "ref": "p.2"
+        },
+        {
+          "id": "pass",
+          "text": "Pass tiles next to the Synagogue board",
+          "ref": "p.2"
+        },
+        {
+          "id": "characters",
+          "text": "Split Character cards into I-III and IV decks; 1 from IV in the rightmost Palace space, 3 from I-III in the others, faceup",
+          "ref": "p.2"
+        },
+        {
+          "id": "books",
+          "text": "Shuffle the Book cards onto the Library; 5 faceup next to it",
+          "ref": "p.2"
+        },
+        {
+          "id": "neighborhoods",
+          "text": "Shuffle each color of Neighborhood tiles; 7 per district in ascending order",
+          "ref": "p.2"
+        },
+        {
+          "id": "actions",
+          "text": "Shuffle the Action tiles facedown on the Synagogue board; reveal {n} top to bottom",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "2",
+                "2": "3",
+                "3": "4",
+                "4": "5"
+              }
+            }
+          },
+          "note": "Players + 1 (solo counts the Automa)",
+          "ref": "p.3"
+        },
+        {
+          "id": "objectives",
+          "text": "Shuffle the Objective cards facedown near the board",
+          "ref": "p.3"
+        },
+        {
+          "id": "marbles",
+          "text": "Marbles into the Synagogue (white/black/red/blue/yellow): {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "3/1/2/2/2",
+                "2": "3/1/2/2/2",
+                "3": "5/1/2/2/2",
+                "4": "4/1/3/3/3"
+              }
+            }
+          },
+          "ref": "p.3"
+        },
+        {
+          "id": "menorahs",
+          "text": "Matching Menorah token on each district between spaces VII and VIII",
+          "ref": "p.3"
+        },
+        {
+          "id": "resources",
+          "text": "Clay, Coin, Knowledge and Gold by type as the general supply",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-board",
+          "text": "Each player: a Player board and all pieces of one color",
+          "ref": "p.4"
+        },
+        {
+          "id": "developments",
+          "text": "Development tiles: Study across the top (grey up), Golem ones over the Golem image, Artifact ones on the right",
+          "ref": "p.4"
+        },
+        {
+          "id": "golems",
+          "text": "4 Golems on your board; 2 aside for the main board",
+          "ref": "p.4"
+        },
+        {
+          "id": "students",
+          "text": "A Student on the first space of each of the 3 streets",
+          "ref": "p.4"
+        },
+        {
+          "id": "markers",
+          "text": "Markers on Study 0, Golem track 3, VP 10 and the Turn Order track; Rabbi and Summary card beside your board",
+          "ref": "p.4"
+        },
+        {
+          "id": "turn-order",
+          "text": "Random turn order on the Turn Order track",
+          "ref": "p.4"
+        },
+        {
+          "id": "starting-tiles",
+          "text": "Deal each player 4 Starting tiles",
+          "ref": "p.4"
+        },
+        {
+          "id": "objectives-draft",
+          "text": "Deal 4 Objectives each; draft them to 4, keep 3",
+          "ref": "p.4"
+        },
+        {
+          "id": "artifacts",
+          "text": "Reveal one Artifact tile per player; in reverse turn order each takes one",
+          "ref": "p.5"
+        },
+        {
+          "id": "start-bonus",
+          "text": "Choose 2 of your 4 Starting tiles and take their benefits",
+          "ref": "p.5"
+        },
+        {
+          "id": "golem-placement",
+          "text": "In turn order place your 2 Golems on the leftmost blocks of 2 different districts",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "automa",
+      "title": "Solo: Automa",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "automa-dev",
+          "text": "Replace the Artifact Development tiles with the Special Development tiles",
+          "ref": "Automa p.1"
+        },
+        {
+          "id": "automa-first",
+          "text": "The Automa is first player and takes the last Artifact tile",
+          "ref": "Automa p.1"
+        },
+        {
+          "id": "automa-start",
+          "text": "Give it random Starting tiles equal to the difficulty and 3 random Objectives; you draw 6 and keep 3",
+          "ref": "Automa p.1"
+        },
+        {
+          "id": "automa-track",
+          "text": "Resource track at the chosen difficulty with its marker on 0; Main Strategy tile with the 3 colored ones shuffled below",
+          "ref": "Automa p.1"
+        },
+        {
+          "id": "automa-golems",
+          "text": "Its 2 Golems go to the districts of the top two colored Strategy tiles",
+          "ref": "Automa p.1"
+        },
+        {
+          "id": "automa-deck",
+          "text": "Shuffle the Automa cards facedown by the Resource track",
+          "ref": "Automa p.1"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "round",
+          "text": "In turn order place your Rabbi on an Action tile, then take marble actions",
+          "ref": "p.6"
+        }
+      ]
+    }
+  ]
+}

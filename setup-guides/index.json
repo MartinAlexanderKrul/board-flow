@@ -90,6 +90,14 @@
       "path": "184921.json"
     },
     {
+      "gameId": 191189,
+      "gameName": "Aeon's End",
+      "gameIds": [191189],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "191189.json"
+    },
+    {
       "gameId": 192135,
       "gameName": "Too Many Bones",
       "gameIds": [192135, 235802],
@@ -106,6 +114,14 @@
       "path": "198773.json"
     },
     {
+      "gameId": 199042,
+      "gameName": "Harry Potter: Hogwarts Battle",
+      "gameIds": [199042],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "199042.json"
+    },
+    {
       "gameId": 199792,
       "gameName": "Everdell",
       "gameIds": [199792, 259996, 261142, 289056, 289057, 297972, 297973, 332390, 332397, 332398, 476125],
@@ -120,6 +136,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "201808.json"
+    },
+    {
+      "gameId": 205896,
+      "gameName": "Rising Sun",
+      "gameIds": [205896],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "205896.json"
     },
     {
       "gameId": 224037,
@@ -178,6 +202,14 @@
       "path": "271324.json"
     },
     {
+      "gameId": 285265,
+      "gameName": "Rune Stones",
+      "gameIds": [285265],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "285265.json"
+    },
+    {
       "gameId": 291457,
       "gameName": "Gloomhaven: Jaws of the Lion",
       "gameIds": [291457],
@@ -186,12 +218,28 @@
       "path": "291457.json"
     },
     {
+      "gameId": 292375,
+      "gameName": "The Great Wall",
+      "gameIds": [292375],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "292375.json"
+    },
+    {
       "gameId": 295947,
       "gameName": "Cascadia",
       "gameIds": [295947, 385318],
       "version": 2,
       "schemaVersion": 1,
       "path": "295947.json"
+    },
+    {
+      "gameId": 298383,
+      "gameName": "Golem",
+      "gameIds": [298383],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "298383.json"
     },
     {
       "gameId": 316554,
