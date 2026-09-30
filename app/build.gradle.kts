@@ -100,6 +100,8 @@ val copySetupGuideAssets = tasks.register<Copy>("copySetupGuideAssets") {
 }
 android.sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/setupGuideAssets"))
 tasks.named("preBuild") { dependsOn(copySetupGuideAssets) }
+// BundledSetupGuidesTest reads setup-guides/ directly; declare it so guide edits re-run the tests.
+tasks.withType<Test>().configureEach { inputs.dir(rootProject.file("setup-guides")) }
 
 android.applicationVariants.configureEach {
     outputs.configureEach {

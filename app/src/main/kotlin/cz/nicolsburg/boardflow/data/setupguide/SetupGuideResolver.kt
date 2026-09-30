@@ -30,19 +30,23 @@ object SetupGuideResolver {
         guide: SetupGuide,
         selectedModules: Set<String>,
         fallback: PlayerRange? = null
-    ): IntRange {
+    ): List<Int> {
         val base = baseRange(guide, fallback)
         val extended = guide.modules
             .filter { it.id in selectedModules }
             .mapNotNull { it.extendsMaxPlayers }
             .maxOrNull()
         val max = maxOf(base.max, extended ?: base.max).coerceAtMost(base.min + MAX_PLAYER_CHIPS - 1)
-        return base.min..max
+        return (base.min..max).filter { it !in base.exclude }
     }
 
     /** Player counts offered in the picker, including counts only reachable through a module. */
-    fun allPlayerCounts(guide: SetupGuide, fallback: PlayerRange? = null): IntRange =
+    fun allPlayerCounts(guide: SetupGuide, fallback: PlayerRange? = null): List<Int> =
         selectablePlayerCounts(guide, guide.modules.map { it.id }.toSet(), fallback)
+
+    /** The selectable count closest to [preferred] (ties go to the lower count). */
+    fun nearestPlayerCount(counts: List<Int>, preferred: Int): Int =
+        counts.minWithOrNull(compareBy<Int> { kotlin.math.abs(it - preferred) }.thenBy { it }) ?: preferred
 
     fun isModuleAvailable(module: GuideModule, playerCount: Int): Boolean =
         module.players == null || playerCount in module.players.min..module.players.max

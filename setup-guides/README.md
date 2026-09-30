@@ -38,7 +38,7 @@ only downloads a guide when the index version is higher than the copy it already
   "gameName": "Everdell",
   "version": 1,                     // content revision; bump on every change
   "provenance": { "origin": "BOARDFLOW", "author": "...", "sources": ["Everdell rulebook"] },
-  "players": { "min": 1, "max": 4 },
+  "players": { "min": 1, "max": 4 },   // optional "exclude": [5] for unsupported counts in the range
   "modules": [
     {
       "id": "bellfaire",            // kebab-case, unique in the guide
@@ -89,6 +89,11 @@ only downloads a guide when the index version is higher than the copy it already
 - Values can be text, e.g. `"5, 6, 7"` for per-seat hand sizes.
 
 ## Writing rules
+
+- Cover **every published gameplay expansion**, not only the ones you own: one module per
+  expansion, with its BGG id. Leave out promo cards, component upgrades and fan packs, and say in
+  the pull request which expansions were left out and why (not released yet, no public rulebook,
+  sealed campaign).
 
 - Only include what gets the game onto the table and through the first turn. Leave out strategy
   and full rules.

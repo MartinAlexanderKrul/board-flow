@@ -4,32 +4,32 @@
     {
       "gameId": 199792,
       "gameName": "Everdell",
-      "gameIds": [199792, 259996, 289056, 289057, 297972, 297973, 332390, 332397],
-      "version": 1,
+      "gameIds": [199792, 259996, 261142, 289056, 289057, 297972, 297973, 332390, 332397, 476125],
+      "version": 2,
       "schemaVersion": 1,
       "path": "199792.json"
     },
     {
       "gameId": 266192,
       "gameName": "Wingspan",
-      "gameIds": [266192, 290448],
-      "version": 1,
+      "gameIds": [266192, 290448, 300580, 366161, 461932],
+      "version": 2,
       "schemaVersion": 1,
       "path": "266192.json"
     },
     {
       "gameId": 271324,
       "gameName": "It's a Wonderful World",
-      "gameIds": [271324],
-      "version": 1,
+      "gameIds": [271324, 298851],
+      "version": 2,
       "schemaVersion": 1,
       "path": "271324.json"
     },
     {
       "gameId": 295947,
       "gameName": "Cascadia",
-      "gameIds": [295947],
-      "version": 1,
+      "gameIds": [295947, 385318],
+      "version": 2,
       "schemaVersion": 1,
       "path": "295947.json"
     },

@@ -65,7 +65,11 @@ object SetupGuideJson {
         reviewed = obj.optBoolean("reviewed", true)
     )
 
-    private fun parseRange(obj: JSONObject) = PlayerRange(min = obj.getInt("min"), max = obj.getInt("max"))
+    private fun parseRange(obj: JSONObject) = PlayerRange(
+        min = obj.getInt("min"),
+        max = obj.getInt("max"),
+        exclude = obj.optJSONArray("exclude").ints().toSet()
+    )
 
     private fun parseModule(obj: JSONObject) = GuideModule(
         id = obj.getString("id"),
@@ -135,7 +139,9 @@ object SetupGuideJson {
         if (!p.reviewed) put("reviewed", false)
     }
 
-    private fun rangeToJson(r: PlayerRange) = JSONObject().put("min", r.min).put("max", r.max)
+    private fun rangeToJson(r: PlayerRange) = JSONObject().put("min", r.min).put("max", r.max).apply {
+        if (r.exclude.isNotEmpty()) put("exclude", JSONArray(r.exclude.sorted()))
+    }
 
     private fun moduleToJson(m: GuideModule) = JSONObject().apply {
         put("id", m.id)

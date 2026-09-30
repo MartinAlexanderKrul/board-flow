@@ -31,7 +31,8 @@ data class SetupGuide(
     }
 }
 
-data class PlayerRange(val min: Int, val max: Int)
+/** [exclude] lists counts inside the range the game doesn't support (e.g. Uprising: 1-4 or 6). */
+data class PlayerRange(val min: Int, val max: Int, val exclude: Set<Int> = emptySet())
 
 enum class GuideOrigin { BOARDFLOW, COMMUNITY, USER, AI_DRAFT }
 

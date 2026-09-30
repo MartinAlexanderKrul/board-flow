@@ -2,33 +2,324 @@
   "schemaVersion": 1,
   "gameId": 295947,
   "gameName": "Cascadia",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Cascadia base game rulebook"]
+    "sources": [
+      "Cascadia base game rulebook",
+      "Cascadia Landmarks rulebook (AEG)"
+    ]
   },
-  "players": { "min": 1, "max": 4 },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
   "modules": [
-    { "id": "standard", "name": "Standard", "group": "Scoring cards", "defaultEnabled": true },
-    { "id": "family", "name": "Family variant", "group": "Scoring cards" },
-    { "id": "intermediate", "name": "Intermediate variant", "group": "Scoring cards" }
+    {
+      "id": "standard",
+      "name": "Standard",
+      "group": "Scoring cards",
+      "defaultEnabled": true
+    },
+    {
+      "id": "family",
+      "name": "Family variant",
+      "group": "Scoring cards"
+    },
+    {
+      "id": "intermediate",
+      "name": "Intermediate variant",
+      "group": "Scoring cards"
+    },
+    {
+      "id": "landmarks",
+      "name": "Landmarks (tiles & tokens)",
+      "bggId": 385318,
+      "extendsMaxPlayers": 6,
+      "note": "Enables 5-6 players. Once mixed in, the new tiles and tokens can stay in the base game."
+    },
+    {
+      "id": "landmark-scoring",
+      "name": "Landmarks module",
+      "requires": [
+        "landmarks"
+      ],
+      "note": "Landmark tokens and Landmark Scoring cards."
+    }
   ],
   "sections": [
     {
       "id": "setup",
       "title": "Setup",
       "steps": [
-        { "id": "bag", "text": "All Wildlife tokens in the cloth bag; shake well", "ref": "p.4" },
-        { "id": "habitat-tiles", "text": "Take {n} random Habitat tiles facedown without looking; box the rest", "amounts": { "n": { "byPlayers": { "1": 43, "2": 43, "3": 63, "4": 83 } } }, "ref": "p.4, p.10" },
-        { "id": "tile-stacks", "text": "Shuffle them into facedown stacks within reach", "condition": { "minPlayers": 2 }, "ref": "p.4" },
-        { "id": "tile-stacks-solo", "text": "Shuffle them into facedown stacks on the left of the play area", "condition": { "players": [1] }, "ref": "p.10" },
-        { "id": "scoring-cards", "text": "Randomly pick 1 Wildlife Scoring card for each of the 5 wildlife", "note": "First game: use the cards marked A", "condition": { "modules": ["standard"] }, "ref": "p.4" },
-        { "id": "scoring-family", "text": "Use only the Family Variant scoring card", "condition": { "modules": ["family"] }, "ref": "p.10" },
-        { "id": "scoring-intermediate", "text": "Use only the Intermediate Variant scoring card", "condition": { "modules": ["intermediate"] }, "ref": "p.10" },
-        { "id": "starter-tiles", "text": "Deal each player 1 random Starter Habitat tile faceup; box the rest", "ref": "p.4" },
-        { "id": "display", "text": "Reveal {n} Habitat tiles and pair each with a token drawn from the bag", "amounts": { "n": 4 }, "ref": "p.4" },
-        { "id": "nature-tokens", "text": "Nature tokens within reach", "ref": "p.4" }
+        {
+          "id": "landmarks-mix",
+          "text": "Mix Landmarks' Habitat tiles, Starter tiles and 35 Wildlife tokens in with the base game",
+          "condition": {
+            "modules": [
+              "landmarks"
+            ]
+          },
+          "ref": "Landmarks p.2"
+        },
+        {
+          "id": "bag",
+          "text": "All Wildlife tokens in the cloth bag; shake well",
+          "ref": "p.4"
+        },
+        {
+          "id": "habitat-tiles",
+          "text": "Take {n} random Habitat tiles facedown without looking; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 43,
+                "2": 43,
+                "3": 63,
+                "4": 83,
+                "5": 103,
+                "6": 123
+              },
+              "cases": [
+                {
+                  "when": {
+                    "players": [
+                      1
+                    ],
+                    "modules": [
+                      "landmark-scoring"
+                    ]
+                  },
+                  "value": 44
+                },
+                {
+                  "when": {
+                    "players": [
+                      2
+                    ],
+                    "modules": [
+                      "landmark-scoring"
+                    ]
+                  },
+                  "value": 45
+                },
+                {
+                  "when": {
+                    "players": [
+                      3
+                    ],
+                    "modules": [
+                      "landmark-scoring"
+                    ]
+                  },
+                  "value": 66
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "landmark-scoring"
+                    ]
+                  },
+                  "value": 87
+                },
+                {
+                  "when": {
+                    "players": [
+                      5
+                    ],
+                    "modules": [
+                      "landmark-scoring"
+                    ]
+                  },
+                  "value": 108
+                },
+                {
+                  "when": {
+                    "players": [
+                      6
+                    ],
+                    "modules": [
+                      "landmark-scoring"
+                    ]
+                  },
+                  "value": 129
+                }
+              ]
+            }
+          },
+          "ref": "p.4, p.10, Landmarks p.2"
+        },
+        {
+          "id": "tile-stacks",
+          "text": "Shuffle them into facedown stacks within reach",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "tile-stacks-solo",
+          "text": "Shuffle them into facedown stacks on the left of the play area",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "scoring-cards",
+          "text": "Randomly pick 1 Wildlife Scoring card for each of the 5 wildlife",
+          "note": "First game: use the cards marked A",
+          "condition": {
+            "modules": [
+              "standard"
+            ]
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "scoring-family",
+          "text": "Use only the Family Variant scoring card",
+          "condition": {
+            "modules": [
+              "family"
+            ]
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "scoring-intermediate",
+          "text": "Use only the Intermediate Variant scoring card",
+          "condition": {
+            "modules": [
+              "intermediate"
+            ]
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "starter-tiles",
+          "text": "Deal each player 1 random Starter Habitat tile faceup; box the rest",
+          "ref": "p.4"
+        },
+        {
+          "id": "lm-first-player",
+          "text": "Pick a random first player",
+          "condition": {
+            "modules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "Landmarks p.6"
+        },
+        {
+          "id": "lm-keystones",
+          "text": "Flip Habitat tiles until {n} Keystone tiles are revealed; shuffle the other flipped tiles back",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 6
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "Landmarks p.6"
+        },
+        {
+          "id": "lm-keystone-pick",
+          "text": "In reverse turn order, each player adds 1 of those Keystone tiles to their environment",
+          "condition": {
+            "minPlayers": 2,
+            "modules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "Landmarks p.6"
+        },
+        {
+          "id": "lm-keystone-solo",
+          "text": "Add that Keystone tile to your environment",
+          "condition": {
+            "players": [
+              1
+            ],
+            "modules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "Landmarks p.6"
+        },
+        {
+          "id": "lm-scoring",
+          "text": "Shuffle each of the 5 Landmark Scoring decks; flip {n} from each beside the Wildlife Scoring cards",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 2,
+                "2": 2,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 6
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "Landmarks p.6"
+        },
+        {
+          "id": "lm-tokens",
+          "text": "{n} Landmark tokens of each type beside their scoring cards",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 6
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "Landmarks p.6"
+        },
+        {
+          "id": "display",
+          "text": "Reveal {n} Habitat tiles and pair each with a token drawn from the bag",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "nature-tokens",
+          "text": "Nature tokens within reach",
+          "ref": "p.4"
+        }
       ]
     },
     {
@@ -36,11 +327,59 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "overpopulation-4", "text": "All 4 tokens the same: wipe and redraw them automatically", "ref": "p.6" },
-        { "id": "overpopulation-3", "text": "3 tokens the same: the active player may wipe those 3, once per turn", "ref": "p.6" },
-        { "id": "nature-token", "text": "Spend a Nature token: take any tile with any token, or wipe any tokens", "ref": "p.6" },
-        { "id": "solo-slide", "text": "Solo: before refilling, discard the tile and token furthest from the stacks and slide the rest", "condition": { "players": [1] }, "ref": "p.10" },
-        { "id": "turn-count", "text": "Everyone gets {n} turns", "amounts": { "n": 20 }, "ref": "p.4, p.10" }
+        {
+          "id": "overpopulation-4",
+          "text": "All 4 tokens the same: wipe and redraw them automatically",
+          "ref": "p.6"
+        },
+        {
+          "id": "overpopulation-3",
+          "text": "3 tokens the same: the active player may wipe those 3, once per turn",
+          "ref": "p.6"
+        },
+        {
+          "id": "nature-token",
+          "text": "Spend a Nature token: take any tile with any token, or wipe any tokens",
+          "ref": "p.6"
+        },
+        {
+          "id": "solo-slide",
+          "text": "Solo: before refilling, discard the tile and token furthest from the stacks and slide the rest",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "turn-count",
+          "text": "Everyone gets {n} turns",
+          "amounts": {
+            "n": 20
+          },
+          "ref": "p.4, p.10"
+        },
+        {
+          "id": "lm-place",
+          "text": "Placing a 5th+ tile in a habitat corridor: you may put that habitat's Landmark token on it and take a Landmark Scoring card",
+          "condition": {
+            "modules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "Landmarks p.7"
+        },
+        {
+          "id": "lm-no-wildlife",
+          "text": "No Wildlife token on a Landmark tile; no Nature token for a Landmark on a Keystone",
+          "condition": {
+            "modules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "Landmarks p.7"
+        }
       ]
     },
     {
@@ -48,8 +387,22 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first-player", "text": "Whoever most recently saw one of the wildlife goes first (or pick randomly)", "condition": { "minPlayers": 2 }, "ref": "p.4" },
-        { "id": "first-turn", "text": "Take a tile + token pair and place both in your area", "ref": "p.6" }
+        {
+          "id": "first-player",
+          "text": "Whoever most recently saw one of the wildlife goes first (or pick randomly)",
+          "condition": {
+            "minPlayers": 2,
+            "notModules": [
+              "landmark-scoring"
+            ]
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "first-turn",
+          "text": "Take a tile + token pair and place both in your area",
+          "ref": "p.6"
+        }
       ]
     }
   ]

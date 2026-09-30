@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "gameId": 271324,
   "gameName": "It's a Wonderful World",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["It's a Wonderful World rulebook (EN, La Boite de Jeu)"]
+    "sources": ["It's a Wonderful World rulebook (EN, La Boite de Jeu)", "Corruption & Ascension rules (EN)"]
   },
   "players": { "min": 1, "max": 5 },
   "modules": [
     { "id": "side-a", "name": "Empire side A", "group": "Empire cards", "defaultEnabled": true, "note": "Recommended for your first games." },
-    { "id": "side-b", "name": "Empire side B", "group": "Empire cards" }
+    { "id": "side-b", "name": "Empire side B", "group": "Empire cards" },
+    { "id": "corruption", "name": "Corruption & Ascension", "bggId": 298851, "extendsMaxPlayers": 7, "note": "Enables 6-7 players." }
   ],
   "sections": [
     {
@@ -20,9 +21,12 @@
       "steps": [
         { "id": "board", "text": "Assemble the board; Round tracker on round 1", "ref": "p.2" },
         { "id": "deck", "text": "Shuffle the Development cards into a deck in its notch", "ref": "p.2" },
+        { "id": "corruption-deck", "text": "Shuffle the C&A cards as a separate facedown deck beside the Development deck", "condition": { "modules": ["corruption"] }, "ref": "C&A p.1" },
         { "id": "supply", "text": "Resource cubes and Character tokens on their supply spaces", "ref": "p.2" },
         { "id": "empires", "text": "Deal each player an Empire card, side {side} up", "amounts": { "side": { "default": "A", "cases": [{ "when": { "modules": ["side-b"] }, "value": "B" }] } }, "note": "Everyone uses the same side", "ref": "p.2" },
-        { "id": "solo-pools", "text": "Form {n} facedown Development Pools of 5 cards; the rest is the deck", "amounts": { "n": 8 }, "condition": { "players": [1] }, "ref": "p.7" }
+        { "id": "corruption-empires", "text": "Add C&A's 2 new Empires to the Empire cards before dealing", "condition": { "modules": ["corruption"] }, "ref": "C&A p.3" },
+        { "id": "solo-pools", "text": "Form {n} facedown Development Pools of 5 cards; the rest is the deck", "amounts": { "n": 8 }, "condition": { "players": [1], "notModules": ["corruption"] }, "ref": "p.7" },
+        { "id": "solo-pools-corruption", "text": "Form {n} facedown mini-decks of 3 base + 2 C&A cards", "amounts": { "n": 8 }, "condition": { "players": [1], "modules": ["corruption"] }, "ref": "C&A p.3" }
       ]
     },
     {
@@ -31,8 +35,12 @@
       "kind": "REMINDERS",
       "steps": [
         { "id": "draft-direction", "text": "Pass left in rounds 1 and 3, right in rounds 2 and 4", "condition": { "minPlayers": 2 }, "ref": "p.3" },
-        { "id": "two-player-draft", "text": "2 players: discard the last 3 cards of each draft (no Recycling Bonus)", "condition": { "players": [2] }, "ref": "p.7" },
+        { "id": "two-player-draft", "text": "2 players: discard the last 3 cards of each draft (no Recycling Bonus)", "condition": { "players": [2], "notModules": ["corruption"] }, "ref": "p.7" },
+        { "id": "draft-leftovers", "text": "After drafting your 7th card, discard any remaining cards", "condition": { "minPlayers": 2, "maxPlayers": 6, "modules": ["corruption"] }, "ref": "C&A p.1" },
+        { "id": "corruption", "text": "Corrupted resources are subtracted from your production (and Supremacy)", "condition": { "modules": ["corruption"] }, "ref": "C&A p.2" },
+        { "id": "big-supremacy", "text": "6-7 players: Supremacy ties follow the special C&A rules", "condition": { "minPlayers": 6 }, "ref": "C&A p.3" },
         { "id": "solo-supremacy", "text": "Solo Supremacy needs at least 5 of that resource produced this round", "condition": { "players": [1] }, "ref": "p.7" },
+        { "id": "solo-draw-corruption", "text": "Solo: when you discard 2 to draw, draw 5 base cards or 3 C&A cards, never mixed; keep 1", "condition": { "players": [1], "modules": ["corruption"] }, "ref": "C&A p.3" },
         { "id": "solo-score", "text": "Solo scores assume side B; subtract 15 if you used side A", "condition": { "players": [1] }, "ref": "p.7" }
       ]
     },
@@ -41,7 +49,8 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "deal-draft", "text": "Deal {n} Development cards to each player and start the draft", "amounts": { "n": { "default": 7, "byPlayers": { "2": 10 } } }, "condition": { "minPlayers": 2 }, "ref": "p.3, p.7" },
+        { "id": "deal-draft", "text": "Deal {n} Development cards to each player and start the draft", "amounts": { "n": { "default": 7, "byPlayers": { "2": 10 } } }, "condition": { "minPlayers": 2, "notModules": ["corruption"] }, "ref": "p.3, p.7" },
+        { "id": "deal-draft-corruption", "text": "Deal each player {n} and start the draft", "amounts": { "n": { "byPlayers": { "2": "8 base + 4 C&A cards", "3": "6 base + 3 C&A cards", "4": "6 base + 3 C&A cards", "5": "6 base + 2 C&A cards", "6": "6 base + 2 C&A cards", "7": "5 base + 2 C&A cards" } } }, "condition": { "minPlayers": 2, "modules": ["corruption"] }, "ref": "C&A p.1" },
         { "id": "solo-start", "text": "No draft: take a Development Pool and start planning", "note": "Play 2 Pools per round", "condition": { "players": [1] }, "ref": "p.7" }
       ]
     }

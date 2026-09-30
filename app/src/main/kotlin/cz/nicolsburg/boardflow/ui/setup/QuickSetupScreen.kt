@@ -198,11 +198,11 @@ private fun QuickSetupContent(
                             )
                         }
                     }
-                    if (state.selectablePlayerCounts.last < state.playerCounts.last) {
+                    if (state.selectablePlayerCounts.last() < state.playerCounts.last()) {
                         val unlocking = guide.modules
-                            .filter { (it.extendsMaxPlayers ?: 0) > state.selectablePlayerCounts.last }
+                            .filter { (it.extendsMaxPlayers ?: 0) > state.selectablePlayerCounts.last() }
                             .joinToString(" or ") { it.name }
-                        HintText("${state.selectablePlayerCounts.last + 1}+ players needs $unlocking")
+                        HintText("${state.selectablePlayerCounts.last() + 1}+ players needs $unlocking")
                     }
                 }
             }

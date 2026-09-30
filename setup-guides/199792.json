@@ -1,8 +1,9 @@
 {
   "schemaVersion": 1,
   "gameId": 199792,
+  "aliasGameIds": [476125],
   "gameName": "Everdell",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -26,7 +27,8 @@
     { "id": "nightweave", "name": "Nightweave's Lair", "players": { "min": 1, "max": 2 }, "note": "Mistwood's AI opponent; she counts as an extra player." },
     { "id": "player-powers", "name": "Player Powers", "note": "From Bellfaire, Newleaf or Mistwood." },
     { "id": "legends", "name": "Legends", "bggId": 297972 },
-    { "id": "extra-extra", "name": "Extra! Extra!", "bggId": 297973 }
+    { "id": "extra-extra", "name": "Extra! Extra!", "bggId": 297973 },
+    { "id": "rugwort-cards", "name": "Rugwort cards", "bggId": 261142, "note": "3 mean cards; not recommended with Pearlbrook." }
   ],
   "sections": [
     {
@@ -80,6 +82,7 @@
         { "id": "deck-pearlbrook", "text": "Shuffle the Pearlbrook cards into the main deck", "condition": { "modules": ["pearlbrook"] }, "ref": "Pearlbrook p.3" },
         { "id": "deck-newleaf", "text": "Shuffle the Newleaf Critters and Constructions into the main deck", "condition": { "modules": ["newleaf"] }, "ref": "Newleaf p.4" },
         { "id": "deck-extra-extra", "text": "Shuffle the Extra! Extra! cards into the main deck", "condition": { "modules": ["extra-extra"] }, "ref": "Collector's rule sheet p.1" },
+        { "id": "deck-rugwort", "text": "Shuffle the 3 Rugwort cards into the main deck", "condition": { "modules": ["rugwort-cards"] }, "ref": "Collector's rule sheet p.4" },
         { "id": "deck-farms", "text": "Swap the 8 base Farms for Mistwood's 8 special Farms", "condition": { "modules": ["mistwood"] }, "ref": "Mistwood p.4" },
         { "id": "deck-corrin", "text": "Shuffle the 5 Corrin Evertail cards into the main deck", "condition": { "modules": ["mistwood"] }, "ref": "Mistwood p.4" },
         { "id": "meadow", "text": "Shuffle the main deck and deal {n} cards faceup into the Meadow", "amounts": { "n": 8 }, "ref": "Everdell p.5" },

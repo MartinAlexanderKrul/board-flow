@@ -19,7 +19,10 @@ object SetupGuideValidator {
         if (guide.gameId <= 0) add("gameId must be a positive BGG id")
         if (guide.gameName.isBlank()) add("gameName is blank")
         if (guide.version < 1) add("version must be >= 1")
-        guide.players?.let { if (it.min < 1 || it.max < it.min) add("Invalid players range ${it.min}-${it.max}") }
+        guide.players?.let {
+            if (it.min < 1 || it.max < it.min) add("Invalid players range ${it.min}-${it.max}")
+            it.exclude.filter { n -> n <= it.min || n >= it.max }.forEach { n -> add("players.exclude $n must be strictly inside the range") }
+        }
 
         val moduleIds = guide.modules.map { it.id }
         duplicates(moduleIds).forEach { add("Duplicate module id '$it'") }

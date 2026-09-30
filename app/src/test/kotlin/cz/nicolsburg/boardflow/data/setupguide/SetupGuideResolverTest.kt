@@ -57,8 +57,8 @@ class SetupGuideResolverTest {
 
     @Test
     fun bellfaireUnlocksFiveAndSixPlayers() {
-        assertEquals(1..4, SetupGuideResolver.selectablePlayerCounts(everdell, emptySet()))
-        assertEquals(1..6, SetupGuideResolver.selectablePlayerCounts(everdell, setOf("bellfaire")))
+        assertEquals((1..4).toList(), SetupGuideResolver.selectablePlayerCounts(everdell, emptySet()))
+        assertEquals((1..6).toList(), SetupGuideResolver.selectablePlayerCounts(everdell, setOf("bellfaire")))
 
         val six = SetupGuideResolver.resolve(everdell, 6, setOf("bellfaire"))
         assertTrue(six.step("special-events")!!.contains("place 6"))

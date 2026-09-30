@@ -2,29 +2,72 @@
   "schemaVersion": 1,
   "gameId": 266192,
   "gameName": "Wingspan",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Wingspan rulebook r10", "Wingspan Automa rules r5", "European Expansion rulebook r4"]
+    "sources": [
+      "Wingspan rulebook r10",
+      "Wingspan Automa rules r5",
+      "European Expansion rulebook r4",
+      "Oceania Expansion rulebook r8 + Oceania Automa rules r2",
+      "Americas Expansion rulebook r10",
+      "Wingspan Asia rulebook r9 (Flock mode)"
+    ]
   },
   "players": { "min": 1, "max": 5 },
   "modules": [
-    { "id": "european", "name": "European Expansion", "bggId": 290448, "note": "Use the green side of the goal board; some new goals don't work on the blue side." }
+    { "id": "european", "name": "European Expansion", "bggId": 290448, "note": "Use the green side of the goal board; some new goals don't work on the blue side." },
+    { "id": "oceania", "name": "Oceania Expansion", "bggId": 300580, "note": "Nectar is a wild food; unspent nectar is discarded at the end of each round." },
+    { "id": "americas", "name": "Americas Expansion", "bggId": 461932 },
+    { "id": "asia", "name": "Wingspan Asia (Flock mode)", "bggId": 366161, "extendsMaxPlayers": 7, "forcedAtPlayers": [6, 7], "note": "Adds 6-7 players in two groups; also mixes in Asia's birds and bonus cards." }
   ],
   "sections": [
     {
       "id": "table",
       "title": "Table",
       "steps": [
-        { "id": "european-mix", "text": "Shuffle the European bird and bonus cards into their decks; mix in the extra eggs, food and goal tiles", "condition": { "modules": ["european"] }, "ref": "European p.2" },
-        { "id": "bird-tray", "text": "Shuffle the bird deck beside the bird tray; fill the tray with {n} faceup birds", "amounts": { "n": 3 }, "ref": "Wingspan p.2" },
+        { "id": "mix-birds", "text": "Shuffle together the bird decks you want to use", "note": "Each expansion's birds also work on their own with the base game", "condition": { "modules": ["oceania"] }, "ref": "Oceania p.1" },
+        { "id": "european-mix", "text": "Shuffle the European birds and bonus cards into their decks; mix in the extra eggs, food and goal tiles", "condition": { "modules": ["european"] }, "ref": "European p.2" },
+        { "id": "oceania-mix", "text": "Mix Oceania's bonus cards and goal tiles in with the others", "condition": { "modules": ["oceania"] }, "ref": "Oceania p.1" },
+        { "id": "americas-mix", "text": "Shuffle in the Americas birds, bonus cards and goal tiles", "condition": { "modules": ["americas"] }, "ref": "Americas p.1-2" },
+        { "id": "asia-mix", "text": "Shuffle in Asia's birds and bonus cards (not the Duet goal tiles with red corners)", "condition": { "modules": ["asia"] }, "ref": "Asia p.3" },
+        { "id": "bird-tray", "text": "Shuffle the bird deck beside the bird tray; fill the tray with {n} faceup birds", "amounts": { "n": 3 }, "condition": { "maxPlayers": 5 }, "ref": "Wingspan p.2" },
         { "id": "supply", "text": "All food and egg tokens in the supply", "ref": "Wingspan p.2" },
-        { "id": "birdfeeder", "text": "Toss the food dice into the birdfeeder", "ref": "Wingspan p.2" },
-        { "id": "goal-board", "text": "Goal board: green side (1st/2nd/3rd place) or blue side (1 point per item)", "ref": "Wingspan p.2" },
-        { "id": "goal-tiles", "text": "Shuffle the goal tiles; {n} random tiles, random side up, on the goal board", "amounts": { "n": 4 }, "ref": "Wingspan p.2" },
-        { "id": "european-reference", "text": "European reference tile next to the goal board", "condition": { "modules": ["european"] }, "ref": "European p.2" },
-        { "id": "bonus-deck", "text": "Shuffle the bonus cards into a deck", "ref": "Wingspan p.2" }
+        { "id": "nectar-supply", "text": "Add the nectar tokens to the food supply", "condition": { "modules": ["oceania"] }, "ref": "Oceania p.1" },
+        { "id": "birdfeeder", "text": "Toss the food dice into the birdfeeder", "condition": { "maxPlayers": 5, "notModules": ["oceania"] }, "ref": "Wingspan p.2" },
+        { "id": "birdfeeder-oceania", "text": "Swap all 5 food dice for Oceania's 5 dice and toss them into the birdfeeder", "condition": { "maxPlayers": 5, "modules": ["oceania"] }, "ref": "Oceania p.1" },
+        { "id": "goal-board", "text": "Goal board: green side (1st/2nd/3rd place) or blue side (1 point per item)", "condition": { "maxPlayers": 5 }, "ref": "Wingspan p.2" },
+        { "id": "goal-tiles", "text": "Shuffle the goal tiles; {n} random tiles, random side up, on the goal board", "amounts": { "n": 4 }, "condition": { "maxPlayers": 5 }, "ref": "Wingspan p.2" },
+        { "id": "reference-tile", "text": "Expansion reference tile next to the goal board", "condition": { "modules": ["european"] }, "ref": "European p.2" },
+        { "id": "reference-tile-oceania", "text": "Oceania reference tile next to the goal board", "condition": { "modules": ["oceania"], "notModules": ["americas"] }, "ref": "Oceania p.1" },
+        { "id": "reference-tile-americas", "text": "Updated Americas reference tile next to the goal board", "condition": { "modules": ["americas"] }, "ref": "Americas p.1" },
+        { "id": "bonus-deck", "text": "Shuffle the bonus cards into a deck", "condition": { "maxPlayers": 5 }, "ref": "Wingspan p.2" }
+      ]
+    },
+    {
+      "id": "flock",
+      "title": "Flock mode (6-7 players)",
+      "condition": { "minPlayers": 6 },
+      "steps": [
+        { "id": "flock-groups", "text": "Split into 2 fixed groups: {n}", "amounts": { "n": { "byPlayers": { "6": "3 + 3", "7": "3 + 4" } } }, "ref": "Asia p.3" },
+        { "id": "flock-dial", "text": "Turn-order dial in the middle ({n}-player side up on both pieces); hand out action cubes in the dial's color order", "amounts": { "n": { "byPlayers": { "6": "6", "7": "7" } } }, "ref": "Asia p.3" },
+        { "id": "flock-trays", "text": "Shuffle the bird deck, split it in half: each group gets a bird tray with {n} faceup birds", "amounts": { "n": 3 }, "note": "Combine enough bird cards from the base game and expansions", "ref": "Asia p.3" },
+        { "id": "flock-feeders", "text": "Each group gets its own birdfeeder with {n}", "amounts": { "n": { "default": "5 dice", "cases": [{ "when": { "modules": ["oceania"] }, "value": "2 nectar dice + 3 regular dice" }] } }, "ref": "Asia p.3" },
+        { "id": "flock-bonus", "text": "One shared bonus deck of all bonus cards except the Historian", "ref": "Asia p.3" },
+        { "id": "flock-goals", "text": "Flock goal board (back of the Duet map): {n} random standard goal tiles, random side up", "amounts": { "n": 4 }, "ref": "Asia p.3" }
+      ]
+    },
+    {
+      "id": "americas",
+      "title": "Americas: hummingbirds",
+      "condition": { "modules": ["americas"] },
+      "steps": [
+        { "id": "garden", "text": "Hummingbird garden board in the middle; shuffle the hummingbird deck beside it", "ref": "Americas p.2" },
+        { "id": "garden-fill", "text": "{n} hummingbird faceup on each of the 5 garden spaces", "amounts": { "n": 1 }, "ref": "Americas p.2" },
+        { "id": "overlay", "text": "Each player: hummingbird overlay on the left of the player mat", "ref": "Americas p.2" },
+        { "id": "starting-hummingbird", "text": "Each player: a random hummingbird on the grassland hummingbird space", "ref": "Americas p.2" },
+        { "id": "hummingbird-track", "text": "Each player: a random hummingbird track (either side) with {n} tokens on the S-T-A-R-T spaces", "amounts": { "n": 5 }, "ref": "Americas p.2" }
       ]
     },
     {
@@ -34,6 +77,7 @@
       "steps": [
         { "id": "automa-cubes", "text": "Give the Automa {n} action cubes of one color", "amounts": { "n": 8 }, "ref": "Automa p.2" },
         { "id": "automa-deck", "text": "Shuffle the Automa deck (remove Automubon Society unless playing expert); round tracker card beside it", "ref": "Automa p.2" },
+        { "id": "automa-oceania", "text": "Add the RAOUtoma card; Spent Nectar card by the Automa with 3/4/5 nectar per habitat (Eaglet/Eagle/Eagle-eyed)", "condition": { "modules": ["oceania"] }, "ref": "Oceania Automa p.1" },
         { "id": "automa-bonus", "text": "Reveal a bonus card for the Automa first; redraw Breeding Manager, Backyard Birder, or any card without a %", "note": "Reshuffle the bonus deck afterwards", "ref": "Automa p.2" },
         { "id": "automa-goal-card", "text": "End-of-round Goal Scoring card, Round 1 up, beside the Round 1 goal", "ref": "Automa p.2" },
         { "id": "automa-difficulty", "text": "Choose the Automa difficulty level", "ref": "Automa p.4" }
@@ -43,10 +87,12 @@
       "id": "players",
       "title": "Players",
       "steps": [
-        { "id": "player-mat", "text": "Each player: a player mat and {n} action cubes of one color", "amounts": { "n": 8 }, "ref": "Wingspan p.2" },
-        { "id": "deal", "text": "Deal each player {n} birds, 2 bonus cards and 5 food (one of each)", "amounts": { "n": 5 }, "ref": "Wingspan p.2" },
+        { "id": "player-mat", "text": "Each player: a player mat and {n} action cubes of one color", "amounts": { "n": 8 }, "condition": { "notModules": ["oceania"] }, "ref": "Wingspan p.2" },
+        { "id": "player-mat-oceania", "text": "Each player: an Oceania player mat and {n} action cubes of one color", "amounts": { "n": 8 }, "condition": { "modules": ["oceania"] }, "ref": "Oceania p.1" },
+        { "id": "deal", "text": "Deal each player {n} birds, 2 bonus cards and 5 food (one of each, no nectar)", "amounts": { "n": 5 }, "ref": "Wingspan p.2, Oceania p.1" },
         { "id": "keep-birds", "text": "Keep up to 5 birds, discarding 1 food for each bird kept", "ref": "Wingspan p.2" },
-        { "id": "keep-bonus", "text": "Keep 1 bonus card, discard the other", "ref": "Wingspan p.2" }
+        { "id": "keep-bonus", "text": "Keep 1 bonus card, discard the other", "ref": "Wingspan p.2" },
+        { "id": "nectar-start", "text": "Everyone then gains {n} nectar", "amounts": { "n": 1 }, "condition": { "modules": ["oceania"] }, "ref": "Oceania p.1" }
       ]
     },
     {
@@ -55,7 +101,11 @@
       "kind": "REMINDERS",
       "steps": [
         { "id": "cubes-stay", "text": "Action cubes stay on the row you used until end-of-round scoring", "condition": { "modules": ["european"] }, "note": "Round-end (teal) powers count them", "ref": "European p.2" },
-        { "id": "brown-powers", "text": "Moving your cube right to left activates brown powers in that row; each is optional", "ref": "Wingspan p.4" }
+        { "id": "cubes-stay-oceania", "text": "Action cubes stay on the row you used until end-of-round scoring", "condition": { "modules": ["oceania"], "notModules": ["european"] }, "ref": "Oceania p.1" },
+        { "id": "brown-powers", "text": "Moving your cube right to left activates brown powers in that row; each is optional", "ref": "Wingspan p.4" },
+        { "id": "nectar-wild", "text": "Nectar pays for any food when playing a bird; unspent nectar is discarded each round", "condition": { "modules": ["oceania"] }, "ref": "Oceania p.2" },
+        { "id": "hummingbird-action", "text": "After a forest, grassland or wetland action, take a hummingbird action", "condition": { "modules": ["americas"] }, "ref": "Americas p.4" },
+        { "id": "flock-access", "text": "You only use your own group's bird tray and birdfeeder", "condition": { "minPlayers": 6 }, "ref": "Asia p.3" }
       ]
     },
     {
@@ -63,7 +113,8 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first-player", "text": "Random first player takes the first-player token; play is clockwise", "condition": { "minPlayers": 2 }, "ref": "Wingspan p.2" },
+        { "id": "first-player", "text": "Random first player takes the first-player token; play is clockwise", "condition": { "minPlayers": 2, "maxPlayers": 5 }, "ref": "Wingspan p.2" },
+        { "id": "first-player-flock", "text": "Random first player; rotate the dial's star to them. Two players act at once", "condition": { "minPlayers": 6 }, "ref": "Asia p.3" },
         { "id": "first-player-solo", "text": "You always go first", "condition": { "players": [1] }, "ref": "Automa p.2" },
         { "id": "turn", "text": "Each turn: play a bird, gain food, lay eggs, or draw birds", "ref": "Wingspan p.4" }
       ]

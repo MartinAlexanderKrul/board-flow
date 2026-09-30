@@ -24,8 +24,8 @@ sealed interface QuickSetupUiState {
     data object NotFound : QuickSetupUiState
     data class Ready(
         val loaded: LoadedSetupGuide,
-        val playerCounts: IntRange,
-        val selectablePlayerCounts: IntRange,
+        val playerCounts: List<Int>,
+        val selectablePlayerCounts: List<Int>,
         val selectedModules: Set<String>,
         val lockedModules: Set<String>,
         val resolved: ResolvedSetup,
@@ -95,7 +95,7 @@ class QuickSetupViewModel(
         val openedModule = g.modules.firstOrNull { it.bggId == requestedGameId && requestedGameId != g.gameId }
         val selected = (g.modules.filter { it.defaultEnabled }.map { it.id } + listOfNotNull(openedModule?.id)).toSet()
         val range = SetupGuideResolver.selectablePlayerCounts(g, selected)
-        val players = DEFAULT_PLAYERS.coerceIn(range.first, range.last)
+        val players = SetupGuideResolver.nearestPlayerCount(range, DEFAULT_PLAYERS)
         savedState[KEY_MODULES] = ArrayList(SetupGuideResolver.effectiveModules(g, players, selected))
         savedState[KEY_PLAYERS] = players
     }
@@ -124,7 +124,7 @@ class QuickSetupViewModel(
             current - module.excludes.toSet() - g.modules.filter { moduleId in it.excludes }.map { it.id }.toSet() + moduleId
         }
         val range = SetupGuideResolver.selectablePlayerCounts(g, next)
-        val clamped = players.coerceIn(range.first, range.last)
+        val clamped = if (players in range) players else SetupGuideResolver.nearestPlayerCount(range, players)
         savedState[KEY_MODULES] = ArrayList(SetupGuideResolver.effectiveModules(g, clamped, next))
         if (clamped != players) savedState[KEY_PLAYERS] = clamped
     }
