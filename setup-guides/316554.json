@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "gameId": 316554,
+  "gameName": "Dune: Imperium",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Dune: Imperium rulebook (2020-10-26) incl. House Hagal sheet",
+      "Rise of Ix rulebook (22-2-11)",
+      "Immortality rulebook",
+      "Bloodlines rulebook"
+    ]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "ix", "name": "Rise of Ix", "bggId": 342031 },
+    { "id": "epic", "name": "Epic mode", "requires": ["ix"], "note": "Play to 12 VP. Needs Rise of Ix." },
+    { "id": "immortality", "name": "Immortality", "bggId": 367466 },
+    { "id": "bloodlines", "name": "Bloodlines", "bggId": 426129, "note": "Some Bloodlines cards are Uprising-only; the steps below say which to leave out." },
+    { "id": "bloodlines-tech", "name": "Bloodlines Tech Module", "requires": ["bloodlines"] },
+    { "id": "novice", "name": "Novice (Mercenary)", "group": "Solo difficulty", "defaultEnabled": true, "players": { "min": 1, "max": 1 } },
+    { "id": "veteran", "name": "Veteran (Sardaukar)", "group": "Solo difficulty", "players": { "min": 1, "max": 1 } },
+    { "id": "expert", "name": "Expert (Mentat)", "group": "Solo difficulty", "players": { "min": 1, "max": 1 } }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "place-board", "text": "Place the board; Mentat on its side on the Mentat space", "ref": "Dune p.4" },
+        { "id": "alliances", "text": "Alliance tokens on the marked spots of the Emperor, Guild, Bene Gesserit and Fremen tracks", "ref": "Dune p.4" },
+        { "id": "ix-boards", "text": "CHOAM overlay on the board's upper right corner; Ix board beside the board", "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.3" },
+        { "id": "ix-tech", "text": "Shuffle the {n} Tech tiles facedown into 3 stacks on the Ix board; flip the top of each", "amounts": { "n": 18 }, "condition": { "modules": ["ix"], "notModules": ["bloodlines-tech"] }, "ref": "Rise of Ix p.3" },
+        { "id": "ix-tech-bloodlines", "text": "Shuffle the Ix and Bloodlines Tech tiles into 3 even stacks on the Ix board; flip the top of each", "note": "No Ixian Embassy board. Leave out CHOAM Transports, Advanced Data Analysis, Forbidden Weapons, Ornithopter Fleet, Panopticon and Spy Drones", "condition": { "modules": ["ix", "bloodlines-tech"] }, "ref": "Bloodlines p.6-7" },
+        { "id": "embassy-tech", "text": "Ixian Embassy board beside the board; shuffle the Bloodlines Tech tiles into 3 even stacks on it and flip the top of each", "note": "Leave out CHOAM Transports, Advanced Data Analysis, Forbidden Weapons, Ornithopter Fleet, Panopticon and Spy Drones", "condition": { "modules": ["bloodlines-tech"], "notModules": ["ix"] }, "ref": "Bloodlines p.6" },
+        { "id": "tleilax-board", "text": "Bene Tleilax board above the Imperium Row, {n} spice on the 4th space of the Tleilaxu track", "amounts": { "n": 2 }, "condition": { "modules": ["immortality"] }, "ref": "Immortality p.4" },
+        { "id": "research-overlay", "text": "Research Station overlay on the Research Station space", "condition": { "modules": ["immortality"] }, "ref": "Immortality p.5" },
+        { "id": "sardaukar", "text": "Sardaukar Commanders on Conspire, Wealth, Foldspace, High Council and Rally Troops; 1 more in the bank", "condition": { "modules": ["bloodlines"], "notModules": ["ix"] }, "ref": "Bloodlines p.3" },
+        { "id": "sardaukar-4p", "text": "4 players: another Sardaukar Commander on Hall of Oratory", "condition": { "players": [4], "modules": ["bloodlines"], "notModules": ["ix"] }, "ref": "Bloodlines p.3" },
+        { "id": "sardaukar-ix", "text": "Sardaukar Commanders on Conspire, Wealth, Foldspace, High Council and Dreadnought; 1 more in the bank", "note": "The CHOAM overlay covers Rally Troops and Hall of Oratory", "condition": { "modules": ["bloodlines", "ix"] }, "ref": "Bloodlines p.3, p.7" },
+        { "id": "sardaukar-ix-4p", "text": "4 players: another Sardaukar Commander on Tech Negotiation", "condition": { "players": [4], "modules": ["bloodlines", "ix"] }, "ref": "Bloodlines p.7" },
+        { "id": "sardaukar-skills", "text": "Shuffle the Sardaukar Commander Skills without the 2 \"Fierce\" ones; deal {n} faceup", "amounts": { "n": 4 }, "condition": { "modules": ["bloodlines"] }, "ref": "Bloodlines p.3" }
+      ]
+    },
+    {
+      "id": "conflict",
+      "title": "Conflict deck",
+      "steps": [
+        { "id": "conflict-ix", "text": "Add Rise of Ix's Conflict cards to the pool", "note": "Bloodlines' Conflict cards are Uprising-only; leave them out", "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.3" },
+        { "id": "conflict-deck", "text": "Conflict deck from the bottom up: {n}; return the rest unseen", "amounts": { "n": "4 random Conflict III, 5 Conflict II, 1 Conflict I" }, "condition": { "notModules": ["epic"] }, "ref": "Dune p.4" },
+        { "id": "conflict-deck-epic", "text": "Conflict deck from the bottom up: {n}; no Conflict I", "amounts": { "n": "5 random Conflict III, 5 Conflict II" }, "condition": { "modules": ["epic"] }, "ref": "Rise of Ix p.10" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards & bank",
+      "steps": [
+        { "id": "cards-ix", "text": "Shuffle Rise of Ix's Intrigue and Imperium cards into those decks", "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.3" },
+        { "id": "cards-immortality", "text": "Shuffle Immortality's Intrigue and Imperium cards into those decks", "condition": { "modules": ["immortality"] }, "ref": "Immortality p.4-5" },
+        { "id": "cards-bloodlines", "text": "Shuffle Bloodlines' Intrigue and Imperium cards into those decks", "note": "Leave out the Uprising-only cards: False Orders, Grasp Arrakis, Insider Information, Ripples in the Sand, Sleeper Unit, Arrakis Observer, Eliminate Allies, Holy War, Intelligence Training (2), Pointing the Way, Shrouded Counsel, and all CHOAM Module parts", "condition": { "modules": ["bloodlines"] }, "ref": "Bloodlines p.3" },
+        { "id": "cards-bloodlines-tech", "text": "Add the Tech Module's 2 Intrigue and 2 Imperium cards", "condition": { "modules": ["bloodlines-tech"] }, "ref": "Bloodlines p.6" },
+        { "id": "intrigue", "text": "Shuffle the Intrigue deck facedown beside the board", "ref": "Dune p.4" },
+        { "id": "imperium-row", "text": "Shuffle the Imperium deck and reveal {n} cards as the Imperium Row", "amounts": { "n": 5 }, "ref": "Dune p.4" },
+        { "id": "reserve", "text": "Reserve stacks: Arrakis Liaison, The Spice Must Flow, Foldspace", "ref": "Dune p.4" },
+        { "id": "tleilaxu-row", "text": "Reclaimed Forces left of the Bene Tleilax board; shuffle the Tleilaxu deck and deal {n} faceup beside it", "amounts": { "n": 2 }, "condition": { "modules": ["immortality"] }, "ref": "Immortality p.4" },
+        { "id": "bank", "text": "Bank of Solari, spice and water beside the board", "ref": "Dune p.5" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "leaders-bloodlines", "text": "Leave out Count Hasimir Fenring, Gaius Helen Mohiam and Liet Kynes", "note": "Uprising-only Bloodlines Leaders", "condition": { "modules": ["bloodlines"] }, "ref": "Bloodlines p.3" },
+        { "id": "leaders", "text": "Each player takes a Leader", "ref": "Dune p.4" },
+        { "id": "starting-deck", "text": "Shuffle your 10-card starting deck facedown left of your Leader", "ref": "Dune p.5" },
+        { "id": "deck-immortality", "text": "Swap both Dune, the Desert Planet cards for 2 Experimentation", "condition": { "modules": ["immortality"] }, "ref": "Immortality p.5" },
+        { "id": "deck-epic", "text": "Swap 1 Dune, the Desert Planet for Control the Spice", "condition": { "modules": ["epic"] }, "ref": "Rise of Ix p.10" },
+        { "id": "water", "text": "Take {n} water", "amounts": { "n": 1 }, "ref": "Dune p.5" },
+        { "id": "agents", "text": "Pick a color: 2 Agents on your Leader, Swordmaster beside the board", "ref": "Dune p.5" },
+        { "id": "score", "text": "Score marker on {n}", "amounts": { "n": { "default": 0, "byPlayers": { "4": 1 } } }, "ref": "Dune p.5" },
+        { "id": "combat-marker", "text": "Combat marker on 0 of the Combat track", "ref": "Dune p.5" },
+        { "id": "influence", "text": "A cube on the bottom space of each of the 4 Influence tracks", "ref": "Dune p.5" },
+        { "id": "garrison", "text": "{n} troops in your garrison, the rest in your supply", "amounts": { "n": { "default": 3, "cases": [{ "when": { "modules": ["epic"] }, "value": 5 }] } }, "ref": "Dune p.5, Rise of Ix p.10" },
+        { "id": "ix-player", "text": "Take your {n} dreadnoughts; Freighter disc on the bottom of the Shipping track", "amounts": { "n": 2 }, "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.3" },
+        { "id": "immortality-player", "text": "Tleilaxu and research discs on the leftmost spaces of their tracks; take a Family Atomics token", "condition": { "modules": ["immortality"] }, "ref": "Immortality p.4-5" },
+        { "id": "epic-intrigue", "text": "Each player draws {n} Intrigue card", "amounts": { "n": 1 }, "condition": { "modules": ["epic"] }, "ref": "Rise of Ix p.10" }
+      ]
+    },
+    {
+      "id": "house-hagal",
+      "title": "House Hagal (2 players)",
+      "condition": { "players": [2] },
+      "steps": [
+        { "id": "hagal-color", "text": "Pick a color for House Hagal: a cube on the bottom of each Influence track, no troops in its garrison", "ref": "House Hagal sheet" },
+        { "id": "hagal-remove", "text": "Remove the 3 Arrakeen cards marked 1P from the House Hagal deck", "ref": "House Hagal sheet" },
+        { "id": "hagal-ix", "text": "Also remove both Hall of Oratory and both Rally Troops cards; add Rise of Ix's Hagal cards except the 4 marked 1P", "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.8" },
+        { "id": "hagal-tuek", "text": "Add Bloodlines' 2 Tuek's Sietch Hagal cards only if someone plays Esmar Tuek", "condition": { "modules": ["bloodlines"] }, "ref": "Bloodlines p.8" },
+        { "id": "hagal-shuffle", "text": "Shuffle the House Hagal deck; its {n} Agents beside it", "amounts": { "n": 3 }, "ref": "House Hagal sheet" }
+      ]
+    },
+    {
+      "id": "solo",
+      "title": "Solo Rivals",
+      "condition": { "players": [1] },
+      "steps": [
+        { "id": "rival-leaders", "text": "Pick 2 Leaders for the Rivals (not Paul Atreides or Helena Richese)", "note": "Rivals use only their Signet Ring ability", "ref": "House Hagal sheet" },
+        { "id": "rival-setup", "text": "Each Rival: a cube on the bottom of each Influence track, {n} troops in its garrison, 2 Agents in its supply", "amounts": { "n": { "default": 3, "cases": [{ "when": { "modules": ["novice"] }, "value": 0 }] } }, "ref": "House Hagal sheet" },
+        { "id": "rival-swordmasters", "text": "Insert both Rival Swordmasters into the Conflict deck with {n} cards above them", "amounts": { "n": { "default": 3, "cases": [{ "when": { "modules": ["novice"] }, "value": 5 }, { "when": { "modules": ["veteran"] }, "value": 4 }] } }, "ref": "House Hagal sheet" },
+        { "id": "solo-hagal", "text": "House Hagal deck: remove the Reshuffle card and the 3 Arrakeen cards marked 2P, then shuffle", "ref": "House Hagal sheet" },
+        { "id": "solo-hagal-ix", "text": "Also remove both Hall of Oratory and both Rally Troops cards; add Rise of Ix's Hagal cards except the 2 Dreadnought cards marked 2P", "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.8" },
+        { "id": "solo-hagal-immortality", "text": "Swap the 3 Carthag Hagal cards for Immortality's 4; Rival Tleilaxu discs at the start of the Tleilaxu track", "note": "Rivals don't use the research track", "condition": { "modules": ["immortality"] }, "ref": "Immortality p.13" },
+        { "id": "solo-hagal-tech", "text": "Add Bloodlines' 4 Acquire Tech Hagal cards", "condition": { "modules": ["bloodlines-tech"], "notModules": ["ix"] }, "ref": "Bloodlines p.8" },
+        { "id": "solo-hagal-tuek", "text": "Add Bloodlines' 2 Tuek's Sietch Hagal cards only if you play Esmar Tuek", "condition": { "modules": ["bloodlines"] }, "ref": "Bloodlines p.8" },
+        { "id": "solo-mentat", "text": "Put the 5 Solari token on the Mentat space", "note": "The Mentat costs 5 Solari this game", "condition": { "notModules": ["novice"] }, "ref": "House Hagal sheet" },
+        { "id": "solo-resources", "text": "You also start with 1 Solari and 1 spice", "condition": { "modules": ["novice"] }, "ref": "House Hagal sheet" },
+        { "id": "solo-rival-intrigue", "text": "Each Rival draws 1 Intrigue card", "condition": { "notModules": ["novice"] }, "ref": "House Hagal sheet" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "game-end", "text": "The game ends after the round in which someone reaches {n} VP (or the Conflict deck runs out)", "amounts": { "n": { "default": 10, "cases": [{ "when": { "modules": ["epic"] }, "value": 12 }] } }, "ref": "Dune p.13, Rise of Ix p.10" },
+        { "id": "hagal-turns", "text": "House Hagal takes a turn after each of the first player's Agent turns", "condition": { "players": [2] }, "ref": "House Hagal sheet" },
+        { "id": "rival-spending", "text": "Rivals spend resources for VP as soon as they can", "condition": { "players": [1] }, "ref": "House Hagal sheet" },
+        { "id": "rival-swordmasters-join", "text": "Rivals get their Swordmasters when the Conflict card above them is revealed", "condition": { "players": [1] }, "ref": "House Hagal sheet" },
+        { "id": "tech-flip", "text": "After buying a Tech tile, flip the next tile of that stack", "condition": { "modules": ["ix"] }, "ref": "Rise of Ix p.4" },
+        { "id": "sardaukar-cost", "text": "Sardaukar Commander: 2 Solari when your Agent visits its space", "condition": { "modules": ["bloodlines"] }, "ref": "Bloodlines p.4" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-player", "text": "Pick a random first player; they take the First Player marker", "condition": { "minPlayers": 2 }, "ref": "Dune p.5" },
+        { "id": "first-player-solo", "text": "The Rival on your left takes the First Player marker", "condition": { "players": [1] }, "ref": "House Hagal sheet" },
+        { "id": "round-start", "text": "Reveal the top Conflict card; everyone draws {n} cards", "amounts": { "n": 5 }, "ref": "Dune p.8" },
+        { "id": "turns", "text": "Clockwise: send an Agent, or take your Reveal turn", "ref": "Dune p.8" }
+      ]
+    }
+  ]
+}

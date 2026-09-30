@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 422780,
   "gameName": "Mistborn: The Deckbuilding Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -10,7 +10,8 @@
   },
   "players": { "min": 1, "max": 4 },
   "modules": [
-    { "id": "coop", "name": "Co-op vs the Lord Ruler", "forcedAtPlayers": [1], "note": "Always on for solo. No Target and no starting bonuses." }
+    { "id": "competitive", "name": "Competitive", "group": "Mode", "defaultEnabled": true, "players": { "min": 2, "max": 4 } },
+    { "id": "coop", "name": "Co-op vs the Lord Ruler", "group": "Mode", "forcedAtPlayers": [1], "note": "Always used for solo. No Target and no starting bonuses." }
   ],
   "sections": [
     {

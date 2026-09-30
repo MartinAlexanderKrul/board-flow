@@ -49,7 +49,6 @@ class QuickSetupViewModel(
 ) : ViewModel() {
 
     private val requestedGameId: Int = savedState.get<Int>(ARG_GAME_ID) ?: 0
-    private val suggestedPlayers: Int = savedState.get<Int>(ARG_PLAYERS) ?: 0
 
     private val guide = MutableStateFlow<LoadedSetupGuide?>(null)
     private val loadFinished = MutableStateFlow(false)
@@ -96,7 +95,7 @@ class QuickSetupViewModel(
         val openedModule = g.modules.firstOrNull { it.bggId == requestedGameId && requestedGameId != g.gameId }
         val selected = (g.modules.filter { it.defaultEnabled }.map { it.id } + listOfNotNull(openedModule?.id)).toSet()
         val range = SetupGuideResolver.selectablePlayerCounts(g, selected)
-        val players = suggestedPlayers.takeIf { it in range } ?: range.first
+        val players = DEFAULT_PLAYERS.coerceIn(range.first, range.last)
         savedState[KEY_MODULES] = ArrayList(SetupGuideResolver.effectiveModules(g, players, selected))
         savedState[KEY_PLAYERS] = players
     }
@@ -112,12 +111,16 @@ class QuickSetupViewModel(
         val players = playerCount.value
         if (moduleId in SetupGuideResolver.lockedModules(g, players)) return
         val current = modules.value.toSet()
-        val next = if (moduleId in current) {
+        val module = g.modules.first { it.id == moduleId }
+        val next = if (module.group != null) {
+            // Single-choice group: picking one replaces its siblings; tapping the active one does nothing.
+            if (moduleId in current) return
+            current - g.modules.filter { it.group == module.group }.map { it.id }.toSet() + moduleId
+        } else if (moduleId in current) {
             // Switching a module off also drops modules that depend on it.
             val dependents = g.modules.filter { moduleId in it.requires }.map { it.id }.toSet()
             current - moduleId - dependents
         } else {
-            val module = g.modules.first { it.id == moduleId }
             current - module.excludes.toSet() - g.modules.filter { moduleId in it.excludes }.map { it.id }.toSet() + moduleId
         }
         val range = SetupGuideResolver.selectablePlayerCounts(g, next)
@@ -137,7 +140,8 @@ class QuickSetupViewModel(
 
     companion object {
         const val ARG_GAME_ID = "gameId"
-        const val ARG_PLAYERS = "players"
+        /** Every guide opens at 2 players (clamped to the guide's range). */
+        private const val DEFAULT_PLAYERS = 2
         private const val KEY_PLAYERS = "qs_players"
         private const val KEY_MODULES = "qs_modules"
         private const val KEY_CHECKED = "qs_checked"

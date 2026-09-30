@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "gameId": 271324,
+  "gameName": "It's a Wonderful World",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["It's a Wonderful World rulebook (EN, La Boite de Jeu)"]
+  },
+  "players": { "min": 1, "max": 5 },
+  "modules": [
+    { "id": "side-a", "name": "Empire side A", "group": "Empire cards", "defaultEnabled": true, "note": "Recommended for your first games." },
+    { "id": "side-b", "name": "Empire side B", "group": "Empire cards" }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        { "id": "board", "text": "Assemble the board; Round tracker on round 1", "ref": "p.2" },
+        { "id": "deck", "text": "Shuffle the Development cards into a deck in its notch", "ref": "p.2" },
+        { "id": "supply", "text": "Resource cubes and Character tokens on their supply spaces", "ref": "p.2" },
+        { "id": "empires", "text": "Deal each player an Empire card, side {side} up", "amounts": { "side": { "default": "A", "cases": [{ "when": { "modules": ["side-b"] }, "value": "B" }] } }, "note": "Everyone uses the same side", "ref": "p.2" },
+        { "id": "solo-pools", "text": "Form {n} facedown Development Pools of 5 cards; the rest is the deck", "amounts": { "n": 8 }, "condition": { "players": [1] }, "ref": "p.7" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "draft-direction", "text": "Pass left in rounds 1 and 3, right in rounds 2 and 4", "condition": { "minPlayers": 2 }, "ref": "p.3" },
+        { "id": "two-player-draft", "text": "2 players: discard the last 3 cards of each draft (no Recycling Bonus)", "condition": { "players": [2] }, "ref": "p.7" },
+        { "id": "solo-supremacy", "text": "Solo Supremacy needs at least 5 of that resource produced this round", "condition": { "players": [1] }, "ref": "p.7" },
+        { "id": "solo-score", "text": "Solo scores assume side B; subtract 15 if you used side A", "condition": { "players": [1] }, "ref": "p.7" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "deal-draft", "text": "Deal {n} Development cards to each player and start the draft", "amounts": { "n": { "default": 7, "byPlayers": { "2": 10 } } }, "condition": { "minPlayers": 2 }, "ref": "p.3, p.7" },
+        { "id": "solo-start", "text": "No draft: take a Development Pool and start planning", "note": "Play 2 Pools per round", "condition": { "players": [1] }, "ref": "p.7" }
+      ]
+    }
+  ]
+}

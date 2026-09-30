@@ -140,6 +140,7 @@ fun BoardFlowApp(
     val pendingWidgetQuickScan by appViewModel.pendingWidgetQuickScan.collectAsState()
     val pendingWidgetOpenGameId by appViewModel.pendingWidgetOpenGameId.collectAsState()
     val setupGuideAvailability by setupGuideRepository.availability.collectAsState()
+    val allSetupGuides by setupGuideRepository.guides.collectAsState()
     var startupSilentSyncRequested by rememberSaveable { mutableStateOf(false) }
     var showDiscardLogPlayConfirm by rememberSaveable { mutableStateOf(false) }
     var showStopTimerConfirm by rememberSaveable { mutableStateOf(false) }
@@ -195,12 +196,7 @@ fun BoardFlowApp(
     }
 
     fun openQuickSetup(gameId: Int) {
-        // Default the player count to the most recent play of this game (or any game sharing its guide).
-        val guideId = setupGuideAvailability[gameId]?.baseGameId
-        val lastPlayers = historyPlays
-            .firstOrNull { play -> play.gameId == gameId || setupGuideAvailability[play.gameId]?.baseGameId == guideId }
-            ?.players?.size?.takeIf { it > 0 }
-        navController.navigate(AppRoutes.quickSetup(gameId, lastPlayers)) { launchSingleTop = true }
+        navController.navigate(AppRoutes.quickSetup(gameId)) { launchSingleTop = true }
     }
 
     // Reload play data after any sync completes so historyPlays (and Stats) reflect
@@ -293,7 +289,7 @@ fun BoardFlowApp(
     val isQuickSetup = currentRoute == AppRoutes.QUICK_SETUP
 
     val headerSubtitle = when {
-        currentRoute == AppRoutes.NEW_PLAY -> "Log a New Play"
+        currentRoute == AppRoutes.NEW_PLAY -> activeTabLabel ?: "Log a New Play"
         currentRoute == AppRoutes.HISTORY -> activeTabLabel ?: "Play Journal"
         currentRoute == AppRoutes.QR_IMPORT -> "Import Play"
         currentRoute == AppRoutes.COLLECTION -> activeTabLabel ?: "My Collection"
@@ -502,7 +498,11 @@ fun BoardFlowApp(
                         appViewModel.exitQuickScanCorrectionMode()
                         val game = appViewModel.selectedGame
                         navController.navigate(AppRoutes.scan(game?.id ?: 0, game?.name ?: ""))
-                    }
+                    },
+                    setupGuideAvailability = setupGuideAvailability,
+                    allSetupGuides = allSetupGuides,
+                    onOpenQuickSetup = ::openQuickSetup,
+                    onActiveTabChange = { activeTabLabel = it }
                 )
             }
 
@@ -714,8 +714,7 @@ fun BoardFlowApp(
             composable(
                 route = AppRoutes.QUICK_SETUP,
                 arguments = listOf(
-                    navArgument(QuickSetupViewModel.ARG_GAME_ID) { type = NavType.IntType },
-                    navArgument(QuickSetupViewModel.ARG_PLAYERS) { type = NavType.IntType; defaultValue = 0 }
+                    navArgument(QuickSetupViewModel.ARG_GAME_ID) { type = NavType.IntType }
                 )
             ) {
                 val quickSetupViewModel: QuickSetupViewModel = viewModel(

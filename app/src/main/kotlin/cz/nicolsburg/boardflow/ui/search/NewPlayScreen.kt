@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
@@ -47,6 +48,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.AppViewModel
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideAvailability
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideSummary
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
+import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.RecommendationLane
 import cz.nicolsburg.boardflow.model.RecommendationPick
@@ -76,9 +83,19 @@ fun NewPlayScreen(
     viewModel: AppViewModel,
     onGameSelected: (BggGame) -> Unit,
     onPlayAgain: () -> Unit = {},
-    onScanQuick: () -> Unit = {}
+    onScanQuick: () -> Unit = {},
+    setupGuideAvailability: Map<Int, SetupGuideAvailability> = emptyMap(),
+    allSetupGuides: List<SetupGuideSummary> = emptyList(),
+    onOpenQuickSetup: (gameId: Int) -> Unit = {},
+    onActiveTabChange: (String?) -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
+    var selectedTab by rememberSaveable { mutableStateOf(NewPlayTab.LOG_PLAY) }
+    // Quick Setup tab: every guide, or only the games on my shelf (with unavailable ones dimmed).
+    var showAllGuides by rememberSaveable { mutableStateOf(true) }
+    val correctionMode by viewModel.quickScanCorrectionMode.collectAsState()
+    // Correcting a scanned game is a Log Play flow; never show it on the Quick Setup tab.
+    val setupTab = selectedTab == NewPlayTab.QUICK_SETUP && !correctionMode
     val results by viewModel.logPlaySearchResults.collectAsState()
     val loading by viewModel.searchLoading.collectAsState()
     val error   by viewModel.searchError.collectAsState()
@@ -98,14 +115,24 @@ fun NewPlayScreen(
 
     LaunchedEffect(Unit) { viewModel.loadLogPlayGames() }
 
+    LaunchedEffect(setupTab) { onActiveTabChange(if (setupTab) NewPlayTab.QUICK_SETUP.label else null) }
+
     LaunchedEffect(query) {
         delay(800)
         viewModel.filterLogPlayGames(query)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
+        if (!correctionMode) {
+            ScreenTabRow(
+                tabs = NewPlayTab.entries.map { it.label },
+                selectedIndex = selectedTab.ordinal,
+                onTabSelected = { selectedTab = NewPlayTab.entries[it] }
+            )
+        }
+
         // Continue last session banner
-        AnimatedVisibility(visible = sessionBannerVisible && !changeGameActive) {
+        AnimatedVisibility(visible = sessionBannerVisible && !changeGameActive && !setupTab) {
             sessionContext?.let { ctx ->
                 SessionContinueBanner(
                     context   = ctx,
@@ -121,7 +148,7 @@ fun NewPlayScreen(
         }
 
         // Change game notice — same slot and size as the session banner
-        AnimatedVisibility(visible = changeGameActive) {
+        AnimatedVisibility(visible = changeGameActive && !setupTab) {
             Surface(
                 shape = BoardFlowSurfaceTokens.ContentCardShape,
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
@@ -162,18 +189,36 @@ fun NewPlayScreen(
                 onValueChange = { query = it },
                 placeholder = "Search games...",
                 modifier = Modifier.fillMaxWidth(),
-                trailingAction = {
-                    SearchFieldActionButton(onClick = onScanQuick) {
-                        Icon(
-                            Icons.Default.CameraAlt,
-                            contentDescription = "Scan score",
-                            modifier = Modifier.size(20.dp)
-                        )
+                trailingAction = if (setupTab) null else {
+                    {
+                        SearchFieldActionButton(onClick = onScanQuick) {
+                            Icon(
+                                Icons.Default.CameraAlt,
+                                contentDescription = "Scan score",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             )
 
-            if (query.isBlank() && !changeGameActive) {
+            if (setupTab) {
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BoardFlowFilterChip(
+                        selected = showAllGuides,
+                        onClick = { showAllGuides = true },
+                        label = { Text("All guides") }
+                    )
+                    BoardFlowFilterChip(
+                        selected = !showAllGuides,
+                        onClick = { showAllGuides = false },
+                        label = { Text("My games") }
+                    )
+                }
+            }
+
+            if (query.isBlank() && !changeGameActive && !setupTab) {
                 Spacer(Modifier.height(4.dp))
                 PlayingWithRow(
                     pendingPlayers = pendingPlayers,
@@ -186,6 +231,34 @@ fun NewPlayScreen(
             Spacer(Modifier.height(8.dp))
 
             when {
+                setupTab && showAllGuides -> {
+                    val matches = remember(allSetupGuides, query) {
+                        allSetupGuides.filter { query.isBlank() || it.gameName.contains(query.trim(), ignoreCase = true) }
+                    }
+                    if (matches.isEmpty()) {
+                        Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                            Text(
+                                if (query.isBlank()) "No setup guides yet" else "No setup guide for \"$query\"",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(bottom = 8.dp)
+                        ) {
+                            items(matches, key = { it.gameId }) { guide ->
+                                SetupGameRow(
+                                    game = BggGame(id = guide.gameId, name = guide.gameName, yearPublished = null, thumbnailUrl = null),
+                                    available = true,
+                                    onClick = { onOpenQuickSetup(guide.gameId) }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 loading -> LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = PaddingValues(bottom = 8.dp)
@@ -240,13 +313,13 @@ fun NewPlayScreen(
                         modifier = Modifier.padding(32.dp)
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.NoteAdd,
+                            if (setupTab) Icons.Default.Checklist else Icons.AutoMirrored.Filled.NoteAdd,
                             contentDescription = null,
                             modifier = Modifier.size(72.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
                         )
                         Text(
-                            "Log a Play",
+                            if (setupTab) "Quick Setup" else "Log a Play",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -277,7 +350,15 @@ fun NewPlayScreen(
                                 end = if (showScrollBar) 20.dp else 0.dp
                             )
                         ) {
-                            if (recommendationsEnabled && query.isBlank() && recommendationLanes.isNotEmpty()) {
+                            if (setupTab && query.isBlank()) {
+                                val withGuides = results.filter { it.id in setupGuideAvailability }
+                                if (withGuides.isNotEmpty()) {
+                                    item(key = "setup-available") {
+                                        AvailableGuidesStrip(games = withGuides, onOpen = { onOpenQuickSetup(it.id) })
+                                    }
+                                }
+                            }
+                            if (!setupTab && recommendationsEnabled && query.isBlank() && recommendationLanes.isNotEmpty()) {
                                 item {
                                     RecommendationsSection(
                                         lanes = recommendationLanes,
@@ -288,7 +369,13 @@ fun NewPlayScreen(
                                     )
                                 }
                             }
-                            items(results) { game ->
+                            if (setupTab) items(results) { game ->
+                                SetupGameRow(
+                                    game = game,
+                                    available = game.id in setupGuideAvailability,
+                                    onClick = { onOpenQuickSetup(game.id) }
+                                )
+                            } else items(results) { game ->
                                 GameRow(
                                     game = game,
                                     timerActive = activeTimer?.gameId == game.id,
@@ -894,3 +981,92 @@ private fun GameRow(
     )
 }
 
+private enum class NewPlayTab(val label: String) {
+    LOG_PLAY("Log Play"),
+    QUICK_SETUP("Quick Setup")
+}
+
+/** Games that already have a guide, so they are not buried in a long alphabetical list. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AvailableGuidesStrip(games: List<BggGame>, onOpen: (BggGame) -> Unit) {
+    Column(
+        modifier = Modifier.padding(bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            "Available now",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            games.forEach { game ->
+                BoardFlowFilterChip(
+                    selected = false,
+                    onClick = { onOpen(game) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Checklist, contentDescription = null, modifier = Modifier.size(16.dp))
+                    },
+                    label = { Text(game.name) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SetupGameRow(
+    game: BggGame,
+    available: Boolean,
+    onClick: () -> Unit
+) {
+    if (available) {
+        ListItem(
+            headlineContent = { Text(game.name, fontWeight = FontWeight.Medium) },
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Checklist,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = "Open setup guide",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                }
+            },
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .clickable(onClick = onClick)
+        )
+    } else {
+        // Translucent, dimmed row: still listed so search finds it, but it cannot be opened.
+        ListItem(
+            headlineContent = {
+                Text(
+                    game.name,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                )
+            },
+            supportingContent = {
+                Text(
+                    "Setup guide not available yet",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            colors = ListItemDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+            ),
+            modifier = Modifier.clip(RoundedCornerShape(4.dp))
+        )
+    }
+}

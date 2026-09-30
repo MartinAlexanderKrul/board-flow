@@ -48,6 +48,7 @@ only downloads a guide when the index version is higher than the copy it already
       "players": { "min": 1, "max": 2 },   // only offered at these counts (optional)
       "extendsMaxPlayers": 6,       // unlocks higher player counts (optional)
       "forcedAtPlayers": [1],       // always on at these counts, e.g. solo mode (optional)
+      "group": "Mode",              // modules sharing a group are one choice, e.g. Competitive / Co-op (optional)
       "requires": [], "excludes": [],
       "note": "Shown while the module is on"
     }

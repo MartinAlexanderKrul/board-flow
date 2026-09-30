@@ -56,6 +56,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideResolver
+import cz.nicolsburg.boardflow.model.GuideModule
 import cz.nicolsburg.boardflow.model.GuideOrigin
 import cz.nicolsburg.boardflow.model.GuideSectionKind
 import cz.nicolsburg.boardflow.model.ResolvedSection
@@ -127,8 +129,15 @@ private fun QuickSetupContent(
     val listState = rememberLazyListState()
     var showResetConfirm by rememberSaveable { mutableStateOf(false) }
     val sections = state.resolved.sections
-    // Items before the sections: header, players, content.
-    val leadingItems = 3
+    // Single-choice groups (e.g. "Mode") get their own picker; everything else is "Content".
+    // A group with no member available at this player count (e.g. solo difficulty at 3 players) is hidden.
+    val moduleGroups = remember(guide, state.resolved.playerCount) {
+        guide.modules.filter { it.group != null }.groupBy { it.group!! }.toList()
+            .filter { (_, members) -> members.any { SetupGuideResolver.isModuleAvailable(it, state.resolved.playerCount) } }
+    }
+    val ungroupedModules = remember(guide) { guide.modules.filter { it.group == null } }
+    // Items before the sections: header, players, one per group, and content when shown.
+    val leadingItems = 2 + moduleGroups.size + if (ungroupedModules.isNotEmpty()) 1 else 0
 
     // Once everything is ticked, bring the "Start playing" card into view.
     LaunchedEffect(state.isComplete) {
@@ -197,32 +206,20 @@ private fun QuickSetupContent(
                     }
                 }
             }
-            item(key = "content") {
-                SectionCard {
-                    SectionLabel("Content")
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        BoardFlowFilterChip(
-                            selected = true,
-                            onClick = {},
-                            enabled = false,
-                            label = { Text("Base game") }
-                        )
-                        guide.modules.forEach { module ->
-                            val locked = module.id in state.lockedModules
-                            BoardFlowFilterChip(
-                                selected = module.id in state.selectedModules,
-                                onClick = { onToggleModule(module.id) },
-                                enabled = !locked,
-                                label = { Text(module.name) }
-                            )
-                        }
+            moduleGroups.forEach { (group, members) ->
+                item(key = "group-$group") {
+                    SectionCard {
+                        SectionLabel(group)
+                        ModuleChips(members, state, onToggleModule)
                     }
-                    guide.modules
-                        .filter { it.id in state.selectedModules && it.note != null }
-                        .forEach { HintText("${it.name}: ${it.note}") }
+                }
+            }
+            if (ungroupedModules.isNotEmpty()) {
+                item(key = "content") {
+                    SectionCard {
+                        SectionLabel("Content")
+                        ModuleChips(ungroupedModules, state, onToggleModule, showBaseGame = true)
+                    }
                 }
             }
             sections.forEach { section ->
@@ -477,4 +474,34 @@ private fun attribution(state: QuickSetupUiState.Ready): String {
         SetupGuideSource.USER -> "customised"
     }
     return "$origin v${guide.version} ($where). Setup reminder only - see the rulebook for full rules."
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ModuleChips(
+    modules: List<GuideModule>,
+    state: QuickSetupUiState.Ready,
+    onToggleModule: (String) -> Unit,
+    showBaseGame: Boolean = false
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (showBaseGame) {
+            // Always included; shown selected (not greyed out) so it reads as part of the setup.
+            BoardFlowFilterChip(selected = true, onClick = {}, label = { Text("Base game") })
+        }
+        modules.forEach { module ->
+            BoardFlowFilterChip(
+                selected = module.id in state.selectedModules,
+                onClick = { onToggleModule(module.id) },
+                enabled = module.id !in state.lockedModules,
+                label = { Text(module.name) }
+            )
+        }
+    }
+    modules
+        .filter { it.id in state.selectedModules && it.note != null }
+        .forEach { HintText("${it.name}: ${it.note}") }
 }

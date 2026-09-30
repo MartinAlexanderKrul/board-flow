@@ -77,7 +77,8 @@ object SetupGuideJson {
         forcedAtPlayers = obj.optJSONArray("forcedAtPlayers").ints().toSet(),
         requires = obj.optJSONArray("requires").strings(),
         excludes = obj.optJSONArray("excludes").strings(),
-        note = obj.optStringOrNull("note")
+        note = obj.optStringOrNull("note"),
+        group = obj.optStringOrNull("group")
     )
 
     private fun parseSection(obj: JSONObject) = GuideSection(
@@ -147,6 +148,7 @@ object SetupGuideJson {
         if (m.requires.isNotEmpty()) put("requires", JSONArray(m.requires))
         if (m.excludes.isNotEmpty()) put("excludes", JSONArray(m.excludes))
         m.note?.let { put("note", it) }
+        m.group?.let { put("group", it) }
     }
 
     private fun sectionToJson(s: GuideSection) = JSONObject().apply {

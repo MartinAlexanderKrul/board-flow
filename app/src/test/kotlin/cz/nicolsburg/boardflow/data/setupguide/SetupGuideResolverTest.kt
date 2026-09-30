@@ -102,6 +102,18 @@ class SetupGuideResolverTest {
     }
 
     @Test
+    fun modeGroupAlwaysHasExactlyOneChoice() {
+        assertEquals("default mode", setOf("competitive"), SetupGuideResolver.effectiveModules(mistborn, 3, emptySet()))
+        assertEquals(setOf("coop"), SetupGuideResolver.effectiveModules(mistborn, 3, setOf("coop")))
+        assertEquals(
+            "two members of one group collapse to one",
+            1,
+            SetupGuideResolver.effectiveModules(mistborn, 3, setOf("coop", "competitive")).size
+        )
+        assertTrue("competitive is unavailable solo", "competitive" in SetupGuideResolver.lockedModules(mistborn, 1))
+    }
+
+    @Test
     fun onlySetupSectionsAreCheckable() {
         val resolved = SetupGuideResolver.resolve(mistborn, 2, emptySet())
         val reminderIds = resolved.sections.filter { it.kind != GuideSectionKind.SETUP }.flatMap { s -> s.steps.map { it.id } }

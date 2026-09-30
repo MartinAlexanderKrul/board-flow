@@ -28,6 +28,9 @@ object SetupGuideValidator {
             (module.requires + module.excludes).filter { it !in moduleIds }
                 .forEach { add("Module '${module.id}' references unknown module '$it'") }
         }
+        guide.modules.mapNotNull { it.group }.distinct()
+            .filter { group -> guide.modules.count { it.group == group } < 2 }
+            .forEach { add("Module group '$it' needs at least 2 modules") }
 
         val sectionIds = guide.sections.map { it.id }
         duplicates(sectionIds).forEach { add("Duplicate section id '$it'") }

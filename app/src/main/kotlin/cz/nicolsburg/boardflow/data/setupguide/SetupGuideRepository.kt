@@ -17,6 +17,12 @@ data class SetupGuideAvailability(
     val offlineReady: Boolean
 )
 
+/** One guide as listed in the "All guides" view: its base game. */
+data class SetupGuideSummary(
+    val gameId: Int,
+    val gameName: String
+)
+
 /**
  * Combines the three guide layers:
  * - USER guides in Room always win (copy-on-write customisations; later phases),
@@ -36,6 +42,11 @@ class SetupGuideRepository(
     /** Keyed by every BGG id that opens a guide (base, aliases, expansion modules). */
     val availability: StateFlow<Map<Int, SetupGuideAvailability>> = _availability.asStateFlow()
 
+    private val _guides = MutableStateFlow<List<SetupGuideSummary>>(emptyList())
+
+    /** Every known guide (bundled, catalog, user), one per base game, sorted by name. */
+    val guides: StateFlow<List<SetupGuideSummary>> = _guides.asStateFlow()
+
     suspend fun refreshAvailability() {
         val bundledIndex = bundled.index().filter { it.isSupported() }
         val catalogIndex = store.getSetupGuideCatalog().filter { it.isSupported() }
@@ -43,16 +54,25 @@ class SetupGuideRepository(
         val offlineBaseIds = bundledIndex.map { it.gameId }.toSet() + stored.map { it.gameId }
 
         val result = mutableMapOf<Int, SetupGuideAvailability>()
+        val names = linkedMapOf<Int, String>()
         fun register(baseId: Int, ids: Set<Int>) {
             val availability = SetupGuideAvailability(baseId, offlineReady = baseId in offlineBaseIds)
             // A base game's own id always maps to itself, even if another guide lists it as a module.
             ids.forEach { id -> if (id == baseId || id !in result) result[id] = availability }
         }
-        (bundledIndex + catalogIndex).forEach { register(it.gameId, it.gameIds) }
+        (bundledIndex + catalogIndex).forEach {
+            register(it.gameId, it.gameIds)
+            names.putIfAbsent(it.gameId, it.gameName)
+        }
         stored.forEach { row ->
-            SetupGuideJson.parseOrNull(row.guideJson)?.let { register(it.gameId, it.allGameIds) }
+            SetupGuideJson.parseOrNull(row.guideJson)?.let {
+                register(it.gameId, it.allGameIds)
+                names.putIfAbsent(it.gameId, it.gameName)
+            }
         }
         _availability.value = result
+        _guides.value = names.map { (id, name) -> SetupGuideSummary(id, name) }
+            .sortedBy { it.gameName.lowercase() }
     }
 
     /**

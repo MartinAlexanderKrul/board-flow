@@ -266,7 +266,8 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 
 ### Quick Setup
 
-- entry: `Setup` button in `GameDetailsDialog` `HeaderSection`, shown when `SetupGuideRepository.availability` has the game's BGG id (base, alias, or a module `bggId`); both Collection and History wire it through `AppShell.openQuickSetup`, which passes the last logged player count as a route argument
+- entries: the `Quick Setup` tab in `NewPlayScreen` (`All guides` lists `SetupGuideRepository.guides`; `My games` shares the Log Play search results and dims rows without a guide), and the `Setup` button in `GameDetailsDialog` `HeaderSection`, shown when `SetupGuideRepository.availability` has the game's BGG id (base, alias, or a module `bggId`); both Collection and History wire it through `AppShell.openQuickSetup`
+- every guide opens at 2 players (clamped to the guide's range); modules with the same `group` are a single choice (radio) and exactly one available member is always on
 - route `AppRoutes.QUICK_SETUP` (`quick_setup/{gameId}?players={players}`); bottom nav hidden; `QuickSetupViewModel` is nav-scoped and keeps player count, modules and checked step ids in its `SavedStateHandle` only - never persisted, never written into the guide
 - guide content is data, not code: edit `setup-guides/*.json`, bump `version` in the guide and `index.json`, and run `:app:testDebugUnitTest` (`BundledSetupGuidesTest` validates every guide and every configuration). Paraphrase rulebooks; do not paste their text
 - conditions are AND-only; express OR as two steps. Step ids must stay stable so ticks survive configuration changes

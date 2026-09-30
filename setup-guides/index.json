@@ -10,10 +10,50 @@
       "path": "199792.json"
     },
     {
+      "gameId": 266192,
+      "gameName": "Wingspan",
+      "gameIds": [266192, 290448],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "266192.json"
+    },
+    {
+      "gameId": 271324,
+      "gameName": "It's a Wonderful World",
+      "gameIds": [271324],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "271324.json"
+    },
+    {
+      "gameId": 295947,
+      "gameName": "Cascadia",
+      "gameIds": [295947],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "295947.json"
+    },
+    {
+      "gameId": 316554,
+      "gameName": "Dune: Imperium",
+      "gameIds": [316554, 342031, 367466, 426129],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "316554.json"
+    },
+    {
+      "gameId": 338960,
+      "gameName": "Slay the Spire: The Board Game",
+      "gameIds": [338960],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "338960.json"
+    },
+    {
       "gameId": 422780,
       "gameName": "Mistborn: The Deckbuilding Game",
       "gameIds": [422780],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "422780.json"
     }

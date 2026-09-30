@@ -62,6 +62,16 @@ object SetupGuideResolver {
         }
         forced.forEach(::add)
         selected.forEach(::add)
+        // Single-choice groups: keep one member (forced first, then guide order); if none is on,
+        // turn on the default (or first) member available at this player count.
+        guide.modules.mapNotNull { it.group }.distinct().forEach { group ->
+            val members = guide.modules.filter { it.group == group && isModuleAvailable(it, playerCount) }
+            val chosen = members.filter { it.id in result }.sortedBy { if (it.id in forced) 0 else 1 }
+            if (chosen.size > 1) chosen.drop(1).forEach { result.remove(it.id) }
+            if (chosen.isEmpty()) {
+                (members.firstOrNull { it.defaultEnabled } ?: members.firstOrNull())?.let { add(it.id) }
+            }
+        }
         // Exclusions: forced modules win; otherwise the earlier-listed module wins.
         val ordered = guide.modules.map { it.id }.filter { it in result }
             .sortedBy { if (it in forced) 0 else 1 }

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "gameId": 266192,
+  "gameName": "Wingspan",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Wingspan rulebook r10", "Wingspan Automa rules r5", "European Expansion rulebook r4"]
+  },
+  "players": { "min": 1, "max": 5 },
+  "modules": [
+    { "id": "european", "name": "European Expansion", "bggId": 290448, "note": "Use the green side of the goal board; some new goals don't work on the blue side." }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        { "id": "european-mix", "text": "Shuffle the European bird and bonus cards into their decks; mix in the extra eggs, food and goal tiles", "condition": { "modules": ["european"] }, "ref": "European p.2" },
+        { "id": "bird-tray", "text": "Shuffle the bird deck beside the bird tray; fill the tray with {n} faceup birds", "amounts": { "n": 3 }, "ref": "Wingspan p.2" },
+        { "id": "supply", "text": "All food and egg tokens in the supply", "ref": "Wingspan p.2" },
+        { "id": "birdfeeder", "text": "Toss the food dice into the birdfeeder", "ref": "Wingspan p.2" },
+        { "id": "goal-board", "text": "Goal board: green side (1st/2nd/3rd place) or blue side (1 point per item)", "ref": "Wingspan p.2" },
+        { "id": "goal-tiles", "text": "Shuffle the goal tiles; {n} random tiles, random side up, on the goal board", "amounts": { "n": 4 }, "ref": "Wingspan p.2" },
+        { "id": "european-reference", "text": "European reference tile next to the goal board", "condition": { "modules": ["european"] }, "ref": "European p.2" },
+        { "id": "bonus-deck", "text": "Shuffle the bonus cards into a deck", "ref": "Wingspan p.2" }
+      ]
+    },
+    {
+      "id": "automa",
+      "title": "Solo: Automa",
+      "condition": { "players": [1] },
+      "steps": [
+        { "id": "automa-cubes", "text": "Give the Automa {n} action cubes of one color", "amounts": { "n": 8 }, "ref": "Automa p.2" },
+        { "id": "automa-deck", "text": "Shuffle the Automa deck (remove Automubon Society unless playing expert); round tracker card beside it", "ref": "Automa p.2" },
+        { "id": "automa-bonus", "text": "Reveal a bonus card for the Automa first; redraw Breeding Manager, Backyard Birder, or any card without a %", "note": "Reshuffle the bonus deck afterwards", "ref": "Automa p.2" },
+        { "id": "automa-goal-card", "text": "End-of-round Goal Scoring card, Round 1 up, beside the Round 1 goal", "ref": "Automa p.2" },
+        { "id": "automa-difficulty", "text": "Choose the Automa difficulty level", "ref": "Automa p.4" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "player-mat", "text": "Each player: a player mat and {n} action cubes of one color", "amounts": { "n": 8 }, "ref": "Wingspan p.2" },
+        { "id": "deal", "text": "Deal each player {n} birds, 2 bonus cards and 5 food (one of each)", "amounts": { "n": 5 }, "ref": "Wingspan p.2" },
+        { "id": "keep-birds", "text": "Keep up to 5 birds, discarding 1 food for each bird kept", "ref": "Wingspan p.2" },
+        { "id": "keep-bonus", "text": "Keep 1 bonus card, discard the other", "ref": "Wingspan p.2" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "cubes-stay", "text": "Action cubes stay on the row you used until end-of-round scoring", "condition": { "modules": ["european"] }, "note": "Round-end (teal) powers count them", "ref": "European p.2" },
+        { "id": "brown-powers", "text": "Moving your cube right to left activates brown powers in that row; each is optional", "ref": "Wingspan p.4" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-player", "text": "Random first player takes the first-player token; play is clockwise", "condition": { "minPlayers": 2 }, "ref": "Wingspan p.2" },
+        { "id": "first-player-solo", "text": "You always go first", "condition": { "players": [1] }, "ref": "Automa p.2" },
+        { "id": "turn", "text": "Each turn: play a bird, gain food, lay eggs, or draw birds", "ref": "Wingspan p.4" }
+      ]
+    }
+  ]
+}

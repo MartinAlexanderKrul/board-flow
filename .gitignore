@@ -127,3 +127,6 @@ collection.csv
 android/google-services.json
 
 
+
+# Kotlin compiler session/cache files
+.kotlin/

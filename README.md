@@ -113,9 +113,13 @@ Primary files:
 
 A box -> table -> first turn cheat sheet for games you already know. It is not a rulebook.
 
-- open it from the `Setup` button in the game detail dialog (Collection and Journal). Opening an
+- open it from the `Quick Setup` tab on the Log Play screen (same search; `All guides` lists every
+  guide, `My games` lists owned games and marks those without a guide "not available yet"), or
+  from the `Setup` button in the game detail
+  dialog (Collection and Journal). Opening an
   expansion that a guide lists as a module opens the base game's guide with that module on
-- pick the player count (it defaults to your last logged play) and the expansions/modules, and
+- pick the player count (every guide opens at 2 players, clamped to its range), the mode for
+  games that have one (e.g. Mistborn: Competitive / Co-op), and the expansions/modules, and
   only the matching steps are shown. Quantities are resolved per configuration and shown in bold
 - setup sections are a checklist. Ticks are session-only (`SavedStateHandle`) and never change the
   guide. `Reset` clears them. `Easy to forget` and `Start playing` cards follow the checklist

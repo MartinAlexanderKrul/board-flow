@@ -57,7 +57,12 @@ data class GuideModule(
     val forcedAtPlayers: Set<Int> = emptySet(),
     val requires: List<String> = emptyList(),
     val excludes: List<String> = emptyList(),
-    val note: String? = null
+    val note: String? = null,
+    /**
+     * Modules sharing a group are a single choice (e.g. "Mode": Competitive / Co-op): exactly one
+     * available member is always on. The group name is shown as the picker label.
+     */
+    val group: String? = null
 )
 
 enum class GuideSectionKind { SETUP, REMINDERS, START }
