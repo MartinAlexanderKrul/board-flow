@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "gameId": 198773,
+  "gameName": "Codenames: Pictures",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Codenames: Pictures rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 8
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "teams",
+          "text": "Split into two teams; each picks a spymaster; spymasters sit on the same side",
+          "ref": "p.2"
+        },
+        {
+          "id": "grid",
+          "text": "20 random pictures in a 5 x 4 grid (marked corner top-left)",
+          "ref": "p.2"
+        },
+        {
+          "id": "key",
+          "text": "Random key card on the stand between the spymasters, matching the grid",
+          "ref": "p.3"
+        },
+        {
+          "id": "agents",
+          "text": "7 red and 7 blue agent cards by their spymasters; the double agent flipped to the starting team's color",
+          "ref": "p.3"
+        },
+        {
+          "id": "bystanders",
+          "text": "4 innocent bystanders and the assassin card within reach",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The key card's lights show the starting team (8 pictures to find); its spymaster gives the first clue",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}

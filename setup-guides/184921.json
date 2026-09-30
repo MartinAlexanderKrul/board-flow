@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "gameId": 184921,
+  "gameName": "Bunny Kingdom",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Bunny Kingdom rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "board",
+          "text": "New World board in the middle; a Strength 1 City on each City space",
+          "ref": "p.5"
+        },
+        {
+          "id": "rabbits",
+          "text": "Each player: 36 Rabbits of one color, one on 0 of the Score Track",
+          "ref": "p.5"
+        },
+        {
+          "id": "supply",
+          "text": "Remaining Cities and tokens next to the board",
+          "ref": "p.5"
+        },
+        {
+          "id": "deck",
+          "text": "Shuffle the Exploration cards facedown by the board",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "pass",
+          "text": "Pass left in rounds 1 and 3, right in rounds 2 and 4",
+          "ref": "p.6"
+        },
+        {
+          "id": "two-player",
+          "text": "2 players: each round also take a 10-card Reserve; draw 1 from it before each pick, then play 1 and discard 1",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.6"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "deal",
+          "text": "Deal each player {n} cards and start the draft (pick 2)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "10",
+                "3": "12",
+                "4": "10"
+              }
+            }
+          },
+          "ref": "p.6"
+        }
+      ]
+    }
+  ]
+}

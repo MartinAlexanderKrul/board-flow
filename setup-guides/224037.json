@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "gameId": 224037,
+  "gameName": "Codenames: Duet",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Codenames: Duet rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "seats",
+          "text": "Sit on opposite sides of the table",
+          "ref": "p.2"
+        },
+        {
+          "id": "grid",
+          "text": "Shuffle the word cards; deal 25 into a 5 x 5 grid",
+          "ref": "p.2"
+        },
+        {
+          "id": "agents",
+          "text": "Green agent cards and the assassin card within reach of both players",
+          "ref": "p.2"
+        },
+        {
+          "id": "timer",
+          "text": "{n} timer tokens, bystander side up, as the time bank",
+          "amounts": {
+            "n": 9
+          },
+          "note": "Add a 10th or 11th for an easier game",
+          "ref": "p.2"
+        },
+        {
+          "id": "key",
+          "text": "Random key card in the stand, wide side up, each player seeing one side",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "assassins",
+          "text": "Your partner sees 3 assassins you might not",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Either player may give the first clue",
+          "ref": "p.4"
+        }
+      ]
+    }
+  ]
+}

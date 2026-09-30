@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "gameId": 201808,
+  "gameName": "Clank!: A Deck-Building Adventure",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Clank! rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "artifacts",
+          "text": "Artifacts faceup on their numbered spaces{n}",
+          "amounts": {
+            "n": {
+              "default": "",
+              "byPlayers": {
+                "2": " (first box 2 random ones)",
+                "3": " (first box 1 random one)"
+              }
+            }
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "secrets",
+          "text": "Shuffle Major and Minor Secrets separately; one on each Major space, two in each Minor room; box extras unseen",
+          "ref": "p.2"
+        },
+        {
+          "id": "market",
+          "text": "Market items: 2 Master Keys, 2 Backpacks, 3 Crowns (10, 9, 8)",
+          "ref": "p.2"
+        },
+        {
+          "id": "idols",
+          "text": "3 Monkey Idols on the Monkey Shrine; 1 Mastery token per player near the top left",
+          "ref": "p.2"
+        },
+        {
+          "id": "bank",
+          "text": "Gold tokens (1 and 5) as the Bank",
+          "ref": "p.2"
+        },
+        {
+          "id": "dragon",
+          "text": "Dragon marker on space {n} of the Rage Track",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "3",
+                "3": "2",
+                "4": "1"
+              }
+            }
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "bag",
+          "text": "24 black dragon cubes in the Dragon Bag",
+          "ref": "p.2"
+        },
+        {
+          "id": "reserve",
+          "text": "Reserve: Goblin, Mercenary, Explore and Secret Tome piles",
+          "ref": "p.2"
+        },
+        {
+          "id": "dungeon-row",
+          "text": "Shuffle the Dungeon Deck; deal 6 faceup as the Dungeon Row, replacing any with Dragon Attack",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "cubes",
+          "text": "Each player: 30 Clank! cubes and a pawn of one color",
+          "ref": "p.2"
+        },
+        {
+          "id": "deck",
+          "text": "10-card deck: 6 Burgle, 2 Stumble, 1 Cautious Advance, 1 Skillful Move; shuffle and draw 5",
+          "ref": "p.2"
+        },
+        {
+          "id": "pawns",
+          "text": "Pawns just outside the dungeon at the top of the board",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The sneakiest player goes first; clockwise",
+          "ref": "p.2"
+        },
+        {
+          "id": "clank",
+          "text": "Starting Clank! in the Clank! Area by seat: 3, 2, 1, 0",
+          "ref": "p.2"
+        }
+      ]
+    }
+  ]
+}

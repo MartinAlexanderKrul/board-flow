@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "gameId": 38713,
+  "gameName": "Time's Up! Party",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Time's Up! rules (EN)"
+    ]
+  },
+  "players": {
+    "min": 4,
+    "max": 12
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "teams",
+          "text": "Split into teams, teammates sitting across from each other (teams of 2 work best)",
+          "ref": "p.1"
+        },
+        {
+          "id": "deck",
+          "text": "Shuffle a random set of name cards facedown in the middle: the deck",
+          "ref": "p.1"
+        },
+        {
+          "id": "timer",
+          "text": "The starting team takes the deck; the next team clockwise takes the 30-second timer",
+          "ref": "p.1"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "rounds",
+          "text": "Round 1: say anything, no passing. Round 2: one word. Round 3: mime only",
+          "ref": "p.1"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The first Cluegiver draws a card; the next team says \"Go!\" and starts the timer",
+          "ref": "p.1"
+        }
+      ]
+    }
+  ]
+}

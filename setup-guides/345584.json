@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "gameId": 345584,
+  "gameName": "Mindbug: First Contact",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Mindbug: First Contact rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "modules": [
+    {
+      "id": "new-servants",
+      "name": "New Servants",
+      "bggId": 368718,
+      "note": "The rulebook doesn't change setup; this just adds creatures."
+    }
+  ],
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "new-servants",
+          "text": "Shuffle the New Servants creatures into the creature deck",
+          "condition": {
+            "modules": [
+              "new-servants"
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "mindbugs",
+          "text": "Deal each player 2 Mindbugs faceup",
+          "ref": "p.5"
+        },
+        {
+          "id": "decks",
+          "text": "Shuffle the creatures; deal each player {n} facedown as their draw pile",
+          "amounts": {
+            "n": 10
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "hands",
+          "text": "Each player draws {n} cards",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "life",
+          "text": "{n} life points each (unused cards turned sideways, or dice)",
+          "amounts": {
+            "n": 3
+          },
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "win",
+          "text": "Reduce your opponent to 0 life to win",
+          "ref": "p.6"
+        }
+      ]
+    }
+  ]
+}

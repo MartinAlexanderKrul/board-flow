@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "gameId": 172242,
+  "gameName": "Exploding Kittens: NSFW Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Exploding Kittens rules"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "remove",
+          "text": "Take out all Exploding Kittens and Defuse cards",
+          "ref": "p.1"
+        },
+        {
+          "id": "deal",
+          "text": "Shuffle; deal {n} cards to each player, plus 1 Defuse each",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "p.1"
+        },
+        {
+          "id": "kittens",
+          "text": "Shuffle {n} Exploding Kittens back in; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 1,
+                "3": 2,
+                "4": 3,
+                "5": 4
+              }
+            }
+          },
+          "ref": "p.1"
+        },
+        {
+          "id": "defuse",
+          "text": "Shuffle the spare Defuse cards back in",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.1"
+        },
+        {
+          "id": "defuse-2p",
+          "text": "Shuffle only 2 spare Defuse cards back in; box the others",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.1"
+        },
+        {
+          "id": "deck",
+          "text": "Deck facedown in the middle as the draw pile",
+          "ref": "p.1"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "turn",
+          "text": "On your turn play as many cards as you like, then draw 1",
+          "ref": "p.1"
+        }
+      ]
+    }
+  ]
+}

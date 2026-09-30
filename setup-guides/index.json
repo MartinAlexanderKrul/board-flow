@@ -2,6 +2,14 @@
   "schemaVersion": 1,
   "guides": [
     {
+      "gameId": 38713,
+      "gameName": "Time's Up! Party",
+      "gameIds": [38713],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "38713.json"
+    },
+    {
       "gameId": 39856,
       "gameName": "Dixit",
       "gameIds": [39856],
@@ -50,6 +58,14 @@
       "path": "170216.json"
     },
     {
+      "gameId": 172242,
+      "gameName": "Exploding Kittens: NSFW Edition",
+      "gameIds": [172242],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "172242.json"
+    },
+    {
       "gameId": 173346,
       "gameName": "7 Wonders Duel",
       "gameIds": [173346, 202976],
@@ -66,6 +82,14 @@
       "path": "174430.json"
     },
     {
+      "gameId": 184921,
+      "gameName": "Bunny Kingdom",
+      "gameIds": [184921],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "184921.json"
+    },
+    {
       "gameId": 192135,
       "gameName": "Too Many Bones",
       "gameIds": [192135, 235802],
@@ -74,12 +98,36 @@
       "path": "192135.json"
     },
     {
+      "gameId": 198773,
+      "gameName": "Codenames: Pictures",
+      "gameIds": [198773],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "198773.json"
+    },
+    {
       "gameId": 199792,
       "gameName": "Everdell",
       "gameIds": [199792, 259996, 261142, 289056, 289057, 297972, 297973, 332390, 332397, 332398, 476125],
       "version": 3,
       "schemaVersion": 1,
       "path": "199792.json"
+    },
+    {
+      "gameId": 201808,
+      "gameName": "Clank!: A Deck-Building Adventure",
+      "gameIds": [201808],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "201808.json"
+    },
+    {
+      "gameId": 224037,
+      "gameName": "Codenames: Duet",
+      "gameIds": [224037],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "224037.json"
     },
     {
       "gameId": 237182,
@@ -104,6 +152,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "254640.json"
+    },
+    {
+      "gameId": 256382,
+      "gameName": "Disney Villainous: The Worst Takes it All",
+      "gameIds": [256382, 299047],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "256382.json"
     },
     {
       "gameId": 266192,
@@ -146,6 +202,14 @@
       "path": "316554.json"
     },
     {
+      "gameId": 336755,
+      "gameName": "King of Tokyo: Monster Box",
+      "gameIds": [336755],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "336755.json"
+    },
+    {
       "gameId": 338960,
       "gameName": "Slay the Spire: The Board Game",
       "gameIds": [338960],
@@ -160,6 +224,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "342942.json"
+    },
+    {
+      "gameId": 345584,
+      "gameName": "Mindbug: First Contact",
+      "gameIds": [345584, 368718],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "345584.json"
     },
     {
       "gameId": 357563,

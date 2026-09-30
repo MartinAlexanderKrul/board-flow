@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "gameId": 256382,
+  "aliasGameIds": [
+    299047
+  ],
+  "gameName": "Disney Villainous: The Worst Takes it All",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Disney Villainous rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "villain",
+          "text": "Each player picks a Villain: Board, Villain Mover, Villain deck, Fate deck, Villain Guide and Reference card",
+          "ref": "p.3"
+        },
+        {
+          "id": "board",
+          "text": "Board in front of you; Villain Mover on the left-most location",
+          "ref": "p.3"
+        },
+        {
+          "id": "lock",
+          "text": "If the right-most location shows a lock, put a Lock token on it",
+          "ref": "p.3"
+        },
+        {
+          "id": "decks",
+          "text": "Villain deck left of your Board, Fate deck right, room for discards",
+          "ref": "p.3"
+        },
+        {
+          "id": "hand",
+          "text": "Draw {n} cards from your Villain deck",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "p.3"
+        },
+        {
+          "id": "power",
+          "text": "Power tokens in the Cauldron within reach",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "objective",
+          "text": "Read your Objective aloud",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "power-start",
+          "text": "Choose a first player. Starting Power by seat: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "0, 1",
+                "3": "0, 1, 2",
+                "4": "0, 1, 2, 2",
+                "5": "0, 1, 2, 2, 3",
+                "6": "0, 1, 2, 2, 3, 3"
+              }
+            }
+          },
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}

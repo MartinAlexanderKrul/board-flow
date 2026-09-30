@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "gameId": 336755,
+  "gameName": "King of Tokyo: Monster Box",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "King of Tokyo rulebook (2nd edition)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Tokyo board in the middle: {n}",
+          "amounts": {
+            "n": {
+              "default": "Tokyo City only",
+              "byPlayers": {
+                "5": "Tokyo City and Tokyo Bay",
+                "6": "Tokyo City and Tokyo Bay"
+              }
+            }
+          },
+          "ref": "p.3"
+        },
+        {
+          "id": "monsters",
+          "text": "Each player picks a Monster: figure and board, Life at 10, Victory Points at 0",
+          "ref": "p.3"
+        },
+        {
+          "id": "cards",
+          "text": "Shuffle the Power cards into a deck; 3 faceup next to Tokyo",
+          "ref": "p.3"
+        },
+        {
+          "id": "energy",
+          "text": "All Energy cubes in a pool; tokens nearby",
+          "ref": "p.3"
+        },
+        {
+          "id": "dice",
+          "text": "6 black dice in the middle; green dice aside",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Everyone rolls the 6 black dice; most claws goes first",
+          "ref": "p.4"
+        },
+        {
+          "id": "turn",
+          "text": "Turn: roll (up to 3 times), resolve, enter Tokyo, buy Power cards",
+          "ref": "p.4"
+        }
+      ]
+    }
+  ]
+}
