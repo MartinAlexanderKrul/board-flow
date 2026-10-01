@@ -86,8 +86,54 @@ data class CollectionStatusUpdate(
 /** A game's existing collection entry: its `collid` and the status flags currently set. */
 data class BggCollectionEntry(
     val collectionId: String?,
-    val status: BggCollectionStatus
+    val status: BggCollectionStatus,
+    /** The Private Info comment; null when the read did not include private info. */
+    val privateComment: String? = null
 )
+
+/**
+ * A collection entry's Private Info block. [fields] holds every field other than the comment,
+ * keyed by its `geekcollection.php` form name: the block is saved as a whole, so they all have
+ * to be posted back with a comment change.
+ */
+data class BggPrivateInfo(
+    val collectionId: String,
+    val fields: Map<String, String>,
+    val comment: String
+)
+
+/**
+ * Sleeve tracking is backed up to BGG as a `[sleeves:...]` token inside a collection entry's
+ * private comment. The rest of the comment is the user's own text and is left untouched.
+ */
+object BggSleeveMarker {
+    private val PATTERN = Regex("""\[sleeves:\s*([a-z-]+)\s*]""", RegexOption.IGNORE_CASE)
+
+    fun parse(comment: String?): SleeveTrackingState =
+        when (PATTERN.find(comment.orEmpty())?.groupValues?.get(1)?.lowercase()) {
+            "sleeved" -> SleeveTrackingState.SLEEVED
+            "to-sleeve" -> SleeveTrackingState.TO_SLEEVE
+            "possible" -> SleeveTrackingState.POSSIBLE
+            "no" -> SleeveTrackingState.NOT_SLEEVING
+            else -> SleeveTrackingState.UNKNOWN
+        }
+
+    /** [comment] with its marker set to [state]; unchanged for [SleeveTrackingState.UNKNOWN]. */
+    fun apply(comment: String, state: SleeveTrackingState): String {
+        val token = when (state) {
+            SleeveTrackingState.SLEEVED -> "[sleeves:sleeved]"
+            SleeveTrackingState.TO_SLEEVE -> "[sleeves:to-sleeve]"
+            SleeveTrackingState.POSSIBLE -> "[sleeves:possible]"
+            SleeveTrackingState.NOT_SLEEVING -> "[sleeves:no]"
+            SleeveTrackingState.UNKNOWN -> return comment
+        }
+        return when {
+            PATTERN.containsMatchIn(comment) -> PATTERN.replaceFirst(comment, Regex.escapeReplacement(token))
+            comment.isBlank() -> token
+            else -> comment.trimEnd() + "\n" + token
+        }
+    }
+}
 
 /**
  * The eight status checkboxes BGG's own collection UI exposes. Listed here in the order and
@@ -148,7 +194,22 @@ private object CollectionStatusKeys {
     const val WISHLIST = "wishlist"
     const val WISHLIST_PRIORITY = "wishlistpriority"
     const val PREORDERED = "preordered"
+    const val SLEEVE_MARKER = "sleevemarker"
 }
+
+/** The sleeve state last seen in (or written to) this game's BGG private comment. */
+val GameItem.syncedSleeveMarker: SleeveTrackingState
+    get() = runCatching { SleeveTrackingState.valueOf(bggValues[CollectionStatusKeys.SLEEVE_MARKER].orEmpty()) }
+        .getOrDefault(SleeveTrackingState.UNKNOWN)
+
+fun GameItem.withSyncedSleeveMarker(state: SleeveTrackingState): GameItem =
+    copy(sources = sources.copy(bggValues = bggValues + (CollectionStatusKeys.SLEEVE_MARKER to state.name)))
+
+/** The sleeve tracking state the app shows, kept in the spreadsheet's `sleeved` column value. */
+val GameItem.sleeveTracking: SleeveTrackingState
+    get() = SleeveTrackingState.fromSheetValue(
+        spreadsheetValues.entries.firstOrNull { (key, _) -> key.equals("sleeved", ignoreCase = true) }?.value
+    )
 
 /** True once the collection status sync has recorded this game's status. */
 val GameItem.hasSyncedCollectionStatus: Boolean
@@ -197,7 +258,15 @@ fun GameItem.withSyncedCollectionEntry(entry: BggCollectionEntry?, mirrorOwnersh
         CollectionStatusKeys.WISHLIST to status.wishlist.flag(),
         CollectionStatusKeys.WISHLIST_PRIORITY to status.wishlistPriority.toString(),
         CollectionStatusKeys.PREORDERED to status.preordered.flag()
-    )
+    ).let { synced ->
+        // A null comment means private info was not read, so the last known marker stands.
+        val comment = entry?.privateComment
+        when {
+            entry == null -> synced - CollectionStatusKeys.SLEEVE_MARKER
+            comment == null -> synced
+            else -> synced + (CollectionStatusKeys.SLEEVE_MARKER to BggSleeveMarker.parse(comment).name)
+        }
+    }
     return copy(
         ownership = if (mirrorOwnership) ownership.copy(isOwned = status.own, isWishlisted = status.wishlist) else ownership,
         sources = sources.copy(bggValues = values)

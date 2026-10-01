@@ -134,8 +134,92 @@ def save_status(game_id: int, form: dict) -> requests.Response:
     )
 
 
+# The Private Info fields, named as both the save form and the site's JSON read name them.
+PRIVATE_FIELDS = [
+    "pricepaid", "pp_currency", "currvalue", "cv_currency", "quantity",
+    "acquisitiondate", "acquiredfrom", "invdate", "invlocation", "privatecomment",
+]
+
+
+def fetch_private_info(game_id: int) -> Optional[dict]:
+    """Returns {'collid': str, <private fields>} from the live JSON read, or None if not in collection.
+
+    xmlapi2 (showprivate=1, and only without brief=1) also carries private info, but it is cached
+    and serves the old values for a while after a write, so it cannot verify one.
+    """
+    user = session.get("https://boardgamegeek.com/api/users/current", timeout=30).json()
+    resp = session.get(
+        "https://boardgamegeek.com/api/collections"
+        f"?objectid={game_id}&objecttype=thing&userid={user['userid']}",
+        timeout=30,
+    )
+    resp.raise_for_status()
+    items = resp.json().get("items") or []
+    if not items:
+        return None
+    result = {"collid": items[0]["collid"]}
+    for field in PRIVATE_FIELDS:
+        value = items[0].get(field)
+        result[field] = "" if value is None else str(value)
+    return result
+
+
+def build_private_form(game_id: int, collid: str, values: dict) -> dict:
+    # fieldname=ownership saves the whole Private Info block at once, so every field has to be
+    # sent back or BGG blanks the ones left out (price paid, acquisition date, ...).
+    form = {
+        "ajax": "1",
+        "action": "savedata",
+        "objecttype": "thing",
+        "objectid": str(game_id),
+        "collid": collid,
+        "fieldname": "ownership",
+    }
+    form.update({field: values[field] for field in PRIVATE_FIELDS})
+    return form
+
+
+def probe_private_comment(game_id: int, comment: str, execute: bool, restore: bool) -> None:
+    original = fetch_private_info(game_id)
+    if original is None:
+        sys.exit(f"Game {game_id} is not in the collection; the app never creates entries for sleeve markers")
+    collid = original["collid"]
+    print("Current private info: " + " ".join(f"{f}={original[f]!r}" for f in PRIVATE_FIELDS))
+    updated = dict(original, privatecomment=comment)
+    form = build_private_form(game_id, collid, updated)
+    print("\nPOST https://boardgamegeek.com/geekcollection.php")
+    for key, value in form.items():
+        print(f"  {key}={value}")
+    if not execute:
+        print("\nDry run — pass --execute to send it.")
+        return
+
+    resp = save_status(game_id, form)
+    error = response_error(resp)
+    print(f"\nHTTP {resp.status_code}")
+    if not resp.ok or error:
+        sys.exit(f"Write failed: {error or resp.status_code}")
+    after = fetch_private_info(game_id) or {}
+    print("Verification:")
+    for field in PRIVATE_FIELDS:
+        ok = after.get(field) == updated[field]
+        print(f"  {field}: expected={updated[field]!r} actual={after.get(field)!r} -> {'OK' if ok else 'MISMATCH'}")
+
+    if not restore:
+        return
+    restored = save_status(game_id, build_private_form(game_id, collid, original))
+    restore_error = response_error(restored)
+    print(f"Restored original private info: HTTP {restored.status_code}"
+          + (f" - REJECTED: {restore_error}" if restore_error else ""))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Probe the BGG collection-status write call")
+    parser.add_argument(
+        "--private-comment",
+        metavar="TEXT",
+        help="probe the Private Info write instead: set the private comment to TEXT",
+    )
     parser.add_argument("--game", type=int, required=True, help="BGG game id (objectid)")
     parser.add_argument(
         "--status",
@@ -166,6 +250,10 @@ def main() -> None:
     if not login(username, password):
         sys.exit("Login failed")
     print(f"Logged in as {username}")
+
+    if args.private_comment is not None:
+        probe_private_comment(args.game, args.private_comment, args.execute, not args.no_restore)
+        return
 
     before = fetch_collection_item(username, args.game)
     if before is None:

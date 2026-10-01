@@ -5,6 +5,9 @@ import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.model.BggCollectionEntry
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.BggGame
+import cz.nicolsburg.boardflow.model.BggPrivateInfo
+import cz.nicolsburg.boardflow.model.BggSleeveMarker
+import cz.nicolsburg.boardflow.model.SleeveTrackingState
 import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.PlayerResult
@@ -618,6 +621,91 @@ class BggRepository {
             }
             null
         }
+    }
+
+    /**
+     * Reads the Private Info block of the logged-in user's collection entry for a game, or null
+     * if the game is not in the collection. Requires a prior [login].
+     *
+     * This uses the site's own JSON endpoint rather than xmlapi2: the XML collection is cached and
+     * keeps serving the old private info for a while after a write, and since a save replaces the
+     * whole block, posting back a stale read would undo the previous edit. The JSON keys are also
+     * exactly the form field names the save expects.
+     */
+    suspend fun getPrivateInfo(gameId: Int): Result<BggPrivateInfo?> = withContext(Dispatchers.IO) {
+        runCatching {
+            val userId = currentUserId()
+            val body = getJson("https://boardgamegeek.com/api/collections?objectid=$gameId&objecttype=thing&userid=$userId")
+            val item = JSONObject(body).optJSONArray("items")?.optJSONObject(0) ?: return@runCatching null
+            val collectionId = item.optString("collid").takeIf { it.isNotBlank() && it != "null" }
+                ?: throw Exception("BGG returned a collection entry without an id")
+            fun value(name: String) = if (item.isNull(name)) "" else item.optString(name)
+            BggPrivateInfo(
+                collectionId = collectionId,
+                fields = PRIVATE_INFO_FIELDS.associateWith(::value),
+                comment = value("privatecomment")
+            )
+        }
+    }
+
+    /**
+     * Writes the sleeve marker (see [BggSleeveMarker]) into the private comment of an existing
+     * collection entry. Returns false without writing when the game has no entry: sleeve backup
+     * never creates collection entries. Requires a prior [login].
+     *
+     * Private Info is saved as one block (`fieldname=ownership`) and BGG blanks any field left
+     * out, so the current values are read first and posted back unchanged. Verified against a
+     * live account: every field round-trips and the status flags are untouched.
+     */
+    suspend fun saveSleeveMarker(gameId: Int, state: SleeveTrackingState): Result<Boolean> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                require(gameId > 0) { "Invalid game id: $gameId" }
+                val info = getPrivateInfo(gameId).getOrThrow() ?: return@runCatching false
+                val comment = BggSleeveMarker.apply(info.comment, state)
+                if (comment == info.comment) return@runCatching true
+                val formBody = FormBody.Builder()
+                    .add("ajax", "1")
+                    .add("action", "savedata")
+                    .add("objecttype", "thing")
+                    .add("objectid", gameId.toString())
+                    .add("collid", info.collectionId)
+                    .add("fieldname", "ownership")
+                    .apply { info.fields.forEach { (name, value) -> add(name, value) } }
+                    .add("privatecomment", comment)
+                    .build()
+                val request = Request.Builder()
+                    .url("https://boardgamegeek.com/geekcollection.php")
+                    .post(formBody)
+                    .addHeader("Referer", "https://boardgamegeek.com/boardgame/$gameId")
+                    .addHeader("X-Requested-With", "XMLHttpRequest")
+                    .build()
+                val response = client.newCall(request).execute()
+                val body = response.body?.string().orEmpty()
+                if (!response.isSuccessful) throw Exception("Failed to save sleeve marker: HTTP ${response.code}")
+                extractCollectionError(body)?.let { throw Exception("BGG rejected sleeve marker: $it") }
+                Log.i(TAG, "Sleeve marker saved: gameId=$gameId collid=${info.collectionId} state=$state")
+                true
+            }
+        }
+
+    // The Private Info fields other than the comment, named as both the save form and the JSON read name them.
+    private val PRIVATE_INFO_FIELDS = listOf(
+        "pricepaid", "pp_currency", "currvalue", "cv_currency", "quantity",
+        "acquisitiondate", "acquiredfrom", "invdate", "invlocation"
+    )
+
+    private fun currentUserId(): String {
+        val user = JSONObject(getJson("https://boardgamegeek.com/api/users/current"))
+        return user.optString("userid").takeIf { user.optBoolean("loggedIn") && it.isNotBlank() && it != "0" }
+            ?: throw Exception("Not logged in to BGG. Please check your BGG credentials in Settings.")
+    }
+
+    private fun getJson(url: String): String {
+        val response = client.newCall(Request.Builder().url(url).build()).execute()
+        val body = response.body?.string().orEmpty()
+        if (!response.isSuccessful) throw Exception("BGG request failed: HTTP ${response.code}")
+        return body
     }
 
     private val MESSAGEBOX_ERROR = "messagebox error"

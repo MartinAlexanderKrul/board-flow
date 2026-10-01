@@ -71,6 +71,10 @@ class CanonicalCollectionStore private constructor(
         dao.clearSleeveTracking()
     }
 
+    /** Object ids of the games that have a locally stored sleeve tracking state. */
+    suspend fun getSleeveTrackingIds(): Set<String> =
+        dao.getAllSleeveTracking().map { it.objectId }.toSet()
+
     suspend fun getSleeveInventory(): Map<String, Int> =
         dao.getAllSleeveInventory().associate { it.genericName to it.ownedCount }
 

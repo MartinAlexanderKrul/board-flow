@@ -20,6 +20,11 @@ import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.CollectionStatusUpdate
 import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.withSyncedCollectionEntry
+import cz.nicolsburg.boardflow.model.hasSyncedCollectionStatus
+import cz.nicolsburg.boardflow.model.sleeveTracking
+import cz.nicolsburg.boardflow.model.syncedCollectionEntry
+import cz.nicolsburg.boardflow.model.syncedSleeveMarker
+import cz.nicolsburg.boardflow.model.withSyncedSleeveMarker
 import cz.nicolsburg.boardflow.model.LogEntry
 import cz.nicolsburg.boardflow.model.SleeveTrackingState
 import cz.nicolsburg.boardflow.model.SpreadsheetDetails
@@ -199,6 +204,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 val updatedGame = game.withSpreadsheetValue("sleeved", status.sheetValue)
                 patchCollectionGame(updatedGame)
                 maybeMirrorSleeveTrackingToSheet(game.objectId, status, game.name)
+                maybeMirrorSleeveTrackingToBgg(updatedGame, status)
                 withContext(Dispatchers.Main.immediate) {
                     onSuccess?.invoke(updatedGame)
                 }
@@ -601,6 +607,87 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         } catch (e: Exception) {
             entry("Google Sheets", e.message ?: "Could not mirror sleeve status", LogEntry.Type.ERROR)
         }
+    }
+
+    /**
+     * Backs the sleeve status up into the game's BGG private comment. Games without a BGG
+     * collection entry are skipped, and a failure here never fails the local save.
+     */
+    private suspend fun maybeMirrorSleeveTrackingToBgg(game: GameItem, status: SleeveTrackingState) {
+        val credentials = securePrefs.getCredentials() ?: return
+        val gameId = game.objectId.toIntOrNull() ?: return
+        if (game.hasSyncedCollectionStatus && game.syncedCollectionEntry() == null) return
+        try {
+            bggRepository.login(credentials).getOrThrow()
+            val written = bggRepository.saveSleeveMarker(gameId, status).getOrThrow()
+            if (written) {
+                patchCollectionGame(game.withSyncedSleeveMarker(status))
+                entry("BGG", "Backed up sleeve status for ${game.name}", LogEntry.Type.UPDATED)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            entry("BGG", e.message ?: "Could not back up sleeve status", LogEntry.Type.ERROR)
+        }
+    }
+
+    /**
+     * Writes the sleeve status of every game whose BGG private comment marker is missing or out
+     * of date. One read and one post per game, so it is a manual action rather than part of sync.
+     */
+    fun backupSleeveStatusToBgg() = runSync("Back Up Sleeve Status to BGG") {
+        val credentials = requireBggCredentials()
+        val games = currentOrCachedCollection()
+        require(games.any { it.hasSyncedCollectionStatus }) { "Refresh your collection from BGG first." }
+        val pending = games.filter { game ->
+            game.sleeveTracking != SleeveTrackingState.UNKNOWN &&
+                game.syncedCollectionEntry() != null &&
+                game.syncedSleeveMarker != game.sleeveTracking
+        }
+        if (pending.isEmpty()) {
+            entry("Done", "BGG already has every sleeve status", LogEntry.Type.DONE)
+            return@runSync
+        }
+        bggRepository.login(credentials).getOrThrow()
+        val written = mutableMapOf<String, SleeveTrackingState>()
+        var skipped = 0
+        var failed = 0
+        var consecutiveFailures = 0
+        for ((index, game) in pending.withIndex()) {
+            if (!isActive) break
+            if (index > 0) kotlinx.coroutines.delay(1_500)
+            val gameId = game.objectId.toIntOrNull() ?: continue
+            val state = game.sleeveTracking
+            bggRepository.saveSleeveMarker(gameId, state)
+                .onSuccess { saved ->
+                    consecutiveFailures = 0
+                    if (saved) written[game.objectId] = state else skipped++
+                }
+                .onFailure { error ->
+                    failed++
+                    consecutiveFailures++
+                    entry(game.name, error.message ?: "Could not back up sleeve status", LogEntry.Type.ERROR)
+                }
+            if (consecutiveFailures >= 3) {
+                entry("BGG", "Stopping after repeated failures", LogEntry.Type.ERROR)
+                break
+            }
+        }
+        if (written.isNotEmpty()) {
+            collectionMutex.withLock {
+                val updatedGames = readCanonicalSnapshotLocked().map { game ->
+                    written[game.objectId]?.let(game::withSyncedSleeveMarker) ?: game
+                }
+                writeCanonicalSnapshotLocked(updatedGames)
+                _collectionGames.value = updatedGames
+            }
+        }
+        val summary = buildList {
+            if (written.isNotEmpty()) add("${written.size} backed up")
+            if (skipped > 0) add("$skipped not in collection")
+            if (failed > 0) add("$failed failed")
+        }.joinToString(", ").ifBlank { "Nothing to do" }
+        entry("Done", summary, if (failed > 0) LogEntry.Type.ERROR else LogEntry.Type.DONE)
     }
 
     private fun applySpreadsheet(details: SpreadsheetDetails) {
@@ -1139,7 +1226,28 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             return games
         }
         entry("BGG Collection Status", "${entries.size} collection entries read", LogEntry.Type.INFO)
-        return games.map { game -> game.withSyncedCollectionEntry(entries[game.objectId]) }
+        // The BGG marker only fills gaps: a local edit or a spreadsheet value always wins. Restored
+        // values go into sleeve tracking so they survive a later sync that cannot reach BGG.
+        val localTracking = collectionStore.getSleeveTrackingIds()
+        var restored = 0
+        val merged = games.map { game ->
+            val synced = game.withSyncedCollectionEntry(entries[game.objectId])
+            val marker = synced.syncedSleeveMarker
+            if (marker == SleeveTrackingState.UNKNOWN ||
+                synced.sleeveTracking != SleeveTrackingState.UNKNOWN ||
+                game.objectId in localTracking
+            ) {
+                synced
+            } else {
+                collectionStore.saveSleeveTracking(game.objectId, marker)
+                restored++
+                synced.withSpreadsheetValue("sleeved", marker.sheetValue)
+            }
+        }
+        if (restored > 0) {
+            entry("BGG Collection Status", "$restored sleeve statuses restored from BGG", LogEntry.Type.UPDATED)
+        }
+        return merged
     }
 
     /**

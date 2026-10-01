@@ -321,6 +321,13 @@ fun SyncScreen(
                         ) {
                             Text("Refresh Sleeve Sizes")
                         }
+                        BoardFlowOutlinedButton(
+                            onClick = { triggerSync { syncViewModel.backupSleeveStatusToBgg() } },
+                            enabled = !busy && hasBggCredentials,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Back Up Sleeve Status to BGG")
+                        }
                         if (!hasBggCredentials) {
                             InlineHint("Set up your BGG account", onClick = { showBggModal = true })
                         }

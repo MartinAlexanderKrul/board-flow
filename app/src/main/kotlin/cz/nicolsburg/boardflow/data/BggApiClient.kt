@@ -308,8 +308,12 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
      */
     suspend fun fetchCollectionStatuses(username: String, password: String? = null): Map<String, BggCollectionEntry> {
         password?.let { loginIfNeeded(username, it) }
+        // Private info is only served to the logged-in owner. The read drops brief=1 then, so the
+        // <privateinfo> block (and the sleeve marker in its comment) is not abbreviated away.
+        val showPrivate = password != null
         val body = fetchWithRetry(
-            "https://boardgamegeek.com/xmlapi2/collection?username=${java.net.URLEncoder.encode(username, "UTF-8")}&brief=1"
+            "https://boardgamegeek.com/xmlapi2/collection?username=${java.net.URLEncoder.encode(username, "UTF-8")}" +
+                if (showPrivate) "&showprivate=1" else "&brief=1"
         )
         // An unknown user comes back as HTTP 200 with an <errors> document rather than an error status.
         if (body.contains("<errors")) throw RuntimeException("BGG rejected the collection status read")
@@ -334,7 +338,12 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
                     wishlist = flag("wishlist"),
                     wishlistPriority = status?.getAttribute("wishlistpriority")?.toIntOrNull()?.coerceIn(1, 5) ?: 3,
                     preordered = flag("preordered")
-                )
+                ),
+                privateComment = if (showPrivate) {
+                    item.getElementsByTagName("privatecomment").item(0)?.textContent.orEmpty()
+                } else {
+                    null
+                }
             )
         }
         return result
