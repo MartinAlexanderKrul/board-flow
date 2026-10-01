@@ -2,81 +2,696 @@
   "schemaVersion": 1,
   "gameId": 312484,
   "gameName": "Lost Ruins of Arnak",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Lost Ruins of Arnak rulebook (Czech Games Edition)"]
+    "sources": [
+      "Lost Ruins of Arnak rulebook (Czech Games Edition)",
+      "Expedition Leaders rulebook",
+      "The Missing Expedition rulebook",
+      "Twisted Paths rulebook",
+      "Solo Mini-Expansions rules"
+    ]
   },
-  "players": { "min": 1, "max": 4 },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
   "modules": [
-    { "id": "snake", "name": "Snake Temple side", "note": "Bird Temple side is recommended for a first game." }
+    {
+      "id": "bird",
+      "name": "Bird Temple",
+      "group": "Board",
+      "defaultEnabled": true,
+      "note": "Recommended for a first game."
+    },
+    {
+      "id": "snake",
+      "name": "Snake Temple",
+      "group": "Board"
+    },
+    {
+      "id": "spider",
+      "name": "Spider Temple (Twisted Paths)",
+      "group": "Board",
+      "bggId": 439816,
+      "note": "Designed for use with expedition leaders."
+    },
+    {
+      "id": "owl",
+      "name": "Owl Temple (Twisted Paths)",
+      "group": "Board"
+    },
+    {
+      "id": "printed",
+      "name": "Printed research track",
+      "group": "Research track",
+      "defaultEnabled": true
+    },
+    {
+      "id": "monkey",
+      "name": "Monkey Temple (Expedition Leaders)",
+      "group": "Research track",
+      "note": "Overlay for the Bird or Snake board; Snake side recommended."
+    },
+    {
+      "id": "lizard",
+      "name": "Lizard Temple (Expedition Leaders)",
+      "group": "Research track"
+    },
+    {
+      "id": "waterfall",
+      "name": "Waterfall Temple (Missing Expedition)",
+      "group": "Research track"
+    },
+    {
+      "id": "tree",
+      "name": "Tree Temple (Missing Expedition)",
+      "group": "Research track"
+    },
+    {
+      "id": "el-cards",
+      "name": "Expedition Leaders cards & tiles",
+      "bggId": 341254,
+      "note": "Items, artifacts, sites, idols, guardians and assistants mixed into the base game."
+    },
+    {
+      "id": "me-cards",
+      "name": "Missing Expedition cards & tiles",
+      "bggId": 382350,
+      "note": "For a standard game; the 6-chapter campaign has its own setup."
+    },
+    {
+      "id": "me-sites",
+      "name": "Encounter sites (Missing Expedition)"
+    },
+    {
+      "id": "leaders",
+      "name": "Expedition leaders",
+      "note": "Captain, Falconer, Baroness, Professor, Explorer, Mystic; Journalist and Mechanic from The Missing Expedition."
+    },
+    {
+      "id": "red-staff",
+      "name": "Red moon staff variant"
+    },
+    {
+      "id": "rival-objectives",
+      "name": "Rival Objectives (solo mini)",
+      "bggId": 349092,
+      "players": {
+        "min": 1,
+        "max": 1
+      }
+    },
+    {
+      "id": "purple-actions",
+      "name": "Purple Actions (solo mini)",
+      "players": {
+        "min": 1,
+        "max": 1
+      }
+    }
   ],
   "sections": [
     {
       "id": "card-row",
       "title": "Card row",
       "steps": [
-        { "id": "board", "text": "Main board {side} up", "amounts": { "side": { "default": "Bird Temple side", "cases": [{ "when": { "modules": ["snake"] }, "value": "Snake Temple side" }] } }, "ref": "p.4" },
-        { "id": "artifacts", "text": "Shuffle the Artifacts facedown on their marked space", "ref": "p.4" },
-        { "id": "fear", "text": "Fear cards faceup on their marked space", "ref": "p.4" },
-        { "id": "items", "text": "Shuffle the Items facedown on their marked space", "ref": "p.4" },
-        { "id": "moon-staff", "text": "Moon staff in the card row on round I", "ref": "p.4" },
-        { "id": "deal-row", "text": "{a} artifact faceup left of the moon staff, {i} items faceup right of it", "amounts": { "a": 1, "i": 5 }, "ref": "p.4" }
+        {
+          "id": "el-mix",
+          "text": "Mix in the Expedition Leaders items, artifacts, sites, idols, guardians and assistants",
+          "condition": {
+            "modules": [
+              "el-cards"
+            ]
+          },
+          "ref": "Expedition Leaders p.2"
+        },
+        {
+          "id": "el-replace",
+          "text": "With leaders: swap the Stone Key artifact and miner assistant for their new versions",
+          "condition": {
+            "modules": [
+              "el-cards",
+              "leaders"
+            ]
+          },
+          "ref": "Expedition Leaders p.2"
+        },
+        {
+          "id": "me-mix",
+          "text": "Mix in The Missing Expedition items, artifacts, assistants, guardians and idols",
+          "condition": {
+            "modules": [
+              "me-cards"
+            ]
+          },
+          "ref": "Missing Expedition p.2"
+        },
+        {
+          "id": "me-sites",
+          "text": "Add the 5 new site tiles; shuffle the 56 encounter cards",
+          "condition": {
+            "modules": [
+              "me-sites"
+            ]
+          },
+          "ref": "Missing Expedition p.2"
+        },
+        {
+          "id": "board",
+          "text": "{side} up",
+          "amounts": {
+            "side": {
+              "default": "Main board, Bird Temple side",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "snake"
+                    ]
+                  },
+                  "value": "Main board, Snake Temple side"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "spider"
+                    ]
+                  },
+                  "value": "Twisted Paths board (original stays boxed), Spider Temple side"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "owl"
+                    ]
+                  },
+                  "value": "Twisted Paths board (original stays boxed), Owl Temple side"
+                }
+              ]
+            }
+          },
+          "ref": "p.4, Twisted Paths p.1"
+        },
+        {
+          "id": "artifacts",
+          "text": "Shuffle the Artifacts facedown on their marked space",
+          "ref": "p.4"
+        },
+        {
+          "id": "fear",
+          "text": "Fear cards faceup on their marked space",
+          "ref": "p.4"
+        },
+        {
+          "id": "items",
+          "text": "Shuffle the Items facedown on their marked space",
+          "ref": "p.4"
+        },
+        {
+          "id": "moon-staff",
+          "text": "Moon staff in the card row on round I",
+          "ref": "p.4"
+        },
+        {
+          "id": "deal-row",
+          "text": "{a} artifact faceup left of the moon staff, {i} items faceup right of it",
+          "amounts": {
+            "a": 1,
+            "i": 5
+          },
+          "ref": "p.4"
+        }
       ]
     },
     {
       "id": "island",
       "title": "Island",
       "steps": [
-        { "id": "idols", "text": "Mix the Idol tiles; each level-1 site (the 7 sites) gets one faceup idol", "ref": "p.4" },
-        { "id": "idols-2", "text": "Each of the 8 level-2 sites gets one faceup and one facedown idol, as shown on the board", "ref": "p.4" },
-        { "id": "blocking-3", "text": "Shuffle the blocking tiles facedown, flip 3: block the space at each of those 3 sites; box the other 2", "condition": { "players": [3] }, "ref": "p.4" },
-        { "id": "blocking-2", "text": "Block all 5 marked spaces - each of those sites holds only one archaeologist", "condition": { "maxPlayers": 2 }, "ref": "p.4" }
+        {
+          "id": "idols",
+          "text": "Mix the Idol tiles; each level-1 site (the 7 sites) gets one faceup idol",
+          "ref": "p.4"
+        },
+        {
+          "id": "idols-2",
+          "text": "Each of the 8 level-2 sites gets one faceup and one facedown idol, as shown on the board",
+          "ref": "p.4"
+        },
+        {
+          "id": "owl-idols",
+          "text": "Level-2 sites start with 1 faceup + 1 facedown idol and cost 2 extra compasses to explore",
+          "condition": {
+            "modules": [
+              "owl"
+            ]
+          },
+          "ref": "Twisted Paths p.4"
+        },
+        {
+          "id": "blocking-3",
+          "text": "Shuffle the blocking tiles facedown, flip 3: block the space at each of those 3 sites; box the other 2",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "blocking-2",
+          "text": "Block all 5 marked spaces - each of those sites holds only one archaeologist",
+          "condition": {
+            "maxPlayers": 2
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "dark-tablets",
+          "text": "{n} dark tablets in each dark tablet space below the sites; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 2,
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "spider"
+            ]
+          },
+          "ref": "Twisted Paths p.2"
+        }
       ]
     },
     {
       "id": "research",
       "title": "Research track",
       "steps": [
-        { "id": "temple", "text": "Temple tile stacks of {n} each: one 11-point stack at the top, two 6-point in the middle, three 2-point at the bottom; box the rest", "amounts": { "n": { "byPlayers": { "1": 2, "2": 2, "3": 3, "4": 4 } } }, "ref": "p.5" },
-        { "id": "lost-temple", "text": "Shuffle the research bonus tiles facedown; a stack of {n} at the top of the research track", "amounts": { "n": { "byPlayers": { "1": 2, "2": 2, "3": 3, "4": 4 } } }, "ref": "p.5" },
-        { "id": "bonus", "text": "One bonus tile on most research spaces (spaces marked for 3+ or 4 players only as marked); turn them faceup, box the rest", "ref": "p.5" },
-        { "id": "rescue", "text": "Deal {n} random assistants to the Assistant Rescue space (top one public)", "amounts": { "n": { "byPlayers": { "1": 2, "2": 2, "3": 3, "4": 4 } } }, "condition": { "modules": ["snake"] }, "ref": "p.19" },
-        { "id": "dreadful", "text": "Deal 2 or 3 bonus tiles to the Dreadful Tales row as marked", "condition": { "modules": ["snake"] }, "ref": "p.19" }
+        {
+          "id": "overlay",
+          "text": "Lay the {t} overlay on the research track",
+          "amounts": {
+            "t": {
+              "default": "chosen temple",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "monkey"
+                    ]
+                  },
+                  "value": "Monkey Temple"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "lizard"
+                    ]
+                  },
+                  "value": "Lizard Temple"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "waterfall"
+                    ]
+                  },
+                  "value": "Waterfall Temple"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "tree"
+                    ]
+                  },
+                  "value": "Tree Temple"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "notModules": [
+              "printed"
+            ]
+          },
+          "ref": "Expedition Leaders p.18, Missing Expedition p.11-12"
+        },
+        {
+          "id": "temple",
+          "text": "Temple tile stacks of {n} each: one 11-point stack at the top, two 6-point in the middle, three 2-point at the bottom; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 2,
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "p.5",
+          "condition": {
+            "notModules": [
+              "owl"
+            ]
+          }
+        },
+        {
+          "id": "lost-temple",
+          "text": "Shuffle the research bonus tiles facedown; a stack of {n} at the top of the research track",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 2,
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "bonus",
+          "text": "One bonus tile on most research spaces (spaces marked for 3+ or 4 players only as marked); turn them faceup, box the rest",
+          "ref": "p.5"
+        },
+        {
+          "id": "rescue",
+          "text": "Deal {n} random assistants to the Assistant Rescue space (top one public)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 2,
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "snake",
+              "printed"
+            ]
+          },
+          "ref": "p.19"
+        },
+        {
+          "id": "dreadful",
+          "text": "Deal 2 or 3 bonus tiles to the Dreadful Tales row as marked",
+          "condition": {
+            "modules": [
+              "snake",
+              "printed"
+            ]
+          },
+          "ref": "p.19"
+        },
+        {
+          "id": "owl-temple",
+          "text": "Owl Temple tiles and facedown idols at the top as printed for your player count; regular temple tiles stay boxed",
+          "condition": {
+            "modules": [
+              "owl"
+            ]
+          },
+          "ref": "Twisted Paths p.4"
+        },
+        {
+          "id": "owl-track",
+          "text": "Owl Temple tiles or research bonus tiles on the marked track spaces, secret passages included",
+          "condition": {
+            "modules": [
+              "owl"
+            ]
+          },
+          "ref": "Twisted Paths p.4"
+        },
+        {
+          "id": "lanterns",
+          "text": "Each player keeps a lantern research token on their board",
+          "condition": {
+            "modules": [
+              "owl"
+            ]
+          },
+          "ref": "Twisted Paths p.4"
+        },
+        {
+          "id": "lizard-idols",
+          "text": "The Lizard Temple uses the 4 leftover Expedition Leaders idols",
+          "condition": {
+            "modules": [
+              "lizard"
+            ]
+          },
+          "ref": "Expedition Leaders p.2"
+        },
+        {
+          "id": "waterfall-site",
+          "text": "{n} random level-2 sites facedown on the hidden site space; waterfall tiles cover the two Cataract costs",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 2,
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "waterfall"
+            ]
+          },
+          "ref": "Missing Expedition p.11"
+        },
+        {
+          "id": "tree-idols",
+          "text": "Before dealing idols to sites: two facedown stacks of {n} random idols on the marked spaces",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 2,
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "tree"
+            ]
+          },
+          "ref": "Missing Expedition p.12"
+        }
       ]
     },
     {
       "id": "supply",
       "title": "Supply board",
       "steps": [
-        { "id": "resources", "text": "All resource tokens on the supply board", "ref": "p.5" },
-        { "id": "sites", "text": "Shuffle the level-1 and level-2 site tiles separately; facedown on the supply board", "ref": "p.5" },
-        { "id": "guardians", "text": "Shuffle the guardians facedown on the supply board", "ref": "p.5" },
-        { "id": "assistants", "text": "Assistants silver side up, shuffled into 3 stacks of 4", "condition": { "notModules": ["snake"] }, "ref": "p.5" },
-        { "id": "assistants-snake", "text": "Remaining assistants silver side up: two stacks of 3, the third with all the rest", "condition": { "modules": ["snake"] }, "ref": "p.19" }
+        {
+          "id": "resources",
+          "text": "All resource tokens on the supply board",
+          "ref": "p.5"
+        },
+        {
+          "id": "sites",
+          "text": "Shuffle the level-1 and level-2 site tiles separately; facedown on the supply board",
+          "ref": "p.5"
+        },
+        {
+          "id": "guardians",
+          "text": "Shuffle the guardians facedown on the supply board",
+          "ref": "p.5"
+        },
+        {
+          "id": "assistants",
+          "text": "Assistants silver side up, shuffled into 3 stacks of 4",
+          "condition": {
+            "notModules": [
+              "snake",
+              "el-cards"
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "assistants-snake",
+          "text": "Remaining assistants silver side up: two stacks of 3, the third with all the rest",
+          "condition": {
+            "modules": [
+              "snake",
+              "printed"
+            ],
+            "notModules": [
+              "el-cards"
+            ]
+          },
+          "ref": "p.19"
+        },
+        {
+          "id": "assistants-el",
+          "text": "Assistants silver side up in 3 stacks of 5",
+          "condition": {
+            "modules": [
+              "el-cards"
+            ],
+            "notModules": [
+              "snake"
+            ]
+          },
+          "ref": "Expedition Leaders p.2"
+        },
+        {
+          "id": "assistants-el-snake",
+          "text": "Assistant stacks of 4, 4 and the rest",
+          "condition": {
+            "modules": [
+              "el-cards",
+              "snake"
+            ]
+          },
+          "ref": "Expedition Leaders p.2"
+        }
       ]
     },
     {
       "id": "players",
       "title": "Players",
       "steps": [
-        { "id": "color", "text": "Each player takes a player board, research tokens, 2 archaeologists and 4 basic cards in their color", "ref": "p.6" },
-        { "id": "research-tokens", "text": "Research tokens on a starting space below the track; magnifying glass atop the notebook", "ref": "p.6" },
-        { "id": "deck", "text": "Starting deck: 2 Funding, 2 Exploration + 2 Fear cards, shuffled facedown on your board", "ref": "p.6" },
-        { "id": "first", "text": "Starting player marker to whoever most recently visited somewhere new; play is clockwise", "ref": "p.6" },
-        { "id": "resources-start", "text": "Starting resources: P1 2 coins, P2 1 coin + 1 compass, P3 2 coins + 1 compass, P4 1 coin + 2 compasses", "ref": "p.6" }
+        {
+          "id": "color",
+          "text": "Each player takes a player board, research tokens, 2 archaeologists and 4 basic cards in their color",
+          "ref": "p.6",
+          "condition": {
+            "notModules": [
+              "leaders"
+            ]
+          }
+        },
+        {
+          "id": "leader",
+          "text": "Choose leaders (or draw random-role tokens): your leader's board and starting cards plus 2 Fear cards",
+          "condition": {
+            "modules": [
+              "leaders"
+            ]
+          },
+          "ref": "Expedition Leaders p.4-5"
+        },
+        {
+          "id": "leader-color",
+          "text": "Pick a color: its tent token marks your board; use the base archaeologists and research tokens",
+          "condition": {
+            "modules": [
+              "leaders"
+            ]
+          },
+          "ref": "Expedition Leaders p.5"
+        },
+        {
+          "id": "leader-setup",
+          "text": "Follow the Setup box for your leader",
+          "condition": {
+            "modules": [
+              "leaders"
+            ]
+          },
+          "ref": "Expedition Leaders p.6-17"
+        },
+        {
+          "id": "research-tokens",
+          "text": "Research tokens on a starting space below the track; magnifying glass atop the notebook",
+          "ref": "p.6"
+        },
+        {
+          "id": "deck",
+          "text": "Starting deck: 2 Funding, 2 Exploration + 2 Fear cards, shuffled facedown on your board",
+          "ref": "p.6",
+          "condition": {
+            "notModules": [
+              "leaders"
+            ]
+          }
+        },
+        {
+          "id": "first",
+          "text": "Starting player marker to whoever most recently visited somewhere new; play is clockwise",
+          "ref": "p.6"
+        },
+        {
+          "id": "resources-start",
+          "text": "Starting resources: P1 2 coins, P2 1 coin + 1 compass, P3 2 coins + 1 compass, P4 1 coin + 2 compasses",
+          "ref": "p.6"
+        }
       ]
     },
     {
       "id": "solo",
       "title": "Solo rival",
-      "condition": { "players": [1] },
+      "condition": {
+        "players": [
+          1
+        ]
+      },
       "steps": [
-        { "id": "solo-board", "text": "Board set up as for 2 players; you play second (1 coin, 1 compass)", "ref": "p.20" },
-        { "id": "rival-board", "text": "Rival: another player board, gray-tents side, with all 6 archaeologists not in your color", "ref": "p.20" },
-        { "id": "rival-glass", "text": "Rival's magnifying glass on a starting space next to your research tokens", "ref": "p.20" },
-        { "id": "rival-stack", "text": "Rival action stack of 10 tiles: all 5 archaeologist tiles + 5 red or green tiles", "ref": "p.20" }
+        {
+          "id": "solo-board",
+          "text": "Board set up as for 2 players; you play second (1 coin, 1 compass)",
+          "ref": "p.20"
+        },
+        {
+          "id": "rival-board",
+          "text": "Rival: another player board, gray-tents side, with all 6 archaeologists not in your color",
+          "ref": "p.20"
+        },
+        {
+          "id": "rival-glass",
+          "text": "Rival's magnifying glass on a starting space next to your research tokens",
+          "ref": "p.20"
+        },
+        {
+          "id": "rival-stack",
+          "text": "Rival action stack of 10 tiles: all 5 archaeologist tiles + 5 red or green tiles",
+          "ref": "p.20",
+          "condition": {
+            "notModules": [
+              "purple-actions"
+            ]
+          }
+        },
+        {
+          "id": "objectives",
+          "text": "Rival Objectives: keep the 6 leftover 2-point temple tiles handy; 5 objective cards facedown",
+          "condition": {
+            "modules": [
+              "rival-objectives"
+            ]
+          },
+          "ref": "Solo Mini-Expansions p.1"
+        },
+        {
+          "id": "purple",
+          "text": "Purple Actions: rival deck of the 5 archaeologist cards + one purple or red card of each type",
+          "condition": {
+            "modules": [
+              "purple-actions"
+            ]
+          },
+          "ref": "Solo Mini-Expansions p.2"
+        }
       ]
     },
     {
@@ -84,9 +699,72 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "rounds", "text": "5 rounds; each round starts by drawing up to 5 cards", "ref": "p.7" },
-        { "id": "snake-bridge", "text": "Crossing the research bridge costs 1 idol from your crates", "condition": { "modules": ["snake"] }, "ref": "p.19" },
-        { "id": "rival-first", "text": "The rival starts every round and doesn't pass until all 10 tiles are played", "condition": { "players": [1] }, "ref": "p.20" }
+        {
+          "id": "rounds",
+          "text": "5 rounds; each round starts by drawing up to 5 cards",
+          "ref": "p.7"
+        },
+        {
+          "id": "snake-bridge",
+          "text": "Crossing the research bridge costs 1 idol from your crates",
+          "condition": {
+            "modules": [
+              "snake",
+              "printed"
+            ]
+          },
+          "ref": "p.19"
+        },
+        {
+          "id": "rival-first",
+          "text": "The rival starts every round and doesn't pass until all 10 tiles are played",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.20"
+        },
+        {
+          "id": "red-staff",
+          "text": "Red moon staff: at round end it exiles the 2 items and 2 artifacts closest to it",
+          "condition": {
+            "modules": [
+              "red-staff"
+            ]
+          },
+          "ref": "Expedition Leaders p.22"
+        },
+        {
+          "id": "blue-slots",
+          "text": "Leaders: idol slots may be used in any order, blue slots too",
+          "condition": {
+            "modules": [
+              "leaders"
+            ]
+          },
+          "ref": "Expedition Leaders p.5"
+        },
+        {
+          "id": "monkey-buy",
+          "text": "One row below the Monkey Temple you may research to buy a 6- or 2-point tile; two rows below, only 2-point",
+          "condition": {
+            "modules": [
+              "monkey"
+            ]
+          },
+          "ref": "Expedition Leaders p.18"
+        },
+        {
+          "id": "lizard-buy",
+          "text": "One row below the Lizard Temple you may research to buy a 6- or 2-point tile; two rows below, only 2-point",
+          "condition": {
+            "modules": [
+              "lizard"
+            ]
+          },
+          "ref": "Expedition Leaders p.18"
+        }
       ]
     },
     {
@@ -94,7 +772,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "draw", "text": "Everyone draws 5 cards; the starting player takes the first turn", "ref": "p.7" }
+        {
+          "id": "draw",
+          "text": "Everyone draws 5 cards; the starting player takes the first turn",
+          "ref": "p.7"
+        }
       ]
     }
   ]

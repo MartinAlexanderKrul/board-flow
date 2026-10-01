@@ -2,65 +2,313 @@
   "schemaVersion": 1,
   "gameId": 401325,
   "gameName": "The Witcher: Path of Destiny",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["The Witcher: Path of Destiny rulebook (Go On Board, via RulesPal)"]
+    "sources": [
+      "The Witcher: Path of Destiny rulebook (Go On Board, via RulesPal)",
+      "Legendary Monsters rulebook (Go On Board)"
+    ]
   },
-  "players": { "min": 1, "max": 5 },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
   "modules": [
-    { "id": "edge", "name": "The Edge of the World", "group": "Tale", "defaultEnabled": true, "note": "Easiest; for a first game skip Extra Effort cards and Side Quests." },
-    { "id": "striga", "name": "Striga", "group": "Tale" },
-    { "id": "lesser-evil", "name": "The Lesser Evil", "group": "Tale" }
+    {
+      "id": "edge",
+      "name": "The Edge of the World",
+      "group": "Tale",
+      "defaultEnabled": true,
+      "note": "Easiest; for a first game skip Extra Effort cards and Side Quests."
+    },
+    {
+      "id": "striga",
+      "name": "Striga",
+      "group": "Tale"
+    },
+    {
+      "id": "lesser-evil",
+      "name": "The Lesser Evil",
+      "group": "Tale"
+    },
+    {
+      "id": "legendary",
+      "name": "Legendary Monsters (co-op)",
+      "group": "Tale",
+      "bggId": 405401,
+      "note": "Fight a Legendary Monster together; no other modules."
+    }
   ],
   "sections": [
     {
       "id": "tale",
       "title": "Playmat & Tale",
       "steps": [
-        { "id": "playmat", "text": "Playmat on the table with room for each Player board and Timeline", "ref": "Setup 1" },
-        { "id": "tale-deck", "text": "Tale card deck on its spot, cover faceup like a book", "ref": "Setup 2a" },
-        { "id": "destiny", "text": "Destiny and Path tokens by the Tale cards: Destiny III at the bottom, II, then I on top", "ref": "Setup 2b" },
-        { "id": "pool", "text": "Shuffle the Main deck facedown; a faceup pair of cards on each of {n} rows", "amounts": { "n": { "default": 4, "byPlayers": { "4": 5, "5": 5 } } }, "ref": "Setup 3" },
-        { "id": "extra-xp", "text": "Extra Experience token next to the bottom available row", "ref": "Setup 4" },
-        { "id": "symbols", "text": "Symbol tokens on the table", "ref": "Setup 5" }
+        {
+          "id": "playmat",
+          "text": "Playmat on the table with room for each Player board and Timeline",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "monster-card",
+          "text": "Choose a Legendary Monster; its cards on the playmat, side for your player count up; Destiny tokens nearby",
+          "condition": {
+            "modules": [
+              "legendary"
+            ]
+          },
+          "ref": "Legendary Monsters p.5"
+        },
+        {
+          "id": "tale-deck",
+          "text": "Tale card deck on its spot, cover faceup like a book",
+          "ref": "Setup 2a",
+          "condition": {
+            "notModules": [
+              "legendary"
+            ]
+          }
+        },
+        {
+          "id": "destiny",
+          "text": "Destiny and Path tokens by the Tale cards: Destiny III at the bottom, II, then I on top",
+          "ref": "Setup 2b",
+          "condition": {
+            "notModules": [
+              "legendary"
+            ]
+          }
+        },
+        {
+          "id": "pool",
+          "text": "Shuffle the Main deck facedown; a faceup pair of cards on each of {n} rows",
+          "amounts": {
+            "n": {
+              "default": 4,
+              "byPlayers": {
+                "4": 5,
+                "5": 5
+              }
+            }
+          },
+          "ref": "Setup 3",
+          "note": "Legendary Monsters: first remove Main deck cards 2, 7, 9 and 50"
+        },
+        {
+          "id": "extra-xp",
+          "text": "Extra Experience token next to the bottom available row",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "symbols",
+          "text": "Symbol tokens on the table",
+          "ref": "Setup 5"
+        }
       ]
     },
     {
       "id": "characters",
       "title": "Characters",
       "steps": [
-        { "id": "draft", "text": "Whoever last read a Witcher book picks first: shuffle Player boards facedown, take 2, keep 1, return 1; clockwise", "ref": "Setup 6" },
-        { "id": "xp", "text": "Regular Experience marker on 0; Golden marker on the spot shown right of the track", "ref": "Player Components" },
-        { "id": "abilities", "text": "1 Ability token active side up on the leftmost Ability; the other 3 beside the board", "ref": "Player Components" },
-        { "id": "standee", "text": "Standees on the Initiative track in the Tale's order (highest closest to the Tale cards)", "ref": "Setup 2c" },
-        { "id": "vp", "text": "One Player token on 0 of the Victory Point track", "ref": "Player Components" },
-        { "id": "hand", "text": "Your 5 starting Action cards as your hand; Side Quest card tucked faceup under your board", "ref": "Player Components" }
+        {
+          "id": "draft",
+          "text": "Whoever last read a Witcher book picks first: shuffle Player boards facedown, take 2, keep 1, return 1; clockwise",
+          "ref": "Setup 6",
+          "note": "Legendary Monsters: Dandelion may not be chosen; no Side Quests"
+        },
+        {
+          "id": "xp",
+          "text": "Regular Experience marker on 0; Golden marker on the spot shown right of the track",
+          "ref": "Player Components"
+        },
+        {
+          "id": "abilities",
+          "text": "1 Ability token active side up on the leftmost Ability; the other 3 beside the board",
+          "ref": "Player Components"
+        },
+        {
+          "id": "standee",
+          "text": "Standees on the Initiative track in the Tale's order (highest closest to the Tale cards)",
+          "ref": "Setup 2c"
+        },
+        {
+          "id": "vp",
+          "text": "One Player token on 0 of the Victory Point track",
+          "ref": "Player Components",
+          "condition": {
+            "notModules": [
+              "legendary"
+            ]
+          }
+        },
+        {
+          "id": "hand",
+          "text": "Your 5 starting Action cards as your hand; Side Quest card tucked faceup under your board",
+          "ref": "Player Components"
+        },
+        {
+          "id": "health",
+          "text": "Health Point tokens: {n} each",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 5,
+                "2": 7,
+                "3": 7,
+                "4": 7,
+                "5": 8
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "legendary"
+            ]
+          },
+          "ref": "Legendary Monsters p.6"
+        },
+        {
+          "id": "runestones",
+          "text": "Runestone cards for your player count faceup by the playmat",
+          "note": "Easier: add 1-2 marked cards; harder: remove 1-2",
+          "condition": {
+            "modules": [
+              "legendary"
+            ]
+          },
+          "ref": "Legendary Monsters p.6"
+        },
+        {
+          "id": "trails",
+          "text": "Trail cards in 3 piles by Chapter number, each shuffled facedown",
+          "condition": {
+            "modules": [
+              "legendary"
+            ]
+          },
+          "ref": "Legendary Monsters p.6"
+        },
+        {
+          "id": "companions",
+          "text": "Optional: Lambert or Eskel Companion rules",
+          "condition": {
+            "modules": [
+              "legendary"
+            ]
+          },
+          "ref": "Legendary Monsters p.5"
+        }
       ]
     },
     {
       "id": "solo",
       "title": "Solo vs Automa",
-      "condition": { "players": [1] },
+      "condition": {
+        "players": [
+          1
+        ],
+        "notModules": [
+          "legendary"
+        ]
+      },
       "steps": [
-        { "id": "automa", "text": "Automa board of a remaining character as the second player; its Experience markers and VP token as normal", "ref": "Solo Mode" },
-        { "id": "solo-token", "text": "Solo Mode Destiny token nearby; box the Automa character's other components", "ref": "Solo Mode" }
+        {
+          "id": "automa",
+          "text": "Automa board of a remaining character as the second player; its Experience markers and VP token as normal",
+          "ref": "Solo Mode"
+        },
+        {
+          "id": "solo-token",
+          "text": "Solo Mode Destiny token nearby; box the Automa character's other components",
+          "ref": "Solo Mode"
+        }
+      ]
+    },
+    {
+      "id": "monster",
+      "title": "Monster",
+      "condition": {
+        "modules": [
+          "legendary"
+        ]
+      },
+      "steps": [
+        {
+          "id": "miniature",
+          "text": "Monster miniature next to the playmat",
+          "ref": "Legendary Monsters p.8"
+        },
+        {
+          "id": "movement",
+          "text": "Monster Movement deck for your player count, shuffled, by the playmat",
+          "ref": "Legendary Monsters p.8"
+        },
+        {
+          "id": "life",
+          "text": "Monster Life Points counter at {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 30,
+                "2": 60,
+                "3": 85,
+                "4": 110,
+                "5": 130
+              }
+            }
+          },
+          "ref": "Legendary Monsters p.8"
+        },
+        {
+          "id": "specific",
+          "text": "Monster-specific: Ancient Leshen - Root tokens nearby; Hym - Suffering tokens nearby; Katakan - Power token on its card's start position for your player count",
+          "ref": "Legendary Monsters p.8"
+        }
       ]
     },
     {
       "id": "tale-setup",
       "title": "Tale setup",
       "steps": [
-        { "id": "tale-rules", "text": "Finish setup with the chosen Tale's own section in the rulebook", "ref": "Setup 7" }
-      ]
+        {
+          "id": "tale-rules",
+          "text": "Finish setup with the chosen Tale's own section in the rulebook",
+          "ref": "Setup 7"
+        }
+      ],
+      "condition": {
+        "notModules": [
+          "legendary"
+        ]
+      }
     },
     {
       "id": "start",
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "intro", "text": "Turn over the first Tale card and read the introduction", "ref": "Gameplay" }
+        {
+          "id": "intro",
+          "text": "Turn over the first Tale card and read the introduction",
+          "ref": "Gameplay",
+          "condition": {
+            "notModules": [
+              "legendary"
+            ]
+          }
+        },
+        {
+          "id": "monster-start",
+          "text": "Chapter 1: draft cards, then the Monster moves or attacks",
+          "condition": {
+            "modules": [
+              "legendary"
+            ]
+          },
+          "ref": "Legendary Monsters p.5"
+        }
       ]
     }
   ]

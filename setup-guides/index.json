@@ -12,8 +12,8 @@
     {
       "gameId": 3955,
       "gameName": "BANG!",
-      "gameIds": [3955],
-      "version": 1,
+      "gameIds": [3955, 8269, 20237, 401241],
+      "version": 2,
       "schemaVersion": 1,
       "path": "3955.json"
     },
@@ -236,8 +236,8 @@
     {
       "gameId": 201808,
       "gameName": "Clank!: A Deck-Building Adventure",
-      "gameIds": [201808],
-      "version": 1,
+      "gameIds": [201808, 218103, 245377, 257276, 282426],
+      "version": 2,
       "schemaVersion": 1,
       "path": "201808.json"
     },
@@ -261,7 +261,7 @@
       "gameId": 216849,
       "gameName": "Dominion (Second Edition) Big Box",
       "gameIds": [216849],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "216849.json"
     },
@@ -284,8 +284,8 @@
     {
       "gameId": 233371,
       "gameName": "Clank! In! Space!: A Deck-Building Adventure",
-      "gameIds": [233371],
-      "version": 1,
+      "gameIds": [233371, 254470, 286265, 333536],
+      "version": 2,
       "schemaVersion": 1,
       "path": "233371.json"
     },
@@ -516,8 +516,8 @@
     {
       "gameId": 312484,
       "gameName": "Lost Ruins of Arnak",
-      "gameIds": [312484],
-      "version": 1,
+      "gameIds": [312484, 341254, 349092, 382350, 439816],
+      "version": 2,
       "schemaVersion": 1,
       "path": "312484.json"
     },
@@ -620,8 +620,8 @@
     {
       "gameId": 357563,
       "gameName": "Akropolis",
-      "gameIds": [357563],
-      "version": 1,
+      "gameIds": [357563, 422822],
+      "version": 2,
       "schemaVersion": 1,
       "path": "357563.json"
     },
@@ -748,8 +748,8 @@
     {
       "gameId": 401325,
       "gameName": "The Witcher: Path of Destiny",
-      "gameIds": [401325],
-      "version": 1,
+      "gameIds": [401325, 405401],
+      "version": 2,
       "schemaVersion": 1,
       "path": "401325.json"
     },

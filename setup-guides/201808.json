@@ -2,12 +2,16 @@
   "schemaVersion": 1,
   "gameId": 201808,
   "gameName": "Clank!: A Deck-Building Adventure",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Clank! rulebook"
+      "Clank! rulebook",
+      "Sunken Treasures rules sheet",
+      "The Mummy's Curse rulebook",
+      "Expeditions: Gold and Silk rulebook",
+      "Expeditions: Temple of the Ape Lords rulebook"
     ]
   },
   "players": {
@@ -31,7 +35,8 @@
               }
             }
           },
-          "ref": "p.2"
+          "ref": "p.2",
+          "note": "Ape Lords boards: 33-point artifact replaces the 30; Spider's Lair: 8-point replaces the 7"
         },
         {
           "id": "secrets",
@@ -40,8 +45,13 @@
         },
         {
           "id": "market",
-          "text": "Market items: 2 Master Keys, 2 Backpacks, 3 Crowns (10, 9, 8)",
-          "ref": "p.2"
+          "text": "Market items: 2 Master Keys, 2 Backpacks, 3 Crowns (10, 9, 8){x}",
+          "ref": "p.2",
+          "amounts": {
+            "x": {
+              "default": ""
+            }
+          }
         },
         {
           "id": "idols",
@@ -80,7 +90,171 @@
         {
           "id": "dungeon-row",
           "text": "Shuffle the Dungeon Deck; deal 6 faceup as the Dungeon Row, replacing any with Dragon Attack",
-          "ref": "p.2"
+          "ref": "p.2",
+          "note": "Shuffle in the 35 Sunken Treasures and/or 40 Mummy's Curse cards first if used"
+        },
+        {
+          "id": "market-board",
+          "text": "Market Board beside the board; all Market items go on it",
+          "condition": {
+            "modules": [
+              "sunken"
+            ]
+          },
+          "ref": "Sunken Treasures"
+        },
+        {
+          "id": "market-board-m",
+          "text": "Market Board beside the board; all Market items go on it",
+          "condition": {
+            "modules": [
+              "mummy"
+            ],
+            "notModules": [
+              "sunken"
+            ]
+          },
+          "ref": "Mummy's Curse"
+        },
+        {
+          "id": "scuba",
+          "text": "2 SCUBA tokens with the Market items",
+          "condition": {
+            "modules": [
+              "b-sunken"
+            ]
+          },
+          "ref": "Sunken Treasures"
+        },
+        {
+          "id": "goldfish",
+          "text": "Goldfish card in the Reserve next to the Goblin",
+          "condition": {
+            "modules": [
+              "b-sunken"
+            ]
+          },
+          "ref": "Sunken Treasures"
+        },
+        {
+          "id": "sunken-secrets",
+          "text": "Mix the new Major and Minor Secrets in before placing secrets; box extras unseen",
+          "condition": {
+            "modules": [
+              "sunken"
+            ]
+          },
+          "ref": "Sunken Treasures"
+        },
+        {
+          "id": "ankhs",
+          "text": "2 Ankhs with the Market items; 24 Curse tokens in the Bank",
+          "condition": {
+            "modules": [
+              "mummy"
+            ]
+          },
+          "ref": "Mummy's Curse"
+        },
+        {
+          "id": "mummy-secrets",
+          "text": "Mix the new Major and Minor Secrets (Mummy's Treasure, Chalice, Scarabs) in; box extras unseen",
+          "condition": {
+            "modules": [
+              "mummy"
+            ]
+          },
+          "ref": "Mummy's Curse"
+        },
+        {
+          "id": "mummy-board",
+          "text": "Mummy marker on its start zone space; Mummy card in the Reserve; pyramid die by the board; Supreme Monkey Idol on its space",
+          "condition": {
+            "modules": [
+              "b-mummy"
+            ]
+          },
+          "ref": "Mummy's Curse"
+        },
+        {
+          "id": "mining",
+          "text": "3 mining bonus tokens on their spaces below the Clank! area (the entrance flag is on the right)",
+          "condition": {
+            "modules": [
+              "b-mine"
+            ]
+          },
+          "ref": "Gold and Silk"
+        },
+        {
+          "id": "webs",
+          "text": "Shuffle the 12 Web tokens facedown, one on each web space",
+          "condition": {
+            "modules": [
+              "b-spider"
+            ]
+          },
+          "ref": "Gold and Silk"
+        },
+        {
+          "id": "time-winders",
+          "text": "2 Time Winders with the Market items",
+          "condition": {
+            "modules": [
+              "b-jungle"
+            ]
+          },
+          "ref": "Ape Lords"
+        },
+        {
+          "id": "time-winders-t",
+          "text": "2 Time Winders with the Market items",
+          "condition": {
+            "modules": [
+              "b-temple"
+            ]
+          },
+          "ref": "Ape Lords"
+        },
+        {
+          "id": "guardian",
+          "text": "Bronze Guardian: one cog, one wrench, one banana faceup; the other 15 ape-aratus tokens shuffled, one on each marked tunnel",
+          "condition": {
+            "modules": [
+              "b-jungle"
+            ]
+          },
+          "ref": "Ape Lords"
+        },
+        {
+          "id": "gears",
+          "text": "9 gear tokens in their spaces, random orientation (3- and 4-sided ones in random spots), then faceup",
+          "condition": {
+            "modules": [
+              "b-temple"
+            ]
+          },
+          "ref": "Ape Lords"
+        },
+        {
+          "id": "ape-deal",
+          "text": "Deal 3 secret ape-aratus tokens to each player; box the rest unseen",
+          "condition": {
+            "modules": [
+              "b-temple"
+            ]
+          },
+          "ref": "Ape Lords"
+        },
+        {
+          "id": "rng",
+          "text": "8 RNG tokens shuffled facedown: one on each marked Rage Track space, the other 4 stacked on the space above",
+          "condition": {
+            "modules": [
+              "b-temple"
+            ]
+          },
+          "ref": "Ape Lords"
         }
       ]
     },
@@ -121,6 +295,57 @@
           "ref": "p.2"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "original",
+      "name": "Original board",
+      "group": "Board",
+      "defaultEnabled": true
+    },
+    {
+      "id": "b-sunken",
+      "name": "Sunken Treasures board",
+      "group": "Board"
+    },
+    {
+      "id": "b-mummy",
+      "name": "Mummy's Curse board",
+      "group": "Board"
+    },
+    {
+      "id": "b-mine",
+      "name": "Gold and Silk: the mine",
+      "group": "Board",
+      "bggId": 257276
+    },
+    {
+      "id": "b-spider",
+      "name": "Gold and Silk: Spider Queen's Lair",
+      "group": "Board"
+    },
+    {
+      "id": "b-jungle",
+      "name": "Ape Lords: Jungle side",
+      "group": "Board",
+      "bggId": 282426
+    },
+    {
+      "id": "b-temple",
+      "name": "Ape Lords: Temple side",
+      "group": "Board"
+    },
+    {
+      "id": "sunken",
+      "name": "Sunken Treasures cards & secrets",
+      "bggId": 218103
+    },
+    {
+      "id": "mummy",
+      "name": "The Mummy's Curse cards & curses",
+      "bggId": 245377,
+      "note": "First game: leave out the Sunken Treasures cards."
     }
   ]
 }

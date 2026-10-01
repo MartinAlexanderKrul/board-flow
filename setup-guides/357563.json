@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 357563,
   "gameName": "Akropolis",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Akropolis rulebook"
+      "Akropolis rulebook",
+      "Akropolis Athena rulebook (Gigamic)"
     ]
   },
   "players": {
@@ -85,6 +86,43 @@
       ]
     },
     {
+      "id": "athena",
+      "title": "Athena",
+      "condition": {
+        "modules": [
+          "athena"
+        ]
+      },
+      "steps": [
+        {
+          "id": "constructions",
+          "text": "Shuffle the 18 Construction cards; draw 4 faceup beside the play area; box the rest",
+          "ref": "Athena p.3"
+        },
+        {
+          "id": "mini-tiles",
+          "text": "Draw 16 random Mini-tiles; 4 faceup below each Construction card; box the rest",
+          "ref": "Athena p.3"
+        },
+        {
+          "id": "statues",
+          "text": "Above each Construction card: one Statue part type, {n} identical parts (heads, torsos, legs, pedestals)",
+          "amounts": {
+            "n": {
+              "default": "1 per player",
+              "byPlayers": {
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "Athena p.3"
+        }
+      ]
+    },
+    {
       "id": "reminders",
       "title": "Easy to forget",
       "kind": "REMINDERS",
@@ -112,6 +150,13 @@
           "ref": "p.3"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "athena",
+      "name": "Athena",
+      "bggId": 422822
     }
   ]
 }

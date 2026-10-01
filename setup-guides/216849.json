@@ -2,13 +2,12 @@
   "schemaVersion": 1,
   "gameId": 216849,
   "gameName": "Dominion (Second Edition) Big Box",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Dominion rulebook (Rio Grande Games, via RulesPal)",
-      "5-6 player adjustments provided by the owner"
+      "Dominion 2nd Edition rulebook (Rio Grande Games, 2021)"
     ]
   },
   "players": {
@@ -23,7 +22,7 @@
         {
           "id": "copper",
           "text": "Each player takes 7 Coppers; remaining Copper, all Silver and all Gold in faceup Supply piles",
-          "ref": "Preparation",
+          "ref": "p.3, p.9",
           "note": "5-6 players: add all the extra Copper, Silver and Gold from the Big Box"
         },
         {
@@ -49,7 +48,7 @@
               }
             }
           },
-          "ref": "Preparation"
+          "ref": "p.3, p.9"
         },
         {
           "id": "curse",
@@ -65,12 +64,12 @@
               }
             }
           },
-          "ref": "Preparation"
+          "ref": "p.3, p.9"
         },
         {
           "id": "trash",
           "text": "Trash card to mark the trash pile",
-          "ref": "Preparation"
+          "ref": "p.3"
         }
       ]
     },
@@ -81,7 +80,8 @@
         {
           "id": "choose",
           "text": "Choose 10 Kingdom cards (e.g. draw 10 Randomizers or a suggested set); 10 of each in faceup piles",
-          "ref": "Kingdom Cards"
+          "ref": "p.3",
+          "note": "First game: Cellar, Market, Merchant, Militia, Mine, Moat, Remodel, Smithy, Village, Workshop"
         },
         {
           "id": "victory-kingdom",
@@ -97,12 +97,12 @@
               }
             }
           },
-          "ref": "Kingdom Cards"
+          "ref": "p.3"
         },
         {
           "id": "placeholders",
           "text": "Optional: Randomizers as placeholders under each pile; box unused Kingdom cards",
-          "ref": "Kingdom Cards"
+          "ref": "p.3"
         }
       ]
     },
@@ -113,7 +113,7 @@
         {
           "id": "deck",
           "text": "Shuffle your 7 Coppers + 3 Estates facedown as your deck",
-          "ref": "Preparation"
+          "ref": "p.4"
         },
         {
           "id": "hand",
@@ -121,7 +121,7 @@
           "amounts": {
             "n": 5
           },
-          "ref": "Preparation"
+          "ref": "p.4"
         }
       ]
     },
@@ -133,7 +133,7 @@
         {
           "id": "end",
           "text": "Game ends when the Provinces run out or any {n} Supply piles are empty",
-          "ref": "End of the Game",
+          "ref": "p.6, p.9",
           "amounts": {
             "n": {
               "default": 3,
@@ -147,7 +147,7 @@
         {
           "id": "tie",
           "text": "Ties go to the player with fewer turns",
-          "ref": "End of the Game"
+          "ref": "p.6"
         }
       ]
     },
@@ -158,8 +158,8 @@
       "steps": [
         {
           "id": "first",
-          "text": "Random starting player (next game: left of the last winner); play is clockwise",
-          "ref": "Gameplay"
+          "text": "Random starting player (after a won game, the winner goes last); play is clockwise",
+          "ref": "p.4"
         }
       ]
     }
