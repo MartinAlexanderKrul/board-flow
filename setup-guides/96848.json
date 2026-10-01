@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "gameId": 96848,
+  "gameName": "Mage Knight Board Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Mage Knight Game Walkthrough (WizKids) - First Reconnaissance scenario"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "map",
+      "title": "Map",
+      "steps": [
+        {
+          "id": "scenario",
+          "text": "Scenario: First Reconnaissance (find the city within 3 Rounds: Day, Night, Day)",
+          "ref": "Walkthrough p.2"
+        },
+        {
+          "id": "start-tile",
+          "text": "Starting tile on its \"A\" side",
+          "ref": "Walkthrough p.2"
+        },
+        {
+          "id": "countryside",
+          "text": "11 Countryside tiles (green) sorted by number, facedown, 1 on top{x}",
+          "amounts": {
+            "x": {
+              "default": "",
+              "byPlayers": {
+                "2": "; box the bottom 3",
+                "3": "; box the bottom 2"
+              }
+            }
+          },
+          "ref": "Walkthrough p.2"
+        },
+        {
+          "id": "core",
+          "text": "Core tiles (brown): shuffle the city and non-city tiles apart; 1 random city + 2 non-city shuffled under the Countryside pile",
+          "ref": "Walkthrough p.2"
+        },
+        {
+          "id": "reveal",
+          "text": "Reveal tiles 1 and 2 next to the starting tile as shown, all numbers facing the same way as the A",
+          "note": "Leave room on the table for the map to grow; nothing goes past the coastline",
+          "ref": "Walkthrough p.3"
+        },
+        {
+          "id": "tokens",
+          "text": "Sort the enemy and ruin tokens into 7 facedown piles by their backs and randomize each",
+          "ref": "Walkthrough p.4"
+        },
+        {
+          "id": "orcs",
+          "text": "On the two \"Orc Khan\" spaces: draw a token from the matching pile, faceup",
+          "ref": "Walkthrough p.4"
+        }
+      ]
+    },
+    {
+      "id": "offers",
+      "title": "Cards & offers",
+      "steps": [
+        {
+          "id": "advanced",
+          "text": "Advanced Actions: use only cards 1-16 (box 17-28), shuffle facedown; reveal the offer as shown",
+          "ref": "Walkthrough p.3-4"
+        },
+        {
+          "id": "spells",
+          "text": "Shuffle the Spell deck facedown; reveal the offer as shown",
+          "ref": "Walkthrough p.3-4"
+        },
+        {
+          "id": "artifacts",
+          "text": "Shuffle the Artifact deck; Wound cards faceup in a pile",
+          "ref": "Walkthrough p.4"
+        },
+        {
+          "id": "units",
+          "text": "Regular Units (silver) shuffled facedown; reveal {n} as the Unit offer; Elite Units stay boxed",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 5,
+                "4": 6
+              }
+            }
+          },
+          "note": "First game: the offer must include a Unit with the village icon - reshuffle if not",
+          "ref": "Walkthrough p.4"
+        },
+        {
+          "id": "tactics",
+          "text": "Night Tactics facedown by the Day/Night board; Day Tactics faceup in the center",
+          "ref": "Walkthrough p.4"
+        },
+        {
+          "id": "sites",
+          "text": "Site Description cards for the start area out: Village, Magical Glade / Crystal Mines, Marauding Orcs; box the City cards",
+          "ref": "Walkthrough p.4"
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "title": "Boards & mana",
+      "steps": [
+        {
+          "id": "fame-board",
+          "text": "Fame and Reputation board: each player's Shield on 0 Fame and on the center of the Reputation track",
+          "ref": "Walkthrough p.6"
+        },
+        {
+          "id": "day",
+          "text": "Day/Night board Day side up",
+          "ref": "Walkthrough p.6"
+        },
+        {
+          "id": "mana-bank",
+          "text": "Mana tokens as a bank",
+          "ref": "Walkthrough p.6"
+        },
+        {
+          "id": "source",
+          "text": "Roll {n} mana dice into the Source; reroll gold and black until at least half show a basic color",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 5,
+                "4": 6
+              }
+            }
+          },
+          "ref": "Walkthrough p.6"
+        }
+      ]
+    },
+    {
+      "id": "heroes",
+      "title": "Heroes",
+      "steps": [
+        {
+          "id": "hero",
+          "text": "Each player picks (or draws) a Hero and all its components; box unused heroes",
+          "ref": "Walkthrough p.5"
+        },
+        {
+          "id": "round-order",
+          "text": "Round Order tokens randomized in a column left of the Day/Night board",
+          "ref": "Walkthrough p.5"
+        },
+        {
+          "id": "level",
+          "text": "Level tokens sorted faceup (1-2 on top) on your Hero card; the blank one symbol up as your first Command token",
+          "ref": "Walkthrough p.5"
+        },
+        {
+          "id": "skills",
+          "text": "Shuffle your 10 Skill tokens facedown; Skills Description card nearby",
+          "ref": "Walkthrough p.5"
+        },
+        {
+          "id": "deed",
+          "text": "Shuffle your 16-card Deed deck; draw 5",
+          "ref": "Walkthrough p.5"
+        },
+        {
+          "id": "figure",
+          "text": "Hero figure in front of you (it enters on the portal on your first turn)",
+          "ref": "Walkthrough p.5"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "crystals",
+          "text": "Max 3 crystals of a color in your Inventory",
+          "ref": "Walkthrough p.6"
+        },
+        {
+          "id": "source-die",
+          "text": "One Source die per turn; reroll it when returning it",
+          "ref": "Walkthrough p.6"
+        },
+        {
+          "id": "no-pvp",
+          "text": "First game: leave out Player vs. Player combat",
+          "ref": "Walkthrough p.2"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-tactics",
+          "text": "Round 1 (Day): each player picks a Day Tactic, which sets the turn order",
+          "ref": "Walkthrough p.7"
+        }
+      ]
+    }
+  ]
+}

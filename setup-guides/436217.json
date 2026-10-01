@@ -1,0 +1,276 @@
+{
+  "schemaVersion": 1,
+  "gameId": 436217,
+  "gameName": "The Lord of the Rings: Fate of the Fellowship",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Lord of the Rings: Fate of the Fellowship rulebook (Z-Man Games)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "modules": [
+    {
+      "id": "intro",
+      "name": "Introductory (4 stacks)",
+      "group": "Difficulty",
+      "defaultEnabled": true
+    },
+    {
+      "id": "standard",
+      "name": "Standard (5 stacks)",
+      "group": "Difficulty"
+    },
+    {
+      "id": "first",
+      "name": "First game suggestions"
+    }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board & shadow",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Game board in the center",
+          "ref": "p.4"
+        },
+        {
+          "id": "tracks",
+          "text": "Threat rate marker and hope marker on the dotted space of their tracks",
+          "ref": "p.4"
+        },
+        {
+          "id": "shadow-deck",
+          "text": "The 2 special shadow cards (Sauron, Saruman) into the shadow discard pile; shuffle the rest (both backs) facedown as the shadow deck",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "troops",
+      "title": "Troops & Nazgul",
+      "steps": [
+        {
+          "id": "dwarves",
+          "text": "Dwarven troops (grey): 1 each in Ered Luin, Erebor, Iron Hills",
+          "ref": "p.4"
+        },
+        {
+          "id": "elves",
+          "text": "Elven troops (green): 1 each in Grey Havens, Rivendell, Lorien, Woodland Realm",
+          "ref": "p.4"
+        },
+        {
+          "id": "rohirrim",
+          "text": "Rohirrim troops (brown): 1 each in Helm's Deep, Edoras, Eastemnet",
+          "ref": "p.4"
+        },
+        {
+          "id": "gondor",
+          "text": "Gondor troops (blue): 2 in Minas Tirith, 2 in Dol Amroth, 1 in Pelargir; the rest of each type in the supply (5 each)",
+          "ref": "p.4-5"
+        },
+        {
+          "id": "shadow-troops",
+          "text": "18 shadow troops: Dunland 1, Isengard 1, Moria 2, Dol Guldur 1, Rhun 3, Minas Morgul 2, Barad-dur 2, Nurn 3, Umbar 1, Near Harad 2",
+          "ref": "p.5"
+        },
+        {
+          "id": "draw-nine",
+          "text": "Draw 9 shadow cards one by one: 1 shadow troop on each card's red location (ignore other text); discard them; 21 troops stay in the supply",
+          "ref": "p.5"
+        },
+        {
+          "id": "nazgul",
+          "text": "9 Nazgul: Eriador 2, Rhudaur 1, Misty Mountains 1, Gondor 1, Mordor 4",
+          "ref": "p.5"
+        },
+        {
+          "id": "eye",
+          "text": "Eye of Sauron on Eriador",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "objectives",
+      "title": "Objectives & characters",
+      "steps": [
+        {
+          "id": "objectives",
+          "text": "Destroy the One Ring (red star) + 3 random objectives faceup by the board; box the rest; follow their setup text",
+          "ref": "p.6"
+        },
+        {
+          "id": "objectives-first",
+          "text": "First game: Attain the Blessing of the Elves; Saruman, Your Staff Is Broken; Challenge Sauron; Destroy the One Ring",
+          "condition": {
+            "modules": [
+              "first"
+            ]
+          },
+          "ref": "p.6"
+        },
+        {
+          "id": "characters",
+          "text": "Characters required by objectives + random ones up to 2 per player; shuffle and deal 2 each; 2 reference cards each",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "p.6"
+        },
+        {
+          "id": "characters-first",
+          "text": "First game: P1 Frodo & Sam + Legolas, P2 Merry & Pippin + Eowyn, P3 Arwen + Aragorn, P4 Gandalf + Boromir, P5 Gimli + Eomer",
+          "condition": {
+            "modules": [
+              "first"
+            ],
+            "minPlayers": 2
+          },
+          "ref": "p.6"
+        },
+        {
+          "id": "solo-chars",
+          "text": "Solo: Frodo & Sam card by the board; 4 random characters faceup in a row; solo token on the leftmost",
+          "note": "First game: Merry & Pippin, Eowyn, Legolas, Gandalf",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.22"
+        },
+        {
+          "id": "figures",
+          "text": "Figures on their characters' starting locations; box unused characters, figures and reference cards",
+          "note": "Aragorn Weather Hills, Arwen Rivendell, Boromir/Faramir Minas Tirith, Eomer Eastemnet, Eowyn Edoras, Frodo & Sam and Merry & Pippin The Shire, Galadriel Lorien, Gandalf Tharbad, Gimli Erebor, Gollum Moria, Legolas Woodland Realm",
+          "ref": "p.7"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Player deck",
+      "steps": [
+        {
+          "id": "events",
+          "text": "Set aside the 12 Skies Darken cards; shuffle the 14 events and take {n} unseen",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 5,
+                "2": 6,
+                "3": 6,
+                "4": 7,
+                "5": 9
+              }
+            }
+          },
+          "ref": "p.8"
+        },
+        {
+          "id": "hands",
+          "text": "Shuffle them with the 48 region cards; deal {n} cards each, faceup",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 4,
+                "2": 4,
+                "3": 3,
+                "4": 2,
+                "5": 2
+              }
+            }
+          },
+          "ref": "p.8"
+        },
+        {
+          "id": "stacks",
+          "text": "Split the rest into {n} facedown stacks; shuffle 1 Skies Darken into each; pile them (larger stacks on top) on the draw space",
+          "amounts": {
+            "n": {
+              "default": 4,
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "standard"
+                    ]
+                  },
+                  "value": 5
+                }
+              ]
+            }
+          },
+          "ref": "p.8"
+        },
+        {
+          "id": "box",
+          "text": "Box the unused events and Skies Darken cards unseen",
+          "ref": "p.8"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "hand-limit",
+          "text": "Hand limit 7 cards",
+          "ref": "Board"
+        },
+        {
+          "id": "no-limit",
+          "text": "No limit on shadow troops in a location",
+          "ref": "p.5"
+        },
+        {
+          "id": "solo-turns",
+          "text": "Solo: the solo-token character takes 4 actions plus 1 Frodo & Sam bonus action; no Fellowship action",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.22"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The player whose region card shows the lowest number goes first",
+          "note": "First game: the Frodo player starts",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "p.8"
+        },
+        {
+          "id": "solo-first",
+          "text": "The leftmost character takes the first turn",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.22"
+        }
+      ]
+    }
+  ]
+}

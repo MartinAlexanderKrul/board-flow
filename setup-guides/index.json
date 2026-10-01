@@ -90,6 +90,14 @@
       "path": "77423.json"
     },
     {
+      "gameId": 96848,
+      "gameName": "Mage Knight Board Game",
+      "gameIds": [96848],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "96848.json"
+    },
+    {
       "gameId": 115746,
       "gameName": "War of the Ring: Second Edition",
       "gameIds": [115746],
@@ -452,8 +460,8 @@
     {
       "gameId": 285967,
       "gameName": "Ankh: Gods of Egypt",
-      "gameIds": [285967],
-      "version": 1,
+      "gameIds": [285967, 307807, 308505],
+      "version": 2,
       "schemaVersion": 1,
       "path": "285967.json"
     },
@@ -588,8 +596,8 @@
     {
       "gameId": 342942,
       "gameName": "Ark Nova",
-      "gameIds": [342942],
-      "version": 1,
+      "gameIds": [342942, 368966],
+      "version": 2,
       "schemaVersion": 1,
       "path": "342942.json"
     },
@@ -826,12 +834,28 @@
       "path": "436126.json"
     },
     {
+      "gameId": 436217,
+      "gameName": "The Lord of the Rings: Fate of the Fellowship",
+      "gameIds": [436217],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "436217.json"
+    },
+    {
       "gameId": 436821,
       "gameName": "Everdell Silverfrost",
       "gameIds": [436821],
       "version": 1,
       "schemaVersion": 1,
       "path": "436821.json"
+    },
+    {
+      "gameId": 448271,
+      "gameName": "The Lord of the Rings: The Two Towers – Trick-Taking Game",
+      "gameIds": [448271],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "448271.json"
     },
     {
       "gameId": 450782,

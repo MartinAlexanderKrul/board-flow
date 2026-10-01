@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "gameId": 448271,
+  "gameName": "The Lord of the Rings: The Two Towers – Trick-Taking Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Two Towers Trick-Taking Game rulebook"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "part1",
+      "name": "Part 1 (chapters 19-28)",
+      "group": "Part",
+      "defaultEnabled": true
+    },
+    {
+      "id": "part2",
+      "name": "Part 2 (chapter 29 on)",
+      "group": "Part"
+    }
+  ],
+  "sections": [
+    {
+      "id": "chapter",
+      "title": "Chapter",
+      "steps": [
+        {
+          "id": "card",
+          "text": "Your chapter card and the character cards it lists faceup in the center",
+          "note": "Start with Chapter 19 \"The Departure of Boromir\"",
+          "ref": "p.4"
+        },
+        {
+          "id": "stars",
+          "text": "A star token next to each character marked * on the chapter card",
+          "ref": "p.4"
+        },
+        {
+          "id": "deck-p2",
+          "text": "Main deck from chapter 29: remove the four rank-8 cards and the 3 Orcs; add the 5 Rings and 2 Weariness cards",
+          "condition": {
+            "modules": [
+              "part2"
+            ]
+          },
+          "ref": "p.20"
+        },
+        {
+          "id": "tower-event",
+          "text": "Follow the chapter's Tower event (e.g. set aside the White Tower card and token by it)",
+          "condition": {
+            "modules": [
+              "part2"
+            ]
+          },
+          "ref": "p.20"
+        }
+      ]
+    },
+    {
+      "id": "deal",
+      "title": "Deal",
+      "steps": [
+        {
+          "id": "lost",
+          "text": "Shuffle the main deck; deal 1 faceup lost card by the chapter card (a Tower card is redealt and shuffled back)",
+          "condition": {
+            "modules": [
+              "part1"
+            ],
+            "minPlayers": 2
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "hands",
+          "text": "Deal {n} cards to each player (secret)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 12,
+                "3": 12,
+                "4": 9
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "pyramid",
+          "text": "2 players: an extra 12-card hand becomes the pyramid between you - top row 3 (2 up, 1 down), middle 4 facedown, bottom 5 faceup",
+          "note": "The first player assigned a character controls it; use 3-player character sides",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.26-27"
+        },
+        {
+          "id": "solo-aside",
+          "text": "Set aside {c}; deal the lost card",
+          "amounts": {
+            "c": {
+              "default": "the White Tower and Black Tower",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "part2"
+                    ]
+                  },
+                  "value": "the 1 of Rings"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.28"
+        },
+        {
+          "id": "solo-hands",
+          "text": "Mix the set-aside card(s) with random cards into 4 faceup hands of 4; the rest is a draw deck",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.28"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "steps": [
+        {
+          "id": "aragorn",
+          "text": "Whoever has the White Tower takes Aragorn and the White Tower token (keeps the card)",
+          "condition": {
+            "modules": [
+              "part1"
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "frodo",
+          "text": "Whoever has the 1 of Rings takes Frodo, the Ring token and the 4 Burden tokens (2-5)",
+          "condition": {
+            "modules": [
+              "part2"
+            ]
+          },
+          "ref": "p.21"
+        },
+        {
+          "id": "pick",
+          "text": "From that player's left, each picks a character; starred ones must be chosen; then remove the stars",
+          "note": "Use the character side for 3 or 4 players",
+          "ref": "p.5"
+        },
+        {
+          "id": "setup-actions",
+          "text": "From the {w} clockwise, resolve setup actions (exchanges: pass 1 card facedown, get 1 back)",
+          "amounts": {
+            "w": {
+              "default": "Aragorn",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "part2"
+                    ]
+                  },
+                  "value": "Frodo"
+                }
+              ]
+            }
+          },
+          "note": "The Tower / One Ring card can't be exchanged",
+          "ref": "p.5"
+        },
+        {
+          "id": "solo-exchange",
+          "text": "Solo: use only 1 character's exchange per round",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.28"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "solo-refill",
+          "text": "Solo: after each trick deal each hand 1 new faceup card; all 4 goals must be completed",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.28"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "lead",
+          "text": "{w} leads the first trick",
+          "amounts": {
+            "w": {
+              "default": "Aragorn",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "part2"
+                    ]
+                  },
+                  "value": "Frodo"
+                }
+              ]
+            }
+          },
+          "ref": "p.3, p.20"
+        }
+      ]
+    }
+  ]
+}

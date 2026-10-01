@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 342942,
   "gameName": "Ark Nova",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Ark Nova rulebook (EN)"
+      "Ark Nova rulebook (EN)",
+      "Marine Worlds rulebook (Capstone / Feuerland)"
     ]
   },
   "players": {
@@ -31,6 +32,12 @@
       "id": "advanced-maps",
       "name": "Advanced maps 1-8",
       "group": "Zoo maps"
+    },
+    {
+      "id": "marine",
+      "name": "Marine Worlds",
+      "bggId": 368966,
+      "note": "Sea animals, aquariums, a new university and alternate Action cards."
     }
   ],
   "sections": [
@@ -38,6 +45,26 @@
       "id": "board",
       "title": "Board",
       "steps": [
+        {
+          "id": "marine-supply",
+          "text": "Add the aquariums, unique buildings and extra kiosks/pavilions to the supply; new Bonus tiles to the Bonus tiles",
+          "condition": {
+            "modules": [
+              "marine"
+            ]
+          },
+          "ref": "Marine Worlds p.2"
+        },
+        {
+          "id": "marine-cards",
+          "text": "Add the new Zoo, Final Scoring and Base Conservation cards to their decks; swap out the replaced base cards (001, 003, 005, 008-011, 101, 102, 131, 207, 208, 225-227, 250, 261, 262)",
+          "condition": {
+            "modules": [
+              "marine"
+            ]
+          },
+          "ref": "Marine Worlds p.2"
+        },
         {
           "id": "board",
           "text": "Game board in the middle; Break token on the start space for your player count",
@@ -99,6 +126,26 @@
           "id": "final-scoring",
           "text": "Shuffle the Final Scoring cards facedown next to the Association board",
           "ref": "p.5"
+        },
+        {
+          "id": "marine-bonus",
+          "text": "1 more random Bonus tile faceup by the appeal icon next to space 15 of the Reputation track",
+          "condition": {
+            "modules": [
+              "marine"
+            ]
+          },
+          "ref": "Marine Worlds p.2"
+        },
+        {
+          "id": "marine-association",
+          "text": "Use the new Association board; generic university on its spot, the specific universities beside the board",
+          "condition": {
+            "modules": [
+              "marine"
+            ]
+          },
+          "ref": "Marine Worlds p.2"
         }
       ]
     },
@@ -156,6 +203,17 @@
           "ref": "p.4"
         },
         {
+          "id": "alt-actions",
+          "text": "After taking your zoo map: draft alternate Action cards - take 3, keep 1 pass 2 left, keep 1 pass 1 left; keep 2 of different types and replace those standard cards",
+          "note": "Solo: draw 3, keep 2 of different types",
+          "condition": {
+            "modules": [
+              "marine"
+            ]
+          },
+          "ref": "Marine Worlds p.2, p.8"
+        },
+        {
           "id": "action-cards",
           "text": "5 Action cards side I up: Animals in the leftmost slot, the other 4 random",
           "ref": "p.4"
@@ -192,6 +250,16 @@
           "id": "zoo-cards",
           "text": "Draw 8 Zoo cards; keep 4, discard 4",
           "ref": "p.5"
+        },
+        {
+          "id": "alt-tokens",
+          "text": "Use the alternate counters and the 7 alternate player tokens",
+          "condition": {
+            "modules": [
+              "marine"
+            ]
+          },
+          "ref": "Marine Worlds p.3"
         }
       ]
     },
