@@ -8,7 +8,8 @@ import org.json.JSONObject
 /**
  * Links from a BGG id to its rulebook in the public `boardgame-rulebooks` GitHub repo.
  * The map is the bundled `assets/rulebooks.json` (BGG id -> a PDF path, or a folder when the
- * game has several files), so a game only gets a link once its rulebook is in that repo.
+ * game has several files). Games with no PDF in that repo yet carry a full URL instead (the
+ * RulesPal page the guide was written from), used as-is.
  */
 object RulebookLinks {
     private const val TAG = "RulebookLinks"
@@ -19,6 +20,7 @@ object RulebookLinks {
 
     fun urlFor(context: Context, gameId: Int?): String? {
         val path = gameId?.let { load(context)[it] } ?: return null
+        if (path.startsWith("http")) return path
         val kind = if (path.endsWith(".pdf", ignoreCase = true)) "blob" else "tree"
         return "$REPO_URL/$kind/main/" + path.split('/').joinToString("/") { Uri.encode(it) }
     }
