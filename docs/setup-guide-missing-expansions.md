@@ -18,10 +18,9 @@ Already in the guide: Leaders, Cities, Babel: Tower, Babel: Great Projects, Arma
 - [ ] [7 Wonders: Diceopolis](https://boardgamegeek.com/boardgameexpansion/456148) (2025) - no rules on BGG
 
 ## 7 Wonders Duel
-Already in the guide: Pantheon
+Already in the guide: Pantheon, Agora
 
 - [ ] [7 Wonders Duel: Solo](https://boardgamegeek.com/boardgameexpansion/310215) (2020)
-- [ ] [7 Wonders Duel: Agora](https://boardgamegeek.com/boardgameexpansion/309116) (2020)
 
 ## Aeon's End
 
@@ -60,11 +59,6 @@ Already in the guide: Expedition, Harder: No Choice token, Easier: 1/2 and 3/4 t
 - [ ] [Aeon's End: The Cinderkeep](https://boardgamegeek.com/boardgameexpansion/472343) (2027) - no rules on BGG
 - [ ] [Aeon's End: The Wastes](https://boardgamegeek.com/boardgameexpansion/472342) (2027) - no rules on BGG
 
-## Akropolis
-Already in the guide: Athena
-
-- [ ] [Akropolis: Pantheon](https://boardgamegeek.com/boardgameexpansion/461828) (2026) - no rules on BGG
-
 ## Ankh: Gods of Egypt
 Already in the guide: Pharaoh, Pantheon
 
@@ -79,28 +73,19 @@ Already in the guide: Map A, Map 0, Advanced maps 1-8, Marine Worlds
 - [ ] [Ark Nova: Zoo Map Pack 2](https://boardgamegeek.com/boardgameexpansion/426978) (2024) - no rules on BGG
 
 ## BANG!
-Already in the guide: Simplified (no book cards), High Noon, A Fistful of Cards, BANG! Legends
+Already in the guide: Simplified (no book cards), High Noon, A Fistful of Cards, BANG! Legends, Dodge City, Gold Rush, The Valley of Shadows, Wild West Show, The Great Train Robbery
 
 - [ ] [BANG! Uncle Will](https://boardgamegeek.com/boardgameexpansion/60381) (2004) - no rules on BGG
-- [ ] [BANG! Dodge City](https://boardgamegeek.com/boardgameexpansion/9653) (2004)
 - [ ] [BANG! Face Off](https://boardgamegeek.com/boardgameexpansion/18954) (2005) - no rules on BGG
 - [ ] [BANG! Claus "The Saint"](https://boardgamegeek.com/boardgameexpansion/63490) (2007) - no rules on BGG
 - [ ] [BANG! Johnny Kisch](https://boardgamegeek.com/boardgameexpansion/57885) (2007) - no rules on BGG
 - [ ] [BANG! Dodge City with High Noon expansion](https://boardgamegeek.com/boardgameexpansion/147918) (2008) - no rules on BGG
-- [ ] [BANG! Wild West Show](https://boardgamegeek.com/boardgameexpansion/66508) (2010)
-- [ ] [BANG! The Valley of Shadows](https://boardgamegeek.com/boardgameexpansion/130046) (2011)
-- [ ] [BANG! Gold Rush](https://boardgamegeek.com/boardgameexpansion/107794) (2011)
 - [ ] [BANG! High Noon/A Fistful of Cards](https://boardgamegeek.com/boardgameexpansion/161953) (2014)
 - [ ] [BANG! Expansion Pack](https://boardgamegeek.com/boardgameexpansion/183275) (2015) - no rules on BGG
 - [ ] [BANG! Bloody Mary](https://boardgamegeek.com/boardgameexpansion/217972) (2016) - no rules on BGG
 - [ ] [BANG! Armed & Dangerous](https://boardgamegeek.com/boardgameexpansion/230505) (2017) - no rules on BGG
-- [ ] [BANG! The Great Train Robbery](https://boardgamegeek.com/boardgameexpansion/349886) (2021) - no rules on BGG
 - [ ] [BANG!: Emiliano](https://boardgamegeek.com/boardgameexpansion/374167) (2022) - no rules on BGG
 - [ ] [BANG! Most Wanted](https://boardgamegeek.com/boardgameexpansion/431931) (2024) - no rules on BGG
-
-## BANG! The Duel
-
-- [ ] [BANG! The Duel: Renegades](https://boardgamegeek.com/boardgameexpansion/288429) (2019) - no rules on BGG
 
 ## Blood Rage
 Already in the guide: Gods of Asgard, Mystics of Midgard
@@ -389,8 +374,8 @@ Already in the guide: Empire side A, Empire side B, Corruption & Ascension
 - [ ] [Just One: Neue Begriffe](https://boardgamegeek.com/boardgameexpansion/317124) (2020) - no rules on BGG
 
 ## Karak
+Already in the guide: Regent
 
-- [ ] [Karak: Regent](https://boardgamegeek.com/boardgameexpansion/291436) (2019)
 - [ ] [Karak: Sidhar, Kirima, Elspeth](https://boardgamegeek.com/boardgameexpansion/347190) (2021) - no rules on BGG
 
 ## Karak II
@@ -659,11 +644,6 @@ Already in the guide: Team play
 - [ ] [War of the Ring: Kings of Middle-earth](https://boardgamegeek.com/boardgameexpansion/299490) (2023)
 - [ ] [War of the Ring: Kings and Lords of Middle-Earth – Limited Edition](https://boardgamegeek.com/boardgameexpansion/407813) (2024) - no rules on BGG
 - [ ] [War of the Ring: Sieges of Middle-earth](https://boardgamegeek.com/boardgameexpansion/463030) (2026) - no rules on BGG
-
-## Škoda kouzla, které padne vedle
-Already in the guide: Duel, 3 players: lone wizard vs allies (Velké rozšíření), 3 players: elimination (Velké rozšíření), Free-for-all (Velké rozšíření), Solo vs the Cave Lord (Velké rozšíření)
-
-- [ ] [Škoda kouzla, které padne vedle: velké rozšíření](https://boardgamegeek.com/boardgameexpansion/430464) (2024) - no rules on BGG
 
 # Living card games
 
