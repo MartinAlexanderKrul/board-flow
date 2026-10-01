@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "gameId": 13,
   "gameName": "Catan",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
+      "Catan Big Box rules, Czech edition (KOSMOS / Albi, 2016)",
       "Catan rules (CATAN Studio, via RulesPal)"
     ]
   },
@@ -14,42 +15,321 @@
     "min": 3,
     "max": 4
   },
+  "modules": [
+    {
+      "id": "x56",
+      "name": "5-6 Player Expansion",
+      "bggId": 2807,
+      "extendsMaxPlayers": 6,
+      "forcedAtPlayers": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "base",
+      "name": "Base game",
+      "group": "Scenario",
+      "defaultEnabled": true
+    },
+    {
+      "id": "friends",
+      "name": "Best Friends",
+      "group": "Scenario"
+    },
+    {
+      "id": "germany",
+      "name": "Germany",
+      "group": "Scenario"
+    },
+    {
+      "id": "mallorca",
+      "name": "Mallorca",
+      "group": "Scenario"
+    },
+    {
+      "id": "helpers",
+      "name": "Helpers",
+      "group": "Scenario"
+    }
+  ],
   "sections": [
     {
-      "id": "setup",
-      "title": "Setup",
+      "id": "island",
+      "title": "Island",
+      "condition": {
+        "notModules": [
+          "germany",
+          "mallorca"
+        ]
+      },
       "steps": [
         {
-          "id": "setup-1",
-          "text": "Build the board as the starting map shows",
-          "note": "Experienced players can use the variable set-up instead",
-          "ref": "Setting Up the Game"
+          "id": "island-1",
+          "text": "Build the sea frame from its 6 parts",
+          "condition": {
+            "notModules": [
+              "x56"
+            ]
+          },
+          "ref": "p.4"
         },
         {
-          "id": "setup-2",
+          "id": "island-2",
+          "text": "Beginners: lay the terrain hexes, number tokens and harbours exactly as pictured",
+          "condition": {
+            "notModules": [
+              "x56"
+            ]
+          },
+          "note": "After a game or two, build a variable board (Almanac: variable set-up)",
+          "ref": "p.2-4"
+        },
+        {
+          "id": "island-3",
+          "text": "Frame of 10 parts: the 6 base parts with the 4 blue parts between them, as pictured",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "ref": "p.7"
+        },
+        {
+          "id": "island-4",
+          "text": "Shuffle all 30 land hexes from both sets and lay them faceup in rows of 3, 4, 5, 6, 5, 4, 3",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "ref": "p.7"
+        },
+        {
+          "id": "island-5",
+          "text": "Use only the 28 number tokens of the expansion: start in a corner with A and spiral inward in alphabetical order; none on the deserts",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "note": "The last three tokens are Za, Zb and Zc",
+          "ref": "p.7"
+        },
+        {
+          "id": "island-6",
+          "text": "Robber on one of the two deserts",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "ref": "p.7"
+        }
+      ]
+    },
+    {
+      "id": "germany",
+      "title": "Germany",
+      "condition": {
+        "modules": [
+          "germany"
+        ]
+      },
+      "steps": [
+        {
+          "id": "germany-1",
+          "text": "Lay out the Germany board instead of the hexes and frame",
+          "ref": "p.10"
+        },
+        {
+          "id": "germany-2",
+          "text": "3-4 players: play only the northern or the southern area; mark the boundary line with roads of an unused colour",
+          "condition": {
+            "maxPlayers": 4
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "germany-3",
+          "text": "Landmark figures on their outlines outside the play area; 1 Catan token on each landmark outline that is in play",
+          "ref": "p.10"
+        },
+        {
+          "id": "germany-4",
+          "text": "Goetz von Berlichingen replaces the robber: on the mountains with the 12, east of Nuremberg",
+          "ref": "p.10"
+        }
+      ]
+    },
+    {
+      "id": "mallorca",
+      "title": "Mallorca",
+      "condition": {
+        "modules": [
+          "mallorca"
+        ]
+      },
+      "steps": [
+        {
+          "id": "mallorca-1",
+          "text": "Lay out the Mallorca board instead of the hexes and frame",
+          "ref": "p.11"
+        },
+        {
+          "id": "mallorca-2",
+          "text": "3-4 players: 1 Catan token on every intersection with a victory point symbol",
+          "condition": {
+            "maxPlayers": 4
+          },
+          "ref": "p.11"
+        },
+        {
+          "id": "mallorca-3",
+          "text": "Robber on the pasture north-west of Cala Pi",
+          "ref": "p.11"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
           "text": "Each player: 5 settlements, 4 cities, 15 roads and a building costs card",
-          "ref": "Setting Up the Game"
+          "note": "3 players: red stays in the box",
+          "ref": "p.4"
         },
         {
-          "id": "setup-3",
-          "text": "Place your 2 starting settlements and 2 roads on the board as the starting map shows",
-          "note": "3 players: nobody plays the red position",
-          "ref": "Setting Up the Game"
+          "id": "players-2",
+          "text": "Beginners: place your 2 settlements and 2 roads as pictured",
+          "condition": {
+            "notModules": [
+              "x56",
+              "germany",
+              "mallorca"
+            ]
+          },
+          "ref": "p.4"
         },
         {
-          "id": "setup-4",
-          "text": "Longest Road and Largest Army cards and the 2 dice beside the board",
-          "ref": "Setting Up the Game"
+          "id": "players-3",
+          "text": "Place starting settlements and roads in the founding phase",
+          "condition": {
+            "modules": [
+              "x56"
+            ],
+            "notModules": [
+              "germany",
+              "mallorca"
+            ]
+          },
+          "ref": "p.7"
         },
         {
-          "id": "setup-5",
-          "text": "Resource cards in 5 faceup stacks; development cards shuffled facedown",
-          "ref": "Setting Up the Game"
+          "id": "players-4",
+          "text": "Place starting settlements and roads in the founding phase - settlements only on the round building spaces",
+          "condition": {
+            "notModules": [
+              "base",
+              "friends",
+              "helpers"
+            ]
+          },
+          "ref": "p.10-11"
         },
         {
-          "id": "setup-6",
-          "text": "Take 1 resource for each terrain hex around your settlement marked with a white star; keep your hand hidden",
-          "ref": "Setting Up the Game"
+          "id": "players-5",
+          "text": "Longest Road and Largest Army cards and the dice to the side",
+          "ref": "p.4"
+        },
+        {
+          "id": "players-6",
+          "text": "Resource cards sorted into 5 faceup stacks; development cards shuffled facedown",
+          "ref": "p.4"
+        },
+        {
+          "id": "players-7",
+          "text": "Take 1 resource for each hex next to your settlement marked with a star; keep your cards hidden",
+          "condition": {
+            "notModules": [
+              "x56",
+              "germany",
+              "mallorca"
+            ]
+          },
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "best-friends",
+      "title": "Best Friends",
+      "condition": {
+        "modules": [
+          "friends"
+        ]
+      },
+      "steps": [
+        {
+          "id": "best-friends-1",
+          "text": "Guild mat beside the island; Catan victory point tokens to its right",
+          "ref": "p.8"
+        },
+        {
+          "id": "best-friends-2",
+          "text": "Favour tokens in play: {a} each of Merchant, Trader and Road Builder; {b} each of Scholar and Architect",
+          "amounts": {
+            "a": {
+              "byPlayers": {
+                "3": 6,
+                "4": 8,
+                "5": 10,
+                "6": 12
+              }
+            },
+            "b": {
+              "byPlayers": {
+                "3": 12,
+                "4": 16,
+                "5": 20,
+                "6": 24
+              }
+            }
+          },
+          "ref": "p.8"
+        },
+        {
+          "id": "best-friends-3",
+          "text": "Shuffle them facedown into one common supply",
+          "ref": "p.8"
+        }
+      ]
+    },
+    {
+      "id": "helpers",
+      "title": "Helpers",
+      "condition": {
+        "modules": [
+          "helpers"
+        ]
+      },
+      "steps": [
+        {
+          "id": "helpers-1",
+          "text": "Stack the numbered helper cards A1 on top down to A6, the unnumbered ones underneath in any order",
+          "ref": "p.12"
+        },
+        {
+          "id": "helpers-2",
+          "text": "After placing your second settlement, take the top card, A side up",
+          "ref": "p.12"
+        },
+        {
+          "id": "helpers-3",
+          "text": "After the founding phase, lay out the remaining cards A side up as the offer",
+          "ref": "p.12"
         }
       ]
     },
@@ -60,8 +340,65 @@
       "steps": [
         {
           "id": "reminders-1",
-          "text": "Distance Rule: a settlement needs all adjacent intersections empty",
-          "ref": "Setting Up the Game"
+          "text": "5-6 players: after every turn there is a special building phase - everyone else may build or buy development cards in turn order, but not trade",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "ref": "p.7"
+        },
+        {
+          "id": "reminders-2",
+          "text": "Favour tokens can't be used in the turn you gain them, nor in the special building phase",
+          "condition": {
+            "modules": [
+              "friends"
+            ]
+          },
+          "ref": "p.9"
+        },
+        {
+          "id": "reminders-3",
+          "text": "Germany: trade with the bank at 3:1 - there are no harbours",
+          "condition": {
+            "modules": [
+              "germany"
+            ]
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "reminders-4",
+          "text": "Germany and Mallorca are won at {n} victory points",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": 13,
+                "4": 12,
+                "5": 10,
+                "6": 10
+              }
+            }
+          },
+          "condition": {
+            "notModules": [
+              "base",
+              "friends",
+              "helpers"
+            ]
+          },
+          "ref": "p.11"
+        },
+        {
+          "id": "reminders-5",
+          "text": "A helper card can't be used in the turn you gained or flipped it",
+          "condition": {
+            "modules": [
+              "helpers"
+            ]
+          },
+          "ref": "p.12"
         }
       ]
     },
@@ -72,8 +409,8 @@
       "steps": [
         {
           "id": "start-1",
-          "text": "The oldest player goes first",
-          "ref": "Turn Overview"
+          "text": "The oldest player starts; play passes to the left",
+          "ref": "p.4"
         }
       ]
     }

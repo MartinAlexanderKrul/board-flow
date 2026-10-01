@@ -12,8 +12,8 @@
     {
       "gameId": 13,
       "gameName": "Catan",
-      "gameIds": [13],
-      "version": 1,
+      "gameIds": [13, 2807],
+      "version": 2,
       "schemaVersion": 1,
       "path": "13.json"
     },
