@@ -147,6 +147,8 @@ fun List<LoggedPlay>.gameHistoryStats(gameId: Int, roster: List<Player> = emptyL
     return computeGameHistoryStats(gamePlays, roster)
 }
 
+private fun playCount(count: Int): String = if (count == 1) "1 play" else "$count plays"
+
 fun List<LoggedPlay>.gameHealthSignal(gameId: Int): Pair<String, Boolean>? {
     val gamePlays = filter { it.gameId == gameId }
     if (gamePlays.isEmpty()) return "No plays logged yet." to false
@@ -775,7 +777,7 @@ fun List<LoggedPlay>.buildRangeObservations(
 
             when {
                 prev30Count == 0 -> result += SmartObservation(
-                    text = "$totalPlays plays in the last 30 days.",
+                    text = "${playCount(totalPlays)} in the last 30 days.",
                     subtext = "Recent run"
                 )
                 totalPlays > prev30Count * 1.3 -> result += SmartObservation(
@@ -784,10 +786,10 @@ fun List<LoggedPlay>.buildRangeObservations(
                     subtext = "Recent run"
                 )
                 totalPlays < prev30Count * 0.7 -> result += SmartObservation(
-                    "$totalPlays plays in the last 30 days, down from $prev30Count. A quieter stretch."
+                    "${playCount(totalPlays)} in the last 30 days, down from $prev30Count. A quieter stretch."
                 )
                 else -> result += SmartObservation(
-                    "$totalPlays plays in the last 30 days. Roughly the same as before."
+                    "${playCount(totalPlays)} in the last 30 days. Roughly the same as before."
                 )
             }
 
@@ -894,7 +896,7 @@ fun List<LoggedPlay>.buildStatsBrief(
                 val delta = recentCount - previous
                 val metric = if (delta >= 0) "+$delta" else delta.toString()
                 val body = when {
-                    previous == 0 && recentCount > 0 -> "$recentCount plays in the last 30 days. The table is awake again."
+                    previous == 0 && recentCount > 0 -> "${playCount(recentCount)} in the last 30 days. The table is awake again."
                     delta > 0 -> "$recentCount recent plays, up from $previous in the 30 days before."
                     delta < 0 -> "$recentCount recent plays, down from $previous in the 30 days before."
                     else -> "$recentCount recent plays. Almost exactly the same as before."
@@ -913,8 +915,8 @@ fun List<LoggedPlay>.buildStatsBrief(
         val metric = if (delta >= 0) "+$delta" else delta.toString()
         val label = range.displaySubtitle()
         val body = when {
-            previousCount == 0 && currentCount > 0 -> "$label has $currentCount plays. No matching baseline before it."
-            delta > 0 -> "$label is $delta plays ahead of the previous matching stretch."
+            previousCount == 0 && currentCount > 0 -> "$label has ${playCount(currentCount)}. No matching baseline before it."
+            delta > 0 -> "$label is ${playCount(delta)} ahead of the previous matching stretch."
             delta < 0 -> "$label is ${-delta} plays behind the previous matching stretch."
             else -> "$label is matching the previous stretch exactly."
         }
@@ -992,7 +994,7 @@ fun List<LoggedPlay>.buildStatsBrief(
     playerCounts.maxByOrNull { it.value }?.takeIf { it.value >= 3 }?.let { (name, count) ->
         items += StatsBriefItem(
             title = "Most present",
-            body = "$name has been at the table for $count plays in this view.",
+            body = "$name has been at the table for ${playCount(count)} in this view.",
             metric = "${count}x",
             rarity = InsightRarity.COMMON,
             playerFilter = name

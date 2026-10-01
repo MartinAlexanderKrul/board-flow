@@ -651,7 +651,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun applyDetectedGameCorrection(game: BggGame) {
         val extracted = _extractedPlay.value
         Log.d(TAG_SCAN, "Correction game selected: ${game.name}; extractedDataPreserved=${extracted != null} players=${extracted?.players?.size ?: 0}")
-        extracted?.let { saveHintForGame(game, it) }
+        // Manual entry has no scan evidence, so it must not create a recognition template.
+        extracted
+            ?.takeIf { !it.detectedGameTitle.isNullOrBlank() || it.detectedScoringCategories.isNotEmpty() }
+            ?.let { saveHintForGame(game, it) }
         if (extracted != null && extracted.players.isNotEmpty()) {
             initEditablePlayers(extracted.players)
             Log.d(TAG_SCAN, "Re-initialized ${extracted.players.size} player(s) from extracted play")
@@ -669,7 +672,31 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** Turns a raw Gemini failure into a sentence the user can act on; the raw text stays in Logcat. */
+    private fun scanErrorMessage(raw: String?): String {
+        val text = raw.orEmpty()
+        val summary = when {
+            listOf("401", "403", "PERMISSION_DENIED", "API key", "API_KEY").any { text.contains(it, ignoreCase = true) } ->
+                "Gemini rejected the API key. Check it in Settings > Scan, or enter the play manually."
+            listOf("429", "RESOURCE_EXHAUSTED", "quota").any { text.contains(it, ignoreCase = true) } ->
+                "Gemini's quota is used up for now. Try again later, or enter the play manually."
+            else -> "The scoresheet could not be read. Try again, or enter the play manually."
+        }
+        val detail = text.lineSequence().firstOrNull { it.isNotBlank() }?.trim()?.take(120)
+        return if (detail.isNullOrBlank()) summary else "$summary\n\nDetails: $detail"
+    }
+
     fun extractScores(imageFile: File) {
+        if (!prefs.hasGeminiKey()) {
+            _extractedPlay.value = null
+            _scanError.value = "Scanning needs a Gemini API key. Add one in Settings > Scan, or enter the play manually."
+            return
+        }
+        if (!isOnline()) {
+            _extractedPlay.value = null
+            _scanError.value = "You are offline. Connect to the internet to scan, or enter the play manually."
+            return
+        }
         viewModelScope.launch {
             _scanStartedWithGame.value = (selectedGame?.id ?: 0) != 0
             Log.d(TAG_AUTO_SWITCH, "Scan started; preselectedGame=${selectedGame?.name ?: "none"} scanStartedWithGame=${_scanStartedWithGame.value}")
@@ -771,7 +798,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 }
             }.onFailure {
                 Log.e(TAG_AUTO_SWITCH, "Scan failed: ${it.message}")
-                _scanError.value = it.message
+                _scanError.value = scanErrorMessage(it.message)
             }
             _scanLoading.value = false
             _scanStreaming.value = false

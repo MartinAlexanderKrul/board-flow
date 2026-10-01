@@ -680,8 +680,14 @@ fun BoardFlowApp(
                     viewModel = appViewModel,
                     onPosted = {
                         appViewModel.clearLogPlayFlow()
+                        // Leave the scan/log screens first, then switch tabs exactly like the
+                        // bottom bar does. Navigating straight from here left the Log Play tab
+                        // restoring Journal on its next tap.
+                        navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false)
                         navController.navigate(AppRoutes.HISTORY) {
-                            popUpTo(AppRoutes.NEW_PLAY) { inclusive = false }
+                            popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     },
                     onChangeGame = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) },

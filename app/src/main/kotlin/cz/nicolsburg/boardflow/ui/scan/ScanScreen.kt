@@ -152,7 +152,7 @@ fun ScanScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Error:",
+                        text = "Scan failed",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.error
                     )

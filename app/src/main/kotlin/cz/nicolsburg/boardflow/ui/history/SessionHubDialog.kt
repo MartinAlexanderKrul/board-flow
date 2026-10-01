@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -238,9 +237,6 @@ private fun SessionHubSummaryCard(session: SessionHub) {
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
     ) {
-        val totalPoints = session.plays.sumOf { play ->
-            play.players.sumOf { p -> p.score.trim().toIntOrNull() ?: 0 }
-        }
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -254,9 +250,6 @@ private fun SessionHubSummaryCard(session: SessionHub) {
                 SummaryChip(Icons.Default.EmojiEvents, "${session.totalLoggedPlays} logged")
                 if (session.totalDurationMinutes > 0) {
                     SummaryChip(Icons.Default.Schedule, "${session.totalDurationMinutes} min")
-                }
-                if (totalPoints > 0) {
-                    SummaryChip(Icons.Default.Star, "$totalPoints pts")
                 }
                 if (session.location.isNotBlank()) {
                     SummaryChip(Icons.Default.LocationOn, session.location)

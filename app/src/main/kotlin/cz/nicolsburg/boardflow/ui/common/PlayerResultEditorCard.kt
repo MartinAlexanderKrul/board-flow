@@ -48,7 +48,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -262,6 +264,7 @@ fun PlayerResultEditorCard(
                         CompactTonalTextField(
                             value = player.score,
                             onValueChange = { onUpdate(player.copy(score = it)) },
+                            transformInput = ::replaceZeroPlaceholder,
                             label = "Score",
                             modifier = Modifier.focusRequester(scoreFocusRequester),
                             keyboardType = KeyboardType.Number,
@@ -424,6 +427,19 @@ private fun TogglePill(
     }
 }
 
+/**
+ * Roster players start with a "0" score. Typing into that field must replace the
+ * zero rather than extend it, otherwise 62 is saved as "062" or "620".
+ */
+internal fun replaceZeroPlaceholder(previous: String, updated: String): String {
+    if (previous != "0" || updated.length != 2) return updated
+    return when {
+        updated[0] == '0' -> updated.substring(1)
+        updated[1] == '0' -> updated.substring(0, 1)
+        else -> updated
+    }
+}
+
 @Composable
 private fun CompactTonalTextField(
     value: String,
@@ -438,50 +454,87 @@ private fun CompactTonalTextField(
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = 1,
-    trailingContent: @Composable (() -> Unit)? = null
+    trailingContent: @Composable (() -> Unit)? = null,
+    // Score entry: maps (previous text, typed text) to the text to keep. Edits are applied
+    // to local field state first, so fast typing never works from a stale value.
+    transformInput: ((previous: String, updated: String) -> String)? = null
 ) {
+    val labelContent: @Composable (() -> Unit)? = if (showLabel) {
+        {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+            )
+        }
+    } else null
+    val placeholderContent: @Composable (() -> Unit)? = (placeholder ?: if (showLabel) null else label)?.let {
+        {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (showLabel) 12.sp else 14.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+            )
+        }
+    }
+    val colors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
+        disabledBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f),
+        focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+    )
+    val fieldModifier = modifier.height(if (singleLine) 52.dp else 92.dp)
+
+    if (transformInput == null) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            readOnly = readOnly,
+            singleLine = singleLine,
+            minLines = minLines,
+            maxLines = maxLines,
+            shape = CompactFieldShape,
+            textStyle = textStyle,
+            label = labelContent,
+            placeholder = placeholderContent,
+            trailingIcon = trailingContent,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            colors = colors,
+            modifier = fieldModifier
+        )
+        return
+    }
+
+    var fieldValue by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    if (fieldValue.text != value) {
+        // The value changed from outside (scan result, play again, reset).
+        fieldValue = TextFieldValue(value, TextRange(value.length))
+    }
     OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = fieldValue,
+        onValueChange = { incoming ->
+            val text = transformInput(fieldValue.text, incoming.text)
+            fieldValue = if (text == incoming.text) incoming else TextFieldValue(text, TextRange(text.length))
+            if (text != value) onValueChange(text)
+        },
         readOnly = readOnly,
         singleLine = singleLine,
         minLines = minLines,
         maxLines = maxLines,
         shape = CompactFieldShape,
         textStyle = textStyle,
-        label = if (showLabel) {
-            {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
-                )
-            }
-        } else null,
-        placeholder = (placeholder ?: if (showLabel) null else label)?.let {
-            {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (showLabel) 12.sp else 14.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                )
-            }
-        },
+        label = labelContent,
+        placeholder = placeholderContent,
         trailingIcon = trailingContent,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
-            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f),
-            focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
-            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-        ),
-    modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
+        colors = colors,
+        modifier = fieldModifier
     )
 }
 

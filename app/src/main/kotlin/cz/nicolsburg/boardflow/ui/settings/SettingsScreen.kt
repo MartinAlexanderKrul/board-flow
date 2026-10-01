@@ -1406,6 +1406,22 @@ private fun CustomMoodsDialog(
     onDismiss: () -> Unit
 ) {
     val moods by viewModel.customMoods.collectAsState()
+    var moodPendingDelete by remember { mutableStateOf<String?>(null) }
+
+    moodPendingDelete?.let { mood ->
+        BoardFlowConfirmationDialog(
+            title = "Delete mood?",
+            message = "\"$mood\" will be removed from your templates and from every play that uses it. This cannot be undone.",
+            confirmLabel = "Delete",
+            dismissLabel = "Cancel",
+            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
+            onConfirm = {
+                viewModel.deleteCustomMood(mood)
+                moodPendingDelete = null
+            },
+            onDismiss = { moodPendingDelete = null }
+        )
+    }
 
     AnimatedDialog(onDismissRequest = onDismiss) {
         LazyColumn(
@@ -1461,7 +1477,7 @@ private fun CustomMoodsDialog(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
-                        IconButton(onClick = { viewModel.deleteCustomMood(mood) }) {
+                        IconButton(onClick = { moodPendingDelete = mood }) {
                             Icon(
                                 Icons.Default.Delete,
                                 contentDescription = "Delete mood",

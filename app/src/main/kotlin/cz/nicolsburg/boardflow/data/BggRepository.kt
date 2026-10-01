@@ -149,9 +149,23 @@ class BggRepository {
                 .post(body)
                 .build()
             val response = client.newCall(request).execute()
-            if (!response.isSuccessful) throw Exception("Login failed: HTTP ${response.code}")
+            if (!response.isSuccessful) {
+                // BGG explains a rejected login in the body, e.g. {"errors":{"message":"Invalid Username/Password"}}.
+                val reason = runCatching {
+                    JSONObject(response.body?.string().orEmpty()).optJSONObject("errors")?.optString("message")
+                }.getOrNull()?.takeIf { it.isNotBlank() }
+                Log.w(TAG, "Login rejected: HTTP ${response.code} reason=$reason")
+                throw Exception(
+                    if (response.code in setOf(400, 401, 403)) {
+                        "BGG sign-in failed" + (reason?.let { " ($it)" } ?: "") +
+                            ". Check your BGG username and password in Settings > Accounts."
+                    } else {
+                        "BGG sign-in failed (HTTP ${response.code}). Try again later."
+                    }
+                )
+            }
             val hasCookies = cookieStore["boardgamegeek.com"]?.any { it.name == "SessionID" } == true
-            if (!hasCookies) throw Exception("Login failed: no session cookie received")
+            if (!hasCookies) throw Exception("BGG sign-in failed: no session received. Try again later.")
             Log.i(TAG, "Login success for ${credentials.username}")
         }
     }

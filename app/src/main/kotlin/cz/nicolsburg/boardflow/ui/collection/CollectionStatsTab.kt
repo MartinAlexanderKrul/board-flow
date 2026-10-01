@@ -124,10 +124,21 @@ private fun computeStats(games: List<GameItem>): CollectionStats {
 fun CollectionStatsTab(
     games: List<GameItem>,
     onMarkAsPlayed: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
+    historyPlayCounts: Map<Int, Int> = emptyMap(),
 ) {
     var markedObjectIds by remember(games) { mutableStateOf(emptySet<String>()) }
-    val stats = remember(games, markedObjectIds) {
-        val base = computeStats(games)
+    val stats = remember(games, markedObjectIds, historyPlayCounts) {
+        // BGG's play count lags behind plays logged here until the next sync, so use
+        // whichever is higher. Display only: the canonical snapshot is not touched.
+        val withHistory = games.map { game ->
+            val logged = game.objectId.toIntOrNull()?.let { historyPlayCounts[it] } ?: 0
+            if (logged > (game.numPlays ?: 0)) {
+                game.copy(ownership = game.ownership.copy(bggPlayCount = logged))
+            } else {
+                game
+            }
+        }
+        val base = computeStats(withHistory)
         if (markedObjectIds.isEmpty()) base
         else base.copy(neverPlayedGames = base.neverPlayedGames.filter { it.objectId !in markedObjectIds })
     }

@@ -348,7 +348,7 @@ fun buildInsights(
             icon = Icons.AutoMirrored.Filled.TrendingUp,
             value = "$recent7",
             label = "This Week",
-            detail = "$recent7 plays in the last 7 days",
+            detail = "$recent7 ${if (recent7 == 1) "play" else "plays"} in the last 7 days",
             recentDaysFilter = 7
         ))
         mostThisMonth?.let { (name, count) ->

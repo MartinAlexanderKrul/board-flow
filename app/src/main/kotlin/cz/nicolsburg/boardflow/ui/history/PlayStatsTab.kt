@@ -557,11 +557,13 @@ private fun HeroObservationCard(observations: List<SmartObservation>, label: Str
                         color = mutedColor.copy(alpha = 0.72f)
                     )
                 }
-                Text(
-                    "Tap · ${(offset % observations.size) + 1} of ${observations.size}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = mutedColor.copy(alpha = 0.5f)
-                )
+                if (observations.size > 1) {
+                    Text(
+                        "Tap · ${(offset % observations.size) + 1} of ${observations.size}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = mutedColor.copy(alpha = 0.5f)
+                    )
+                }
             }
 
             // Shimmer overlay — single diagonal sweep, Epic/Legendary only

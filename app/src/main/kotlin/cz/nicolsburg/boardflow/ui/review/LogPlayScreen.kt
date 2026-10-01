@@ -192,7 +192,9 @@ fun LogPlayScreen(
         }
     }
 
-    val gameName = viewModel.selectedGame?.name ?: "Unknown game"
+    // Quick scan + "Enter manually" reaches this screen without a game.
+    val hasGame = (viewModel.selectedGame?.id ?: 0) != 0
+    val gameName = viewModel.selectedGame?.name ?: "No game selected"
     val headerGameName = if (additionalGames.isEmpty()) gameName
         else (listOf(gameName) + additionalGames.map { it.name }).joinToString(" + ")
 
@@ -375,7 +377,7 @@ fun LogPlayScreen(
                         }
                         BoardFlowButton(
                             onClick = ::submitPlay,
-                            enabled = !posting,
+                            enabled = !posting && hasGame,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -434,6 +436,7 @@ fun LogPlayScreen(
                             .sortedBy { it.lowercase() }
                     }
                     SessionDetailsCard(
+                        onChooseGame = onChooseGame.takeIf { !hasGame },
                         title = "Log Play",
                         gameName = headerGameName,
                         detectedGameHint = detectedGameHint,
@@ -673,7 +676,8 @@ private fun SessionDetailsCard(
     onQuantityDecrease: () -> Unit,
     onQuantityIncrease: () -> Unit,
     onIncompleteChange: (Boolean) -> Unit,
-    onNowInStatsChange: (Boolean) -> Unit
+    onNowInStatsChange: (Boolean) -> Unit,
+    onChooseGame: (() -> Unit)? = null
 ) {
     Surface(
         shape = BoardFlowSurfaceTokens.ContentCardShape,
@@ -687,7 +691,12 @@ private fun SessionDetailsCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CompactGameHeader(title = title, gameName = gameName, detectedGameHint = detectedGameHint)
+            CompactGameHeader(
+                title = title,
+                gameName = gameName,
+                detectedGameHint = detectedGameHint,
+                onChooseGame = onChooseGame
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -851,11 +860,16 @@ private fun SessionFieldLabel(text: String) {
 }
 
 @Composable
-private fun CompactGameHeader(title: String, gameName: String, detectedGameHint: String? = null) {
+private fun CompactGameHeader(
+    title: String,
+    gameName: String,
+    detectedGameHint: String? = null,
+    onChooseGame: (() -> Unit)? = null
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
             modifier = Modifier.weight(1f),
@@ -879,6 +893,9 @@ private fun CompactGameHeader(title: String, gameName: String, detectedGameHint:
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
                 )
             }
+        }
+        if (onChooseGame != null) {
+            BoardFlowSecondaryButton(onClick = onChooseGame) { Text("Choose game") }
         }
     }
 }
@@ -2103,7 +2120,8 @@ private fun RelatedGamesBanner(
     additionalGames: List<BggGame>,
     onToggleGame: (BggGame) -> Unit
 ) {
-    var dismissed by remember { mutableStateOf(false) }
+    // Saveable so the dismissal survives the banner scrolling out of the list.
+    var dismissed by rememberSaveable { mutableStateOf(false) }
     if (dismissed) return
 
     val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions

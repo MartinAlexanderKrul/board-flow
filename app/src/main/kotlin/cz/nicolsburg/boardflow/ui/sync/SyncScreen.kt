@@ -82,6 +82,21 @@ private fun List<LogEntry>.deriveSummary(): LogSummary? {
     if (isEmpty()) return null
     val header = lastOrNull { it.type == LogEntry.Type.HEADER }
     val result = lastOrNull { it.type == LogEntry.Type.DONE || it.type == LogEntry.Type.ERROR }
+
+    // A run can end on a DONE entry even though an earlier step failed (for example the
+    // play history fetch). Do not report that as a clean "Done".
+    val runStart = indexOfLast { it.type == LogEntry.Type.HEADER }.coerceAtLeast(0)
+    val runErrors = subList(runStart, size).filter { it.type == LogEntry.Type.ERROR }
+    if (result?.type == LogEntry.Type.DONE && runErrors.isNotEmpty()) {
+        val failed = if (runErrors.size == 1) "1 step failed" else "${runErrors.size} steps failed"
+        return LogSummary(
+            headline = "Finished with errors",
+            detail = listOfNotNull(result.status.ifBlank { null }, "$failed: ${runErrors.first().status}")
+                .joinToString(" - "),
+            isError = true
+        )
+    }
+
     val headline = when {
         result?.name?.contains("Collection cached", ignoreCase = true) == true -> "Collection updated"
         result?.name?.contains("Sleeve refresh", ignoreCase = true) == true -> "Sleeve data refreshed"
@@ -322,7 +337,8 @@ fun SyncScreen(
                             Text("Refresh Sleeve Sizes")
                         }
                         BoardFlowOutlinedButton(
-                            onClick = { triggerSync { syncViewModel.backupSleeveStatusToBgg() } },
+                            // Not a collection sync, so it skips the "Sync again?" prompt.
+                            onClick = { syncViewModel.backupSleeveStatusToBgg() },
                             enabled = !busy && hasBggCredentials,
                             modifier = Modifier.fillMaxWidth()
                         ) {

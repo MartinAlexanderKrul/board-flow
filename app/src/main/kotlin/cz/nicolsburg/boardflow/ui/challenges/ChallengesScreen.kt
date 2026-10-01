@@ -1501,6 +1501,24 @@ fun CreateChallengeDialog(
                 }
             }
 
+            // Say why the confirm button is disabled instead of leaving it silently inert.
+            val missingInput = when {
+                !gameOk -> "Pick a game to continue."
+                requiresSinglePlayer && !playerOk -> "Pick one player to continue."
+                requiresGroupPlayers && !playerOk -> "Pick at least two players to continue."
+                target <= 0 -> "Enter a target count above zero."
+                else -> null
+            }
+            if (missingInput != null) {
+                item {
+                    Text(
+                        missingInput,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
             item {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),

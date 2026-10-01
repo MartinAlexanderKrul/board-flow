@@ -249,6 +249,9 @@ fun CollectionScreen(
     }
 
     val playedGameIds = remember(historyPlays) { historyPlays.map { it.gameId }.toSet() }
+    val historyPlayCounts = remember(historyPlays) {
+        historyPlays.groupBy { it.gameId }.mapValues { (_, plays) -> plays.sumOf { it.quantity.coerceAtLeast(1) } }
+    }
 
     val filteredGames = remember(allGames, searchQuery, sortMode, tabMode, filterOwnership, filterPlayStatus, filterPlayers, filterBestFor, filterRecommendedFor, playedGameIds) {
         var result = allGames
@@ -503,7 +506,7 @@ fun CollectionScreen(
                                 initiallyExpandedGroup = sleevesHighlightGroup
                             )
 
-                            tabMode == TabMode.STATS -> CollectionStatsTab(allGames, onMarkAsPlayed)
+                            tabMode == TabMode.STATS -> CollectionStatsTab(allGames, onMarkAsPlayed, historyPlayCounts)
 
                             else -> {
                                 Column(modifier = Modifier.fillMaxSize()) {
