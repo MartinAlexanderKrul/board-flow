@@ -621,7 +621,7 @@
       "gameId": 355326,
       "gameName": "Heroes of Might and Magic III: The Board Game",
       "gameIds": [355326],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "355326.json"
     },
@@ -677,7 +677,7 @@
       "gameId": 367150,
       "gameName": "Dune: War for Arrakis",
       "gameIds": [367150],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "367150.json"
     },
@@ -685,7 +685,7 @@
       "gameId": 367966,
       "gameName": "Endeavor: Deep Sea",
       "gameIds": [367966],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "367966.json"
     },

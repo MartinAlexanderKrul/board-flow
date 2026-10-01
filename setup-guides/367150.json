@@ -2,54 +2,163 @@
   "schemaVersion": 1,
   "gameId": 367150,
   "gameName": "Dune: War for Arrakis",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Dune: War for Arrakis rulebook (CMON, via RulesPal)"]
+    "sources": [
+      "Dune: War for Arrakis rulebook (CMON)"
+    ]
   },
-  "players": { "min": 2, "max": 4 },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
   "sections": [
     {
       "id": "factions",
       "title": "Factions",
       "steps": [
-        { "id": "two", "text": "Each player leads a faction: Atreides (+ Fremen Ally) or Harkonnen (+ Corrino Ally)", "condition": { "players": [2] }, "ref": "Overview" },
-        { "id": "three", "text": "One player plays a faction alone; two share the other (recommended: share the Harkonnen - House Harkonnen and Corrino Ally)", "condition": { "players": [3] }, "ref": "Rules for 3-4 Players" },
-        { "id": "four", "text": "Both factions shared: House Atreides + Fremen Ally, House Harkonnen + Corrino Ally", "condition": { "players": [4] }, "ref": "Rules for 3-4 Players" }
+        {
+          "id": "two",
+          "text": "Each player leads a faction: Atreides (+ Fremen Ally) or Harkonnen (+ Corrino Ally)",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.6"
+        },
+        {
+          "id": "three",
+          "text": "One player plays a faction alone; two share the other (recommended: share the Harkonnen - House Harkonnen and Corrino Ally)",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "p.33"
+        },
+        {
+          "id": "four",
+          "text": "Both factions shared: House Atreides + Fremen Ally, House Harkonnen + Corrino Ally",
+          "condition": {
+            "players": [
+              4
+            ]
+          },
+          "ref": "p.33"
+        },
+        {
+          "id": "share-hark",
+          "text": "Shared Harkonnen: 3-4 player dashboards for House Harkonnen and Corrino Ally replace Giedi Prime; add Emperor Shaddam IV (in play) and Gaius Helen Mohiam figures and Leader cards; 3 Harkonnen Cone of Silence tokens",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.34"
+        },
+        {
+          "id": "share-atr",
+          "text": "Shared Atreides: 3-4 player dashboards for House Atreides and Fremen Ally replace Sietch Tabr; 3 Atreides Cone of Silence tokens",
+          "condition": {
+            "minPlayers": 3
+          },
+          "note": "3 players: only for the faction that is shared",
+          "ref": "p.33"
+        }
       ]
     },
     {
       "id": "atreides",
       "title": "Map & Atreides",
       "steps": [
-        { "id": "map", "text": "Arrange the two map sections", "ref": "Setup 1" },
-        { "id": "sietches", "text": "Shuffle 8 Sietch tokens facedown onto their Areas (only the Atreides may look)", "ref": "Setup 2" },
-        { "id": "garrisons", "text": "Shuffle the Atreides Garrison Deployment tokens; 1 token and 1 Naib Leader in each Sietch Area", "ref": "Setup 3" },
-        { "id": "deployment", "text": "Shuffle the standard Atreides Deployment tokens facedown by the Atreides player", "ref": "Setup 4" },
-        { "id": "stations", "text": "Shuffle 6 Ecological Testing Stations facedown onto their Areas", "ref": "Setup 7" }
+        {
+          "id": "map",
+          "text": "Arrange the two map sections",
+          "ref": "p.14"
+        },
+        {
+          "id": "sietches",
+          "text": "Shuffle 8 Sietch tokens facedown onto their Areas (only the Atreides may look)",
+          "ref": "p.14"
+        },
+        {
+          "id": "garrisons",
+          "text": "Shuffle the Atreides Garrison Deployment tokens; 1 token and 1 Naib Leader in each Sietch Area",
+          "ref": "p.14"
+        },
+        {
+          "id": "deployment",
+          "text": "Shuffle the standard Atreides Deployment tokens facedown by the Atreides player",
+          "ref": "p.14"
+        },
+        {
+          "id": "stations",
+          "text": "Shuffle 6 Ecological Testing Stations facedown onto their Areas",
+          "ref": "p.14"
+        }
       ]
     },
     {
       "id": "harkonnen",
       "title": "Harkonnen",
       "steps": [
-        { "id": "settlements", "text": "6 Harkonnen Settlements on their Areas (ratings public)", "ref": "Setup 5" },
-        { "id": "h-garrisons", "text": "Shuffle both Harkonnen Garrison Deployment sets; 1 of each type in each Settlement Area, then flip and replace with the figures", "ref": "Setup 6" },
-        { "id": "spice", "text": "Harkonnen: Spice Must Flow board with the 3 Imperium markers on \"start here\"", "ref": "Setup 12" }
+        {
+          "id": "settlements",
+          "text": "6 Harkonnen Settlements on their Areas (ratings public)",
+          "ref": "p.14"
+        },
+        {
+          "id": "h-garrisons",
+          "text": "Shuffle both Harkonnen Garrison Deployment sets; 1 of each type in each Settlement Area, then flip and replace with the figures",
+          "ref": "p.14"
+        },
+        {
+          "id": "spice",
+          "text": "Harkonnen: Spice Must Flow board with the 3 Imperium markers on \"start here\"",
+          "ref": "p.15"
+        }
       ]
     },
     {
       "id": "common",
       "title": "Tracks & cards",
       "steps": [
-        { "id": "markers", "text": "3 Prescience markers on 0 and the Supremacy marker on 0", "ref": "Setup 8" },
-        { "id": "prescience", "text": "Shuffle the Prescience cards facedown", "ref": "Setup 9" },
-        { "id": "wormsign", "text": "Shuffle 16 Wormsign tokens into a facedown pool", "ref": "Setup 10" },
-        { "id": "dashboards", "text": "Take faction dashboards; Named Leaders marked \"in play at start\" on their Action boxes", "ref": "Setup 11" },
-        { "id": "planning", "text": "Shuffle the 4 Planning decks, each by its back", "ref": "Setup 13" },
-        { "id": "objective", "text": "Atreides draws 1 of the 6 Secret Objective cards (hidden)", "ref": "Setup 14" },
-        { "id": "supply", "text": "Figures, dice and reference cards within reach", "ref": "Setup 15" }
+        {
+          "id": "markers",
+          "text": "3 Prescience markers on 0 and the Supremacy marker on 0",
+          "ref": "p.15"
+        },
+        {
+          "id": "prescience",
+          "text": "Shuffle the Prescience cards facedown",
+          "ref": "p.15"
+        },
+        {
+          "id": "wormsign",
+          "text": "Shuffle 16 Wormsign tokens into a facedown pool",
+          "ref": "p.15"
+        },
+        {
+          "id": "dashboards",
+          "text": "Take faction dashboards; Named Leaders marked \"in play at start\" on their Action boxes",
+          "ref": "p.15"
+        },
+        {
+          "id": "planning",
+          "text": "Shuffle the 4 Planning decks, each by its back",
+          "ref": "p.15"
+        },
+        {
+          "id": "objective",
+          "text": "Atreides draws 1 of the 6 Secret Objective cards (hidden)",
+          "ref": "p.15"
+        },
+        {
+          "id": "supply",
+          "text": "Figures, dice and reference cards within reach",
+          "ref": "p.15"
+        }
       ]
     },
     {
@@ -57,7 +166,22 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "shared", "text": "Shared factions play cooperatively and win together", "condition": { "minPlayers": 3 }, "ref": "Rules for 3-4 Players" }
+        {
+          "id": "shared",
+          "text": "Shared factions play cooperatively and win together",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.33"
+        },
+        {
+          "id": "shared-hand",
+          "text": "Shared faction: each player draws from their own subfaction deck, hand limit 3; discard a Cone of Silence token to confer in secret",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.34"
+        }
       ]
     },
     {
@@ -65,7 +189,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "round", "text": "Round 1: Harkonnen places vehicles, then Action Resolution starting with the Atreides", "ref": "Game Round" }
+        {
+          "id": "round",
+          "text": "Start of round: draw 1 Planning card from each of your decks and reveal 3 Prescience cards; then the Harkonnen place vehicles",
+          "ref": "p.15"
+        }
       ]
     }
   ]

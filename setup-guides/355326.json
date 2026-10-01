@@ -2,33 +2,178 @@
   "schemaVersion": 1,
   "gameId": 355326,
   "gameName": "Heroes of Might and Magic III: The Board Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Heroes of Might and Magic III: The Board Game rulebook (Archon Studio, via RulesPal)"]
+    "sources": [
+      "Heroes of Might and Magic III: The Board Game rulebook (Archon Studio)"
+    ]
   },
-  "players": { "min": 1, "max": 3 },
+  "players": {
+    "min": 1,
+    "max": 3
+  },
   "modules": [
-    { "id": "clash", "name": "Clash", "group": "Mode", "defaultEnabled": true, "players": { "min": 2, "max": 3 } },
-    { "id": "coop", "name": "Co-op", "group": "Mode", "players": { "min": 2, "max": 3 } },
-    { "id": "campaign", "name": "Solo campaign", "group": "Mode", "forcedAtPlayers": [1] }
+    {
+      "id": "clash",
+      "name": "Clash",
+      "group": "Mode",
+      "defaultEnabled": true,
+      "players": {
+        "min": 2,
+        "max": 3
+      }
+    },
+    {
+      "id": "coop",
+      "name": "Co-op",
+      "group": "Mode",
+      "players": {
+        "min": 2,
+        "max": 3
+      }
+    },
+    {
+      "id": "campaign",
+      "name": "Solo campaign",
+      "group": "Mode",
+      "forcedAtPlayers": [
+        1
+      ]
+    }
   ],
   "sections": [
     {
       "id": "scenario",
-      "title": "Scenario",
+      "title": "Scenario & factions",
       "steps": [
-        { "id": "scenario", "text": "Pick a {m} scenario from the Mission Book and set up its map and rules", "amounts": { "m": { "default": "Clash", "cases": [{ "when": { "modules": ["coop"] }, "value": "Co-op" }, { "when": { "modules": ["campaign"] }, "value": "solo campaign" }] } }, "note": "Tutorial: Brave New World (Mission Book p.7)", "ref": "Game Setup 1" }
+        {
+          "id": "scenario",
+          "text": "Pick a {m} scenario from the Mission Book",
+          "amounts": {
+            "m": {
+              "default": "Clash",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "coop"
+                    ]
+                  },
+                  "value": "Co-op"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "campaign"
+                    ]
+                  },
+                  "value": "solo campaign"
+                }
+              ]
+            }
+          },
+          "note": "Tutorial: Brave New World (Mission Book p.7)",
+          "ref": "p.7"
+        },
+        {
+          "id": "faction",
+          "text": "Choose a faction (core: Castle, Dungeon, Necropolis); on a tie the highest Resource die roll picks first",
+          "ref": "p.7"
+        },
+        {
+          "id": "hero",
+          "text": "Choose one of your faction's Heroes as your Main Hero; a faction cube on level 1 of the Hero card",
+          "ref": "p.7-8"
+        },
+        {
+          "id": "components",
+          "text": "Take your faction's Hero card, 2 Hero models, 7 Town Building tiles, Town board, 7 Unit cards, 3 Specialty cards and Ability card for your Hero, 20 cubes, Build, Population and Spell Book tokens",
+          "ref": "p.7"
+        }
       ]
     },
     {
-      "id": "factions",
-      "title": "Factions",
+      "id": "map",
+      "title": "Map & town",
       "steps": [
-        { "id": "faction", "text": "Choose a faction: Castle, Dungeon or Necropolis (tie: highest Resource die roll picks first)", "ref": "Game Setup 2" },
-        { "id": "hero", "text": "Choose one of your faction's Heroes as your Main Hero", "ref": "Game Setup 3" },
-        { "id": "components", "text": "Take your faction's Hero card, 2 Hero models, 7 Town Building tiles, Town board, 7 Unit cards, 3 Specialty cards and 1 Ability card for your Hero, 20 cubes, Build, Population and Spell Book tokens", "ref": "Game Setup 4" }
+        {
+          "id": "map",
+          "text": "Lay out the Map tiles for your player count as the Mission Book shows",
+          "ref": "p.8"
+        },
+        {
+          "id": "town",
+          "text": "Town board in front of you, Building tiles beside it; place the buildings the scenario starts with",
+          "ref": "p.8"
+        },
+        {
+          "id": "income",
+          "text": "Starting income from the scenario on the income tracker; Population, Build and Spell Book tokens on their spots",
+          "ref": "p.8"
+        },
+        {
+          "id": "resources",
+          "text": "Resource tokens in piles; take the scenario's starting resources next to your Hero card",
+          "ref": "p.8"
+        },
+        {
+          "id": "tokens",
+          "text": "All other tokens in piles within reach",
+          "ref": "p.8"
+        }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Decks",
+      "steps": [
+        {
+          "id": "stats",
+          "text": "Statistic cards in 4 piles (Attack, Defense, Power, Knowledge); take the numbers shown on your Hero card as your starting deck",
+          "ref": "p.8"
+        },
+        {
+          "id": "arrow",
+          "text": "Add Magic Arrow: 1 copy for a Might hero, 2 for a Magic hero",
+          "ref": "p.8"
+        },
+        {
+          "id": "specialty",
+          "text": "Add your Hero's Ability card and Level 1 Specialty card; shuffle the deck facedown by your Hero card",
+          "ref": "p.8"
+        },
+        {
+          "id": "shared-decks",
+          "text": "Ability, Artifact and Spell cards in 3 facedown decks; flip the top card of each beside it as its discard pile",
+          "ref": "p.8"
+        },
+        {
+          "id": "difficulty",
+          "text": "Choose the starting difficulty and take its Starting Bonus(es)",
+          "ref": "p.8, p.35"
+        },
+        {
+          "id": "neutrals",
+          "text": "Neutral Units in 4 shuffled decks by tier (Bronze, Silver, Gold, Azure), room for discards",
+          "ref": "p.8"
+        },
+        {
+          "id": "combat",
+          "text": "Combat board next to the Map; set aside the starting units the scenario gives you",
+          "ref": "p.8"
+        },
+        {
+          "id": "round",
+          "text": "Round tracker by the Map with a black cube on 1; shuffle the Astrologers Proclaim cards facedown beside it",
+          "ref": "p.8"
+        },
+        {
+          "id": "place-hero",
+          "text": "Rotate your Starting tile as you like; Hero model on the field with the Town",
+          "ref": "p.8"
+        }
       ]
     },
     {
@@ -36,8 +181,16 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "rounds", "text": "Rounds alternate: Resource round (collect income), then Astrologers' round (draw a Proclaim card)", "ref": "Round Order" },
-        { "id": "tracker", "text": "Advance the black cube on the Round tracker after every player's turn", "ref": "Round Order" }
+        {
+          "id": "rounds",
+          "text": "Rounds alternate: Resource round (collect income), then Astrologers' round (draw a Proclaim card)",
+          "ref": "p.8"
+        },
+        {
+          "id": "tracker",
+          "text": "Advance the black cube on the Round tracker after every player's turn",
+          "ref": "p.8"
+        }
       ]
     },
     {
@@ -45,7 +198,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "Begin with a Resource round", "ref": "Round Order" }
+        {
+          "id": "first",
+          "text": "Fastest to list 5 Neutral units from HoMM III goes first (or highest Attack die roll)",
+          "ref": "p.8"
+        }
       ]
     }
   ]
