@@ -2,48 +2,447 @@
   "schemaVersion": 1,
   "gameId": 230914,
   "gameName": "Carcassonne Big Box 6",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Carcassonne rulebook (Z-Man, via RulesPal)", "Carcassonne Complete Annotated Rules v7.3 (River, Inns & Cathedrals, Traders & Builders, The Abbot)"]
+    "sources": [
+      "Carcassonne rulebook (Z-Man, via RulesPal)",
+      "Carcassonne Complete Annotated Rules v7.3 (River, Inns & Cathedrals, Traders & Builders, The Abbot)"
+    ]
   },
-  "players": { "min": 2, "max": 6 },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
   "modules": [
-    { "id": "river", "name": "The River", "bggId": 2591 },
-    { "id": "abbot", "name": "The Abbot" },
-    { "id": "inns", "name": "Inns & Cathedrals", "bggId": 2993 },
-    { "id": "traders", "name": "Traders & Builders", "bggId": 5405 }
+    {
+      "id": "river",
+      "name": "The River",
+      "bggId": 2591
+    },
+    {
+      "id": "abbot",
+      "name": "The Abbot"
+    },
+    {
+      "id": "inns",
+      "name": "Inns & Cathedrals",
+      "bggId": 2993
+    },
+    {
+      "id": "traders",
+      "name": "Traders & Builders",
+      "bggId": 5405
+    },
+    {
+      "id": "flier",
+      "name": "Mini 1: The Flying Machines",
+      "bggId": 118615,
+      "note": "In Big Box 6."
+    },
+    {
+      "id": "messages",
+      "name": "Mini 2: The Messengers",
+      "bggId": 118619,
+      "note": "In Big Box 6."
+    },
+    {
+      "id": "ferries",
+      "name": "Mini 3: The Ferries",
+      "bggId": 118614,
+      "note": "In Big Box 6."
+    },
+    {
+      "id": "goldmines",
+      "name": "Mini 4: The Gold Mines",
+      "bggId": 118617,
+      "note": "In Big Box 6."
+    },
+    {
+      "id": "mage",
+      "name": "Mini 5: Mage & Witch",
+      "bggId": 118618,
+      "note": "In Big Box 6."
+    },
+    {
+      "id": "robbers",
+      "name": "Mini 6: The Robbers",
+      "bggId": 118616,
+      "note": "In Big Box 6."
+    },
+    {
+      "id": "crop",
+      "name": "Corn Circles II",
+      "bggId": 120686
+    },
+    {
+      "id": "dragon",
+      "name": "Exp. 3: The Princess & the Dragon",
+      "bggId": 15158
+    },
+    {
+      "id": "tower",
+      "name": "Exp. 4: The Tower",
+      "bggId": 21385
+    },
+    {
+      "id": "abbey",
+      "name": "Exp. 5: Abbey & Mayor",
+      "bggId": 31784
+    },
+    {
+      "id": "count",
+      "name": "Exp. 6: Count, King & Robber",
+      "bggId": 33458
+    },
+    {
+      "id": "bridges",
+      "name": "Exp. 8: Bridges, Castles & Bazaars",
+      "bggId": 66646
+    },
+    {
+      "id": "sheep",
+      "name": "Exp. 9: Hills & Sheep",
+      "bggId": 153773
+    }
   ],
   "sections": [
     {
       "id": "tiles",
       "title": "Tiles",
       "steps": [
-        { "id": "start-tile", "text": "Start tile (dark back) faceup in the center", "condition": { "notModules": ["river"] }, "ref": "Components and Setup" },
-        { "id": "river", "text": "River: spring tile in the center; lake tile aside; shuffle the other 10 river tiles facedown in their own stack", "note": "Draw river tiles until gone, then place the lake and continue normally; no 180-degree river U-turns", "condition": { "modules": ["river"] }, "ref": "Annotated Rules p.27" },
-        { "id": "river-start", "text": "The normal start tile: shuffle into the river stack, or place it when the river is done", "condition": { "modules": ["river"] }, "ref": "Annotated Rules p.28" },
-        { "id": "inns-tiles", "text": "Add the 18 Inns & Cathedrals land tiles", "condition": { "modules": ["inns"] }, "ref": "Annotated Rules p.31" },
-        { "id": "traders-tiles", "text": "Add the 24 Traders & Builders land tiles", "condition": { "modules": ["traders"] }, "ref": "Annotated Rules p.35" },
-        { "id": "stacks", "text": "Shuffle the landscape tiles facedown into several stacks within reach", "ref": "Components and Setup" }
+        {
+          "id": "start-tile",
+          "text": "Start tile (dark back) faceup in the center",
+          "condition": {
+            "notModules": [
+              "river",
+              "count"
+            ]
+          },
+          "ref": "Components and Setup"
+        },
+        {
+          "id": "river",
+          "text": "River: spring tile in the center; lake tile aside; shuffle the other 10 river tiles facedown in their own stack",
+          "note": "Draw river tiles until gone, then place the lake and continue normally; no 180-degree river U-turns",
+          "condition": {
+            "modules": [
+              "river"
+            ]
+          },
+          "ref": "Annotated Rules p.27"
+        },
+        {
+          "id": "river-start",
+          "text": "The normal start tile: shuffle into the river stack, or place it when the river is done",
+          "condition": {
+            "modules": [
+              "river"
+            ]
+          },
+          "ref": "Annotated Rules p.28"
+        },
+        {
+          "id": "inns-tiles",
+          "text": "Add the 18 Inns & Cathedrals land tiles",
+          "condition": {
+            "modules": [
+              "inns"
+            ]
+          },
+          "ref": "Annotated Rules p.31"
+        },
+        {
+          "id": "traders-tiles",
+          "text": "Add the 24 Traders & Builders land tiles",
+          "condition": {
+            "modules": [
+              "traders"
+            ]
+          },
+          "ref": "Annotated Rules p.35"
+        },
+        {
+          "id": "mini-tiles",
+          "text": "Mix in the 8 flying machine land tiles; die within reach",
+          "condition": {
+            "modules": [
+              "flier"
+            ]
+          },
+          "ref": "Annotated Rules p.139"
+        },
+        {
+          "id": "ferry-tiles",
+          "text": "Mix in the 8 lake tiles; wooden ferries within reach",
+          "condition": {
+            "modules": [
+              "ferries"
+            ]
+          },
+          "ref": "Annotated Rules p.147"
+        },
+        {
+          "id": "gold-tiles",
+          "text": "Mix in the 8 gold tiles; gold pieces within reach",
+          "condition": {
+            "modules": [
+              "goldmines"
+            ]
+          },
+          "ref": "Annotated Rules p.151"
+        },
+        {
+          "id": "mage-tiles",
+          "text": "Mix in the 8 mage tiles; Mage and Witch figures within reach",
+          "condition": {
+            "modules": [
+              "mage"
+            ]
+          },
+          "ref": "Annotated Rules p.154"
+        },
+        {
+          "id": "robber-tiles",
+          "text": "Mix in the 8 robber tiles",
+          "condition": {
+            "modules": [
+              "robbers"
+            ]
+          },
+          "ref": "Annotated Rules p.157"
+        },
+        {
+          "id": "crop-tiles",
+          "text": "Mix in the 6 crop circle tiles",
+          "condition": {
+            "modules": [
+              "crop"
+            ]
+          },
+          "ref": "Annotated Rules p.164"
+        },
+        {
+          "id": "dragon-tiles",
+          "text": "Mix in the 30 Princess & Dragon tiles; dragon and fairy figures within reach",
+          "condition": {
+            "modules": [
+              "dragon"
+            ]
+          },
+          "ref": "Annotated Rules p.52"
+        },
+        {
+          "id": "tower-tiles",
+          "text": "Mix in the 18 Tower tiles (draw from the tile tower)",
+          "condition": {
+            "modules": [
+              "tower"
+            ]
+          },
+          "ref": "Annotated Rules p.68"
+        },
+        {
+          "id": "abbey-tiles",
+          "text": "Mix in the 12 Abbey & Mayor tiles",
+          "condition": {
+            "modules": [
+              "abbey"
+            ]
+          },
+          "ref": "Annotated Rules p.76"
+        },
+        {
+          "id": "count-city",
+          "text": "Count: the 12 city tiles form the city of Carcassonne as the start (no start tile); mix in the King & Robber tiles; King and Robber Baron tiles aside",
+          "condition": {
+            "modules": [
+              "count"
+            ]
+          },
+          "ref": "Annotated Rules p.41-43"
+        },
+        {
+          "id": "bridge-tiles",
+          "text": "Mix in the 12 Bridges, Castles & Bazaars tiles",
+          "condition": {
+            "modules": [
+              "bridges"
+            ]
+          },
+          "ref": "Annotated Rules p.111"
+        },
+        {
+          "id": "sheep-tiles",
+          "text": "Mix in the 18 Hills & Sheep tiles; all sheep and wolf tokens in the bag",
+          "condition": {
+            "modules": [
+              "sheep"
+            ]
+          },
+          "ref": "Annotated Rules p.175"
+        },
+        {
+          "id": "stacks",
+          "text": "Shuffle the landscape tiles facedown into several stacks within reach",
+          "ref": "Components and Setup"
+        }
       ]
     },
     {
       "id": "scoring",
       "title": "Scoring",
       "steps": [
-        { "id": "board", "text": "Scoring board to the side; 50/100 point tiles set aside", "ref": "Components and Setup" },
-        { "id": "trade", "text": "20 trade counters (wine, grain, cloth) as a supply", "condition": { "modules": ["traders"] }, "ref": "Annotated Rules p.35" }
+        {
+          "id": "board",
+          "text": "Scoring board to the side; 50/100 point tiles set aside",
+          "ref": "Components and Setup"
+        },
+        {
+          "id": "trade",
+          "text": "20 trade counters (wine, grain, cloth) as a supply",
+          "condition": {
+            "modules": [
+              "traders"
+            ]
+          },
+          "ref": "Annotated Rules p.35"
+        },
+        {
+          "id": "messages",
+          "text": "Shuffle the 8 Message tiles facedown beside the scoreboard",
+          "condition": {
+            "modules": [
+              "messages"
+            ]
+          },
+          "ref": "Annotated Rules p.143"
+        }
       ]
     },
     {
       "id": "players",
       "title": "Players",
       "steps": [
-        { "id": "meeples", "text": "Each player takes 7 meeples of a color; the 8th on 0 of the scoring board", "ref": "Components and Setup" },
-        { "id": "abbot", "text": "Each player takes their Abbot", "condition": { "modules": ["abbot"] }, "ref": "Annotated Rules p.197" },
-        { "id": "big", "text": "Each player takes their big follower", "condition": { "modules": ["inns"] }, "ref": "Annotated Rules p.31" },
-        { "id": "builder-pig", "text": "Each player takes their builder and pig", "condition": { "modules": ["traders"] }, "ref": "Annotated Rules p.35" }
+        {
+          "id": "meeples",
+          "text": "Each player takes 7 meeples of a color; the 8th on 0 of the scoring board",
+          "ref": "Components and Setup"
+        },
+        {
+          "id": "abbot",
+          "text": "Each player takes their Abbot",
+          "condition": {
+            "modules": [
+              "abbot"
+            ]
+          },
+          "ref": "Annotated Rules p.197"
+        },
+        {
+          "id": "big",
+          "text": "Each player takes their big follower",
+          "condition": {
+            "modules": [
+              "inns"
+            ]
+          },
+          "ref": "Annotated Rules p.31"
+        },
+        {
+          "id": "builder-pig",
+          "text": "Each player takes their builder and pig",
+          "condition": {
+            "modules": [
+              "traders"
+            ]
+          },
+          "ref": "Annotated Rules p.35"
+        },
+        {
+          "id": "woman",
+          "text": "Each player also puts their woman follower on 0 of the scoreboard (two scoring figures each)",
+          "condition": {
+            "modules": [
+              "messages"
+            ]
+          },
+          "ref": "Annotated Rules p.143"
+        },
+        {
+          "id": "robber",
+          "text": "Each player takes the robber of their color",
+          "condition": {
+            "modules": [
+              "robbers"
+            ]
+          },
+          "ref": "Annotated Rules p.157"
+        },
+        {
+          "id": "tower-pieces",
+          "text": "Each player takes {n} tower pieces",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 10,
+                "3": 9,
+                "4": 7,
+                "5": 6,
+                "6": 5
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "tower"
+            ]
+          },
+          "ref": "Annotated Rules p.68"
+        },
+        {
+          "id": "abbey-pieces",
+          "text": "Each player takes an abbey tile, a mayor, a barn and a wagon",
+          "condition": {
+            "modules": [
+              "abbey"
+            ]
+          },
+          "ref": "Annotated Rules p.76"
+        },
+        {
+          "id": "bridge-pieces",
+          "text": "Each player takes {n} bridges and {n} castles",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 3,
+                "4": 3,
+                "5": 2,
+                "6": 2
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "bridges"
+            ]
+          },
+          "ref": "Annotated Rules p.111"
+        },
+        {
+          "id": "shepherd",
+          "text": "Each player takes their shepherd",
+          "condition": {
+            "modules": [
+              "sheep"
+            ]
+          },
+          "ref": "Annotated Rules p.175"
+        }
       ]
     },
     {
@@ -51,9 +450,31 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "farmers", "text": "Farmers stay put until the end of the game", "ref": "Gameplay" },
-        { "id": "inns-zero", "text": "Unfinished roads with an inn and cities with a cathedral score 0 at game end", "condition": { "modules": ["inns"] }, "ref": "Annotated Rules p.32-33" },
-        { "id": "river-farms", "text": "River segments separate farms; no followers on the river itself", "condition": { "modules": ["river"] }, "ref": "Annotated Rules p.27" }
+        {
+          "id": "farmers",
+          "text": "Farmers stay put until the end of the game",
+          "ref": "Gameplay"
+        },
+        {
+          "id": "inns-zero",
+          "text": "Unfinished roads with an inn and cities with a cathedral score 0 at game end",
+          "condition": {
+            "modules": [
+              "inns"
+            ]
+          },
+          "ref": "Annotated Rules p.32-33"
+        },
+        {
+          "id": "river-farms",
+          "text": "River segments separate farms; no followers on the river itself",
+          "condition": {
+            "modules": [
+              "river"
+            ]
+          },
+          "ref": "Annotated Rules p.27"
+        }
       ]
     },
     {
@@ -61,7 +482,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "The youngest player starts; play is clockwise", "ref": "Gameplay" }
+        {
+          "id": "first",
+          "text": "The youngest player starts; play is clockwise",
+          "ref": "Gameplay"
+        }
       ]
     }
   ]
