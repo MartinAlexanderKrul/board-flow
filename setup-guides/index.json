@@ -90,6 +90,22 @@
       "path": "77423.json"
     },
     {
+      "gameId": 115746,
+      "gameName": "War of the Ring: Second Edition",
+      "gameIds": [115746],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "115746.json"
+    },
+    {
+      "gameId": 124668,
+      "gameName": "The Dwarves",
+      "gameIds": [124668],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "124668.json"
+    },
+    {
       "gameId": 133473,
       "gameName": "Sushi Go!",
       "gameIds": [133473],
@@ -237,7 +253,7 @@
       "gameId": 216849,
       "gameName": "Dominion (Second Edition) Big Box",
       "gameIds": [216849],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "216849.json"
     },
@@ -746,6 +762,14 @@
       "path": "410201.json"
     },
     {
+      "gameId": 421006,
+      "gameName": "The Lord of the Rings: Duel for Middle-earth",
+      "gameIds": [421006],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "421006.json"
+    },
+    {
       "gameId": 421165,
       "gameName": "Pantheum: Demigods of Olympia",
       "gameIds": [421165],
@@ -768,6 +792,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "425005.json"
+    },
+    {
+      "gameId": 429293,
+      "gameName": "The Lord of the Rings: The Fellowship of the Ring – Trick-Taking Game",
+      "gameIds": [429293],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "429293.json"
     },
     {
       "gameId": 436126,

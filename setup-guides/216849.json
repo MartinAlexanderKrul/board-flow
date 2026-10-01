@@ -2,39 +2,127 @@
   "schemaVersion": 1,
   "gameId": 216849,
   "gameName": "Dominion (Second Edition) Big Box",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Dominion rulebook (Rio Grande Games, via RulesPal)"]
+    "sources": [
+      "Dominion rulebook (Rio Grande Games, via RulesPal)",
+      "5-6 player adjustments provided by the owner"
+    ]
   },
-  "players": { "min": 2, "max": 4 },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
   "sections": [
     {
       "id": "supply",
       "title": "Basic supply",
       "steps": [
-        { "id": "copper", "text": "Each player takes 7 Coppers; remaining Copper, all Silver and all Gold in faceup Supply piles", "ref": "Preparation" },
-        { "id": "victory", "text": "Each player takes 3 Estates; {n} each of Estate, Duchy and Province in the Supply; box the rest", "amounts": { "n": { "byPlayers": { "2": 8, "3": 12, "4": 12 } } }, "ref": "Preparation" },
-        { "id": "curse", "text": "{n} Curse cards in the Supply; box the rest", "amounts": { "n": { "byPlayers": { "2": 10, "3": 20, "4": 30 } } }, "ref": "Preparation" },
-        { "id": "trash", "text": "Trash card to mark the trash pile", "ref": "Preparation" }
+        {
+          "id": "copper",
+          "text": "Each player takes 7 Coppers; remaining Copper, all Silver and all Gold in faceup Supply piles",
+          "ref": "Preparation",
+          "note": "5-6 players: add all the extra Copper, Silver and Gold from the Big Box"
+        },
+        {
+          "id": "victory",
+          "text": "Each player takes 3 Estates; {n} each of Estate and Duchy, {p} Provinces in the Supply; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 8,
+                "3": 12,
+                "4": 12,
+                "5": 12,
+                "6": 12
+              }
+            },
+            "p": {
+              "byPlayers": {
+                "2": 8,
+                "3": 12,
+                "4": 12,
+                "5": 15,
+                "6": 18
+              }
+            }
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "curse",
+          "text": "{n} Curse cards in the Supply; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 10,
+                "3": 20,
+                "4": 30,
+                "5": 40,
+                "6": 50
+              }
+            }
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "trash",
+          "text": "Trash card to mark the trash pile",
+          "ref": "Preparation"
+        }
       ]
     },
     {
       "id": "kingdom",
       "title": "Kingdom",
       "steps": [
-        { "id": "choose", "text": "Choose 10 Kingdom cards (e.g. draw 10 Randomizers or a suggested set); 10 of each in faceup piles", "ref": "Kingdom Cards" },
-        { "id": "victory-kingdom", "text": "Kingdom Victory piles (e.g. Gardens) use {n} cards", "amounts": { "n": { "byPlayers": { "2": 8, "3": 12, "4": 12 } } }, "ref": "Kingdom Cards" },
-        { "id": "placeholders", "text": "Optional: Randomizers as placeholders under each pile; box unused Kingdom cards", "ref": "Kingdom Cards" }
+        {
+          "id": "choose",
+          "text": "Choose 10 Kingdom cards (e.g. draw 10 Randomizers or a suggested set); 10 of each in faceup piles",
+          "ref": "Kingdom Cards"
+        },
+        {
+          "id": "victory-kingdom",
+          "text": "Kingdom Victory piles (e.g. Gardens) use {n} cards",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 8,
+                "3": 12,
+                "4": 12,
+                "5": 12,
+                "6": 12
+              }
+            }
+          },
+          "ref": "Kingdom Cards"
+        },
+        {
+          "id": "placeholders",
+          "text": "Optional: Randomizers as placeholders under each pile; box unused Kingdom cards",
+          "ref": "Kingdom Cards"
+        }
       ]
     },
     {
       "id": "players",
       "title": "Players",
       "steps": [
-        { "id": "deck", "text": "Shuffle your 7 Coppers + 3 Estates facedown as your deck", "ref": "Preparation" },
-        { "id": "hand", "text": "Draw {n} cards", "amounts": { "n": 5 }, "ref": "Preparation" }
+        {
+          "id": "deck",
+          "text": "Shuffle your 7 Coppers + 3 Estates facedown as your deck",
+          "ref": "Preparation"
+        },
+        {
+          "id": "hand",
+          "text": "Draw {n} cards",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "Preparation"
+        }
       ]
     },
     {
@@ -42,8 +130,25 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "end", "text": "Game ends when the Provinces run out or any 3 Supply piles are empty", "ref": "End of the Game" },
-        { "id": "tie", "text": "Ties go to the player with fewer turns", "ref": "End of the Game" }
+        {
+          "id": "end",
+          "text": "Game ends when the Provinces run out or any {n} Supply piles are empty",
+          "ref": "End of the Game",
+          "amounts": {
+            "n": {
+              "default": 3,
+              "byPlayers": {
+                "5": 4,
+                "6": 4
+              }
+            }
+          }
+        },
+        {
+          "id": "tie",
+          "text": "Ties go to the player with fewer turns",
+          "ref": "End of the Game"
+        }
       ]
     },
     {
@@ -51,7 +156,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "Random starting player (next game: left of the last winner); play is clockwise", "ref": "Gameplay" }
+        {
+          "id": "first",
+          "text": "Random starting player (next game: left of the last winner); play is clockwise",
+          "ref": "Gameplay"
+        }
       ]
     }
   ]

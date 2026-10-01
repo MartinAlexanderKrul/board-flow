@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "gameId": 429293,
+  "gameName": "The Lord of the Rings: The Fellowship of the Ring – Trick-Taking Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["The Fellowship of the Ring: Trick-Taking Game rulebook (via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "sections": [
+    {
+      "id": "chapter",
+      "title": "Chapter",
+      "steps": [
+        { "id": "card", "text": "Your chapter card and the character cards it lists faceup in the center", "note": "Start with Chapter 1 \"A Long-expected Party\"", "ref": "Chapter 1 Setup 1" },
+        { "id": "stars", "text": "A star token next to each character marked * on the chapter card", "ref": "Chapter 1 Setup 2" }
+      ]
+    },
+    {
+      "id": "deal",
+      "title": "Deal",
+      "steps": [
+        { "id": "lost", "text": "Shuffle the main deck; deal 1 faceup lost card by the chapter card (if it's the 1 of Rings, deal another and shuffle it back)", "condition": { "minPlayers": 2 }, "ref": "Chapter 1 Setup 3" },
+        { "id": "hands", "text": "Deal {n} cards to each player (secret)", "amounts": { "n": { "byPlayers": { "2": 12, "3": 12, "4": 9 } } }, "condition": { "minPlayers": 2 }, "ref": "Chapter 1 Setup 4" },
+        { "id": "pyramid", "text": "2 players: one extra 12-card hand becomes the pyramid - top row 3 (2 up, 1 down), middle 4 facedown, bottom 5 faceup; the 1 of Rings holder controls it", "note": "If the pyramid has the 1 of Rings it is Frodo, controlled by the player to its right", "condition": { "players": [2] }, "ref": "Rule Changes for 2 Players" },
+        { "id": "solo-deal", "text": "Set aside the 1 of Rings; deal the lost card; then 3 faceup hands of 4 and one of 3 + the 1 of Rings; the rest is a draw deck", "condition": { "players": [1] }, "ref": "Solo Setup" }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "steps": [
+        { "id": "frodo", "text": "Whoever has the 1 of Rings takes Frodo (side for {s}) and the Ring token, Cannot Lead Rings side up", "amounts": { "s": { "default": "3 players", "byPlayers": { "4": "4 players" } } }, "ref": "Chapter 1 Setup 5" },
+        { "id": "pick", "text": "From Frodo's left, each player picks a character; starred characters must be chosen; then remove the stars", "ref": "Chapter 1 Setup 6" },
+        { "id": "setup-actions", "text": "From Frodo's left, resolve setup actions (exchanges pass 1 card facedown and get 1 back)", "note": "Frodo may not exchange the 1 of Rings", "ref": "Chapter 1 Setup 7" },
+        { "id": "solo-exchange", "text": "Solo: only 1 character's exchange per round", "condition": { "players": [1] }, "ref": "Solo Setup" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "lead", "text": "Frodo leads the first trick", "ref": "Trick-Taking" }
+      ]
+    }
+  ]
+}

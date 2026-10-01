@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 1,
+  "gameId": 124668,
+  "gameName": "The Dwarves",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Dwarves rulebook (Pegasus Spiele, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "modules": [
+    {
+      "id": "easy",
+      "name": "Easy",
+      "group": "Difficulty",
+      "defaultEnabled": true
+    },
+    {
+      "id": "normal",
+      "name": "Normal",
+      "group": "Difficulty"
+    },
+    {
+      "id": "challenging",
+      "name": "Challenging",
+      "group": "Difficulty"
+    },
+    {
+      "id": "brave",
+      "name": "Brave",
+      "group": "Difficulty"
+    },
+    {
+      "id": "heroic",
+      "name": "Heroic",
+      "group": "Difficulty"
+    },
+    {
+      "id": "elfar",
+      "name": "Élfar expansion"
+    },
+    {
+      "id": "combined",
+      "name": "Combined Might expansion"
+    }
+  ],
+  "sections": [
+    {
+      "id": "boards",
+      "title": "Boards",
+      "steps": [
+        {
+          "id": "boards",
+          "text": "Large and small game boards within reach",
+          "ref": "Game Boards"
+        },
+        {
+          "id": "doom",
+          "text": "Doom track: Hero marker at the left start space, Doom marker at the right",
+          "ref": "Game Boards"
+        },
+        {
+          "id": "troops",
+          "text": "Army of Evil supplies on their pictures: Orcs left, Älfar middle, Trolls right",
+          "ref": "Game Boards"
+        },
+        {
+          "id": "council",
+          "text": "Council marker on the axe in the middle of the Dwarven Council",
+          "ref": "Game Boards"
+        },
+        {
+          "id": "supply",
+          "text": "Attribute Modification tiles, Number and Recruitment dice and Scenario markers within reach",
+          "ref": "Game Boards"
+        },
+        {
+          "id": "tunnel",
+          "text": "Tunnel tile within reach",
+          "condition": {
+            "notModules": [
+              "elfar"
+            ]
+          },
+          "ref": "Game Boards"
+        },
+        {
+          "id": "portal",
+          "text": "Élfar Portal tile 3 hexes south of Gate I; Tunnel tile back in the box",
+          "condition": {
+            "modules": [
+              "elfar"
+            ]
+          },
+          "ref": "Élfar Expansion"
+        },
+        {
+          "id": "perished",
+          "text": "Perished Land tiles facedown, mixed, in a pile",
+          "ref": "Game Boards"
+        }
+      ]
+    },
+    {
+      "id": "heroes",
+      "title": "Heroes",
+      "steps": [
+        {
+          "id": "hero",
+          "text": "Choose or deal Hero boards and figures (Andokai also takes his Spell cards)",
+          "ref": "Hero Boards"
+        },
+        {
+          "id": "health",
+          "text": "Health marker on the top heart of your Hero board",
+          "ref": "Hero Boards"
+        },
+        {
+          "id": "start",
+          "text": "Hero figure on its listed start location",
+          "ref": "Hero Boards"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        {
+          "id": "expansion-cards",
+          "text": "Shuffle the expansion cards into their matching decks",
+          "condition": {
+            "modules": [
+              "elfar"
+            ]
+          },
+          "ref": "Élfar Expansion"
+        },
+        {
+          "id": "expansion-cards-b",
+          "text": "Shuffle the Combined Might cards into their matching decks",
+          "condition": {
+            "modules": [
+              "combined"
+            ]
+          },
+          "ref": "Combined Might Expansion"
+        },
+        {
+          "id": "scenario",
+          "text": "Scenario deck: level C cards shuffled at the bottom{c}, level B on them, shuffled level A on top",
+          "amounts": {
+            "c": {
+              "default": "",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "combined"
+                    ]
+                  },
+                  "value": " (all 9; one random B)"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "elfar"
+                    ]
+                  },
+                  "value": " (only Seal the Élfar Portal as C)"
+                }
+              ]
+            }
+          },
+          "ref": "Cards, Expansions"
+        },
+        {
+          "id": "difficulty",
+          "text": "Remove {n} level A cards unseen",
+          "amounts": {
+            "n": {
+              "default": 4,
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "easy",
+                      "combined"
+                    ]
+                  },
+                  "value": 10
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "normal",
+                      "combined"
+                    ]
+                  },
+                  "value": 9
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "challenging",
+                      "combined"
+                    ]
+                  },
+                  "value": 8
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "brave",
+                      "combined"
+                    ]
+                  },
+                  "value": 7
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "heroic",
+                      "combined"
+                    ]
+                  },
+                  "value": 6
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "easy"
+                    ]
+                  },
+                  "value": 4
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "normal"
+                    ]
+                  },
+                  "value": 3
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "challenging"
+                    ]
+                  },
+                  "value": 2
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "brave"
+                    ]
+                  },
+                  "value": 1
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "heroic"
+                    ]
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          },
+          "ref": "Cards, Combined Might Expansion"
+        },
+        {
+          "id": "adventure",
+          "text": "Shuffle the Adventure deck facedown right of the small board; 3 faceup on its storage spaces",
+          "ref": "Cards"
+        },
+        {
+          "id": "threat",
+          "text": "Shuffle the Threat deck facedown; shuffle its top 3 unseen into the Adventure deck",
+          "ref": "Cards"
+        },
+        {
+          "id": "equipment",
+          "text": "Shuffle the Equipment deck facedown; room for a shared Adventure/Threat discard pile",
+          "ref": "Cards"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "doom-meet",
+          "text": "If the Hero and Doom markers meet, you lose immediately",
+          "ref": "Game Boards"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "advance",
+          "text": "First turn: advance the Hero marker",
+          "ref": "Course of Play"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "gameId": 115746,
+  "gameName": "War of the Ring: Second Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["War of the Ring rulebook (Ares Games, via Ultra Board Games)", "War of the Ring multiplayer summary (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 4 },
+  "sections": [
+    {
+      "id": "sides",
+      "title": "Sides",
+      "steps": [
+        { "id": "two", "text": "One player is the Free Peoples, the other the Shadow", "condition": { "players": [2] }, "ref": "Setup" },
+        { "id": "four", "text": "Two per side: Gondor + Elves / Rohan + North + Dwarves; Witch-king / Saruman and allies; pass a Leading Player token each turn", "condition": { "players": [4] }, "ref": "Multiplayer" },
+        { "id": "three", "text": "One Free Peoples player against two Shadow players (Witch-king / Saruman and allies)", "condition": { "players": [3] }, "ref": "Multiplayer" }
+      ]
+    },
+    {
+      "id": "fellowship",
+      "title": "Fellowship",
+      "steps": [
+        { "id": "board", "text": "Board with room along the sides for discards, casualties and dice", "ref": "Setup 1" },
+        { "id": "ring-bearers", "text": "Ring-bearers figure on Rivendell", "ref": "Setup 2" },
+        { "id": "progress", "text": "Fellowship Progress counter on step 0, \"Hidden\" side up; Corruption counter on step 0", "ref": "Setup 3" },
+        { "id": "guide", "text": "Companion cards in the Guide box with Gandalf the Grey on top; set aside Aragorn - Heir to Isildur, Gandalf the White and Gollum", "ref": "Setup 4" },
+        { "id": "companions", "text": "Companion figures and counters in the Fellowship box; set aside the Gollum figure", "ref": "Setup 5" },
+        { "id": "rings", "text": "3 Elven Ring counters in the Free Peoples' Elven Rings box, Ring side up", "ref": "Setup 6" }
+      ]
+    },
+    {
+      "id": "shadow",
+      "title": "Cards, Hunt & dice",
+      "steps": [
+        { "id": "minions", "text": "Set aside the Minion cards (Witch-king, Saruman, Mouth of Sauron) and their figures", "ref": "Setup 7" },
+        { "id": "events", "text": "Split each side's Event cards into Character and Strategy decks; shuffle separately onto their board areas", "ref": "Setup 8" },
+        { "id": "hunt", "text": "Beige Hunt tiles in an opaque cup (Hunt Pool); set aside the blue and red special tiles", "ref": "Setup 9" },
+        { "id": "dice", "text": "Shadow takes {s} red Action dice, Free Peoples {f} blue; set aside the rest and the 5 Combat dice", "amounts": { "s": 7, "f": 4 }, "ref": "Setup 10" }
+      ]
+    },
+    {
+      "id": "politics",
+      "title": "Politics & armies",
+      "steps": [
+        { "id": "political", "text": "Political counters: Free Peoples Passive side up except the Elves; Elves and all Shadow Nations Active side up", "ref": "Setup 11" },
+        { "id": "positions", "text": "Top box: Rohan, North, Elves, Dwarves; second: Gondor and Southrons/Easterlings; third (above At War): Sauron and Isengard", "ref": "Setup 11" },
+        { "id": "armies", "text": "Sort figures by color and type; place each Nation's starting Armies and Leaders per the Army Setup diagram; the rest are reinforcements", "ref": "Setup 12" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "casualties", "text": "Keep reinforcements apart from eliminated figures", "ref": "Setup 12" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "phase1", "text": "Phase 1: each player draws 1 card from each of their Event decks", "ref": "Game Play" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "gameId": 421006,
+  "gameName": "The Lord of the Rings: Duel for Middle-earth",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["The Lord of the Rings: Duel for Middle-earth rulebook (Repos Production, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 2 },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "sides", "text": "Choose or randomly assign the Fellowship and Sauron; each takes their Unit and Fortress pawns", "ref": "Setup" },
+        { "id": "central", "text": "Central board between you, next to the central play area", "ref": "Setup" },
+        { "id": "units", "text": "{n} Fellowship Units on Arnor and {n} Sauron Units on Mordor", "amounts": { "n": 2 }, "ref": "Setup" },
+        { "id": "quest", "text": "Assemble the Quest of the Ring track below the central board (Nazgul piece on top of Frodo and Sam)", "ref": "Setup, Quest of the Ring" },
+        { "id": "coins", "text": "Fellowship takes 3 Coins, Sauron 2; the rest form the reserve", "ref": "Setup" },
+        { "id": "alliances", "text": "Alliance tokens sorted by Race, each stack shuffled facedown in its notch above the board", "ref": "Setup" },
+        { "id": "landmarks", "text": "Shuffle the Landmark tiles; {n} faceup, the rest in a facedown stack", "amounts": { "n": 3 }, "ref": "Setup" },
+        { "id": "chapters", "text": "Sort the Chapter cards into decks 1, 2 and 3 by their runes; shuffle each", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "chapter",
+      "title": "Chapter 1",
+      "steps": [
+        { "id": "layout", "text": "Lay out chapter 1 cards in the central area as shown (some faceup, some facedown); the 3 left over go facedown to the discard", "ref": "Preparing a chapter" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "Sauron begins: take a Chapter card or a Landmark tile", "ref": "Turn overview" }
+      ]
+    }
+  ]
+}
