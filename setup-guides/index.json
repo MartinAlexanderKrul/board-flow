@@ -242,6 +242,14 @@
       "path": "201808.json"
     },
     {
+      "gameId": 205637,
+      "gameName": "Arkham Horror: The Card Game",
+      "gameIds": [205637],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "205637.json"
+    },
+    {
       "gameId": 205896,
       "gameName": "Rising Sun",
       "gameIds": [205896],
@@ -552,6 +560,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "330950.json"
+    },
+    {
+      "gameId": 331106,
+      "gameName": "The Witcher: Old World",
+      "gameIds": [331106],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "331106.json"
     },
     {
       "gameId": 336755,
