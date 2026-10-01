@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 284778,
   "gameName": "Unmatched: Jurassic Park – Dr. Sattler vs. T. Rex",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Unmatched core rules (Battle of Legends Vol. 1 rulebook, via RulesPal)"
+      "Unmatched: Jurassic Park - Dr. Sattler vs. T. Rex rulebook (Restoration Games)"
     ]
   },
   "players": {
@@ -33,23 +33,28 @@
         {
           "id": "battlefield",
           "text": "Choose a battlefield and place it on the table",
-          "ref": "Setup 1"
+          "ref": "p.6"
         },
         {
           "id": "hero",
           "text": "Each player chooses a hero: action cards, character card, hero figure, sidekicks and health dials",
-          "ref": "Setup 2"
+          "ref": "p.6"
         },
         {
           "id": "health",
           "text": "Set hero and sidekick health dials to the starting health on the character card",
           "note": "Sidekicks without a dial have 1 health",
-          "ref": "Setup 3"
+          "ref": "p.6"
         },
         {
           "id": "deck",
           "text": "Shuffle your action cards facedown; draw 5",
-          "ref": "Setup 4"
+          "ref": "p.6"
+        },
+        {
+          "id": "insight",
+          "text": "Dr. Sattler: 5 Insight tokens off the board by her character card",
+          "ref": "p.16"
         }
       ]
     },
@@ -65,7 +70,7 @@
               2
             ]
           },
-          "ref": "Setup 5"
+          "ref": "p.6"
         },
         {
           "id": "older",
@@ -75,7 +80,7 @@
               2
             ]
           },
-          "ref": "Setup 6"
+          "ref": "p.6"
         },
         {
           "id": "team-place",
@@ -85,7 +90,7 @@
               "teams"
             ]
           },
-          "ref": "Team Play"
+          "ref": "p.18"
         }
       ]
     },
@@ -107,7 +112,12 @@
               "teams"
             ]
           },
-          "ref": "Team Play"
+          "ref": "p.18"
+        },
+        {
+          "id": "insight-move",
+          "text": "Whenever Sattler or Malcolm moves to a new space, place an Insight token there",
+          "ref": "p.16"
         }
       ]
     },
@@ -119,7 +129,7 @@
         {
           "id": "first",
           "text": "The younger player (Team A's first player in teams) takes the first turn",
-          "ref": "Setup 7"
+          "ref": "p.6"
         }
       ]
     }
