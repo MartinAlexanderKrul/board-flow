@@ -2,37 +2,96 @@
   "schemaVersion": 1,
   "gameId": 393672,
   "gameName": "Gloomhaven: Buttons & Bugs",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Gloomhaven: Buttons & Bugs rulebook (Cephalofair Games, via RulesPal)"]
+    "sources": [
+      "Gloomhaven: Buttons & Bugs rulebook (Cephalofair Games, via RulesPal)"
+    ]
   },
-  "players": { "min": 1, "max": 1 },
+  "players": {
+    "min": 1,
+    "max": 1
+  },
   "sections": [
     {
       "id": "character",
       "title": "Character",
       "steps": [
-        { "id": "card", "text": "Your character card and matching miniature", "note": "New to Gloomhaven: the Bruiser", "ref": "Character Setup" },
-        { "id": "hp", "text": "Brown hit point dial to your current level's maximum HP", "ref": "Character Setup" },
-        { "id": "abilities", "text": "The ability cards listed on the back of your character card, A-side up", "note": "Level 1: four cards", "ref": "Character Setup" },
-        { "id": "modifier", "text": "Brown character attack modifier tray, white cube in the topmost slot", "ref": "Character Setup" }
+        {
+          "id": "card",
+          "text": "Your character card and matching miniature",
+          "note": "New to Gloomhaven: the Bruiser",
+          "ref": "Character Setup"
+        },
+        {
+          "id": "hp",
+          "text": "Brown hit point dial to your current level's maximum HP",
+          "ref": "Character Setup"
+        },
+        {
+          "id": "abilities",
+          "text": "The ability cards listed on the back of your character card, A-side up",
+          "note": "Level 1: four cards",
+          "ref": "Character Setup"
+        },
+        {
+          "id": "modifier",
+          "text": "Brown character attack modifier tray, white cube in the topmost slot",
+          "ref": "Character Setup"
+        }
       ]
     },
     {
       "id": "scenario",
       "title": "Scenario",
       "steps": [
-        { "id": "read", "text": "Read the next scenario card up to and including the goal", "ref": "Scenario Setup" },
-        { "id": "monster-card", "text": "Retrieve the monster cards from the scenario's monster list", "ref": "Scenario Setup" },
-        { "id": "map", "text": "Flip the scenario card to its map side; note terrain borders (obstacles, hazards)", "ref": "Scenario Setup" },
-        { "id": "cubes", "text": "Colored cubes on the monster hexes as marked", "ref": "Scenario Setup" },
-        { "id": "start-hex", "text": "Your miniature on the starting hex", "ref": "Scenario Setup" },
-        { "id": "monster-tray", "text": "Monster card in a monster tray; white cube in its middle slot", "ref": "Scenario Setup" },
-        { "id": "monster-hp", "text": "Monster HP dials (matching cube colors) to their maximum HP", "ref": "Scenario Setup" },
-        { "id": "monster-modifier", "text": "Red monster modifier tray, white cube in the topmost slot", "ref": "Scenario Setup" },
-        { "id": "tokens", "text": "Condition tokens, icon reference card and die nearby", "ref": "Scenario Setup" }
+        {
+          "id": "read",
+          "text": "Read the next scenario card up to and including the goal",
+          "ref": "Scenario Setup"
+        },
+        {
+          "id": "monster-card",
+          "text": "Retrieve the monster cards from the scenario's monster list",
+          "ref": "Scenario Setup"
+        },
+        {
+          "id": "map",
+          "text": "Flip the scenario card to its map side; note terrain borders (obstacles, hazards)",
+          "ref": "Scenario Setup"
+        },
+        {
+          "id": "cubes",
+          "text": "Colored cubes on the monster hexes as marked",
+          "ref": "Scenario Setup"
+        },
+        {
+          "id": "start-hex",
+          "text": "Your miniature on the starting hex",
+          "ref": "Scenario Setup"
+        },
+        {
+          "id": "monster-tray",
+          "text": "Monster card in a monster tray; white cube in its middle slot",
+          "ref": "Scenario Setup"
+        },
+        {
+          "id": "monster-hp",
+          "text": "Monster HP dials (matching cube colors) to their maximum HP",
+          "ref": "Scenario Setup"
+        },
+        {
+          "id": "monster-modifier",
+          "text": "Red monster modifier tray, white cube in the topmost slot",
+          "ref": "Scenario Setup"
+        },
+        {
+          "id": "tokens",
+          "text": "Condition tokens, icon reference card and die nearby",
+          "ref": "Scenario Setup"
+        }
       ]
     },
     {
@@ -40,7 +99,11 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "hazard", "text": "Hazards deal 1 damage each time the hex is entered; ranged attacks pass over obstacles", "ref": "Scenario Setup" }
+        {
+          "id": "hazard",
+          "text": "Hazards deal 1 damage each time the hex is entered; ranged attacks pass over obstacles",
+          "ref": "Scenario Setup"
+        }
       ]
     },
     {
@@ -48,7 +111,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "select", "text": "Round 1: card selection", "ref": "Card Selection" }
+        {
+          "id": "select",
+          "text": "Round 1: card selection",
+          "ref": "Card Selection (p.1)"
+        }
       ]
     }
   ]

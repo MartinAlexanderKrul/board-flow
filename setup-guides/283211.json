@@ -2,39 +2,85 @@
   "schemaVersion": 1,
   "gameId": 283211,
   "gameName": "Harry Potter: Death Eaters Rising",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Harry Potter: Death Eaters Rising rulebook (USAopoly, via RulesPal)"]
+    "sources": [
+      "Harry Potter: Death Eaters Rising rulebook (USAopoly, via RulesPal)"
+    ]
   },
-  "players": { "min": 1, "max": 4 },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
   "sections": [
     {
       "id": "board",
       "title": "Board",
       "steps": [
-        { "id": "locations", "text": "Connect the 3 Location boards; Lord Voldemort figure in the center facing a random Place", "ref": "Set Up 1a" },
-        { "id": "places", "text": "Stack each Location's two Place cards faceup in random order", "note": "Ministry: Department of Mysteries, The Atrium; Diagon Alley: Ollivander's, Gringotts; Hogsmeade: Hog's Head Inn, Train Platform", "ref": "Set Up 1b" },
-        { "id": "spells", "text": "Spell Tokens facedown on the table", "ref": "Set Up 2a" },
-        { "id": "counters", "text": "Damage and Corruption counters in a supply", "ref": "Set Up 2b" }
+        {
+          "id": "locations",
+          "text": "Connect the 3 Location boards; Lord Voldemort figure in the center facing a random Place",
+          "ref": "Set Up 1a (p.2)"
+        },
+        {
+          "id": "places",
+          "text": "Stack each Location's two Place cards faceup in random order",
+          "note": "Ministry: Department of Mysteries, The Atrium; Diagon Alley: Ollivander's, Gringotts; Hogsmeade: Hog's Head Inn, Train Platform",
+          "ref": "Set Up 1b (p.2)"
+        },
+        {
+          "id": "spells",
+          "text": "Spell Tokens facedown on the table",
+          "ref": "Set Up 2a (p.2)"
+        },
+        {
+          "id": "counters",
+          "text": "Damage and Corruption counters in a supply",
+          "ref": "Set Up 2b (p.2)"
+        }
       ]
     },
     {
       "id": "players",
       "title": "Affiliations",
       "steps": [
-        { "id": "affiliation", "text": "Each player chooses an Affiliation (two may share one): Hogwarts, Order of the Phoenix or Dumbledore's Army", "ref": "Set Up 3a" },
-        { "id": "hq", "text": "Take its Headquarters card, one of its starting characters and a Mission token", "note": "Hogwarts: Dumbledore / McGonagall; Order: Tonks / Sirius; DA: Harry / Hermione", "ref": "Set Up 3b" }
+        {
+          "id": "affiliation",
+          "text": "Each player chooses an Affiliation (two may share one): Hogwarts, Order of the Phoenix or Dumbledore's Army",
+          "ref": "Set Up 3a (p.2)"
+        },
+        {
+          "id": "hq",
+          "text": "Take its Headquarters card, one of its starting characters and a Mission token",
+          "note": "Hogwarts: Dumbledore / McGonagall; Order: Tonks / Sirius; DA: Harry / Hermione",
+          "ref": "Set Up 3b (p.2)"
+        }
       ]
     },
     {
       "id": "cards",
       "title": "Character deck",
       "steps": [
-        { "id": "voldemort", "text": "Set aside the Lord Voldemort card", "ref": "Set Up 4a" },
-        { "id": "shuffle", "text": "Shuffle all other Character cards (unused starting characters and Death Eaters too) into a draw pile", "ref": "Set Up 4b" },
-        { "id": "deal", "text": "{n} Character cards faceup next to each of the 3 Places", "amounts": { "n": 3 }, "ref": "Set Up 4c" }
+        {
+          "id": "voldemort",
+          "text": "Set aside the Lord Voldemort card",
+          "ref": "Set Up 4a (p.2)"
+        },
+        {
+          "id": "shuffle",
+          "text": "Shuffle all other Character cards (unused starting characters and Death Eaters too) into a draw pile",
+          "ref": "Set Up 4b (p.2)"
+        },
+        {
+          "id": "deal",
+          "text": "{n} Character cards faceup next to each of the 3 Places",
+          "amounts": {
+            "n": 3
+          },
+          "ref": "Set Up 4c (p.2)"
+        }
       ]
     },
     {
@@ -42,7 +88,11 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "lose", "text": "You lose if 4+ Places or one whole Location is corrupted, or too many Wizards fall", "ref": "Object of the Game" }
+        {
+          "id": "lose",
+          "text": "You lose if 4+ Places or one whole Location is corrupted, or too many Wizards fall",
+          "ref": "Object of the Game"
+        }
       ]
     },
     {
@@ -50,7 +100,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "Whoever most recently watched a Harry Potter movie goes first; play is clockwise", "ref": "Game Play" }
+        {
+          "id": "first",
+          "text": "Whoever most recently watched a Harry Potter movie goes first; play is clockwise",
+          "ref": "Game Play (p.2)"
+        }
       ]
     }
   ]

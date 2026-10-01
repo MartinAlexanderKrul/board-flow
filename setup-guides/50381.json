@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 50381,
   "gameName": "Cards Against Humanity",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -25,7 +25,7 @@
           "amounts": {
             "n": 10
           },
-          "ref": "Basic rules"
+          "ref": "Basic rules (p.1)"
         }
       ]
     },
@@ -37,7 +37,7 @@
         {
           "id": "reminders-1",
           "text": "After each round everyone draws back up to ten White Cards and the Card Czar changes",
-          "ref": "Basic rules"
+          "ref": "Basic rules (p.1)"
         }
       ]
     },
@@ -49,7 +49,7 @@
         {
           "id": "start-1",
           "text": "The person who most recently pooped is the first Card Czar and reads a Black Card aloud",
-          "ref": "Basic rules"
+          "ref": "Basic rules (p.1)"
         }
       ]
     }

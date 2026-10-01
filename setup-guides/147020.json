@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 147020,
   "gameName": "Star Realms",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -25,22 +25,22 @@
           "amounts": {
             "n": 50
           },
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "setup-2",
           "text": "10 Explorer cards faceup; Trade Deck shuffled facedown with 5 cards faceup as the Center Row",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "setup-3",
           "text": "Leave space for the Scrap Heap and each discard pile",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "setup-4",
           "text": "Both players shuffle their decks",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         }
       ]
     },
@@ -52,7 +52,7 @@
         {
           "id": "start-1",
           "text": "A random player goes first and draws 3 cards; the other draws 5",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         }
       ]
     }

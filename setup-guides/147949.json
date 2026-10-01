@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "gameId": 147949,
   "gameName": "One Night Ultimate Werewolf",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
+      "One Night Ultimate Werewolf rules (Bezier Games)",
       "One Night Ultimate Werewolf rules summary (Bezier Games, via RulesPal)"
     ]
   },
@@ -64,6 +65,11 @@
           "id": "reminders-1",
           "text": "Your role at the end is the card in front of you, which may have changed; nobody looks at cards after the night",
           "ref": "Setup"
+        },
+        {
+          "id": "wake-order",
+          "text": "Night wake order: Doppelganger, Werewolves, Minion, Masons, Seer, Robber, Troublemaker, Drunk, Insomniac; Villagers, Tanner and Hunter never wake",
+          "ref": "Night Wake Order (p.6)"
         }
       ]
     },

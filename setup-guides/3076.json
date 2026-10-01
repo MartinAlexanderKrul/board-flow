@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 3076,
   "gameName": "Puerto Rico",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -209,7 +209,7 @@
         {
           "id": "reminders-1",
           "text": "After each round put 1 doubloon on every role card nobody took; the governor passes left",
-          "ref": "Playing the game"
+          "ref": "Playing the game (p.3)"
         }
       ]
     },
@@ -221,7 +221,7 @@
         {
           "id": "start-1",
           "text": "The governor picks a role card; everyone takes its action clockwise",
-          "ref": "Playing the game"
+          "ref": "Playing the game (p.3)"
         }
       ]
     }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 129622,
   "gameName": "Love Letter",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -23,7 +23,7 @@
         {
           "id": "each-round-1",
           "text": "A reference card for each player",
-          "ref": "Setup",
+          "ref": "Setup (p.9)",
           "condition": {
             "modules": [
               "new"
@@ -43,7 +43,7 @@
         {
           "id": "each-round-2b",
           "text": "Shuffle the 21 character cards; set the top card aside facedown, unseen",
-          "ref": "Setup",
+          "ref": "Setup (p.9)",
           "condition": {
             "modules": [
               "new"
@@ -85,7 +85,7 @@
         {
           "id": "start-1b",
           "text": "Whoever most recently hand-wrote a letter goes first; later rounds start with the previous round's winner",
-          "ref": "Setup",
+          "ref": "Setup (p.9)",
           "condition": {
             "modules": [
               "new"

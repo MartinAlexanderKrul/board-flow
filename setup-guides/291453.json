@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 291453,
   "gameName": "SCOUT",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "game-1",
           "text": "Choose a starting player, who takes the Starting Player Marker",
-          "ref": "Setting Up the Game"
+          "ref": "Setting Up the Game (p.1)"
         },
         {
           "id": "game-2",
@@ -37,12 +37,12 @@
               }
             }
           },
-          "ref": "Setting Up the Game"
+          "ref": "Setting Up the Game (p.1)"
         },
         {
           "id": "game-3",
           "text": "Keep one Scout & Show chip per player",
-          "ref": "Setting Up the Game"
+          "ref": "Setting Up the Game (p.1)"
         }
       ]
     },
@@ -53,7 +53,7 @@
         {
           "id": "each-round-1",
           "text": "Scout chips in the center; 1 Scout & Show chip each",
-          "ref": "Setting Up the Round"
+          "ref": "Setting Up the Round (p.1)"
         },
         {
           "id": "each-round-2",
@@ -70,7 +70,7 @@
           "condition": {
             "minPlayers": 3
           },
-          "ref": "Setting Up the Round"
+          "ref": "Setting Up the Round (p.1)"
         },
         {
           "id": "each-round-3",
@@ -80,12 +80,12 @@
               2
             ]
           },
-          "ref": "Setting Up the Round"
+          "ref": "Setting Up the Round (p.1)"
         },
         {
           "id": "each-round-4",
           "text": "Pick up your hand without rearranging it; you may flip the whole hand upside down once, right now",
-          "ref": "Setting Up the Round"
+          "ref": "Setting Up the Round (p.1)"
         }
       ]
     },

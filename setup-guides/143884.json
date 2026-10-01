@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 143884,
   "gameName": "Machi Koro",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "setup-1",
           "text": "Each player: a Wheat Field and a Bakery faceup, and the 4 Landmarks facedown (Train Station, Shopping Mall, Amusement Park, Radio Tower)",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         },
         {
           "id": "setup-2",
@@ -30,12 +30,12 @@
           "condition": {
             "maxPlayers": 3
           },
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         },
         {
           "id": "setup-3",
           "text": "Marketplace: Supply cards stacked by type, in order of their dice roll numbers",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         },
         {
           "id": "setup-4",
@@ -43,7 +43,7 @@
           "amounts": {
             "n": 3
           },
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         }
       ]
     },
@@ -55,7 +55,7 @@
         {
           "id": "start-1",
           "text": "Choose a starting player",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         }
       ]
     }

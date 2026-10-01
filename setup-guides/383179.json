@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 383179,
   "gameName": "Age of Innovation",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -111,6 +111,22 @@
           "id": "your-display-8",
           "text": "Turn Order markers down the left column, Start player on top, then clockwise",
           "ref": "Personal Setup (p.6)"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-setup-1",
+          "text": "Set up the Automa as described in its own rulebook (not part of the main rulebook)",
+          "ref": "p.3"
         }
       ]
     },

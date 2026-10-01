@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 172225,
   "gameName": "Exploding Kittens",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -52,7 +52,7 @@
           "id": "setup-2",
           "text": "Deal 1 Defuse to each player; put the extra Defuses back in the deck",
           "note": "2-3 players: put back only 2 and remove the rest",
-          "ref": "Setup",
+          "ref": "Setup (p.1)",
           "condition": {
             "modules": [
               "updated"
@@ -65,7 +65,7 @@
           "amounts": {
             "n": 7
           },
-          "ref": "Setup",
+          "ref": "Setup (p.1)",
           "condition": {
             "modules": [
               "updated"

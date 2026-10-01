@@ -2,21 +2,41 @@
   "schemaVersion": 1,
   "gameId": 320,
   "gameName": "Scrabble",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Scrabble rules (via RulesPal)"]
+    "sources": [
+      "Scrabble rules (via RulesPal)"
+    ]
   },
-  "players": { "min": 2, "max": 4 },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
   "sections": [
     {
       "id": "tiles",
       "title": "Tiles",
       "steps": [
-        { "id": "mix", "text": "All tiles facedown (or in the bag) and mixed", "ref": "Setup" },
-        { "id": "order", "text": "Each player draws a tile: closest to \"A\" plays first (a blank beats an A); return and remix", "ref": "Setup" },
-        { "id": "racks", "text": "Each player draws {n} tiles onto their rack, hidden", "amounts": { "n": 7 }, "ref": "Setup" }
+        {
+          "id": "mix",
+          "text": "All tiles facedown (or in the bag) and mixed",
+          "ref": "Setup (p.1)"
+        },
+        {
+          "id": "order",
+          "text": "Each player draws a tile: closest to \"A\" plays first (a blank beats an A); return and remix",
+          "ref": "Setup (p.1)"
+        },
+        {
+          "id": "racks",
+          "text": "Each player draws {n} tiles onto their rack, hidden",
+          "amounts": {
+            "n": 7
+          },
+          "ref": "Setup (p.1)"
+        }
       ]
     },
     {
@@ -24,8 +44,16 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "center", "text": "The first word must cover the center star and be at least 2 letters", "ref": "Gameplay" },
-        { "id": "premiums", "text": "Letter premiums apply before word premiums; two word premiums multiply", "ref": "Scoring" }
+        {
+          "id": "center",
+          "text": "The first word must cover the center star and be at least 2 letters",
+          "ref": "Gameplay (p.1)"
+        },
+        {
+          "id": "premiums",
+          "text": "Letter premiums apply before word premiums; two word premiums multiply",
+          "ref": "Scoring (p.1)"
+        }
       ]
     },
     {
@@ -33,7 +61,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "The first player places a word across the center star", "ref": "Gameplay" }
+        {
+          "id": "first",
+          "text": "The first player places a word across the center star",
+          "ref": "Gameplay (p.1)"
+        }
       ]
     }
   ]

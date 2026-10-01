@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 322289,
   "gameName": "Darwin's Journey",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -46,6 +46,7 @@
           "text": "Remove 2 Regular Wax Seals per color",
           "condition": {
             "players": [
+              1,
               2
             ]
           },
@@ -126,6 +127,52 @@
           "id": "players-6",
           "text": "Starting Objectives: pairs of 1 silver + 1 golden, one pair per player; draft from the rightmost Turn Order marker leftwards",
           "ref": "Drafting Starting Personal Objective Tiles"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo: Alfred",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-setup-1",
+          "text": "Choose Alfred's difficulty board (white easy, blue medium, yellow and green advanced) and place it above your own, Alfred side up",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-2",
+          "text": "Main board as for 2 players, but reveal only 4 Special Action tiles (bottom Diary row empty) and only 1 silver and 1 golden Objective",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-3",
+          "text": "2-player Turn Order Action token on the Turn Order track: Alfred first, you second",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-4",
+          "text": "Crew: reveal 5 Crew cards, keep 3, and take their Wax Seals",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-5",
+          "text": "Starting Objectives: pick one of the pairs and remove the other from the game",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-6",
+          "text": "Alfred: his 2 Bonus Track cards placed randomly on his Bonus track; 4 workers on spots A-D and the 5th on the leftmost Bonus track space",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-7",
+          "text": "1 Coin on Alfred's Coin Track; shuffle the 8 Alfred Action cards facedown below your board",
+          "ref": "p.26"
         }
       ]
     },

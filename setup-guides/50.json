@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 50,
   "gameName": "Lost Cities",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "setup-1",
           "text": "Game board between the two players",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "setup-2",
@@ -30,12 +30,12 @@
           "amounts": {
             "n": 8
           },
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "setup-3",
           "text": "Pen and paper ready if you play more than one game",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         }
       ]
     },

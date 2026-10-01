@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 121921,
   "gameName": "Robinson Crusoe: Adventures on the Cursed Island",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -11,7 +11,7 @@
     ]
   },
   "players": {
-    "min": 2,
+    "min": 1,
     "max": 4
   },
   "sections": [
@@ -75,6 +75,63 @@
           "id": "board-8",
           "text": "Set up the chosen Scenario card and its pieces as it describes",
           "ref": "Scenarios (p.6)"
+        }
+      ]
+    },
+    {
+      "id": "friday",
+      "title": "Friday",
+      "condition": {
+        "maxPlayers": 2
+      },
+      "steps": [
+        {
+          "id": "friday-1",
+          "text": "Friday's card next to the board with the white Action pawn on it",
+          "ref": "p.26"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-setup-1",
+          "text": "Set up as for 2 players; also place the Dog's card next to the board with the purple Action pawn on it",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-2",
+          "text": "You are always First Player; Shelter, Roof and Palisade cost the same as in the 2-player game",
+          "ref": "p.26"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "solo-morale",
+          "text": "Solo: morale goes up by 1 at the start of each Morale Phase",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.26"
+        },
+        {
+          "id": "night",
+          "text": "Life tracks: each time your Wound marker passes a Morale-decrease symbol, lower Morale by 1",
+          "ref": "Character Cards"
         }
       ]
     },

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 181304,
   "gameName": "Mysterium",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Mysterium rules summary (Libellud, via RulesPal)"
+      "Mysterium rulebook (Libellud)"
     ]
   },
   "players": {
@@ -26,8 +26,8 @@
         },
         {
           "id": "ghost-2",
-          "text": "Crow Tokens according to the difficulty level",
-          "ref": "Game Setup"
+          "text": "Crow Tokens by difficulty: Easy 1 use per turn, Medium 3 per game, Hard 1 per game",
+          "ref": "Game Difficulty & Card Setup (p.8)"
         },
         {
           "id": "ghost-3",
@@ -83,8 +83,41 @@
       "steps": [
         {
           "id": "cards-1",
-          "text": "Draw Character Psychic Cards for your difficulty and Psychic count; the Ghost takes the matching Ghost Cards; lay out the Character Progress Board",
-          "ref": "Game Setup"
+          "text": "Shuffle the Character Psychic Cards and draw {e} (Easy), {m} (Medium) or {h} (Hard); the Ghost takes the matching Ghost Cards; lay out the Character Progress Board",
+          "ref": "Game Difficulty & Card Setup (p.8)",
+          "amounts": {
+            "e": {
+              "byPlayers": {
+                "2": 4,
+                "3": 5,
+                "4": 5,
+                "5": 6,
+                "6": 6,
+                "7": 7
+              }
+            },
+            "m": {
+              "byPlayers": {
+                "2": 5,
+                "3": 6,
+                "4": 6,
+                "5": 7,
+                "6": 8,
+                "7": 8
+              }
+            },
+            "h": {
+              "byPlayers": {
+                "2": 6,
+                "3": 7,
+                "4": 7,
+                "5": 8,
+                "6": 9,
+                "7": 9
+              }
+            }
+          },
+          "note": "First game: Easy"
         },
         {
           "id": "cards-2",

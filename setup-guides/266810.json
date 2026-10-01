@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 266810,
   "gameName": "Paladins of the West Kingdom",
-  "version": 2,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -36,7 +36,7 @@
         },
         {
           "id": "main-board-4",
-          "text": "Tax supply above the board: 5-8 Silver depending on player count (see the rulebook)",
+          "text": "Tax supply above the board: 5-8 Silver for your player count, as the icons printed there show",
           "ref": "Setup 4 (p.5)"
         },
         {
@@ -92,6 +92,47 @@
       ]
     },
     {
+      "id": "solo-setup",
+      "title": "Solo: AI player",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-setup-1",
+          "text": "Flip a spare Player Board to its AI side; place the 7 Monks, Outposts and Absolves on it",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-2",
+          "text": "Stack the AI's Attribute Markers on zero: Influence at the bottom, Faith in the middle, Strength on top",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-3",
+          "text": "Resource Marker on the leftmost space of the AI's Resource Track",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-4",
+          "text": "Set aside the 5 King's Favour Scheme Cards; shuffle the other Scheme Cards facedown on the AI board",
+          "ref": "p.26"
+        },
+        {
+          "id": "solo-setup-5",
+          "text": "Difficulty: reveal 1 (Easy), 3 (Standard) or 5 (Hard) of the 6 King's Order Cards and put an AI Workshop on each matching action space of the AI board; then reshuffle them and place 3 on the Main Board as usual",
+          "ref": "p.27"
+        },
+        {
+          "id": "solo-setup-6",
+          "text": "1 AI Workshop on each King's Order Card and 1 King's Favour Scheme Card faceup on each King's Favour Card on the Main Board",
+          "ref": "p.27"
+        }
+      ]
+    },
+    {
       "id": "reminders",
       "title": "Easy to forget",
       "kind": "REMINDERS",
@@ -100,6 +141,16 @@
           "id": "reminders-1",
           "text": "When the last Silver leaves the Tax supply an Inquisition occurs: whoever has the most Suspicion gains a Debt",
           "ref": "The Inquisition (p.23)"
+        },
+        {
+          "id": "solo-tavern",
+          "text": "Solo: reveal only 2 Tavern Cards each round and you always act first",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.27"
         }
       ]
     },

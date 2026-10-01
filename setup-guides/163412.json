@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 163412,
   "gameName": "Patchwork",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -25,27 +25,27 @@
           "amounts": {
             "n": 5
           },
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "setup-2",
           "text": "Time board in the middle; both time tokens on its starting space",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "setup-3",
           "text": "Regular patches in a circle around the time board",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "setup-4",
           "text": "Neutral token between the 1x2 patch and the next patch clockwise",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "setup-5",
           "text": "Special tile out; special patches on the marked spaces of the time board",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         }
       ]
     },
@@ -57,7 +57,7 @@
         {
           "id": "start-1",
           "text": "The player who last used a needle begins",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         }
       ]
     }

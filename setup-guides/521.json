@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "gameId": 521,
   "gameName": "Crokinole",
-  "version": 1,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
+      "National Crokinole Association rules booklet",
       "Crokinole rules (via RulesPal)"
     ]
   },
@@ -26,13 +27,14 @@
         },
         {
           "id": "setup-2",
-          "text": "2 players: each takes 12 disks",
+          "text": "2 players: 8 discs each under NCA rules",
           "condition": {
             "players": [
               2
             ]
           },
-          "ref": "Game Play"
+          "ref": "NCA rules (p.3)",
+          "note": "Many home sets play 12 discs each"
         },
         {
           "id": "setup-3",
@@ -42,7 +44,7 @@
               4
             ]
           },
-          "ref": "Game Play"
+          "ref": "NCA rules (p.3)"
         }
       ]
     },
@@ -54,12 +56,12 @@
         {
           "id": "reminders-1",
           "text": "One Cheek Rule: stay seated with at least one cheek on the chair; chairs don't move during a round",
-          "ref": "Rules"
+          "ref": "Rules (p.2)"
         },
         {
           "id": "reminders-2",
           "text": "With no opposing disk on the board, your disk must land in the 20 hole or end inside or touching the 15 circle",
-          "ref": "Rules"
+          "ref": "Rules (p.2)"
         },
         {
           "id": "reminders-3",

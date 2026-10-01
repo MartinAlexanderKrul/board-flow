@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 251247,
   "gameName": "Barrage",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,22 +22,22 @@
         {
           "id": "map-tiles-1",
           "text": "Map, Energy Track and Management board on the table",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "map-tiles-2",
           "text": "Excavators, Concrete Mixers, Credits and Water Drops in the general supply",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "map-tiles-3",
           "text": "Shuffle the Headstream tiles; 4 faceup",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "map-tiles-4",
           "text": "Shuffle the Bonus tiles; 5 faceup on the Energy Track; 1 random Objective tile at the end of the track",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "map-tiles-5",
@@ -53,17 +53,17 @@
             }
           },
           "note": "Players minus 1",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "map-tiles-6",
           "text": "Private Contract tiles facedown in piles with two faceup per pile",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "map-tiles-7",
           "text": "Neutral Dams in the marked basins: level 1 in the Mountains, 2 in the Hills, 3 in the Plains, each with 1 Water Drop behind it",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -74,17 +74,17 @@
         {
           "id": "players-1",
           "text": "Each player: a Company board, an Executive Officer tile, all pieces of a color and a Construction Wheel",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "players-2",
           "text": "Each player takes 6 Credits, 6 Excavators, 4 Concrete Mixers and their Starting Contract",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "players-3",
           "text": "Turn Order markers placed; Energy markers on the starting space; VP markers on 10",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -96,7 +96,7 @@
         {
           "id": "reminders-1",
           "text": "Patent Office and Advanced Technology tiles are not used in the introductory game",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -108,7 +108,7 @@
         {
           "id": "start-1",
           "text": "In turn order, place Engineers on an action space and resolve it",
-          "ref": "Actions"
+          "ref": "Actions (p.7)"
         }
       ]
     }
