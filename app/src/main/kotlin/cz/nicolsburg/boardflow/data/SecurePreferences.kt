@@ -44,9 +44,14 @@ class SecurePreferences(context: Context) {
         get() = prefs.getString(KEY_GEMINI_KEY, "") ?: ""
         set(value) = prefs.edit().putString(KEY_GEMINI_KEY, value).apply()
 
+    /** The model the user pinned, or [GeminiModels.AUTO] (blank) to let the app choose. */
     var geminiModelEndpoint: String
-        get() = prefs.getString(KEY_GEMINI_MODEL, "gemini-2.0-flash-lite") ?: "gemini-2.0-flash-lite"
+        get() = prefs.getString(KEY_GEMINI_MODEL, GeminiModels.AUTO) ?: GeminiModels.AUTO
         set(value) = prefs.edit().putString(KEY_GEMINI_MODEL, value).apply()
+
+    var geminiModelsRefreshedAt: Long
+        get() = prefs.getLong(KEY_GEMINI_MODELS_REFRESHED_AT, 0L)
+        set(value) = prefs.edit().putLong(KEY_GEMINI_MODELS_REFRESHED_AT, value).apply()
 
     var appTheme: String
         get() = prefs.getString(KEY_APP_THEME, "DARK") ?: "DARK"
@@ -162,6 +167,21 @@ class SecurePreferences(context: Context) {
             val expiresAt = exhausted[model] ?: 0L
             now >= expiresAt
         }
+    }
+
+    /** Models to try in order: the pinned one (if any), then the automatic order, minus exhausted ones. */
+    fun getGeminiModelCandidates(): List<String> {
+        val now = System.currentTimeMillis()
+        val exhausted = getExhaustedModels().filterValues { now < it }.keys
+        val all = GeminiModels.candidates(geminiModelEndpoint, getAvailableModels())
+        return all.filter { it !in exhausted }.ifEmpty { all }
+    }
+
+    /** Google answered 404 for [model]: it was retired or this key cannot use it. */
+    fun markGeminiModelUnavailable(model: String) {
+        removeAvailableModel(model)
+        markModelExhausted(model)
+        if (geminiModelEndpoint == model) geminiModelEndpoint = GeminiModels.AUTO
     }
 
     fun getNextModel(currentModel: String): String? {
@@ -761,6 +781,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_RECOMMENDATIONS_ENABLED = "recommendations_enabled"
         private const val KEY_GEMINI_EXTRA_KEYS          = "gemini_api_keys_extra"
         private const val KEY_GEMINI_EXHAUSTED_MODELS    = "gemini_exhausted_models"
+        private const val KEY_GEMINI_MODELS_REFRESHED_AT = "gemini_models_refreshed_at"
         private const val KEY_CHALLENGES               = "challenges"
         private const val KEY_INTRO_SEEN               = "intro_seen"
         private const val KEY_PERSONAL_RATINGS         = "personal_ratings"

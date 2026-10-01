@@ -26,36 +26,23 @@ class GeminiRepository {
         .readTimeout(60, TimeUnit.SECONDS)
         .build()
 
-    private val restrictedModels = setOf("gemini-2.5-flash-preview-tts", "gemma-3-1b-it")
-
     // Models confirmed to have zero quota this session — skip key rotation for these.
     private val zeroQuotaModels = mutableSetOf<String>()
 
     companion object {
         private const val TAG = "Gemini"
-
-        // Preferred fallback order for score extraction (multimodal structured output).
-        // Models not in this list fall back to alphabetical-gemini-first ordering.
-        private val SCORE_EXTRACTION_PRIORITY = listOf(
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-lite",
-            "gemini-1.5-flash-latest",
-            "gemini-1.5-flash",
-            "gemini-2.5-flash-preview-05-20",
-            "gemini-2.5-flash",
-            "gemini-1.5-pro-latest",
-            "gemini-1.5-pro"
-        )
     }
 
+    /** [availableModels] is the ordered fallback chain (see [GeminiModels.candidates]). */
     suspend fun extractScoresFromImage(
         imageFile: File,
         apiKey: String,
-        modelName: String = "gemini-2.0-flash-lite",
+        modelName: String,
         availableModels: List<String> = emptyList(),
         availableApiKeys: List<String> = emptyList(),
         onModelChanged: ((String) -> Unit)? = null,
         onModelExhausted: ((String) -> Unit)? = null,
+        onModelUnavailable: ((String) -> Unit)? = null,
         onStreamingStarted: (() -> Unit)? = null
     ): Result<ExtractedPlay> = withContext(Dispatchers.IO) {
         runCatching {
@@ -93,6 +80,20 @@ class GeminiRepository {
                     logGemini("response score-extract attempt=$attempts/$maxAttempts model=$currentModel code=${response.code} elapsedMs=$attemptMs body=${compactJson(responseText)}")
 
                     when (response.code) {
+                        404 -> {
+                            // Model retired or not offered to this key — drop it and try the next one.
+                            onModelUnavailable?.invoke(currentModel)
+                            val nextModel = findNextModel(currentModel, availableModels)
+                            if (nextModel != null && attempts < maxAttempts) {
+                                logGemini("rotate-model score-extract http=404 from=$currentModel to=$nextModel attempt=$attempts/$maxAttempts")
+                                currentModel = nextModel
+                                currentKeyIndex = 0
+                                onModelChanged?.invoke(nextModel)
+                                continue
+                            }
+                            logGemini("failure score-extract http=404 no-fallback model=$currentModel attempts=$attempts")
+                            throw Exception("Gemini model $currentModel is no longer available. Refresh the model list in Settings.")
+                        }
                         503, 429 -> {
                             if (attempts >= maxAttempts) {
                                 logGemini("failure score-extract http=${response.code} no-fallback attempts=$attempts")
@@ -186,19 +187,8 @@ class GeminiRepository {
         }
     }
 
-    private fun findNextModel(currentModel: String, availableModels: List<String>): String? {
-        if (availableModels.isEmpty()) return null
-        val eligible = availableModels.filter { it !in zeroQuotaModels }
-        // Sort by priority list first, then alphabetical-gemini-first for unknowns
-        val priorityIndex = { m: String -> SCORE_EXTRACTION_PRIORITY.indexOf(m).let { if (it < 0) Int.MAX_VALUE else it } }
-        val sorted = eligible.sortedWith(compareBy({ priorityIndex(it) }, { !it.startsWith("gemini") }, { it }))
-        val currentIndex = sorted.indexOf(currentModel)
-        return when {
-            currentIndex >= 0 && currentIndex < sorted.size - 1 -> sorted[currentIndex + 1]
-            currentIndex == -1 && sorted.isNotEmpty() -> sorted.firstOrNull { it != currentModel }
-            else -> null
-        }
-    }
+    private fun findNextModel(currentModel: String, availableModels: List<String>): String? =
+        GeminiModels.next(currentModel, availableModels, zeroQuotaModels)
 
     private fun hasZeroQuota(body: String): Boolean = body.contains("limit: 0")
 
@@ -208,7 +198,8 @@ class GeminiRepository {
             val endpoints = listOf("v1beta", "v1")
             for (apiVersion in endpoints) {
                 try {
-                    val url = "https://generativelanguage.googleapis.com/$apiVersion/models?key=$apiKey"
+                    // Default page size is 50, which the model list has outgrown.
+                    val url = "https://generativelanguage.googleapis.com/$apiVersion/models?pageSize=1000&key=$apiKey"
                     val request = Request.Builder().url(url).build()
                     val response = client.newCall(request).execute()
                     val responseText = response.body?.string() ?: ""
@@ -230,14 +221,14 @@ class GeminiRepository {
                                             break
                                         }
                                     }
-                                    if (supportsGenerate && name.isNotBlank() && !restrictedModels.contains(name)) {
+                                    if (supportsGenerate && GeminiModels.isUsable(name)) {
                                         modelList.add(name)
                                     }
                                 }
                             }
                             if (modelList.isNotEmpty()) {
                                 logGemini("success list-models api=$apiVersion count=${modelList.size}")
-                                return@runCatching modelList
+                                return@runCatching GeminiModels.rank(modelList)
                             }
                         }
                     } else {

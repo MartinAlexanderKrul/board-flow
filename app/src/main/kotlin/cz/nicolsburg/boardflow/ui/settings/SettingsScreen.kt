@@ -84,6 +84,7 @@ import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.AppViewModel
+import cz.nicolsburg.boardflow.data.GeminiModels
 import cz.nicolsburg.boardflow.SyncViewModel
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
@@ -154,7 +155,9 @@ fun SettingsScreen(
     var showImportConfirm by remember { mutableStateOf<String?>(null) }
     var includeSensitiveBackup by remember { mutableStateOf(false) }
     var modelListLoading by remember { mutableStateOf(false) }
-    var availableModels by remember { mutableStateOf<List<String>?>(null) }
+    var availableModels by remember {
+        mutableStateOf(GeminiModels.candidates(GeminiModels.AUTO, prefs.getAvailableModels()).takeIf { prefs.getAvailableModels().isNotEmpty() })
+    }
     var showGoogleSignOutConfirm by remember { mutableStateOf(false) }
     var showSetupGuide by remember { mutableStateOf(false) }
     var showClearCollectionConfirm by remember { mutableStateOf(false) }
@@ -900,22 +903,23 @@ fun SettingsScreen(
                     SettingsCard(
                         icon = Icons.Default.AutoAwesome,
                         title = "Gemini Model",
-                        subtitle = "Choose which model is used for scoresheet scanning and chronicles."
+                        subtitle = "Automatic uses the newest Flash model and falls back when one is busy or retired. Pick a model only if you want to force one."
                     ) {
                         var modelPickerOpen by remember { mutableStateOf(false) }
+                        val autoLabel = "Automatic (recommended)"
                         if (availableModels?.isNotEmpty() == true) {
                             BoardFlowPickerField(
                                 label = "Gemini model",
-                                value = modelEndpoint.ifBlank { "Not selected" },
+                                value = modelEndpoint.ifBlank { autoLabel },
                                 expanded = modelPickerOpen,
                                 onClick = { modelPickerOpen = true }
                             )
                             if (modelPickerOpen) {
                                 BoardFlowPickerSheet(
                                     title = "Choose Gemini model",
-                                    options = availableModels ?: emptyList(),
+                                    options = listOf(GeminiModels.AUTO) + (availableModels ?: emptyList()),
                                     selectedOption = modelEndpoint,
-                                    optionLabel = { it },
+                                    optionLabel = { it.ifBlank { autoLabel } },
                                     onSelect = { model ->
                                         modelEndpoint = model
                                         prefs.geminiModelEndpoint = model.trim()
@@ -932,7 +936,7 @@ fun SettingsScreen(
                                     prefs.geminiModelEndpoint = it.trim()
                                 },
                                 label = { Text("Gemini model") },
-                                placeholder = { Text("e.g. gemini-flash-latest") },
+                                placeholder = { Text("Automatic - leave empty") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )

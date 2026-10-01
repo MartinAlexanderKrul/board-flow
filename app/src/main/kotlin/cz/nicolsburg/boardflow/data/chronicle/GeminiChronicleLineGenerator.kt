@@ -1,6 +1,7 @@
 package cz.nicolsburg.boardflow.data.chronicle
 
 import android.util.Log
+import cz.nicolsburg.boardflow.data.GeminiModels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -74,6 +75,18 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
                                 throw IllegalStateException("Chronicle model $currentModel returned an empty chronicle line")
                             }
                             return@runCatching parsed
+                        }
+                        response.code == 404 -> {
+                            // Model retired or not offered to this key — drop it and try the next one.
+                            config.onModelUnavailable?.invoke(currentModel)
+                            val nextModel = findNextModel(currentModel, config.availableModels, malformedModels)
+                            if (nextModel != null && attempts < MAX_ATTEMPTS) {
+                                logGemini("rotate-model chronicle http=404 from=$currentModel to=$nextModel attempt=$attempts/$MAX_ATTEMPTS")
+                                currentModel = nextModel
+                                currentKeyIndex = 0
+                                continue
+                            }
+                            throw IllegalStateException("Chronicle model $currentModel is no longer available")
                         }
                         response.code == 429 || response.code == 503 -> {
                             if (attempts >= MAX_ATTEMPTS) throw IllegalStateException("All models are currently experiencing high demand (${response.code}). Please try again in a moment.")
@@ -241,17 +254,7 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
         currentModel: String,
         availableModels: List<String>,
         excludedModels: Set<String> = emptySet()
-    ): String? {
-        if (availableModels.isEmpty()) return null
-        val eligible = availableModels.filter { it !in zeroQuotaModels && it !in excludedModels }
-        val sorted = eligible.sortedWith(compareByDescending { it.startsWith("gemini") })
-        val currentIndex = sorted.indexOf(currentModel)
-        return when {
-            currentIndex >= 0 && currentIndex < sorted.lastIndex -> sorted[currentIndex + 1]
-            currentIndex == -1 && sorted.isNotEmpty() -> sorted.first()
-            else -> null
-        }
-    }
+    ): String? = GeminiModels.next(currentModel, availableModels, zeroQuotaModels + excludedModels)
 
     private fun hasZeroQuota(body: String): Boolean = body.contains("limit: 0")
 

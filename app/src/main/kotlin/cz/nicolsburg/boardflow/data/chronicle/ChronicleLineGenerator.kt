@@ -13,7 +13,8 @@ data class ChronicleAiConfig(
     val modelName: String,
     val availableModels: List<String>,
     val availableApiKeys: List<String> = emptyList(),
-    val onModelExhausted: ((String) -> Unit)? = null
+    val onModelExhausted: ((String) -> Unit)? = null,
+    val onModelUnavailable: ((String) -> Unit)? = null
 )
 
 interface ChronicleLineGenerator {

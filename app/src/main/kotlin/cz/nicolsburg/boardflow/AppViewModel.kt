@@ -8,6 +8,7 @@ import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.core.di.AppContainer
 import cz.nicolsburg.boardflow.data.BggApiClient
 import cz.nicolsburg.boardflow.data.GameRecognitionEngine
+import cz.nicolsburg.boardflow.data.GeminiModels
 import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
 import cz.nicolsburg.boardflow.data.chronicle.ChronicleAiConfig
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
@@ -84,6 +85,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         private const val TAG_PLAYER = "PlayerRecognition"
         private const val BACKGROUND_SCAN_RETRY_ATTEMPTS = 3
         private const val BACKGROUND_SCAN_RETRY_DELAY_MS = 1200L
+        private const val GEMINI_MODELS_MAX_AGE_MS = 24 * 60 * 60 * 1000L
 
         fun factory(container: AppContainer) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
@@ -420,7 +422,28 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private var sessionModelExpiry: Long = 0L
     private fun effectiveModel(): String {
         val now = System.currentTimeMillis()
-        return if (sessionModel != null && now < sessionModelExpiry) sessionModel!! else prefs.geminiModelEndpoint
+        return if (sessionModel != null && now < sessionModelExpiry) sessionModel!! else prefs.getGeminiModelCandidates().first()
+    }
+
+    private fun onGeminiModelUnavailable(model: String) {
+        Log.d(TAG_SCAN, "Gemini model no longer available, dropping it: $model")
+        prefs.markGeminiModelUnavailable(model)
+        refreshGeminiModels()
+    }
+
+    private fun refreshGeminiModels() {
+        if (!prefs.hasGeminiKey() || !isOnline()) return
+        viewModelScope.launch {
+            container.geminiRepo.listAvailableModels(prefs.geminiApiKey).onSuccess { models ->
+                prefs.saveAvailableModels(models)
+                prefs.geminiModelsRefreshedAt = System.currentTimeMillis()
+            }
+        }
+    }
+
+    /** Keeps the cached model list from going stale as Google adds and retires models. */
+    private fun refreshGeminiModelsIfStale() {
+        if (System.currentTimeMillis() - prefs.geminiModelsRefreshedAt > GEMINI_MODELS_MAX_AGE_MS) refreshGeminiModels()
     }
 
     private val _extractedPlay = MutableStateFlow<ExtractedPlay?>(null)
@@ -539,20 +562,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     private fun findNextScanRetryModel(currentModel: String, availableModels: List<String>): String? {
-        if (availableModels.isEmpty()) return null
-        val priority = listOf(
-            "gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash-latest",
-            "gemini-1.5-flash", "gemini-2.5-flash-preview-05-20", "gemini-2.5-flash",
-            "gemini-1.5-pro-latest", "gemini-1.5-pro"
-        )
-        val priorityIndex = { m: String -> priority.indexOf(m).let { if (it < 0) Int.MAX_VALUE else it } }
-        val sorted = availableModels.sortedWith(compareBy({ priorityIndex(it) }, { !it.startsWith("gemini") }, { it }))
-        val currentIndex = sorted.indexOf(currentModel)
-        return when {
-            currentIndex >= 0 && currentIndex < sorted.size - 1 -> sorted[currentIndex + 1]
-            currentIndex == -1 && sorted.isNotEmpty() -> sorted.firstOrNull { it != currentModel }
-            else -> null
-        }
+        return GeminiModels.next(currentModel, availableModels)
     }
 
     private fun launchBackgroundScanRetry(imageFile: File) {
@@ -566,13 +576,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     imageFile = imageFile,
                     apiKey = prefs.geminiApiKey,
                     modelName = retryModel,
-                    availableModels = prefs.getEffectiveModels(),
+                    availableModels = prefs.getGeminiModelCandidates(),
                     availableApiKeys = prefs.getGeminiExtraApiKeys(),
                     onModelChanged = { newModel ->
                         sessionModel = newModel
                         sessionModelExpiry = System.currentTimeMillis() + 5 * 60 * 1000L
                         retryModel = newModel
                     },
+                    onModelUnavailable = ::onGeminiModelUnavailable,
                     onModelExhausted = { exhaustedModel ->
                         prefs.markModelExhausted(exhaustedModel)
                         Log.d(TAG_SCAN, "Marked model exhausted with 24h TTL: $exhaustedModel")
@@ -582,7 +593,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         Log.d(TAG_SCAN, "Background scan retry succeeded attempt=$attempt/$BACKGROUND_SCAN_RETRY_ATTEMPTS model=${retried.modelUsed ?: retryModel}")
                         cleanResult = retried
                     } else {
-                        val nextModel = findNextScanRetryModel(retryModel, prefs.getEffectiveModels())
+                        val nextModel = findNextScanRetryModel(retryModel, prefs.getGeminiModelCandidates())
                         if (nextModel != null && nextModel != retryModel) {
                             Log.d(TAG_SCAN, "Background scan retry malformed attempt=$attempt/$BACKGROUND_SCAN_RETRY_ATTEMPTS; rotating model from=$retryModel to=$nextModel")
                             retryModel = nextModel
@@ -592,7 +603,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     }
                 }.onFailure { error ->
                     Log.d(TAG_SCAN, "Background scan retry failed attempt=$attempt/$BACKGROUND_SCAN_RETRY_ATTEMPTS model=$retryModel error=${error.message}")
-                    val nextModel = findNextScanRetryModel(retryModel, prefs.getEffectiveModels())
+                    val nextModel = findNextScanRetryModel(retryModel, prefs.getGeminiModelCandidates())
                     if (nextModel != null && nextModel != retryModel) {
                         Log.d(TAG_SCAN, "Background scan retry rotating model after failure from=$retryModel to=$nextModel")
                         retryModel = nextModel
@@ -665,10 +676,12 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             _scanLoading.value = true; _scanStreaming.value = false; _scanError.value = null; _extractedPlay.value = null
             _gameCandidates.value = emptyList(); _scanRecognitionResult.value = null
             clearQuickScanCorrectionMode("new scan started")
+            refreshGeminiModelsIfStale()
             container.geminiRepo.extractScoresFromImage(
                 imageFile = imageFile, apiKey = prefs.geminiApiKey,
-                modelName = effectiveModel(), availableModels = prefs.getEffectiveModels(),
+                modelName = effectiveModel(), availableModels = prefs.getGeminiModelCandidates(),
                 availableApiKeys = prefs.getGeminiExtraApiKeys(),
+                onModelUnavailable = ::onGeminiModelUnavailable,
                 onModelChanged = { newModel ->
                     sessionModel = newModel
                     sessionModelExpiry = System.currentTimeMillis() + 5 * 60 * 1000L
@@ -768,7 +781,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun checkAvailableModels(onResult: (List<String>) -> Unit) {
         viewModelScope.launch {
             container.geminiRepo.listAvailableModels(prefs.geminiApiKey)
-                .onSuccess { models -> prefs.saveAvailableModels(models); onResult(models) }
+                .onSuccess { models ->
+                    prefs.saveAvailableModels(models)
+                    prefs.geminiModelsRefreshedAt = System.currentTimeMillis()
+                    onResult(models)
+                }
                 .onFailure { onResult(emptyList()) }
         }
     }
@@ -1837,12 +1854,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
             _chroniclePendingPlayIds.value = _chroniclePendingPlayIds.value + play.id
             val aiConfig = if (isOnline() && prefs.hasGeminiKey()) {
+                val candidates = prefs.getGeminiModelCandidates()
                 ChronicleAiConfig(
                     apiKey = prefs.geminiApiKey,
-                    modelName = prefs.geminiModelEndpoint,
-                    availableModels = prefs.getAvailableModels(),
+                    modelName = candidates.first(),
+                    availableModels = candidates,
                     availableApiKeys = prefs.getGeminiExtraApiKeys(),
-                    onModelExhausted = { exhaustedModel -> prefs.removeAvailableModel(exhaustedModel) }
+                    onModelExhausted = { exhaustedModel -> prefs.markModelExhausted(exhaustedModel) },
+                    onModelUnavailable = ::onGeminiModelUnavailable
                 )
             } else {
                 null

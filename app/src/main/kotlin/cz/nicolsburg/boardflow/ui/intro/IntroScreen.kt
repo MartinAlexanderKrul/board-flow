@@ -325,7 +325,7 @@ private fun IntroSettingsOverview() {
         SettingItem(
             icon = Icons.Default.AutoAwesome,
             title = "Gemini model",
-            description = "Which AI model to use for scanning. Use \"Refresh available models\" to see what your key has access to.",
+            description = "Chosen automatically: the newest Flash model your key can use, with fallback when one is busy or retired. You can still force a specific model.",
             optional = true
         )
         SettingItem(
