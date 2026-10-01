@@ -1772,8 +1772,8 @@
     {
       "gameId": 421165,
       "gameName": "Pantheum: Demigods of Olympia",
-      "gameIds": [421165],
-      "version": 1,
+      "gameIds": [421165, 444371],
+      "version": 2,
       "schemaVersion": 1,
       "path": "421165.json"
     },

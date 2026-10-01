@@ -2,43 +2,187 @@
   "schemaVersion": 1,
   "gameId": 421165,
   "gameName": "Pantheum: Demigods of Olympia",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Pantheum rulebook (via RulesPal)"]
+    "sources": [
+      "Pantheum rulebook (via RulesPal)",
+      "Pantheum: Monsters & Mandates rulebook (Archwood Games)"
+    ]
   },
-  "players": { "min": 1, "max": 4 },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
   "sections": [
     {
       "id": "city",
       "title": "City & markets",
       "steps": [
-        { "id": "tiles", "text": "City Tiles randomly in a 4x4 grid; flip the top-right one to show the Pit of Tartarus", "ref": "Setup" },
-        { "id": "epic", "text": "Epic Demigod Market: 1 random green, red and blue Epic Demigod, each with the other card of its color underneath", "ref": "Setup" },
-        { "id": "demigods", "text": "Shuffle the Demigod Deck; {n} faceup in the Demigod Market", "amounts": { "n": 4 }, "ref": "Setup" },
-        { "id": "favor", "text": "{n} Favor Tokens above the City Tiles", "amounts": { "n": { "byPlayers": { "1": 12, "2": 12, "3": 11, "4": 10 } } }, "ref": "Setup" },
-        { "id": "landscapes", "text": "Stacks of 6 Forest, 6 Mountain and 6 River Landscape Tiles right of the city", "ref": "Setup" },
-        { "id": "bank", "text": "Bank: green, red and blue Element Tokens (or the Element Tray)", "ref": "Setup" }
+        {
+          "id": "tiles",
+          "text": "City Tiles randomly in a 4x4 grid; flip the top-right one to show the Pit of Tartarus",
+          "ref": "Setup"
+        },
+        {
+          "id": "epic",
+          "text": "Epic Demigod Market: 1 random green, red and blue Epic Demigod, each with the other card of its color underneath",
+          "ref": "Setup"
+        },
+        {
+          "id": "demigods",
+          "text": "Shuffle the Demigod Deck; {n} faceup in the Demigod Market",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "favor",
+          "text": "{n} Favor Tokens above the City Tiles",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 12,
+                "2": 12,
+                "3": 11,
+                "4": 10
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "landscapes",
+          "text": "Stacks of 6 Forest, 6 Mountain and 6 River Landscape Tiles right of the city",
+          "ref": "Setup"
+        },
+        {
+          "id": "bank",
+          "text": "Bank: green, red and blue Element Tokens (or the Element Tray)",
+          "ref": "Setup"
+        }
       ]
     },
     {
       "id": "players",
       "title": "Players",
       "steps": [
-        { "id": "boards", "text": "Each player: Action Board, Quick Guide Card and God Standee", "ref": "Setup" },
-        { "id": "plan", "text": "Draw a random Divine Plan Card, rotate its dark square to match the Pit of Tartarus from your view; hide it in a white stand", "ref": "Setup" },
-        { "id": "off-board", "text": "Gods begin off the board", "ref": "Gameplay" }
+        {
+          "id": "boards",
+          "text": "Each player: Action Board, Quick Guide Card and God Standee",
+          "ref": "Setup"
+        },
+        {
+          "id": "plan",
+          "text": "Draw a random Divine Plan Card, rotate its dark square to match the Pit of Tartarus from your view; hide it in a white stand",
+          "ref": "Setup"
+        },
+        {
+          "id": "off-board",
+          "text": "Gods begin off the board",
+          "ref": "Gameplay"
+        }
       ]
     },
     {
       "id": "solo",
       "title": "Solo: Kronos",
-      "condition": { "players": [1] },
+      "condition": {
+        "players": [
+          1
+        ]
+      },
       "steps": [
-        { "id": "kronos", "text": "Kronos on the Pit of Tartarus; shuffle the Kronos Action Cards facedown", "ref": "Solo Mode" },
-        { "id": "blight", "text": "Blight Tokens by the Element Tokens in the Bank", "ref": "Solo Mode" },
-        { "id": "pandora", "text": "Remove the Pandora Demigod Cards from the Demigod Deck", "ref": "Solo Mode" }
+        {
+          "id": "kronos",
+          "text": "Kronos on the Pit of Tartarus; shuffle the Kronos Action Cards facedown",
+          "ref": "Solo Mode"
+        },
+        {
+          "id": "blight",
+          "text": "Blight Tokens by the Element Tokens in the Bank",
+          "ref": "Solo Mode"
+        },
+        {
+          "id": "pandora",
+          "text": "Remove the Pandora Demigod Cards from the Demigod Deck",
+          "ref": "Solo Mode"
+        }
+      ]
+    },
+    {
+      "id": "monsters",
+      "title": "Monsters",
+      "condition": {
+        "modules": [
+          "monsters"
+        ]
+      },
+      "steps": [
+        {
+          "id": "m-demigods",
+          "text": "Before building the Demigod Market, shuffle the expansion's Demigod Cards into the Demigod Deck, then draw the four market cards",
+          "ref": "M&M p.3"
+        },
+        {
+          "id": "m-deck",
+          "text": "Shuffle the Monster Cards into a deck above the Epic Demigod Market; reveal the top one onto the Pit of Tartarus",
+          "ref": "M&M p.3"
+        },
+        {
+          "id": "m-hoplites",
+          "text": "Pile of Hoplites in the Bank; Hoplite Market Card under the Epic Demigod Market with {n} Hoplites on it",
+          "amounts": {
+            "n": {
+              "default": 2
+            }
+          },
+          "ref": "M&M p.3"
+        },
+        {
+          "id": "m-penalty",
+          "text": "Penalty Tokens aside for end game scoring",
+          "ref": "M&M p.3"
+        }
+      ]
+    },
+    {
+      "id": "mandates",
+      "title": "Mandates",
+      "condition": {
+        "modules": [
+          "mandates"
+        ]
+      },
+      "steps": [
+        {
+          "id": "md-card",
+          "text": "1 random Mandate Card faceup below the board; box the rest",
+          "ref": "M&M p.8"
+        },
+        {
+          "id": "md-markers",
+          "text": "Each player's God Marker below the Mandate Card; box unused markers",
+          "ref": "M&M p.8"
+        }
+      ]
+    },
+    {
+      "id": "immortals",
+      "title": "Influence of the Immortals",
+      "condition": {
+        "modules": [
+          "immortals"
+        ]
+      },
+      "steps": [
+        {
+          "id": "im-card",
+          "text": "Give each player their god's Influence Card, Powers side up",
+          "ref": "M&M p.11"
+        }
       ]
     },
     {
@@ -46,8 +190,36 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "move", "text": "Each turn your god must move to a different City Tile, never one with another god", "ref": "Gameplay" },
-        { "id": "end", "text": "Game ends when all Favor Tokens are used", "ref": "Gameplay" }
+        {
+          "id": "move",
+          "text": "Each turn your god must move to a different City Tile, never one with another god",
+          "ref": "Gameplay"
+        },
+        {
+          "id": "end",
+          "text": "Game ends when all Favor Tokens are used",
+          "ref": "Gameplay"
+        },
+        {
+          "id": "md-penalty",
+          "text": "An unfulfilled Mandate at game end costs a penalty",
+          "condition": {
+            "modules": [
+              "mandates"
+            ]
+          },
+          "ref": "M&M p.8"
+        },
+        {
+          "id": "im-once",
+          "text": "Each Influence Card is used once per game: top Power immediate then discard, or bottom Power by flipping it",
+          "condition": {
+            "modules": [
+              "immortals"
+            ]
+          },
+          "ref": "M&M p.11"
+        }
       ]
     },
     {
@@ -55,8 +227,27 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "Random starting player; play is clockwise", "ref": "Gameplay" }
+        {
+          "id": "first",
+          "text": "Random starting player; play is clockwise",
+          "ref": "Gameplay"
+        }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "monsters",
+      "name": "Monsters",
+      "bggId": 444371
+    },
+    {
+      "id": "mandates",
+      "name": "Mandates"
+    },
+    {
+      "id": "immortals",
+      "name": "Influence of the Immortals"
     }
   ]
 }
