@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "gameId": 55690,
+  "gameName": "Kingdom Death: Monster",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Kingdom Death: Monster rulebook (Kingdom Death, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "first-story",
+      "name": "First Story (prologue)",
+      "group": "Session",
+      "defaultEnabled": true,
+      "note": "Always start a new campaign here."
+    },
+    {
+      "id": "campaign",
+      "name": "Hunt and showdown",
+      "group": "Session"
+    }
+  ],
+  "sections": [
+    {
+      "id": "survivors",
+      "title": "Survivors",
+      "steps": [
+        {
+          "id": "survivors-1",
+          "text": "The game is built around 4 survivors: with fewer players, some control more than one",
+          "condition": {
+            "modules": [
+              "first-story"
+            ]
+          },
+          "ref": "The First Story"
+        },
+        {
+          "id": "survivors-2",
+          "text": "Each survivor: a gear grid with 1 Cloth and 1 Founding Stone, and a survivor record sheet",
+          "condition": {
+            "modules": [
+              "first-story"
+            ]
+          },
+          "ref": "Create a Survivor"
+        },
+        {
+          "id": "survivors-3",
+          "text": "Name your survivor and record 1 survival; movement 5, other attributes 0; 1 armor point at the Waist for the Cloth",
+          "condition": {
+            "modules": [
+              "first-story"
+            ]
+          },
+          "ref": "Create a Survivor"
+        }
+      ]
+    },
+    {
+      "id": "white-lion",
+      "title": "White Lion",
+      "condition": {
+        "modules": [
+          "first-story"
+        ]
+      },
+      "steps": [
+        {
+          "id": "white-lion-1",
+          "text": "AI deck: Chomp, Size Up, Power Swat, Grasp, Maul, Terrifying Roar and Enraged shuffled facedown, with Claw on top",
+          "ref": "First Story: White Lion 1"
+        },
+        {
+          "id": "white-lion-2",
+          "text": "Hit location deck: shuffle all White Lion hit locations except Strange Hand, then put Strange Hand on top",
+          "ref": "First Story: White Lion 2"
+        },
+        {
+          "id": "white-lion-3",
+          "text": "Basic Action / Monster Reference card on the monster control panel",
+          "ref": "First Story: White Lion 3"
+        },
+        {
+          "id": "white-lion-4",
+          "text": "Showdown board out, record sheets and gear grids within reach",
+          "ref": "First Story: White Lion 4"
+        },
+        {
+          "id": "white-lion-5",
+          "text": "White Lion in the center; each survivor anywhere 6 spaces away (counted cardinally)",
+          "ref": "First Story: White Lion 5"
+        }
+      ]
+    },
+    {
+      "id": "hunt",
+      "title": "Hunt",
+      "condition": {
+        "modules": [
+          "campaign"
+        ]
+      },
+      "steps": [
+        {
+          "id": "hunt-1",
+          "text": "Shuffle the monster's hunt event cards; 1 facedown on every space marked E in its hunt board diagram",
+          "ref": "Set Up the Hunt"
+        },
+        {
+          "id": "hunt-2",
+          "text": "A basic hunt event card on every other open space except Start, Overwhelming Darkness and Starvation",
+          "ref": "Set Up the Hunt"
+        },
+        {
+          "id": "hunt-3",
+          "text": "Add any hunt event cards triggered by gear in your gear grids",
+          "ref": "Set Up the Hunt"
+        },
+        {
+          "id": "hunt-4",
+          "text": "Monster miniature on the space its level indicates; departing survivors on Start",
+          "ref": "Set Up the Hunt"
+        }
+      ]
+    },
+    {
+      "id": "showdown",
+      "title": "Showdown",
+      "condition": {
+        "modules": [
+          "campaign"
+        ]
+      },
+      "steps": [
+        {
+          "id": "showdown-1",
+          "text": "AI deck: shuffle the monster's Basic, Advanced and Legendary cards separately and draw the numbers its story event gives for its level; shuffle those together",
+          "ref": "Create a Monster"
+        },
+        {
+          "id": "showdown-2",
+          "text": "Its (S) cards and attribute tokens faceup on the monster control panel, with the Basic Action / Reference card",
+          "ref": "Create a Monster"
+        },
+        {
+          "id": "showdown-3",
+          "text": "Shuffle all its hit location cards facedown",
+          "ref": "Create a Monster"
+        },
+        {
+          "id": "showdown-4",
+          "text": "Shuffle the basic resource deck and the monster's own resource deck beside the panel",
+          "ref": "Create a Monster"
+        },
+        {
+          "id": "showdown-5",
+          "text": "Terrain, monster and survivors on the showdown board as the showdown story event shows",
+          "ref": "Showdown Board Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "The Founding Stone can be thrown from anywhere for an automatic critical wound, then it is archived",
+          "condition": {
+            "modules": [
+              "first-story"
+            ]
+          },
+          "ref": "Create a Survivor"
+        },
+        {
+          "id": "reminders-2",
+          "text": "Pass the monster controller tile clockwise after every round",
+          "ref": "Showdown"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Choose a monster controller; they draw the top AI card - the White Lion's Claw",
+          "condition": {
+            "modules": [
+              "first-story"
+            ]
+          },
+          "ref": "Showdown"
+        },
+        {
+          "id": "start-2",
+          "text": "Play the hunt along the hunt board, then the showdown in rounds: monster's turn, then one act per survivor",
+          "condition": {
+            "modules": [
+              "campaign"
+            ]
+          },
+          "ref": "Showdown"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "gameId": 209010,
+  "gameName": "Mechs vs. Minions",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Mechs vs. Minions rulebook (Riot Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "tutorial",
+      "name": "Tutorial",
+      "group": "Session",
+      "defaultEnabled": true
+    },
+    {
+      "id": "mission",
+      "name": "Mission",
+      "group": "Session",
+      "note": "Each mission adds its own pieces; follow its setup picture."
+    }
+  ],
+  "sections": [
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player picks a Yordle and takes its Command Line and Mech",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Command Lines in front of their players",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Your Yordle's Schematic Card facedown to the left of your Command Line",
+          "condition": {
+            "modules": [
+              "mission"
+            ]
+          },
+          "ref": "Mission Setup"
+        }
+      ]
+    },
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "table-1",
+          "text": "Place the Map Tile(s) pictured for the mission in the middle",
+          "ref": "Setup"
+        },
+        {
+          "id": "table-2",
+          "text": "Orient the Crystal Compass to the Map Tiles and table as shown",
+          "ref": "Setup"
+        },
+        {
+          "id": "table-3",
+          "text": "Shuffle the Command Card Deck",
+          "ref": "Setup"
+        },
+        {
+          "id": "table-4",
+          "text": "Shuffle the Damage Deck",
+          "condition": {
+            "modules": [
+              "mission"
+            ]
+          },
+          "ref": "Mission Setup"
+        },
+        {
+          "id": "table-5",
+          "text": "School on the Map Tile as shown",
+          "ref": "Setup"
+        },
+        {
+          "id": "table-6",
+          "text": "Each Mech on any Mech starting space, facing any direction",
+          "ref": "Setup"
+        },
+        {
+          "id": "table-7",
+          "text": "4 Crystal Shards inside the School as in the diagram",
+          "condition": {
+            "modules": [
+              "tutorial"
+            ]
+          },
+          "ref": "Tutorial Setup"
+        },
+        {
+          "id": "table-8",
+          "text": "Mission pieces as the mission pictures - for the first mission the Bomb in the School at 5 health and Minions on all Rune Spaces",
+          "condition": {
+            "modules": [
+              "mission"
+            ]
+          },
+          "note": "EZ-MODE: the Bomb starts at 7 health",
+          "ref": "Mission Setup"
+        },
+        {
+          "id": "table-9",
+          "text": "Rune Die and Numbered Die within reach",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "In the tutorial, ignore any piece or rule that isn't called out",
+          "condition": {
+            "modules": [
+              "tutorial"
+            ]
+          },
+          "ref": "Tutorial Setup"
+        },
+        {
+          "id": "reminders-2",
+          "text": "Each mission has its own envelope - open it when the rulebook sends you to that mission",
+          "condition": {
+            "modules": [
+              "mission"
+            ]
+          },
+          "ref": "Mission Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Draft Command Cards, then execute your Command Line from slot 1 to slot 6, starting with the First Player",
+          "ref": "Playing"
+        }
+      ]
+    }
+  ]
+}

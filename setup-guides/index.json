@@ -138,6 +138,14 @@
       "path": "54043.json"
     },
     {
+      "gameId": 55690,
+      "gameName": "Kingdom Death: Monster",
+      "gameIds": [55690],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "55690.json"
+    },
+    {
       "gameId": 66056,
       "gameName": "Rivals for Catan",
       "gameIds": [66056],
@@ -536,6 +544,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "205896.json"
+    },
+    {
+      "gameId": 209010,
+      "gameName": "Mechs vs. Minions",
+      "gameIds": [209010],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "209010.json"
     },
     {
       "gameId": 216132,
