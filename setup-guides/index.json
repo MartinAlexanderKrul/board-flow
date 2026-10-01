@@ -36,8 +36,8 @@
     {
       "gameId": 27627,
       "gameName": "Talisman: Revised 4th Edition",
-      "gameIds": [27627],
-      "version": 1,
+      "gameIds": [27627, 38025, 41064, 54475, 67051, 75857, 99815, 121786, 131816, 152318, 177211, 189950],
+      "version": 2,
       "schemaVersion": 1,
       "path": "27627.json"
     },

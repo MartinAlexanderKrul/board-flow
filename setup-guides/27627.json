@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 27627,
   "gameName": "Talisman: Revised 4th Edition",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Talisman Revised 4th Edition rulebook"
+      "Talisman Revised 4th Edition rulebook",
+      "Talisman Revised 4th Edition expansion rulebooks: Reaper, Frostmarch, Dungeon, Highland, Sacred Pool, Dragon, Blood Moon, City, Firelands, Harbinger, Cataclysm"
     ]
   },
   "players": {
@@ -69,6 +70,196 @@
       ]
     },
     {
+      "id": "expansions",
+      "title": "Expansions",
+      "steps": [
+        {
+          "id": "reaper-fig",
+          "text": "Reaper: Grim Reaper card by the board, his figure on the Portal of Power (optional rule)",
+          "condition": {
+            "modules": [
+              "reaper"
+            ]
+          },
+          "ref": "Reaper p.1",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "reaper-quests",
+          "text": "Warlock Quest cards shuffled facedown by the board (optional with Reaper)",
+          "condition": {
+            "modules": [
+              "reaper"
+            ]
+          },
+          "ref": "Reaper p.1"
+        },
+        {
+          "id": "frost-quests",
+          "text": "Frostmarch: shuffle the Warlock Quest cards (with the Reaper's, if used) facedown by the board",
+          "condition": {
+            "modules": [
+              "frostmarch"
+            ]
+          },
+          "ref": "Frostmarch p.1",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "dungeon-board",
+          "text": "Dungeon board next to the main board; shuffle the Dungeon deck beside it",
+          "note": "Without the board, discard Dungeon-icon Adventure cards when drawn; shuffle this expansion's character, Adventure and Spell cards into their decks",
+          "condition": {
+            "modules": [
+              "dungeon"
+            ]
+          },
+          "ref": "Dungeon p.2-4"
+        },
+        {
+          "id": "highland-board",
+          "text": "Highland board next to the main board; shuffle the Highland deck beside it; Relic cards stay in the box until needed",
+          "condition": {
+            "modules": [
+              "highland"
+            ]
+          },
+          "ref": "Highland: Setup",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "pool-rewards",
+          "text": "Sacred Pool: shuffle the Quest Reward cards facedown by the board",
+          "condition": {
+            "modules": [
+              "pool"
+            ]
+          },
+          "ref": "Sacred Pool: Setup",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "dragon-ending",
+          "text": "Dragon: shuffle its Alternative Ending cards, one random card faceup on the Crown of Command; dragon tokens ready to draw each turn",
+          "condition": {
+            "modules": [
+              "dragon"
+            ]
+          },
+          "ref": "Dragon: Setup",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "blood-time",
+          "text": "Blood Moon: Time Card by the board, Day side up; Werewolf card and figure and Lycanthrope cards ready",
+          "condition": {
+            "modules": [
+              "blood"
+            ]
+          },
+          "ref": "Blood Moon: Setup",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "city-board",
+          "text": "City board next to the main board; shuffle the Potion and Pet decks; Potion, Magic Emporium, Armoury, Pet and Stables decks by their spaces",
+          "condition": {
+            "modules": [
+              "city"
+            ]
+          },
+          "ref": "City: Setup 1-2",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "city-wanted",
+          "text": "Shuffle the Wanted Poster deck, 3 faceup on the City Gate; shuffle the City deck beside the board; Neutral Alignment cards stay boxed",
+          "condition": {
+            "modules": [
+              "city"
+            ]
+          },
+          "ref": "City: Setup 3-4"
+        },
+        {
+          "id": "fire-tokens",
+          "text": "Firelands: Terrain cards and fireland tokens by the board",
+          "condition": {
+            "modules": [
+              "fire"
+            ]
+          },
+          "ref": "Firelands p.1",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "harbinger-fig",
+          "text": "Harbinger: Harbinger figure on the Harbinger sheet; Omen and Harbinger cards ready",
+          "condition": {
+            "modules": [
+              "harbinger"
+            ]
+          },
+          "ref": "Harbinger: Setup",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "cata-board",
+          "text": "Cataclysm board replaces the main board",
+          "condition": {
+            "modules": [
+              "cataclysm"
+            ]
+          },
+          "ref": "Cataclysm: Setup 1",
+          "note": "shuffle this expansion's character, Adventure and Spell cards into their decks"
+        },
+        {
+          "id": "cata-remnants",
+          "text": "Shuffle the Remnant deck; 1 facedown Remnant card per Remnant symbol on each space; box the rest",
+          "condition": {
+            "modules": [
+              "cataclysm"
+            ]
+          },
+          "ref": "Cataclysm: Setup 2"
+        },
+        {
+          "id": "cata-decks",
+          "text": "Shuffle the Denizen, Talisman and Warlock Quest decks facedown by the board",
+          "condition": {
+            "modules": [
+              "cataclysm"
+            ]
+          },
+          "ref": "Cataclysm: Setup 3-5"
+        },
+        {
+          "id": "cata-crown",
+          "text": "\"The Eternal Crown\" Alternative Ending on the Crown of Command",
+          "condition": {
+            "modules": [
+              "cataclysm"
+            ],
+            "notModules": [
+              "alt-ending"
+            ]
+          },
+          "ref": "Cataclysm: Setup 6"
+        },
+        {
+          "id": "alt-ending",
+          "text": "Alternative Ending: revealed variant - remove hidden-icon cards, shuffle, one faceup on the Crown of Command; hidden variant - remove revealed-icon cards, one facedown",
+          "condition": {
+            "modules": [
+              "alt-ending"
+            ]
+          },
+          "ref": "Frostmarch p.1-2"
+        }
+      ]
+    },
+    {
       "id": "start",
       "title": "Start playing",
       "kind": "START",
@@ -79,6 +270,68 @@
           "ref": "p.4"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "reaper",
+      "name": "The Reaper",
+      "bggId": 38025
+    },
+    {
+      "id": "frostmarch",
+      "name": "The Frostmarch",
+      "bggId": 54475
+    },
+    {
+      "id": "dungeon",
+      "name": "The Dungeon",
+      "bggId": 41064
+    },
+    {
+      "id": "highland",
+      "name": "The Highland",
+      "bggId": 67051
+    },
+    {
+      "id": "pool",
+      "name": "The Sacred Pool",
+      "bggId": 75857
+    },
+    {
+      "id": "dragon",
+      "name": "The Dragon",
+      "bggId": 99815
+    },
+    {
+      "id": "blood",
+      "name": "The Blood Moon",
+      "bggId": 121786
+    },
+    {
+      "id": "city",
+      "name": "The City",
+      "bggId": 131816
+    },
+    {
+      "id": "fire",
+      "name": "The Firelands",
+      "bggId": 152318
+    },
+    {
+      "id": "harbinger",
+      "name": "The Harbinger",
+      "bggId": 177211
+    },
+    {
+      "id": "cataclysm",
+      "name": "The Cataclysm",
+      "bggId": 189950
+    },
+    {
+      "id": "alt-ending",
+      "name": "Alternative Ending card",
+      "note": "Optional; from Frostmarch, Highland, Sacred Pool, Dragon, Blood Moon, City, Firelands, Harbinger or Cataclysm."
     }
   ]
 }
