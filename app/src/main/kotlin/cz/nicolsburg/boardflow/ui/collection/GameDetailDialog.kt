@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Checklist
@@ -86,6 +87,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import cz.nicolsburg.boardflow.data.RulebookLinks
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideAvailability
 import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
@@ -240,6 +242,8 @@ fun GameDetailsDialog(
         derivedStateOf { ((headerCollapse - 0.12f) / 0.88f).coerceIn(0f, 1f) }
     }
 
+    val rulesUrl = remember(gameObjectId) { RulebookLinks.urlFor(context, gameObjectId) }
+
     fun open(url: String) {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
@@ -336,7 +340,7 @@ fun GameDetailsDialog(
                     item { InfoGroupBlock(listOf(InfoSection("More", customRows))) }
                 }
 
-                if (bggUrl != null || driveUrl != null) {
+                if (bggUrl != null || rulesUrl != null || driveUrl != null) {
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -350,6 +354,16 @@ fun GameDetailsDialog(
                                     Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp).alpha(0.65f))
                                     Spacer(Modifier.width(5.dp))
                                     Text("Open BGG")
+                                }
+                            }
+                            if (rulesUrl != null) {
+                                DialogUtilityActionButton(
+                                    onClick = { open(rulesUrl) },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp).alpha(0.65f))
+                                    Spacer(Modifier.width(5.dp))
+                                    Text("Rules")
                                 }
                             }
                             if (driveUrl != null) {

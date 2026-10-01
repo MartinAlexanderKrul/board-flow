@@ -290,6 +290,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
   searchable in Log Play (`AppViewModel.logPlayPool`), and resolve as game info from a play.
   Sleeve surfaces filter on `isOwned`, so they ignore played-only games.
 - game detail dialog is a major cross-link hub into History and Players
+- the detail dialog's bottom row is `Open BGG` / `Rules` / `Drive`; `Rules` appears when `RulebookLinks` (bundled `assets/rulebooks.json`, BGG id -> path in the public `boardgame-rulebooks` GitHub repo) has the game's id, and opens the PDF (or the folder when the game has several files) in the browser; regenerate the JSON when rulebooks are added to that repo
 - sleeve display respects per-game exclusion toggles
 
 ### Sync
