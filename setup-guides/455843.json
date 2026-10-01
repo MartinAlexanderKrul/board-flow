@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "gameId": 455843,
+  "gameName": "Everdell Emerland",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Everdell Emerland rulebook (via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "koto", "name": "Professor Koto (solo)", "forcedAtPlayers": [1], "players": { "min": 1, "max": 1 } },
+    { "id": "ruins", "name": "3D Jungle Ruins" }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "board", "text": "Game Board in the center", "ref": "Game Setup 1" },
+        { "id": "overlay-3", "text": "Add the 3p Board Overlay to the lower right of the board", "condition": { "players": [3] }, "ref": "Game Setup 1a" },
+        { "id": "overlay-4", "text": "Add the 3p and 4p Board Overlays to the top and lower portions of the board", "condition": { "players": [4] }, "ref": "Game Setup 1b" },
+        { "id": "path", "text": "Lost City Path Board above the Game Board", "ref": "Game Setup 2" },
+        { "id": "ruins", "text": "Build the 3D Jungle Ruins and place it on the Lost City Path Board", "condition": { "modules": ["ruins"] }, "ref": "Game Setup 3" },
+        { "id": "path-side", "text": "Lost City Path side of the board faceup", "condition": { "notModules": ["ruins"] }, "ref": "Game Setup 3" },
+        { "id": "path-points", "text": "Point Token stacks on each Lost City Path space as shown", "note": "2 players: a single stack per space, using the most valuable", "ref": "Game Setup 10" },
+        { "id": "artifacts", "text": "Artifact Tokens into the draw bag, nearby", "ref": "Game Setup 4" },
+        { "id": "dice", "text": "Roll the 4 orange River Market dice; place them on the lily pads", "ref": "Game Setup 9" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards & supply",
+      "steps": [
+        { "id": "plateau", "text": "Shuffle the Jungle cards; {n} in the Plateau (stack duplicates, refill); deck near the board", "amounts": { "n": 6 }, "note": "Cards are double-sided: cost side with the dark lower strip faceup", "ref": "Game Setup 5" },
+        { "id": "realms", "text": "Shuffle the Realm Cards; reveal {n} on the top area of the board", "amounts": { "n": 3 }, "ref": "Game Setup 6" },
+        { "id": "supply", "text": "Resources by their spots; Point Tokens, Emeralds and Harps in separate piles", "ref": "Game Setup 7-8" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "workers", "text": "Each player takes all Workers and Helpers of a color: 1 Helper in autumn, 1 Worker in winter, 2 Workers + 1 Helper in spring", "ref": "Player Setup 1" },
+        { "id": "archaeologist", "text": "1 Worker on the first Lost City Path space as your Archaeologist (you start with 2 Workers and 2 Helpers)", "ref": "Player Setup 2" },
+        { "id": "emerald", "text": "Each player gains {n} Emerald", "amounts": { "n": 1 }, "condition": { "notModules": ["koto"] }, "ref": "Player Setup 3" },
+        { "id": "hands", "text": "Starting hands: 1st player 3 Jungle cards, 2nd 4, 3rd 5, 4th 6", "condition": { "notModules": ["koto"] }, "ref": "Player Setup 4" }
+      ]
+    },
+    {
+      "id": "koto",
+      "title": "Professor Koto",
+      "condition": { "modules": ["koto"] },
+      "steps": [
+        { "id": "koto-setup", "text": "Koto gets a color (he prefers red); set up as for 2 players", "ref": "Solo Setup" },
+        { "id": "koto-arch", "text": "One of Koto's workers on the Lost City Path as his Archaeologist", "ref": "Solo Setup" },
+        { "id": "koto-decks", "text": "Shuffle Koto's Expedition and Excavation decks into two facedown piles in his area with his Workers and Helpers", "note": "Optional Trick deck for a greater challenge", "ref": "Solo Setup" },
+        { "id": "koto-hand", "text": "You draw 4 cards and take 1 Emerald; Koto gets no cards and no Emerald", "ref": "Solo Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "hand-limit", "text": "Strict hand limit of 6 cards", "ref": "Additional Card Rules" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The most musical player goes first", "note": "Solo: Professor Koto starts", "ref": "Player Setup" }
+      ]
+    }
+  ]
+}

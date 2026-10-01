@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "gameId": 365717,
+  "gameName": "Clank!: Catacombs",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Clank! Catacombs rulebook (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 4 },
+  "modules": [
+    { "id": "adventuring-party", "name": "Adventuring Party", "extendsMaxPlayers": 6, "note": "Enables 5-6 players." }
+  ],
+  "sections": [
+    {
+      "id": "bank",
+      "title": "Clank! board & Bank",
+      "steps": [
+        { "id": "board", "text": "Clank! board to one side; Dragon marker on the Rage Track space for {n} players", "amounts": { "n": { "default": "your number of" } }, "ref": "Setup A" },
+        { "id": "tiles", "text": "Shuffle the 22 Depths tiles facedown in the Bank; shuffle the other 6 square tiles, box 2 unseen, put 4 on top", "ref": "Setup B" },
+        { "id": "supply", "text": "Gold, Lockpicks, 5 white Ghost cubes and the Dragon bag with 24 black cubes in the Bank", "ref": "Setup C" },
+        { "id": "artifacts", "text": "7 Artifacts stacked faceup by value, 5 on top, 20 at the bottom", "ref": "Setup C" },
+        { "id": "ap-artifacts", "text": "Add the 10, 15, 20 and 25 Adventuring Party Artifacts into the stack (theirs above same-value ones); not the 30", "condition": { "modules": ["adventuring-party"] }, "ref": "Adventuring Party" },
+        { "id": "tokens", "text": "Shuffle major secrets, minor secrets and prisoners facedown, each kind separately", "ref": "Setup C" },
+        { "id": "market", "text": "Market Board: 2 Backpacks, 2 Blood Amulets, 3 Burglar's Kits, 3 Crowns (10 on top, 8 at the bottom)", "ref": "Setup C" },
+        { "id": "ap-market", "text": "Add Adventuring Party Market items except the Master Key; use its other components and side board", "condition": { "modules": ["adventuring-party"] }, "ref": "Adventuring Party" }
+      ]
+    },
+    {
+      "id": "dungeon",
+      "title": "Dungeon",
+      "steps": [
+        { "id": "start-tile", "text": "Starting tile in the center, either side up, with room around it", "ref": "Setup D" },
+        { "id": "idols", "text": "3 Monkey Idols on the Monkey Shrine room", "ref": "Setup D" },
+        { "id": "mastery", "text": "{n} Mastery tokens near the Crypt", "amounts": { "n": { "default": "1 per player", "byPlayers": { "2": 2, "3": 3, "4": 4, "5": 5, "6": 6 } } }, "ref": "Setup D" },
+        { "id": "reserve", "text": "Reserve: Goblin card plus Mercenary, Explore and Secret Tome stacks", "ref": "Setup E" },
+        { "id": "row", "text": "Shuffle the Dungeon Deck; deal {n} faceup as the Dungeon Row, replacing Dragon Attack cards (reshuffle those)", "amounts": { "n": 6 }, "ref": "Setup E" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "color", "text": "Each player: 30 Clank! cubes of their color; pawn on the Crypt of the starting tile", "ref": "Setup F" },
+        { "id": "lockpicks", "text": "Each player takes {n} Lockpicks", "amounts": { "n": 3 }, "ref": "Setup G" },
+        { "id": "deck", "text": "Starting deck: 6 Burgles, 2 Stumbles, 1 Sidestep, 1 Scramble; shuffle and draw 5", "ref": "Setup G" },
+        { "id": "clank", "text": "Starting Clank! on the board: 1st player 3, 2nd 2, 3rd 1, 4th 0", "ref": "Setup H" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The sneakiest player (or a random one) goes first", "ref": "Setup H" }
+      ]
+    }
+  ]
+}

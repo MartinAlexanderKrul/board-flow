@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "gameId": 285774,
+  "gameName": "Marvel Champions: The Card Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Marvel Champions Learn to Play (Fantasy Flight Games)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "expert", "name": "Expert mode", "note": "Expert villain stages + Expert encounter set." }
+  ],
+  "sections": [
+    {
+      "id": "heroes",
+      "title": "Heroes",
+      "steps": [
+        { "id": "identity", "text": "Each player picks an identity card, alter-ego side up", "note": "First game: Spider-Man and Captain Marvel vs Rhino", "ref": "Setup 1" },
+        { "id": "hp", "text": "Set your hit point dial to the starting hit points on your identity card", "ref": "Setup 2" },
+        { "id": "first", "text": "Choose a first player; give them the first player token", "ref": "Setup 3" },
+        { "id": "obligations", "text": "Set aside each hero's obligation card", "ref": "Setup 4" },
+        { "id": "nemesis", "text": "Set aside each hero's nemesis and nemesis encounter cards (not in play)", "ref": "Setup 5" },
+        { "id": "decks", "text": "Each player shuffles their player deck by their identity card", "ref": "Setup 6" },
+        { "id": "tokens", "text": "Pool of damage, threat and all-purpose tokens; stunned, confused and tough status cards nearby", "ref": "Setup 7" }
+      ]
+    },
+    {
+      "id": "villain",
+      "title": "Villain",
+      "steps": [
+        { "id": "villain-deck", "text": "Villain deck in stage order ({stages}) and main scheme deck in the center", "amounts": { "stages": { "default": "stages I and II", "cases": [{ "when": { "modules": ["expert"] }, "value": "stages II and III" }] } }, "ref": "Setup 8, Expert Mode" },
+        { "id": "villain-hp", "text": "Villain hit point dial = the card's value x {n}", "amounts": { "n": { "default": "players", "byPlayers": { "1": "1", "2": "2", "3": "3", "4": "4" } } }, "ref": "Setup 9" },
+        { "id": "scheme-setup", "text": "Resolve the main scheme's \"Setup\" instructions (read side A, flip to B)", "ref": "Setup 10" },
+        { "id": "encounter", "text": "Encounter deck: villain set + Standard set + the scenario's modular set + the set-aside obligations; shuffle", "ref": "Setup 11" },
+        { "id": "expert-set", "text": "Add the Expert encounter set (Exhaustion, Masterplan, Under Fire)", "condition": { "modules": ["expert"] }, "ref": "Expert Mode" }
+      ]
+    },
+    {
+      "id": "hands",
+      "title": "Hands",
+      "steps": [
+        { "id": "draw", "text": "Each player draws up to their hand size (bottom left of the identity card)", "ref": "Setup 12" },
+        { "id": "mulligan", "text": "Mulligan: discard any cards and draw back up (don't reshuffle)", "ref": "Setup 13" },
+        { "id": "char-setup", "text": "Resolve \"Setup\" instructions on identity cards", "ref": "Setup 14" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "nemesis-aside", "text": "Nemesis cards stay out until an encounter card calls for them", "ref": "Setup 11" },
+        { "id": "per-player", "text": "Per-player icon values use the number of players who started", "ref": "Key Concepts" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "player-phase", "text": "Player phase: the first player takes their turn, then each player in order", "ref": "Round Sequence" }
+      ]
+    }
+  ]
+}

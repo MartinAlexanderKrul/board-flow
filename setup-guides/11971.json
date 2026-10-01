@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "gameId": 11971,
+  "gameName": "Cockroach Poker",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Cockroach Poker rulebook (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 6 },
+  "sections": [
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        { "id": "remove", "text": "Remove {n} cards from the shuffled deck unseen", "amounts": { "n": 10 }, "condition": { "players": [2] }, "ref": "Two-Player Game" },
+        { "id": "deal", "text": "Shuffle and deal all {n} cards facedown (uneven hands are fine)", "amounts": { "n": { "default": "64", "byPlayers": { "2": "remaining 54" } } }, "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "lose", "text": "You lose with {n} of one critter faceup in front of you, or when you must start a round with no cards", "amounts": { "n": { "default": "4", "byPlayers": { "2": "5" } } }, "ref": "End of the Game" },
+        { "id": "two-no-pass", "text": "2 players: no passing on - every card must be answered \"true\" or \"false\"", "condition": { "players": [2] }, "ref": "Two-Player Game" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The first player slides a card facedown to anyone and names a critter", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

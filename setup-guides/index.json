@@ -2,6 +2,14 @@
   "schemaVersion": 1,
   "guides": [
     {
+      "gameId": 11971,
+      "gameName": "Cockroach Poker",
+      "gameIds": [11971],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "11971.json"
+    },
+    {
       "gameId": 27627,
       "gameName": "Talisman: Revised 4th Edition",
       "gameIds": [27627],
@@ -48,6 +56,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "133473.json"
+    },
+    {
+      "gameId": 136063,
+      "gameName": "Forbidden Desert",
+      "gameIds": [136063],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "136063.json"
     },
     {
       "gameId": 162886,
@@ -178,6 +194,14 @@
       "path": "224037.json"
     },
     {
+      "gameId": 233371,
+      "gameName": "Clank! In! Space!: A Deck-Building Adventure",
+      "gameIds": [233371],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "233371.json"
+    },
+    {
       "gameId": 237182,
       "gameName": "Root",
       "gameIds": [237182, 241386, 272637, 287220, 330149, 428335],
@@ -258,6 +282,14 @@
       "path": "285265.json"
     },
     {
+      "gameId": 285774,
+      "gameName": "Marvel Champions: The Card Game",
+      "gameIds": [285774],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "285774.json"
+    },
+    {
       "gameId": 291457,
       "gameName": "Gloomhaven: Jaws of the Lion",
       "gameIds": [291457],
@@ -288,6 +320,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "298383.json"
+    },
+    {
+      "gameId": 312484,
+      "gameName": "Lost Ruins of Arnak",
+      "gameIds": [312484],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "312484.json"
     },
     {
       "gameId": 316554,
@@ -338,12 +378,28 @@
       "path": "357563.json"
     },
     {
+      "gameId": 365717,
+      "gameName": "Clank!: Catacombs",
+      "gameIds": [365717],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "365717.json"
+    },
+    {
       "gameId": 366161,
       "gameName": "Wingspan Asia",
       "gameIds": [366161],
       "version": 1,
       "schemaVersion": 1,
       "path": "366161.json"
+    },
+    {
+      "gameId": 367966,
+      "gameName": "Endeavor: Deep Sea",
+      "gameIds": [367966],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "367966.json"
     },
     {
       "gameId": 380619,
@@ -360,6 +416,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "385761.json"
+    },
+    {
+      "gameId": 394106,
+      "gameName": "Everdell Farshore",
+      "gameIds": [394106],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "394106.json"
     },
     {
       "gameId": 397598,
@@ -400,6 +464,22 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "436126.json"
+    },
+    {
+      "gameId": 436821,
+      "gameName": "Everdell Silverfrost",
+      "gameIds": [436821],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "436821.json"
+    },
+    {
+      "gameId": 455843,
+      "gameName": "Everdell Emerland",
+      "gameIds": [455843],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "455843.json"
     }
   ]
 }

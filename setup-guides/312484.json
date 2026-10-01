@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "gameId": 312484,
+  "gameName": "Lost Ruins of Arnak",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Lost Ruins of Arnak rulebook (Czech Games Edition)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "snake", "name": "Snake Temple side", "note": "Bird Temple side is recommended for a first game." }
+  ],
+  "sections": [
+    {
+      "id": "card-row",
+      "title": "Card row",
+      "steps": [
+        { "id": "board", "text": "Main board {side} up", "amounts": { "side": { "default": "Bird Temple side", "cases": [{ "when": { "modules": ["snake"] }, "value": "Snake Temple side" }] } }, "ref": "p.4" },
+        { "id": "artifacts", "text": "Shuffle the Artifacts facedown on their marked space", "ref": "p.4" },
+        { "id": "fear", "text": "Fear cards faceup on their marked space", "ref": "p.4" },
+        { "id": "items", "text": "Shuffle the Items facedown on their marked space", "ref": "p.4" },
+        { "id": "moon-staff", "text": "Moon staff in the card row on round I", "ref": "p.4" },
+        { "id": "deal-row", "text": "{a} artifact faceup left of the moon staff, {i} items faceup right of it", "amounts": { "a": 1, "i": 5 }, "ref": "p.4" }
+      ]
+    },
+    {
+      "id": "island",
+      "title": "Island",
+      "steps": [
+        { "id": "idols", "text": "Mix the Idol tiles; each level-1 site (the 7 sites) gets one faceup idol", "ref": "p.4" },
+        { "id": "idols-2", "text": "Each of the 8 level-2 sites gets one faceup and one facedown idol, as shown on the board", "ref": "p.4" },
+        { "id": "blocking-3", "text": "Shuffle the blocking tiles facedown, flip 3: block the space at each of those 3 sites; box the other 2", "condition": { "players": [3] }, "ref": "p.4" },
+        { "id": "blocking-2", "text": "Block all 5 marked spaces - each of those sites holds only one archaeologist", "condition": { "maxPlayers": 2 }, "ref": "p.4" }
+      ]
+    },
+    {
+      "id": "research",
+      "title": "Research track",
+      "steps": [
+        { "id": "temple", "text": "Temple tile stacks of {n} each: one 11-point stack at the top, two 6-point in the middle, three 2-point at the bottom; box the rest", "amounts": { "n": { "byPlayers": { "1": 2, "2": 2, "3": 3, "4": 4 } } }, "ref": "p.5" },
+        { "id": "lost-temple", "text": "Shuffle the research bonus tiles facedown; a stack of {n} at the top of the research track", "amounts": { "n": { "byPlayers": { "1": 2, "2": 2, "3": 3, "4": 4 } } }, "ref": "p.5" },
+        { "id": "bonus", "text": "One bonus tile on most research spaces (spaces marked for 3+ or 4 players only as marked); turn them faceup, box the rest", "ref": "p.5" },
+        { "id": "rescue", "text": "Deal {n} random assistants to the Assistant Rescue space (top one public)", "amounts": { "n": { "byPlayers": { "1": 2, "2": 2, "3": 3, "4": 4 } } }, "condition": { "modules": ["snake"] }, "ref": "p.19" },
+        { "id": "dreadful", "text": "Deal 2 or 3 bonus tiles to the Dreadful Tales row as marked", "condition": { "modules": ["snake"] }, "ref": "p.19" }
+      ]
+    },
+    {
+      "id": "supply",
+      "title": "Supply board",
+      "steps": [
+        { "id": "resources", "text": "All resource tokens on the supply board", "ref": "p.5" },
+        { "id": "sites", "text": "Shuffle the level-1 and level-2 site tiles separately; facedown on the supply board", "ref": "p.5" },
+        { "id": "guardians", "text": "Shuffle the guardians facedown on the supply board", "ref": "p.5" },
+        { "id": "assistants", "text": "Assistants silver side up, shuffled into 3 stacks of 4", "condition": { "notModules": ["snake"] }, "ref": "p.5" },
+        { "id": "assistants-snake", "text": "Remaining assistants silver side up: two stacks of 3, the third with all the rest", "condition": { "modules": ["snake"] }, "ref": "p.19" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "color", "text": "Each player takes a player board, research tokens, 2 archaeologists and 4 basic cards in their color", "ref": "p.6" },
+        { "id": "research-tokens", "text": "Research tokens on a starting space below the track; magnifying glass atop the notebook", "ref": "p.6" },
+        { "id": "deck", "text": "Starting deck: 2 Funding, 2 Exploration + 2 Fear cards, shuffled facedown on your board", "ref": "p.6" },
+        { "id": "first", "text": "Starting player marker to whoever most recently visited somewhere new; play is clockwise", "ref": "p.6" },
+        { "id": "resources-start", "text": "Starting resources: P1 2 coins, P2 1 coin + 1 compass, P3 2 coins + 1 compass, P4 1 coin + 2 compasses", "ref": "p.6" }
+      ]
+    },
+    {
+      "id": "solo",
+      "title": "Solo rival",
+      "condition": { "players": [1] },
+      "steps": [
+        { "id": "solo-board", "text": "Board set up as for 2 players; you play second (1 coin, 1 compass)", "ref": "p.20" },
+        { "id": "rival-board", "text": "Rival: another player board, gray-tents side, with all 6 archaeologists not in your color", "ref": "p.20" },
+        { "id": "rival-glass", "text": "Rival's magnifying glass on a starting space next to your research tokens", "ref": "p.20" },
+        { "id": "rival-stack", "text": "Rival action stack of 10 tiles: all 5 archaeologist tiles + 5 red or green tiles", "ref": "p.20" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "rounds", "text": "5 rounds; each round starts by drawing up to 5 cards", "ref": "p.7" },
+        { "id": "snake-bridge", "text": "Crossing the research bridge costs 1 idol from your crates", "condition": { "modules": ["snake"] }, "ref": "p.19" },
+        { "id": "rival-first", "text": "The rival starts every round and doesn't pass until all 10 tiles are played", "condition": { "players": [1] }, "ref": "p.20" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "draw", "text": "Everyone draws 5 cards; the starting player takes the first turn", "ref": "p.7" }
+      ]
+    }
+  ]
+}

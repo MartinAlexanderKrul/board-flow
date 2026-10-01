@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "gameId": 233371,
+  "gameName": "Clank! In! Space!: A Deck-Building Adventure",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Clank! In! Space! rulebook (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 4 },
+  "sections": [
+    {
+      "id": "ship",
+      "title": "Spaceship",
+      "steps": [
+        { "id": "board", "text": "Assemble the ship: Cargo Bay, Command and Corridor always; the other 3 modules in any position, either side up", "note": "First game: Hydroponics, Doomsday Cannon, Med Lab as shown", "ref": "Setup A" },
+        { "id": "artifacts", "text": "Artifacts faceup on the matching numbered Command spaces{x}", "amounts": { "x": { "default": "", "byPlayers": { "2": " - first box 2 random ones unseen", "3": " - first box 1 random one unseen" } } }, "ref": "Setup C" },
+        { "id": "major", "text": "Shuffle the Major Secrets; 1 on each Major Secret space", "ref": "Setup D" },
+        { "id": "minor", "text": "Shuffle the Minor Secrets; 2 on each Minor Secret space; box extras unseen", "ref": "Setup E" },
+        { "id": "market", "text": "Market Board by the ship with {n} each of Contraband, Master Key, Med Kit and TelePass", "amounts": { "n": { "default": 2, "byPlayers": { "2": 1 } } }, "ref": "Setup F" },
+        { "id": "pods", "text": "4 Escape Pod tokens in the Cargo Bay", "ref": "Setup G" },
+        { "id": "bank", "text": "Bank: 5 Power Crystals, {n} Command Code tokens and all Credits", "amounts": { "n": { "default": "1 per player", "byPlayers": { "2": 2, "3": 3, "4": 4 } } }, "ref": "Setup H" }
+      ]
+    },
+    {
+      "id": "rage",
+      "title": "Rage Track & boss",
+      "steps": [
+        { "id": "hunters", "text": "4 red Bounty Hunter cubes: one on each of the first two red-zone spaces, two on the plaid space", "ref": "Setup I" },
+        { "id": "blockade", "text": "Blockade token on the last space of the red zone", "ref": "Setup J" },
+        { "id": "boss-marker", "text": "Boss Marker on the space for {n} players", "amounts": { "n": { "default": "your number of" } }, "ref": "Setup K" },
+        { "id": "bag", "text": "24 black boss cubes in the Boss Bag", "ref": "Setup L" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        { "id": "reserve", "text": "Reserve: G:B-L1N plus the FAZR, Boldly Go and Memory Core piles", "ref": "Setup M" },
+        { "id": "row", "text": "Shuffle the Adventure Deck; deal {n} faceup as the Adventure Row, replacing any with the Boss Attack symbol (reshuffle those)", "amounts": { "n": 6 }, "ref": "Setup N" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "supply", "text": "Each player: a pawn, 30 Clank! cubes and 2 Data cubes of their color", "ref": "Setup B" },
+        { "id": "deck", "text": "Starting deck: 6 Hacks, 2 Stumbles, 1 Access, 1 Scramble", "ref": "Setup B" },
+        { "id": "start-space", "text": "Pawns on the starting space in the Cargo Bay; shuffle and draw 5", "ref": "Setup O" },
+        { "id": "clank", "text": "Starting Clank! in the Clank! area: 1st player 3, 2nd 2, 3rd 1, 4th 0", "ref": "Setup P" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The sneakiest player (or a random one) goes first; play is clockwise", "ref": "Setup P" }
+      ]
+    }
+  ]
+}

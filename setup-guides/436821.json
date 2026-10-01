@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "gameId": 436821,
+  "gameName": "Everdell Silverfrost",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Everdell Silverfrost rulebook (via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "paws", "name": "Paws (solo)", "forcedAtPlayers": [1], "players": { "min": 1, "max": 1 } },
+    { "id": "rewards", "name": "Snow reward", "group": "Snow reward", "defaultEnabled": true, "note": "Flurries - recommended for a first game." },
+    { "id": "ice-storm", "name": "Ice Storm", "group": "Snow reward", "note": "More competitive." }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board & Mountain",
+      "steps": [
+        { "id": "board", "text": "Board in the center, the Mountain along its top edge", "ref": "Setup" },
+        { "id": "supply", "text": "Resources by their spots, Point tokens in piles, Fire tokens near the Hot Springs", "ref": "Setup" },
+        { "id": "snow", "text": "Snow tokens on the peak of the Mountain", "ref": "Setup" },
+        { "id": "beacons", "text": "{n} Beacons on the Mountain as marked", "amounts": { "n": { "byPlayers": { "1": "2", "2": "2", "3": "3", "4": "4" } } }, "note": "The two always-used Beacons, a third for 3-4 players, a fourth for 4", "ref": "Setup" },
+        { "id": "big-critters", "text": "Shuffle the Big Critters facedown left of the Mountain; 1 faceup on each of its {n} spots", "amounts": { "n": 4 }, "ref": "Setup" },
+        { "id": "winters-fury", "text": "Winter's Fury tile on the board, 1-Fire side up", "ref": "Setup" },
+        { "id": "snowstorm", "text": "Snowstorm deck: {n}, shuffle facedown on its spot", "amounts": { "n": { "byPlayers": { "1": "remove the cards marked 3 and 4", "2": "remove the cards marked 3 and 4", "3": "remove the cards marked 4", "4": "use all cards" } } }, "ref": "Setup" },
+        { "id": "reward-flurries", "text": "Reward tile on the Flurries side: 1 point per Snow cleared, +5 for the most", "condition": { "notModules": ["ice-storm"] }, "ref": "Rewards" },
+        { "id": "reward-ice", "text": "Reward tile on the Ice Storm side: 12 points for the most Snow cleared", "condition": { "modules": ["ice-storm"] }, "ref": "Rewards" }
+      ]
+    },
+    {
+      "id": "quests",
+      "title": "Quests & cards",
+      "steps": [
+        { "id": "highland", "text": "Shuffle the Highland Quests; {n} faceup near the Guild, box the rest", "amounts": { "n": { "byPlayers": { "1": "3", "2": "3", "3": "4", "4": "5" } } }, "note": "1 per player + 1; Paws counts as a player", "ref": "Setup" },
+        { "id": "lowland", "text": "Shuffle the Lowland Quests facedown near the Guild", "ref": "Setup" },
+        { "id": "valley", "text": "Shuffle the main deck; {n} cards faceup in the Valley (stack duplicates, refill)", "amounts": { "n": 8 }, "ref": "Setup" },
+        { "id": "deck", "text": "Deck facedown near the left of the board; discard pile forms on the right", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "workers", "text": "Each player picks a Worker type: 2 workers, one with snowshoes as the Ranger; the other 4 in the seasons - 1 autumn, 1 winter, 2 spring", "ref": "Setup" },
+        { "id": "chimneys", "text": "1 Chimney per player in the autumn and in the winter areas (none in your supply)", "ref": "Setup" },
+        { "id": "fire", "text": "Each player takes {n} Fire token", "amounts": { "n": 1 }, "ref": "Setup" },
+        { "id": "lowland-draw", "text": "Each player draws 2 Lowland Quests, keeps 1 secretly, puts the other at the bottom", "condition": { "notModules": ["paws"] }, "ref": "Setup" },
+        { "id": "hands", "text": "Starting hands: 1st player 5 cards, 2nd 6, 3rd 7, 4th 8", "note": "Each player may redraw their whole hand once during setup", "condition": { "notModules": ["paws"] }, "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "paws",
+      "title": "Paws (solo)",
+      "condition": { "modules": ["paws"] },
+      "steps": [
+        { "id": "paws-level", "text": "Choose a difficulty level; set up as for 2 players with Flurries; Paws gets workers and a Ranger (he prefers red)", "ref": "Solo Setup" },
+        { "id": "paws-quests", "text": "Paws's Quest deck: 5 facedown Quests - level 1 all Lowland; level 2-3 swap 1 for a Highland; level 4 swap 2", "ref": "Solo Setup" },
+        { "id": "paws-cards", "text": "Shuffle the Map and Scheme cards into two facedown stacks; reveal the top Map card; 10 Paws tokens nearby", "ref": "Solo Setup" },
+        { "id": "you", "text": "You take your Lowland Quests as normal and draw 6 cards as the second player", "ref": "Solo Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "hand-limit", "text": "Strict hand limit of 8 cards", "ref": "Additional Card Rules" },
+        { "id": "ranger", "text": "Your Ranger may visit an occupied Location, or gains a Fire when visiting one alone", "ref": "Overview" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The coldest player goes first", "note": "Solo: Paws goes first and has no hand", "ref": "Setup" }
+      ]
+    }
+  ]
+}

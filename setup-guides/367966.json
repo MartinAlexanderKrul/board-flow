@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "gameId": 367966,
+  "gameName": "Endeavor: Deep Sea",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Endeavor: Deep Sea rulebook (via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "coop", "name": "Co-op", "forcedAtPlayers": [1], "note": "Every scenario can be played co-op; solo is 1-player co-op." }
+  ],
+  "sections": [
+    {
+      "id": "ocean",
+      "title": "Ocean",
+      "steps": [
+        { "id": "scenario", "text": "Choose a Scenario Sheet", "note": "First game: Mission 1 - The Call of the Ocean", "ref": "Setup" },
+        { "id": "boards", "text": "Lay out the Ocean boards your scenario shows; discard mission-specific boards not in it", "note": "Maximum depth is 5 unless stated", "ref": "Setup" },
+        { "id": "stacks", "text": "Shuffle the remaining boards into five facedown stacks by depth", "ref": "Setup" },
+        { "id": "dive", "text": "Shuffle the Dive tokens facedown; draw the indicated number onto every zone with a Dive site", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Journals & Specialists",
+      "steps": [
+        { "id": "journals", "text": "Shuffle the Anchor Journal and Journal decks separately; {n} random Anchor Journals faceup, Journal deck facedown nearby", "amounts": { "n": 4 }, "ref": "Setup" },
+        { "id": "tray", "text": "Specialist tray: Tier 1-4 Junior side up, sorted by title into columns (Tier 1 leftmost)", "ref": "Setup" },
+        { "id": "tier5", "text": "Tier 5: shuffle Junior side up, 3 random tiles in each pocket of the rightmost column", "note": "Re-randomize every game", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "wave", "text": "Random start player takes the Wave marker", "ref": "Setup" },
+        { "id": "materials", "text": "Each player: a player mat, a Team Leader tile, and 30 discs, 5 track cubes, 20 Impact markers and 3 vessels in their color", "ref": "Setup" },
+        { "id": "cubes", "text": "Track cubes on the 0 spaces of your Attribute and Research tracks", "ref": "Setup" },
+        { "id": "leader", "text": "Team Leader by your mat with one disc on its activation circle; other discs in a distant supply (not yet available)", "ref": "Setup" },
+        { "id": "impact", "text": "Impact markers near the Impact board", "ref": "Setup" },
+        { "id": "vessel", "text": "Deploy your starting vessel to the launch zone and gain its Arrival bonus", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "coop",
+      "title": "Co-op",
+      "condition": { "modules": ["coop"] },
+      "steps": [
+        { "id": "setbacks", "text": "Shuffle the Setback cards; a facedown stack of {n}", "amounts": { "n": { "default": 3, "byPlayers": { "1": 4 } } }, "ref": "Cooperative and Solo Modes" },
+        { "id": "bonus-goals", "text": "Shuffle the Bonus Goals; 3 on top of the Setbacks; box the rest unseen", "ref": "Cooperative and Solo Modes" },
+        { "id": "difficulty", "text": "Choose difficulty: Beginner 4 goals, Intermediate 5, Expert 6, Legendary all 7", "ref": "Cooperative and Solo Modes" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "rounds", "text": "{n} rounds; the Wave player goes first in each phase", "amounts": { "n": { "default": 6, "byPlayers": { "1": 7 } } }, "ref": "Gameplay" },
+        { "id": "draw-goal", "text": "Co-op: draw the top Bonus Goal / Setback card at the start of every round, including the first", "condition": { "modules": ["coop"] }, "ref": "Cooperative and Solo Modes" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "prep", "text": "Round 1 Preparation: recruit a Specialist, gain discs (Effort), reassign", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

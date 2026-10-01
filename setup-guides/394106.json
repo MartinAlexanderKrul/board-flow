@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "gameId": 394106,
+  "gameName": "Everdell Farshore",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Everdell Farshore rulebook (via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "bonny", "name": "Captain Bonny", "forcedAtPlayers": [1], "note": "Solo opponent; can also join a multiplayer game." }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "board", "text": "Board and Lighthouse in the center; resources on their Shoreline spots", "ref": "Setup 1" },
+        { "id": "tokens", "text": "Point tokens and Treasure tokens in separate piles near the board", "ref": "Setup 1" },
+        { "id": "maps", "text": "Sort the Map tiles by type, stack each ascending with the 2-point Map on top; use {n}", "amounts": { "n": { "byPlayers": { "1": "the 2-point and one 1-point Map", "2": "the 2-point and one 1-point Map", "3": "one 2-point, one 1-point and one 0-point Map", "4": "all 4 Maps" } } }, "note": "Captain Bonny counts as a player here", "ref": "Setup 2" },
+        { "id": "islands", "text": "Shuffle the Island tiles; {n} faceup on the Island spots, box the rest", "amounts": { "n": { "default": "1 per player", "byPlayers": { "1": "1", "2": "2", "3": "3", "4": "4" } } }, "note": "Only human players count here", "ref": "Setup 3" },
+        { "id": "windrose", "text": "Windrose tiles into A and B stacks, shuffle each facedown on its spot, reveal the top tile of each", "ref": "Setup 4" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        { "id": "bay", "text": "Shuffle the deck; {n} cards faceup in the Bay (stack duplicates by name and refill)", "amounts": { "n": 8 }, "ref": "Setup 5" },
+        { "id": "deck", "text": "Deck facedown left of the Lighthouse; discard pile forms facedown on its right", "ref": "Setup 5-6" },
+        { "id": "hands", "text": "Starting hands: 1st player 5 cards, 2nd 6, 3rd 7, 4th 8", "note": "Each player may redraw their whole hand once during setup", "ref": "Setup 7" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "workers", "text": "Each player picks a Worker type: 2 workers in their area, 1 in a Ship on the start of the Ship track, 3 near the top of the board / Lighthouse", "ref": "Setup 8" },
+        { "id": "anchors", "text": "Each player takes {n} Anchor tokens", "amounts": { "n": 3 }, "ref": "Setup 9" }
+      ]
+    },
+    {
+      "id": "bonny",
+      "title": "Captain Bonny",
+      "condition": { "modules": ["bonny"] },
+      "steps": [
+        { "id": "bonny-city", "text": "Bonny gets a color (she prefers red); her 2 reference cards and the Plan Card mark her city", "ref": "Solo Setup A" },
+        { "id": "bonny-level", "text": "Choose a Challenge Level; mark it with an Anchor token", "ref": "Solo Setup B" },
+        { "id": "bonny-markers", "text": "Color Markers shuffled facedown onto the Plan Card's bottom row, then flip: Purple up to #2, Red, Blue and Tan to #3, Green stays on #4", "ref": "Solo Setup C" },
+        { "id": "bonny-routes", "text": "Shuffle the Route cards facedown next to Bonny's city", "ref": "Solo Setup D" },
+        { "id": "bonny-hand", "text": "Bonny is always last and starts with only 2 facedown cards; she sets up workers as normal but gets no Anchor tokens", "ref": "Solo Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "hand-limit", "text": "Strict hand limit of 8 cards", "ref": "Additional Card Rules" },
+        { "id": "treasure", "text": "Treasure can pay for any resource, but isn't a resource itself", "ref": "Legend" },
+        { "id": "no-limit", "text": "Resources, Treasure and points are unlimited - substitute if they run out", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The saltiest player goes first", "note": "Solo: you start", "ref": "Setup" }
+      ]
+    }
+  ]
+}

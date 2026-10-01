@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "gameId": 136063,
+  "gameName": "Forbidden Desert",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Forbidden Desert rulebook (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 5 },
+  "sections": [
+    {
+      "id": "desert",
+      "title": "Desert",
+      "steps": [
+        { "id": "tiles", "text": "Look over the 24 desert/city tiles, then turn them all desert side up - no peeking after that", "ref": "Set Up 1" },
+        { "id": "grid", "text": "Shuffle into a 5 x 5 grid with the middle empty (the Storm); compass symbols in the top-left corners, small gaps", "ref": "Set Up 2" },
+        { "id": "sand", "text": "{n} Sand markers, light side up, on the tiles around the Storm; the rest in a pile", "amounts": { "n": 8 }, "ref": "Set Up 3" },
+        { "id": "parts", "text": "Remove the 4 parts from the flying machine; keep everything nearby", "ref": "Set Up 4" },
+        { "id": "meter", "text": "Sand Storm meter in its holder; clip on the level above the {n}-pawn symbol for your difficulty", "amounts": { "n": { "default": "your player count" } }, "note": "First co-op game: Novice", "ref": "Set Up 5" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards & adventurers",
+      "steps": [
+        { "id": "storm-deck", "text": "Shuffle the Storm deck facedown just above the desert, compass pointing away (North)", "ref": "Set Up 6" },
+        { "id": "equipment", "text": "Shuffle the Equipment deck facedown beside the desert", "ref": "Set Up 6" },
+        { "id": "adventurers", "text": "Deal 1 random Adventurer card each and read your powers aloud", "ref": "Set Up 7" },
+        { "id": "canteen", "text": "Meter clip on the top mark of your canteen", "note": "Water Carrier starts with 5, most others 4", "ref": "Set Up 7" },
+        { "id": "pawns", "text": "Your pawn on the helicopter crash tile; box unused cards and pawns", "ref": "Set Up 7" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "parts-sand", "text": "Sand on a tile with a part goes under the part", "ref": "Wind Blows" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The thirstiest player goes first; play continues to the left", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}
