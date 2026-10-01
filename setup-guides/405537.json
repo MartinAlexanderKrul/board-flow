@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "gameId": 405537,
+  "gameName": "DroPolter",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["DroPolter rulebook (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 5 },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Set-up",
+      "steps": [
+        { "id": "themes", "text": "Theme cards facedown, mixed, in a pile everyone can see", "ref": "Set-up" },
+        { "id": "ghost", "text": "Ghost piece standing in the middle within everyone's reach", "ref": "Set-up" },
+        { "id": "bells", "text": "All bells in the middle", "ref": "Set-up" },
+        { "id": "items", "text": "Each player holds 1 of each item in one palm; box the leftovers", "ref": "Set-up" },
+        { "id": "first", "text": "Choose a starting player", "ref": "Set-up" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "win", "text": "First to 5 bells wins; dropped bells are lost", "ref": "Game Objective" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "mix", "text": "Everyone mixes their items, holds them palm down; the starting player flips a theme card", "ref": "Start Searching for Items" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "gameId": 27451,
+  "gameName": "Activity 2",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Activity rulebook (Piatnik, via RulesPal)"]
+  },
+  "players": { "min": 3, "max": 16 },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        { "id": "teams", "text": "Form teams of at least 2, as even as possible; teammates sit together", "condition": { "minPlayers": 4 }, "ref": "Setup" },
+        { "id": "three", "text": "3 players: no teams - each player has their own piece", "condition": { "players": [3] }, "ref": "Rules for 3 Players" },
+        { "id": "board", "text": "Board in the middle, sandglass next to it", "ref": "Setup" },
+        { "id": "pieces", "text": "Each team's playing piece on the start space", "ref": "Setup" },
+        { "id": "cards", "text": "Sort the cards by the numbers on their backs; shuffle each stack facedown onto its rectangle", "ref": "Setup" },
+        { "id": "paper", "text": "Paper and pencil for drawing", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "start-space", "text": "On the start space you may pick any term but must use the required mode", "ref": "Gameplay" },
+        { "id": "open-3", "text": "3 players: only Open Rounds; performer and guesser both advance; no bumping", "condition": { "players": [3] }, "ref": "Rules for 3 Players" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The opening team picks a performer, who chooses a stack (3, 4 or 5) and lifts the top card", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

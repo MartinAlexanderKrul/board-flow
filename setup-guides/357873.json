@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "gameId": 357873,
+  "gameName": "The Old King's Crown",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["The Old King's Crown rulebook (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 4 },
+  "sections": [
+    {
+      "id": "kingdom",
+      "title": "Kingdom",
+      "steps": [
+        { "id": "length", "text": "Choose game length: Standard 5 Rounds (recommended), Short 4 or Extended 6", "ref": "Setup" },
+        { "id": "board", "text": "Kingdom Board in reach, Councils Tile directly above it", "ref": "Setup A" },
+        { "id": "road", "text": "Shuffle the Kingdom Cards facedown on the leftmost Great Road space; fill the 3 spaces faceup from the right, then flip the deck's top card (4 faceup)", "ref": "Setup B" },
+        { "id": "reserve", "text": "Influence and Lore Tokens near the board as the Reserve", "ref": "Setup C" },
+        { "id": "favour", "text": "Kingdom's Favour Disc on the Harvest Field", "ref": "Setup D" },
+        { "id": "season", "text": "Season Marker in the Spring slot; Round Marker on 1", "ref": "Setup E-F" },
+        { "id": "clash", "text": "Clash Markers stacked III (bottom) to I (top) in their slot", "ref": "Setup G" }
+      ]
+    },
+    {
+      "id": "factions",
+      "title": "Factions",
+      "steps": [
+        { "id": "choose", "text": "Choose or randomly assign Factions; take your Player Board", "ref": "Setup H" },
+        { "id": "pieces", "text": "Your Herald and 5 Supporters in their slots on your board", "ref": "Setup I" },
+        { "id": "hand-size", "text": "Hand Size Marker top-left, starting-hand icon at the arrow", "ref": "Setup J" },
+        { "id": "tactics", "text": "Your 4 Tactic Tiles text side up in the lower slot; follow any SETUP text on them", "ref": "Setup K" },
+        { "id": "markers", "text": "Faction Markers in a pile by your board; Site of Power Tile nearby", "ref": "Setup L-M" },
+        { "id": "site-cards", "text": "Search your Faction Deck for the 5 Advanced Faction and HQ cards (Lore cost top right); faceup on your Site of Power", "ref": "Setup M" },
+        { "id": "hand", "text": "Set aside your Heir, shuffle the rest facedown left of your board, take the Heir and draw up to {n} cards", "amounts": { "n": 6 }, "ref": "Setup N" }
+      ]
+    },
+    {
+      "id": "order",
+      "title": "Turn order",
+      "steps": [
+        { "id": "order", "text": "Order Markers on the Order Track oldest to youngest (or random)", "ref": "Setup O" },
+        { "id": "active", "text": "First on the Order Track takes the Active Player Marker", "ref": "Setup P" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "year", "text": "Start of the Year: draw cards", "ref": "Sequence of Play" }
+      ]
+    }
+  ]
+}

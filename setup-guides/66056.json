@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "gameId": 66056,
+  "gameName": "Rivals for Catan",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["The Rivals for Catan rulebook (CATAN Studio, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 2 },
+  "modules": [
+    { "id": "intro", "name": "Introductory Game", "group": "Game", "defaultEnabled": true },
+    { "id": "gold", "name": "Era of Gold", "group": "Game" },
+    { "id": "turmoil", "name": "Era of Turmoil", "group": "Game" },
+    { "id": "progress", "name": "Era of Progress", "group": "Game" }
+  ],
+  "sections": [
+    {
+      "id": "principalities",
+      "title": "Principalities",
+      "steps": [
+        { "id": "sort", "text": "Sort the cards by their backs; Basic Set only for the Intro game, plus the chosen Theme Set otherwise", "ref": "A Little Bit of Sorting" },
+        { "id": "red", "text": "You: the 9 red-shield starting cards - 6 regions and 2 settlements joined by a road, aligned toward you", "ref": "Your Principality" },
+        { "id": "blue", "text": "Opponent (facing you): the blue-shield starting cards in the same layout", "ref": "Your Opponent" },
+        { "id": "resources", "text": "Each region turned so its 1-resource edge faces you; the center-top gold field on its \"no resource\" edge", "ref": "Regions" }
+      ]
+    },
+    {
+      "id": "stacks",
+      "title": "Center stacks",
+      "steps": [
+        { "id": "buildings", "text": "Road, settlement and city stacks faceup between you, room between settlements and cities", "ref": "Other Preparations" },
+        { "id": "regions", "text": "Shuffle the region stack facedown between the settlement and city stacks", "ref": "Other Preparations" },
+        { "id": "draw-intro", "text": "Shuffle the 36 Basic Set cards into 4 draw stacks of 9", "condition": { "modules": ["intro"] }, "ref": "Other Preparations" },
+        { "id": "draw-theme", "text": "Shuffle the Basic Set cards into 3 draw stacks of 12; the Theme Set cards into 2 equal Theme stacks", "condition": { "notModules": ["intro"] }, "ref": "Theme Games 3" },
+        { "id": "faceup", "text": "Theme Set \"1x\" expansion cards in a faceup stack by the draw stacks", "condition": { "notModules": ["intro"] }, "ref": "Theme Games 2" },
+        { "id": "events", "text": "Event deck: Basic Set events{t} shuffled without the Yule card; 3 cards, Yule facedown on them, the rest on top", "amounts": { "t": { "default": "", "cases": [{ "when": { "modules": ["gold"] }, "value": " + Era of Gold events" }, { "when": { "modules": ["turmoil"] }, "value": " + Era of Turmoil events" }, { "when": { "modules": ["progress"] }, "value": " + Era of Progress events" }] } }, "ref": "Other Preparations, Theme Games 1" }
+      ]
+    },
+    {
+      "id": "hands",
+      "title": "Starting hands",
+      "steps": [
+        { "id": "roll", "text": "Each player rolls; high roller is the starting player", "ref": "The Game Begins" },
+        { "id": "hand-intro", "text": "Starting player draws the top 3 of a draw stack, then the other player 3 from a different stack", "condition": { "modules": ["intro"] }, "ref": "The Game Begins" },
+        { "id": "choose-theme", "text": "Starting player first: choose a Basic draw stack and pick 3 cards from it (order unchanged)", "condition": { "notModules": ["intro"] }, "ref": "Theme Games 4" },
+        { "id": "rearrange", "text": "You may then rearrange your 6 regions", "condition": { "notModules": ["intro"] }, "ref": "Theme Games 5" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "win", "text": "Win with {n}+ victory points at the end of your turn", "amounts": { "n": { "default": 12, "cases": [{ "when": { "modules": ["intro"] }, "value": 7 }] } }, "ref": "The Goal & End of the Game" },
+        { "id": "store", "text": "A region stores 0-3 resources; extras are lost", "ref": "Regions" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The starting player rolls the dice", "ref": "Game Turn" }
+      ]
+    }
+  ]
+}

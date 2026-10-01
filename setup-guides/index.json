@@ -26,6 +26,14 @@
       "path": "11971.json"
     },
     {
+      "gameId": 27451,
+      "gameName": "Activity 2",
+      "gameIds": [27451],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "27451.json"
+    },
+    {
       "gameId": 27627,
       "gameName": "Talisman: Revised 4th Edition",
       "gameIds": [27627],
@@ -56,6 +64,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "54043.json"
+    },
+    {
+      "gameId": 66056,
+      "gameName": "Rivals for Catan",
+      "gameIds": [66056],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "66056.json"
     },
     {
       "gameId": 68448,
@@ -306,6 +322,14 @@
       "path": "270239.json"
     },
     {
+      "gameId": 270633,
+      "gameName": "Aeon's End: The New Age",
+      "gameIds": [270633],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "270633.json"
+    },
+    {
       "gameId": 271055,
       "gameName": "Dwellings of Eldervale",
       "gameIds": [271055],
@@ -458,6 +482,14 @@
       "path": "357563.json"
     },
     {
+      "gameId": 357873,
+      "gameName": "The Old King's Crown",
+      "gameIds": [357873],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "357873.json"
+    },
+    {
       "gameId": 359502,
       "gameName": "Casting Shadows",
       "gameIds": [359502],
@@ -480,6 +512,22 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "366161.json"
+    },
+    {
+      "gameId": 366753,
+      "gameName": "Disney Villains: The Card Game",
+      "gameIds": [366753],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "366753.json"
+    },
+    {
+      "gameId": 367150,
+      "gameName": "Dune: War for Arrakis",
+      "gameIds": [367150],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "367150.json"
     },
     {
       "gameId": 367966,
@@ -546,12 +594,44 @@
       "path": "397598.json"
     },
     {
+      "gameId": 401325,
+      "gameName": "The Witcher: Path of Destiny",
+      "gameIds": [401325],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "401325.json"
+    },
+    {
+      "gameId": 405537,
+      "gameName": "DroPolter",
+      "gameIds": [405537],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "405537.json"
+    },
+    {
+      "gameId": 407343,
+      "gameName": "Ironwood",
+      "gameIds": [407343],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "407343.json"
+    },
+    {
       "gameId": 410201,
       "gameName": "Wyrmspan",
       "gameIds": [410201, 453406],
       "version": 1,
       "schemaVersion": 1,
       "path": "410201.json"
+    },
+    {
+      "gameId": 421165,
+      "gameName": "Pantheum: Demigods of Olympia",
+      "gameIds": [421165],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "421165.json"
     },
     {
       "gameId": 422780,
