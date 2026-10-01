@@ -2,6 +2,14 @@
   "schemaVersion": 1,
   "guides": [
     {
+      "gameId": 27627,
+      "gameName": "Talisman: Revised 4th Edition",
+      "gameIds": [27627],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "27627.json"
+    },
+    {
       "gameId": 38713,
       "gameName": "Time's Up! Party",
       "gameIds": [38713],
@@ -178,6 +186,14 @@
       "path": "254640.json"
     },
     {
+      "gameId": 255984,
+      "gameName": "Sleeping Gods",
+      "gameIds": [255984],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "255984.json"
+    },
+    {
       "gameId": 256382,
       "gameName": "Disney Villainous: The Worst Takes it All",
       "gameIds": [256382, 299047],
@@ -296,6 +312,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "366161.json"
+    },
+    {
+      "gameId": 380619,
+      "gameName": "Cyclades: Legendary Edition",
+      "gameIds": [380619],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "380619.json"
     },
     {
       "gameId": 385761,

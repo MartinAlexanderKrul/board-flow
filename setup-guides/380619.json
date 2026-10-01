@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "gameId": 380619,
+  "gameName": "Cyclades: Legendary Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Cyclades: Legendary Edition rulebook (EN)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "modules": [
+    {
+      "id": "teams",
+      "name": "Team play",
+      "players": {
+        "min": 2,
+        "max": 6
+      },
+      "forcedAtPlayers": [
+        2,
+        6
+      ],
+      "note": "Optional at 4 players; required at 2 (each player runs two factions) and 6."
+    }
+  ],
+  "sections": [
+    {
+      "id": "auction",
+      "title": "Auction board",
+      "steps": [
+        {
+          "id": "auction-board",
+          "text": "Auction Board beside the table",
+          "ref": "p.2"
+        },
+        {
+          "id": "gods",
+          "text": "Shuffle the 5 God tiles faceup onto the 5 slots above Apollo; flip {n} closest to Apollo facedown",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "the last 2",
+                "3": "the last 3",
+                "4": "the last 2",
+                "5": "the last 1",
+                "6": "none"
+              }
+            }
+          },
+          "ref": "p.2, p.3"
+        },
+        {
+          "id": "creatures",
+          "text": "Creature deck facedown in its slot; reveal 4 onto the Creature track",
+          "ref": "p.2"
+        },
+        {
+          "id": "heroes",
+          "text": "Hero deck facedown in its slot; reveal 2 onto the Hero track",
+          "ref": "p.2"
+        },
+        {
+          "id": "cards",
+          "text": "Philosopher and Priestess cards in their slots",
+          "ref": "p.2"
+        },
+        {
+          "id": "supply",
+          "text": "Creature and Hero miniatures, Gold, basic Buildings and the facedown bonus Metropolis stack beside the board",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "map",
+      "title": "Archipelago",
+      "steps": [
+        {
+          "id": "tiles",
+          "text": "Assemble {n} random Archipelago tiles in the middle",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "8",
+                "3": "6",
+                "4": "8",
+                "5": "10",
+                "6": "10"
+              }
+            }
+          },
+          "note": "2 per player; team games: 8 at 4 players, 10 at 6",
+          "ref": "p.2, p.12"
+        },
+        {
+          "id": "order",
+          "text": "Put the players' Offering pawns randomly on the Turn order track",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "pieces",
+          "text": "Each player: Control tokens, basic Troops and Fleets in front of their Screen",
+          "ref": "p.2"
+        },
+        {
+          "id": "gold",
+          "text": "Gold: {n}",
+          "amounts": {
+            "n": {
+              "default": "5 GP each, hidden behind your Screen",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "teams"
+                    ]
+                  },
+                  "value": "10 GP shared per team"
+                }
+              ]
+            }
+          },
+          "ref": "p.2, p.12"
+        },
+        {
+          "id": "place-1",
+          "text": "In turn order, each player controls 2 unoccupied Land Areas on different Islands, each with an adjacent Fleet",
+          "note": "Teammates can't use the same Island; draw a Priestess for Priestess icons",
+          "ref": "p.2"
+        },
+        {
+          "id": "place-2",
+          "text": "In reverse order, each player takes a third Land Area (with a Fleet)",
+          "ref": "p.2"
+        },
+        {
+          "id": "troops",
+          "text": "Everyone spreads 3 basic Troops over their 3 Land Areas; remove Control tokens where Troops stand",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "cycle",
+          "text": "Start the first Cycle: Income, Offerings, Maintenance, Actions",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}

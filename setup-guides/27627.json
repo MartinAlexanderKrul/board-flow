@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "gameId": 27627,
+  "gameName": "Talisman: Revised 4th Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Talisman Revised 4th Edition rulebook"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Unfold the board in the middle",
+          "ref": "p.4"
+        },
+        {
+          "id": "adventure",
+          "text": "Shuffle the Adventure cards facedown beside the board",
+          "ref": "p.4"
+        },
+        {
+          "id": "spells",
+          "text": "Shuffle the Spell cards facedown beside the board",
+          "ref": "p.4"
+        },
+        {
+          "id": "talisman",
+          "text": "Talisman and Purchase cards faceup beside the board; Toad and Alignment cards handy",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "steps": [
+        {
+          "id": "deal",
+          "text": "Shuffle the characters; deal 1 facedown to each player",
+          "note": "Variant: deal 3 each and choose 1",
+          "ref": "p.4"
+        },
+        {
+          "id": "figure",
+          "text": "Your figure on the start space shown on your character card",
+          "ref": "p.4"
+        },
+        {
+          "id": "counters",
+          "text": "Life counters and fate tokens equal to your character's values, plus 1 gold",
+          "ref": "p.4"
+        },
+        {
+          "id": "starting",
+          "text": "Characters that start with Spells or Objects draw/take them now",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The game's owner goes first; play proceeds clockwise",
+          "ref": "p.4"
+        }
+      ]
+    }
+  ]
+}

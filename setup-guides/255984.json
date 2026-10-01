@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "gameId": 255984,
+  "gameName": "Sleeping Gods",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Sleeping Gods rulebook"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "table",
+      "title": "New campaign",
+      "steps": [
+        {
+          "id": "atlas",
+          "text": "Atlas in the middle open to pg. 2; ship in the sea region with location 2",
+          "note": "Continuing a campaign? Use the rulebook's pg. 32 instead",
+          "ref": "p.4"
+        },
+        {
+          "id": "ship",
+          "text": "Ship board, {side} side up, with the ship action token, 3 coins and 1 grain",
+          "amounts": {
+            "side": {
+              "byPlayers": {
+                "1": "1-2 player",
+                "2": "1-2 player",
+                "3": "3-4 player",
+                "4": "3-4 player"
+              }
+            }
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "crew",
+          "text": "Captain Sofi Odessa crew board in the middle; split the other 8 crew boards evenly among players; synergy tokens nearby",
+          "ref": "p.4"
+        },
+        {
+          "id": "ability",
+          "text": "Shuffle the ability deck by the ship board",
+          "ref": "p.4"
+        },
+        {
+          "id": "market",
+          "text": "Shuffle the market deck nearby",
+          "ref": "p.4"
+        },
+        {
+          "id": "events",
+          "text": "Event deck: 6 random deadly, then 6 perilous, then 6 mild on top (18 cards) on the ship board",
+          "ref": "p.4"
+        },
+        {
+          "id": "adventure",
+          "text": "Starting adventure cards Gloria, Soup, Gear and Flapjacks (from the market deck) by the ship board; card box nearby",
+          "ref": "p.5"
+        },
+        {
+          "id": "ordered-decks",
+          "text": "Enemy deck, quest and adventure decks nearby - never reorder or browse them",
+          "ref": "p.5"
+        },
+        {
+          "id": "storybook",
+          "text": "Storybook near the board; shuffle the search tokens facedown in a stack",
+          "ref": "p.5"
+        },
+        {
+          "id": "cards",
+          "text": "Each player (not each crew member) takes 1 command and 1 ability card",
+          "ref": "p.5"
+        },
+        {
+          "id": "levels",
+          "text": "Level cards and all other tokens near the ship board; a new journey log sheet",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "captain",
+          "text": "Choose the first player and give them the captain token",
+          "ref": "p.4"
+        }
+      ]
+    }
+  ]
+}
