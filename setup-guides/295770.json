@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "gameId": 295770,
+  "gameName": "Frosthaven",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Frosthaven rulebook (Cephalofair Games, via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "challenges", "name": "Challenges (sticker 1)", "note": "Once unlocked in the campaign." },
+    { "id": "pets", "name": "Pets (sticker 3)", "note": "Once unlocked in the campaign." },
+    { "id": "new-char", "name": "New character", "note": "Creating a character before a scenario." }
+  ],
+  "sections": [
+    {
+      "id": "character",
+      "title": "New character",
+      "condition": { "modules": ["new-char"] },
+      "steps": [
+        { "id": "boxes", "text": "Open the class's small and large tuck boxes (miniature, mat, standees, tokens, ability cards)", "ref": "Creating a Character" },
+        { "id": "sheet", "text": "Character sheet: name, level 1, {g} gold", "amounts": { "g": 30 }, "ref": "Creating a Character" },
+        { "id": "quest", "text": "Draw 2 personal quests, keep 1, shuffle the other back", "ref": "Creating a Character" },
+        { "id": "items", "text": "Spend starting gold on items 120-128 (or Gloomhaven items 10, 25, 72, 105, 109, 116); unspent gold is lost", "ref": "Creating a Character" },
+        { "id": "cards", "text": "First game with a class: use only its level 1 ability cards", "ref": "Creating a Character" }
+      ]
+    },
+    {
+      "id": "scenario",
+      "title": "Scenario",
+      "steps": [
+        { "id": "select", "text": "Choose an unlocked scenario; open the scenario book to it, section book nearby", "ref": "Beginning a Scenario 1" },
+        { "id": "road", "text": "Resolve a road event if needed", "ref": "Beginning a Scenario 2" },
+        { "id": "tiles", "text": "Set up all map tiles as the map layout shows", "ref": "Beginning a Scenario 3" },
+        { "id": "monsters", "text": "For each monster in the key: ability deck (shuffled), stat card in its sleeve, standees, initiative tracker", "ref": "Beginning a Scenario 4" },
+        { "id": "overlays", "text": "Retrieve the overlay tiles in the key", "ref": "Beginning a Scenario 5" },
+        { "id": "first-room", "text": "Set up the first room as shown on the main map", "ref": "Beginning a Scenario 6" },
+        { "id": "modifiers", "text": "Shuffle all attack modifier decks (characters, monsters, allies); get the extra modifier cards", "ref": "Beginning a Scenario 7" },
+        { "id": "read", "text": "Read the goals, introduction and special rules", "ref": "Beginning a Scenario 8" }
+      ]
+    },
+    {
+      "id": "party",
+      "title": "Party",
+      "steps": [
+        { "id": "battle-goals", "text": "Deal 3 battle goals per character; keep 1 each", "ref": "Beginning a Scenario 9" },
+        { "id": "challenges", "text": "Challenge cards by Town Hall level: L1 draw 1 keep 1, L2 draw 2 keep 1, L3 draw 3 keep 2; others to the bottom", "condition": { "modules": ["challenges"] }, "ref": "Beginning a Scenario 10" },
+        { "id": "tray", "text": "Token tray nearby", "ref": "Beginning a Scenario 11" },
+        { "id": "loot", "text": "Build the loot deck from the scenario's loot table", "ref": "Beginning a Scenario 12" },
+        { "id": "pets", "text": "Choose pets up to the Stables limit; apply their negative effects", "condition": { "modules": ["pets"] }, "ref": "Beginning a Scenario 14" },
+        { "id": "party-items", "text": "Choose items for each character; apply negative and start-of-scenario effects", "ref": "Beginning a Scenario 15" },
+        { "id": "hand", "text": "Choose ability cards equal to your hand size - they start in hand", "ref": "Beginning a Scenario 16" },
+        { "id": "dials", "text": "Red HP dial to your level's maximum; blue XP dial to 0", "ref": "Beginning a Scenario 17" },
+        { "id": "effects", "text": "Apply road event and scenario effects", "ref": "Beginning a Scenario 18" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "start-cards", "text": "Round 1: everyone selects two ability cards", "ref": "Card Selection" }
+      ]
+    }
+  ]
+}

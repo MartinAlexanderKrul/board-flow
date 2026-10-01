@@ -242,6 +242,14 @@
       "path": "224037.json"
     },
     {
+      "gameId": 230914,
+      "gameName": "Carcassonne Big Box 6",
+      "gameIds": [2591, 2993, 5405, 230914],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "230914.json"
+    },
+    {
       "gameId": 233371,
       "gameName": "Clank! In! Space!: A Deck-Building Adventure",
       "gameIds": [233371],
@@ -394,6 +402,14 @@
       "path": "292375.json"
     },
     {
+      "gameId": 295770,
+      "gameName": "Frosthaven",
+      "gameIds": [295770],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "295770.json"
+    },
+    {
       "gameId": 295947,
       "gameName": "Cascadia",
       "gameIds": [295947, 385318],
@@ -432,6 +448,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "316554.json"
+    },
+    {
+      "gameId": 322708,
+      "gameName": "Descent: Legends of the Dark",
+      "gameIds": [322708],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "322708.json"
     },
     {
       "gameId": 336755,

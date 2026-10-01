@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "gameId": 322708,
+  "gameName": "Descent: Legends of the Dark",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Descent: Legends of the Dark rulebook (Fantasy Flight Games, via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "sections": [
+    {
+      "id": "app",
+      "title": "App",
+      "steps": [
+        { "id": "launch", "text": "Launch the app, \"New Game\": choose a save slot, difficulty and heroes", "note": "Only the save slot is permanent", "ref": "Setup 1" },
+        { "id": "solo", "text": "Single player: choose and control two heroes", "condition": { "players": [1] }, "ref": "Setup 1" }
+      ]
+    },
+    {
+      "id": "heroes",
+      "title": "Heroes",
+      "steps": [
+        { "id": "components", "text": "Each hero: reference card, health dial, figure, hero card and two starting weapons", "note": "Brynn: Warden's Blade + Weighted Warhammer; Galaden: Bloodwood Bow + Mirror Blades; Syrus: Crook'd Staff + Glimmering Wand; Vaerix: Ironthorn Warbell + Riverwatch Spear", "ref": "Setup 2" },
+        { "id": "sleeve", "text": "Stack the two weapons with the upgrade-icon faces together, sleeve them as one attack card", "ref": "Setup 2" },
+        { "id": "sides", "text": "Hero card and attack card may start on either side", "ref": "Setup 2" },
+        { "id": "health", "text": "Health dial to the maximum health on your hero card", "ref": "Setup 3" }
+      ]
+    },
+    {
+      "id": "supply",
+      "title": "Supply",
+      "steps": [
+        { "id": "tokens", "text": "Tokens sorted by type into piles", "ref": "Setup 4" },
+        { "id": "rest", "text": "Map tiles, terrain, enemy figures, consumable and injury cards (unshuffled) in the supply", "ref": "Setup 4" },
+        { "id": "box", "text": "Return all other cards to the box for the first quest", "ref": "Setup 4" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "quest", "text": "Start the quest in the app and build the map it shows", "ref": "Playing a Quest" }
+      ]
+    }
+  ]
+}
