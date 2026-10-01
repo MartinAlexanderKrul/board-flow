@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "gameId": 241477,
+  "gameName": "Karak",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Karak rulebook (Albi, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 5 },
+  "sections": [
+    {
+      "id": "dungeon",
+      "title": "Dungeon",
+      "steps": [
+        { "id": "start-tile", "text": "Starting dungeon tile in the middle of the table", "ref": "Setup" },
+        { "id": "tiles", "text": "Shuffle the other tiles facedown within everyone's reach", "ref": "Setup" },
+        { "id": "bag", "text": "Monster and treasure tokens in the bag", "ref": "Components, Exploring" }
+      ]
+    },
+    {
+      "id": "heroes",
+      "title": "Heroes",
+      "steps": [
+        { "id": "sheet", "text": "Each player takes an inventory sheet with {n} HP tokens on it", "amounts": { "n": 5 }, "ref": "Setup" },
+        { "id": "hero", "text": "Each player picks a hero card (chosen or random) onto their sheet", "ref": "Setup" },
+        { "id": "figures", "text": "Hero figures in their stands (stand color matches the card) on the starting tile", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "end", "text": "Game ends when someone defeats the dragon and loots its treasure; most treasure wins", "ref": "Goal of the Game" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "Roll the dice to determine the starting player", "ref": "Setup" }
+      ]
+    }
+  ]
+}

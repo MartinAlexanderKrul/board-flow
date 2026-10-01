@@ -2,6 +2,22 @@
   "schemaVersion": 1,
   "guides": [
     {
+      "gameId": 320,
+      "gameName": "Scrabble",
+      "gameIds": [320],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "320.json"
+    },
+    {
+      "gameId": 3955,
+      "gameName": "BANG!",
+      "gameIds": [3955],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "3955.json"
+    },
+    {
       "gameId": 11971,
       "gameName": "Cockroach Poker",
       "gameIds": [11971],
@@ -114,6 +130,14 @@
       "path": "174430.json"
     },
     {
+      "gameId": 182094,
+      "gameName": "BANG! The Duel",
+      "gameIds": [182094],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "182094.json"
+    },
+    {
       "gameId": 184921,
       "gameName": "Bunny Kingdom",
       "gameIds": [184921],
@@ -186,6 +210,14 @@
       "path": "205896.json"
     },
     {
+      "gameId": 216849,
+      "gameName": "Dominion (Second Edition) Big Box",
+      "gameIds": [216849],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "216849.json"
+    },
+    {
       "gameId": 224037,
       "gameName": "Codenames: Duet",
       "gameIds": [224037],
@@ -210,12 +242,28 @@
       "path": "237182.json"
     },
     {
+      "gameId": 241477,
+      "gameName": "Karak",
+      "gameIds": [241477],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "241477.json"
+    },
+    {
       "gameId": 244992,
       "gameName": "The Mind",
       "gameIds": [244992],
       "version": 1,
       "schemaVersion": 1,
       "path": "244992.json"
+    },
+    {
+      "gameId": 249763,
+      "gameName": "Claim 2",
+      "gameIds": [249763],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "249763.json"
     },
     {
       "gameId": 254640,
@@ -248,6 +296,14 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "266192.json"
+    },
+    {
+      "gameId": 270239,
+      "gameName": "Moonrakers",
+      "gameIds": [270239],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "270239.json"
     },
     {
       "gameId": 271055,
@@ -290,6 +346,14 @@
       "path": "285774.json"
     },
     {
+      "gameId": 285967,
+      "gameName": "Ankh: Gods of Egypt",
+      "gameIds": [285967],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "285967.json"
+    },
+    {
       "gameId": 291457,
       "gameName": "Gloomhaven: Jaws of the Lion",
       "gameIds": [291457],
@@ -320,6 +384,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "298383.json"
+    },
+    {
+      "gameId": 299252,
+      "gameName": "Here to Slay",
+      "gameIds": [299252],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "299252.json"
     },
     {
       "gameId": 312484,
@@ -362,6 +434,14 @@
       "path": "342942.json"
     },
     {
+      "gameId": 343990,
+      "gameName": "Not Enough Mana",
+      "gameIds": [343990],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "343990.json"
+    },
+    {
       "gameId": 345584,
       "gameName": "Mindbug: First Contact",
       "gameIds": [345584, 368718],
@@ -376,6 +456,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "357563.json"
+    },
+    {
+      "gameId": 359502,
+      "gameName": "Casting Shadows",
+      "gameIds": [359502],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "359502.json"
     },
     {
       "gameId": 365717,
@@ -402,6 +490,14 @@
       "path": "367966.json"
     },
     {
+      "gameId": 378851,
+      "gameName": "The Mind: Soulmates",
+      "gameIds": [378851],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "378851.json"
+    },
+    {
       "gameId": 380619,
       "gameName": "Cyclades: Legendary Edition",
       "gameIds": [380619],
@@ -416,6 +512,22 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "385761.json"
+    },
+    {
+      "gameId": 387763,
+      "gameName": "How Dare You?",
+      "gameIds": [387763],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "387763.json"
+    },
+    {
+      "gameId": 393530,
+      "gameName": "Karak II",
+      "gameIds": [393530],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "393530.json"
     },
     {
       "gameId": 394106,

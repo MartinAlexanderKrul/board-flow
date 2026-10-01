@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "gameId": 378851,
+  "gameName": "The Mind: Soulmates",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["The Mind: Soulmates rulebook (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 4 },
+  "sections": [
+    {
+      "id": "general",
+      "title": "General setup",
+      "steps": [
+        { "id": "levels", "text": "12 Level cards facedown in ascending order, level 1 on top", "ref": "General Setup" },
+        { "id": "numbers", "text": "Shuffle the 50 Number cards facedown in the center", "ref": "General Setup" },
+        { "id": "lives", "text": "{n} Lives faceup near the edge of the play area", "amounts": { "n": { "default": 4, "byPlayers": { "2": 3 } } }, "ref": "General Setup" }
+      ]
+    },
+    {
+      "id": "level",
+      "title": "Level setup",
+      "steps": [
+        { "id": "seer", "text": "Randomly appoint a Seer (stays Seer until the level is completed, then passes clockwise)", "ref": "Level Setup" },
+        { "id": "reveal", "text": "The Seer reveals the top Level card and draws that many Number cards, looks at the allowed number and writes the allowed hints on the Hint sheet", "note": "Level 1: draw 4, look at 3, write 1 number", "ref": "Level Setup" },
+        { "id": "deal", "text": "The Seer shuffles those cards and deals them out from their left, including themself", "ref": "Level Setup" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "ready", "text": "Everyone ready places a palm on the table; when all are, lift hands and the level starts", "ref": "Playing the Level" }
+      ]
+    }
+  ]
+}

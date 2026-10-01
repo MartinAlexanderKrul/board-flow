@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "gameId": 216849,
+  "gameName": "Dominion (Second Edition) Big Box",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Dominion rulebook (Rio Grande Games, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 4 },
+  "sections": [
+    {
+      "id": "supply",
+      "title": "Basic supply",
+      "steps": [
+        { "id": "copper", "text": "Each player takes 7 Coppers; remaining Copper, all Silver and all Gold in faceup Supply piles", "ref": "Preparation" },
+        { "id": "victory", "text": "Each player takes 3 Estates; {n} each of Estate, Duchy and Province in the Supply; box the rest", "amounts": { "n": { "byPlayers": { "2": 8, "3": 12, "4": 12 } } }, "ref": "Preparation" },
+        { "id": "curse", "text": "{n} Curse cards in the Supply; box the rest", "amounts": { "n": { "byPlayers": { "2": 10, "3": 20, "4": 30 } } }, "ref": "Preparation" },
+        { "id": "trash", "text": "Trash card to mark the trash pile", "ref": "Preparation" }
+      ]
+    },
+    {
+      "id": "kingdom",
+      "title": "Kingdom",
+      "steps": [
+        { "id": "choose", "text": "Choose 10 Kingdom cards (e.g. draw 10 Randomizers or a suggested set); 10 of each in faceup piles", "ref": "Kingdom Cards" },
+        { "id": "victory-kingdom", "text": "Kingdom Victory piles (e.g. Gardens) use {n} cards", "amounts": { "n": { "byPlayers": { "2": 8, "3": 12, "4": 12 } } }, "ref": "Kingdom Cards" },
+        { "id": "placeholders", "text": "Optional: Randomizers as placeholders under each pile; box unused Kingdom cards", "ref": "Kingdom Cards" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "deck", "text": "Shuffle your 7 Coppers + 3 Estates facedown as your deck", "ref": "Preparation" },
+        { "id": "hand", "text": "Draw {n} cards", "amounts": { "n": 5 }, "ref": "Preparation" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "end", "text": "Game ends when the Provinces run out or any 3 Supply piles are empty", "ref": "End of the Game" },
+        { "id": "tie", "text": "Ties go to the player with fewer turns", "ref": "End of the Game" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "Random starting player (next game: left of the last winner); play is clockwise", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

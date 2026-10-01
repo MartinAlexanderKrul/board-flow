@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "gameId": 299252,
+  "gameName": "Here to Slay",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Here to Slay rulebook (Unstable Games, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 6 },
+  "sections": [
+    {
+      "id": "leaders",
+      "title": "Party Leaders",
+      "steps": [
+        { "id": "sort", "text": "Separate the card types", "ref": "How to Start" },
+        { "id": "leader", "text": "Each player chooses a Party Leader into their Party (roll for pick order if you like)", "ref": "How to Start" },
+        { "id": "reference", "text": "Each player may take a rules reference card; box the rest", "ref": "How to Start" }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Decks",
+      "steps": [
+        { "id": "main", "text": "Shuffle the standard-size cards; deal {n} to each player; rest facedown as the main deck, room for a discard pile", "amounts": { "n": 5 }, "ref": "How to Start" },
+        { "id": "monsters", "text": "Shuffle the Monsters; {n} faceup in the center, the rest facedown as the Monster deck", "amounts": { "n": 3 }, "ref": "How to Start" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "win", "text": "Win by slaying 3 Monsters or ending your turn with 6 different classes in your Party", "ref": "How to Win" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "Whoever picked their Party Leader last goes first", "ref": "How to Start" }
+      ]
+    }
+  ]
+}

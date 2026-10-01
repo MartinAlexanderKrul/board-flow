@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "gameId": 387763,
+  "gameName": "How Dare You?",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["How Dare You? rulebook (via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 10 },
+  "sections": [
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        { "id": "draw-pile", "text": "Shuffle the Theme cards; {n} random ones as a draw pile in the middle, category side up", "amounts": { "n": 10 }, "ref": "Setup" },
+        { "id": "aside", "text": "Set the other cards aside (only for the \"Now You're Pushing It!\" variant)", "ref": "Setup" },
+        { "id": "first", "text": "Choose a starting player", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "ducks", "text": "Most Duck points at the end loses; everybody else wins", "ref": "Object of the Game" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "question", "text": "First player picks 1-6 at random, reads that question on the top card and announces a number below the answer", "ref": "Playing the Game" }
+      ]
+    }
+  ]
+}

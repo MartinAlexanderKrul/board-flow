@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "gameId": 285967,
+  "gameName": "Ankh: Gods of Egypt",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Ankh: Gods of Egypt rulebook (CMON, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 5 },
+  "sections": [
+    {
+      "id": "gods",
+      "title": "Gods",
+      "steps": [
+        { "id": "god", "text": "Each player picks a god: God figure, 6 Warriors, God and Merged God dashboards, Ankh tokens, 7 Battle cards, Player Aid", "ref": "Setup" },
+        { "id": "specials", "text": "Ra takes 3 Sun tokens, Osiris 3 Underworld tokens, Amun the Amun token", "ref": "Setup" },
+        { "id": "follower", "text": "Each player starts with {n} Follower; the rest in a general supply (unlimited)", "amounts": { "n": 1 }, "ref": "Setup" },
+        { "id": "ankhs", "text": "6 Ankh tokens on the bottom row of your god dashboard; the rest as your personal pool", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        { "id": "first", "text": "Random first player (or whoever owns the most cats); clockwise order", "ref": "Setup" },
+        { "id": "devotion", "text": "In reverse order, stack plastic Ankh tokens on the bottom of the Devotion track (first player on top)", "ref": "Setup" },
+        { "id": "actions", "text": "4 Action markers on the starting spaces for {n} players", "amounts": { "n": { "default": "your number of" } }, "ref": "Setup" },
+        { "id": "event", "text": "Event marker on the first space of the Events track", "ref": "Setup" },
+        { "id": "scenario", "text": "Choose a scenario that allows your player count", "ref": "Setup" },
+        { "id": "monuments", "text": "Monuments, Conflict Order tokens and Camels as the scenario shows; rest (and the Battle Tiebreaker) in the supply", "ref": "Setup" },
+        { "id": "figures", "text": "Figures and Ankh tokens per the scenario; the first player is player #1, then clockwise", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "guardians",
+      "title": "Guardians",
+      "steps": [
+        { "id": "cards", "text": "Choose one Level 1, one Level 2 and one Level 3 Guardian card", "ref": "Setup" },
+        { "id": "guardian-figures", "text": "Guardian figures of each type: {n}", "amounts": { "n": { "byPlayers": { "2": "1", "3": "2", "4": "all (3 small-base, 2 large-base)", "5": "all (3 small-base, 2 large-base)" } } }, "ref": "Setup" },
+        { "id": "additional", "text": "Apply the scenario's Additional Setup Rules", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "regions", "text": "Conflict Order tokens belong to whole regions, not single spaces", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first-turn", "text": "The first player takes an action", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

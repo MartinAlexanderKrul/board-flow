@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "gameId": 270239,
+  "gameName": "Moonrakers",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Moonrakers rulebook (IV Studio, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 5 },
+  "sections": [
+    {
+      "id": "players",
+      "title": "Command Terminals",
+      "steps": [
+        { "id": "terminal", "text": "Each player takes a Command Terminal board", "ref": "Set Up" },
+        { "id": "deck", "text": "Starting Action Deck: 2 Damage 1, 3 Reactor, 2 Shield, 2 Thruster, 1 Miss; shuffle on the left of your Terminal", "ref": "Action Deck" },
+        { "id": "spare", "text": "Unused Action Cards within reach", "ref": "Action Deck" },
+        { "id": "hand", "text": "Each player draws {n} cards", "amounts": { "n": 5 }, "ref": "Action Deck" }
+      ]
+    },
+    {
+      "id": "armory",
+      "title": "Armory",
+      "steps": [
+        { "id": "armory-board", "text": "Armory Board within everyone's reach", "ref": "Armory & Credits 1" },
+        { "id": "parts", "text": "Shuffle the Ship Parts facedown on the Armory; {n} faceup in 2 rows of 3", "amounts": { "n": 6 }, "ref": "Armory & Credits 2" },
+        { "id": "crew", "text": "Shuffle the Crew facedown on the Armory; {n} faceup in a row", "amounts": { "n": 3 }, "ref": "Armory & Credits 3" },
+        { "id": "credits", "text": "Each player takes {n} Credits; the rest in the \"1\" and \"3\" piles on the Armory", "amounts": { "n": 2 }, "ref": "Armory & Credits 4" }
+      ]
+    },
+    {
+      "id": "dispatch",
+      "title": "Dispatch",
+      "steps": [
+        { "id": "dispatch-board", "text": "Dispatch Board across from the Armory", "ref": "Dispatch 1" },
+        { "id": "contracts", "text": "Shuffle the Contracts facedown; {n} faceup in 2 rows of 4 left of the board", "amounts": { "n": 8 }, "note": "Shuffle back any with 3 or 4 Hazard Dice and redraw", "ref": "Dispatch 2" },
+        { "id": "objectives", "text": "Deal 3 Objectives each; keep 2 secretly, the 3rd to the bottom of the deck", "ref": "Dispatch 3" },
+        { "id": "hazard", "text": "Hazard Dice on or near the Dispatch Board", "ref": "Dispatch 4" },
+        { "id": "prestige", "text": "Ship Tokens on 0 of the Prestige Tracker", "ref": "Dispatch 5" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "win", "text": "First to 10 Prestige at the end of any turn wins", "ref": "End of the Game" },
+        { "id": "secret", "text": "Objectives stay secret until fulfilled (1 Prestige each)", "ref": "Dispatch 3" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "Everyone rolls all 4 Hazard Dice; least Hazard is the first Mission Leader (reroll ties)", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

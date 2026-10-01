@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "gameId": 343990,
+  "gameName": "Not Enough Mana",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Not Enough Mana rulebook (via RulesPal)"]
+  },
+  "players": { "min": 3, "max": 6 },
+  "sections": [
+    {
+      "id": "prep",
+      "title": "Preparation",
+      "steps": [
+        { "id": "deck", "text": "Shuffle the deck facedown in the middle as the draw pile; discard pile faceup beside it", "ref": "Preparation" },
+        { "id": "supply", "text": "Red health crystals, blue mana crystals and mana potions within reach", "ref": "Preparation" },
+        { "id": "health", "text": "Each wizard takes {n} health points (also the maximum)", "amounts": { "n": 10 }, "ref": "Preparation" },
+        { "id": "hand", "text": "Each wizard draws {n} cards; discard and replace any event cards drawn", "amounts": { "n": 5 }, "ref": "Preparation" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The eldest wizard starts; turns go clockwise", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

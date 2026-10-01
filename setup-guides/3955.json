@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "gameId": 3955,
+  "gameName": "BANG!",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["BANG! rulebook (dV Giochi, via RulesPal)"]
+  },
+  "players": { "min": 4, "max": 7 },
+  "modules": [
+    { "id": "simple", "name": "Simplified (no book cards)", "note": "For your first few games." }
+  ],
+  "sections": [
+    {
+      "id": "roles",
+      "title": "Roles & characters",
+      "steps": [
+        { "id": "boards", "text": "Each player takes a playing board", "ref": "Preparation" },
+        { "id": "roles", "text": "Role cards: {r}", "amounts": { "r": { "byPlayers": { "4": "1 Sheriff, 1 Renegade, 2 Outlaws", "5": "1 Sheriff, 1 Renegade, 2 Outlaws, 1 Deputy", "6": "1 Sheriff, 1 Renegade, 3 Outlaws, 1 Deputy", "7": "1 Sheriff, 1 Renegade, 3 Outlaws, 2 Deputies" } } }, "ref": "Preparation" },
+        { "id": "deal-roles", "text": "Shuffle and deal 1 role facedown each; the Sheriff reveals, everyone else keeps theirs secret", "ref": "Preparation" },
+        { "id": "characters", "text": "Deal 1 character faceup each; announce names and abilities", "ref": "Preparation" },
+        { "id": "bullets", "text": "Take as many bullets as your character shows; the Sheriff takes one extra", "ref": "Preparation" },
+        { "id": "box", "text": "Box the remaining roles, boards and characters", "ref": "Preparation" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        { "id": "simple", "text": "Remove all cards with the book symbol", "condition": { "modules": ["simple"] }, "ref": "Preparation" },
+        { "id": "deal", "text": "Shuffle the playing cards; deal each player as many cards as their bullets", "ref": "Preparation" },
+        { "id": "draw", "text": "Draw pile facedown in the middle, room for a discard pile", "ref": "Preparation" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "colt", "text": "Everyone starts with a Colt .45 (range 1) printed on their board", "ref": "Weapons" },
+        { "id": "hand-limit", "text": "Hand limit at end of turn = your current life points", "ref": "Characters" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The Sheriff begins; play is clockwise", "ref": "The Game" }
+      ]
+    }
+  ]
+}
