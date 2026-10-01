@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "gameId": 1927,
+  "gameName": "Munchkin",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Munchkin rules (Steve Jackson Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Split the cards into the Door deck and the Treasure deck and shuffle both",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Deal {n} cards from each deck to every player",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Roll the dice to decide who goes first; play passes to the left",
+          "ref": "Starting and Finishing the Game"
+        }
+      ]
+    }
+  ]
+}

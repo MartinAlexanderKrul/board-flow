@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "gameId": 11,
+  "gameName": "Bohnanza",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Bohnanza rules (AMIGO / Rio Grande, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 7
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Remove: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "3": "the Cocoa Beans",
+                "4": "the Coffee Beans",
+                "5": "the Coffee Beans",
+                "6": "the Cocoa Beans and the Garden Beans",
+                "7": "the Cocoa Beans and the Garden Beans"
+              }
+            }
+          },
+          "ref": "Variations"
+        },
+        {
+          "id": "setup-2",
+          "text": "3rd bean field cards go back in the box",
+          "condition": {
+            "minPlayers": 4
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-3",
+          "text": "3 players: each starts with a 3rd bean field card and may not buy another",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "Variations"
+        },
+        {
+          "id": "setup-4",
+          "text": "The oldest player shuffles and deals {n} cards to each player - keep them in the order dealt",
+          "amounts": {
+            "n": 5
+          },
+          "condition": {
+            "maxPlayers": 5
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-5",
+          "text": "Deal 3 cards to the starting player, 4 to the next, 5 to the next and 6 to everyone else - keep them in the order dealt",
+          "condition": {
+            "minPlayers": 6
+          },
+          "ref": "Variations"
+        },
+        {
+          "id": "setup-6",
+          "text": "Remaining cards facedown as the draw deck, with room for a discard pile",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Never reorder your hand; new cards go one at a time behind the last card",
+          "ref": "Preparation"
+        },
+        {
+          "id": "reminders-2",
+          "text": "3 players: the game ends when the deck runs out the second time",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "Variations"
+        },
+        {
+          "id": "reminders-3",
+          "text": "6-7 players: draw 4 cards in step 4, and a 3rd bean field costs 2 gold",
+          "condition": {
+            "minPlayers": 6
+          },
+          "ref": "Variations"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player to the left of the dealer starts",
+          "ref": "Preparation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "gameId": 13,
+  "gameName": "Catan",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Catan rules (CATAN Studio, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Build the board as the starting map shows",
+          "note": "Experienced players can use the variable set-up instead",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-2",
+          "text": "Each player: 5 settlements, 4 cities, 15 roads and a building costs card",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-3",
+          "text": "Place your 2 starting settlements and 2 roads on the board as the starting map shows",
+          "note": "3 players: nobody plays the red position",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-4",
+          "text": "Longest Road and Largest Army cards and the 2 dice beside the board",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-5",
+          "text": "Resource cards in 5 faceup stacks; development cards shuffled facedown",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-6",
+          "text": "Take 1 resource for each terrain hex around your settlement marked with a white star; keep your hand hidden",
+          "ref": "Setting Up the Game"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Distance Rule: a settlement needs all adjacent intersections empty",
+          "ref": "Setting Up the Game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The oldest player goes first",
+          "ref": "Turn Overview"
+        }
+      ]
+    }
+  ]
+}

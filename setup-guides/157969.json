@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "gameId": 157969,
+  "gameName": "Sheriff of Nottingham",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Sheriff of Nottingham rules (Arcane Wonders, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player: a Merchant Stand and its Merchant Bag",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-2",
+          "text": "The banker gives everyone {n} Gold: one 20, five 5s and five 1s",
+          "amounts": {
+            "n": 50
+          },
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-3",
+          "text": "Basic game: remove the 12 Royal Goods cards",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-4",
+          "text": "3 players: remove every card with the 4+ icon before shuffling",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "3 Player Games"
+        },
+        {
+          "id": "setup-5",
+          "text": "Shuffle the Goods cards and deal {n} to each player",
+          "amounts": {
+            "n": 6
+          },
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "setup-6",
+          "text": "Draw pile facedown; turn over 5 cards for one discard pile and 5 more for a second",
+          "ref": "Setting Up the Game"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "3 players: play until everyone has been Sheriff three times",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "3 Player Games"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player with the most real cash on them is the first Sheriff",
+          "ref": "Setting Up the Game"
+        }
+      ]
+    }
+  ]
+}

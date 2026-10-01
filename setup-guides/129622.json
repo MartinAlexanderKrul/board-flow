@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "gameId": 129622,
+  "gameName": "Love Letter",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Love Letter rules (Z-Man Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "each-round",
+      "title": "Each round",
+      "steps": [
+        {
+          "id": "each-round-1",
+          "text": "A reference card for each player",
+          "ref": "Setup"
+        },
+        {
+          "id": "each-round-2",
+          "text": "Shuffle the 21 character cards; set the top card aside facedown, unseen",
+          "ref": "Setup"
+        },
+        {
+          "id": "each-round-3",
+          "text": "2 players: set 3 more cards aside faceup",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "each-round-4",
+          "text": "Deal 1 card to each player",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Whoever most recently hand-wrote a letter goes first; later rounds start with the previous round's winner",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

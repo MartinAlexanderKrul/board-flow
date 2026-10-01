@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "gameId": 199561,
+  "gameName": "Sagrada",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Sagrada rules (Floodgate Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Deal 1 Private Objective facedown to each player",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "2 random Window Pattern Cards and a Window Frame board each: choose 1 of the 4 patterns and slide it in",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Favor Tokens equal to the difficulty number of your pattern",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "Score Markers next to the Round Track",
+          "ref": "Player Setup"
+        }
+      ]
+    },
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "table-1",
+          "text": "Round Track in the center",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "table-2",
+          "text": "3 random Tool Cards and 3 random Public Objectives faceup",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "table-3",
+          "text": "All 90 dice in the Dice Bag",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "A random Start Player (whoever last visited a cathedral) takes the Dice Bag",
+          "ref": "Game Setup"
+        }
+      ]
+    }
+  ]
+}

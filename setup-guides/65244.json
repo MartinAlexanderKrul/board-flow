@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "gameId": 65244,
+  "gameName": "Forbidden Island",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Forbidden Island rules (Gamewright, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Shuffle the 24 Island tiles into the island shape: a 4 x 4 square plus 2 tiles beside the 2 middle tiles of each side, small gaps between",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "setup-2",
+          "text": "4 treasure figurines around the island",
+          "ref": "Setup 2"
+        },
+        {
+          "id": "setup-3",
+          "text": "Shuffle the Flood deck; draw 6 cards and flip those tiles to their flooded side",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "setup-4",
+          "text": "Shuffle the 6 Adventurer cards, 1 each; pawn on the tile showing its icon",
+          "note": "Starting on a flooded tile is fine",
+          "ref": "Setup 5"
+        },
+        {
+          "id": "setup-5",
+          "text": "Shuffle the Treasure deck and deal {n} cards each, faceup; replace any Waters Rise! card and shuffle it back in",
+          "amounts": {
+            "n": 2
+          },
+          "ref": "Setup 6"
+        },
+        {
+          "id": "setup-6",
+          "text": "Water Level marker at your chosen difficulty (Novice for a first game)",
+          "ref": "Setup 7"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player who last visited an island goes first; play continues to the left",
+          "ref": "Order of Play"
+        }
+      ]
+    }
+  ]
+}

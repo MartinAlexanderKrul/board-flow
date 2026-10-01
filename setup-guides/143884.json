@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "gameId": 143884,
+  "gameName": "Machi Koro",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Machi Koro rules (IDW / Pandasaurus, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player: a Wheat Field and a Bakery faceup, and the 4 Landmarks facedown (Train Station, Shopping Mall, Amusement Park, Radio Tower)",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Box the unused starting cards",
+          "condition": {
+            "maxPlayers": 3
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Marketplace: Supply cards stacked by type, in order of their dice roll numbers",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Each player takes {n} coins; the rest is the bank",
+          "amounts": {
+            "n": 3
+          },
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Choose a starting player",
+          "ref": "Game Setup"
+        }
+      ]
+    }
+  ]
+}

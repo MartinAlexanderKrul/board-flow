@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "gameId": 263918,
+  "gameName": "Cartographers",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Cartographers rules (Thunderworks Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 8
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "A map sheet and pencil each; everyone uses the same side (wilderness or wastelands)",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Name your cartographer at the top of the sheet",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "The 4 edict cards faceup in a row, A to D",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Scoring cards in 4 stacks by back: 1 random card from each below an edict; box the rest",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "Season cards stacked faceup: spring on top, then summer, fall, winter",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-6",
+          "text": "Shuffle the 4 ambush cards facedown",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-7",
+          "text": "Shuffle the explore cards with the top ambush card, unseen",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-8",
+          "text": "Solo: leave the title blank - it is awarded at the end",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Changes to Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Each new season: reshuffle the explore deck and add another unseen ambush card",
+          "ref": "Preparing for the Next Season"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Reveal the top explore card; everyone draws at the same time",
+          "ref": "Game Setup"
+        }
+      ]
+    }
+  ]
+}

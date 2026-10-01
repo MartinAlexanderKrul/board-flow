@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "gameId": 121921,
+  "gameName": "Robinson Crusoe: Adventures on the Cursed Island",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Robinson Crusoe rules (Portal Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "characters",
+      "title": "Characters",
+      "steps": [
+        {
+          "id": "characters-1",
+          "text": "Each player draws a random Character card and puts its Invention card on it",
+          "note": "2 players: draw only from Carpenter, Cook and Explorer",
+          "ref": "Setup"
+        },
+        {
+          "id": "characters-2",
+          "text": "2 pawns each and a Wound marker on the leftmost space of the life track",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "White marker on Morale level 0; black marker on the top space of the Weapon track",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "The 9 marked Invention cards plus 5 random ones faceup on the board; the rest as the Invention deck",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "The 3 Adventure decks shuffled facedown by their Action fields",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Beast deck and Mystery deck shuffled facedown",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "Island tile 1 faceup on its space with the Camp token (Camp side up)",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-6",
+          "text": "Black marker on the Shovel card over the beach terrain icon",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-7",
+          "text": "Other Island tiles shuffled facedown",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-8",
+          "text": "Set up the chosen Scenario card and its pieces as it describes",
+          "ref": "Scenarios"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Round 1 begins with the First Player",
+          "ref": "Game round"
+        }
+      ]
+    }
+  ]
+}

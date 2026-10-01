@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "gameId": 40692,
+  "gameName": "Small World",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Small World rules (Days of Wonder, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Take the map for your player count; Game Turn marker on the first spot",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "setup-2",
+          "text": "Storage tray of Race tokens open beside the map",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "setup-3",
+          "text": "Shuffle the Race banners: 5 faceup in a column, the stack faceup below them",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "setup-4",
+          "text": "Shuffle the Special Power badges: one to the left of each banner, the stack beside the banner stack (6 combos visible)",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "setup-5",
+          "text": "A Lost Tribe token on every region with a Lost Tribe symbol; a Mountain token on every Mountain region",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "setup-6",
+          "text": "Each player takes five 1-value Victory coins; the rest form the stash",
+          "ref": "Setting up the game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Players take turns clockwise; the first player advances the Game Turn marker each round",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

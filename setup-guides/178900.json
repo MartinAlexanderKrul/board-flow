@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "gameId": 178900,
+  "gameName": "Codenames",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Codenames rules (Czech Games Edition, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 8
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Split into two teams; each picks a spymaster, both spymasters sitting on the same side",
+          "note": "Standard game needs 4+ players; 2-3 player variants are on the back of the rules",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "25 random codenames in a 5 x 5 grid",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Spymasters slide a random key card into the stand, hidden from the field operatives",
+          "ref": "The Key"
+        },
+        {
+          "id": "setup-4",
+          "text": "Red and blue agent cards in front of their spymasters; bystanders and the assassin between them",
+          "ref": "Agent Cards"
+        },
+        {
+          "id": "setup-5",
+          "text": "The double agent goes to the starting team, flipped to its color",
+          "ref": "Agent Cards"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The lights on the key card's edge show the starting team: it has 9 words to find and gives the first clue",
+          "ref": "Starting Team"
+        }
+      ]
+    }
+  ]
+}

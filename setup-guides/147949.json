@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "gameId": 147949,
+  "gameName": "One Night Ultimate Werewolf",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "One Night Ultimate Werewolf rules summary (Bezier Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 10
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Choose role cards: always {n} cards, three more than players",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": 6,
+                "4": 7,
+                "5": 8,
+                "6": 9,
+                "7": 10,
+                "8": 11,
+                "9": 12,
+                "10": 13
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Shuffle and deal 1 facedown to each player; the other 3 facedown in the center",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Everyone secretly looks at their card and puts it back facedown",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "One player is the Announcer and reads the night script (or use the app)",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Your role at the end is the card in front of you, which may have changed; nobody looks at cards after the night",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Night phase: roles wake in the script order",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

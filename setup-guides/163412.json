@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "gameId": 163412,
+  "gameName": "Patchwork",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Patchwork rules (Lookout Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player: a quilt board, a time token and {n} buttons",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Time board in the middle; both time tokens on its starting space",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Regular patches in a circle around the time board",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Neutral token between the 1x2 patch and the next patch clockwise",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "Special tile out; special patches on the marked spaces of the time board",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player who last used a needle begins",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

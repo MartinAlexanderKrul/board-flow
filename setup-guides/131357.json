@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "gameId": 131357,
+  "gameName": "Coup",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Coup rules (Indie Boards & Cards, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Shuffle the character cards and deal {n} to each player, facedown; the rest is the Court deck",
+          "amounts": {
+            "n": 2
+          },
+          "ref": "Set-Up"
+        },
+        {
+          "id": "setup-2",
+          "text": "Each player takes {n} coins, kept visible; the rest is the Treasury",
+          "amounts": {
+            "n": 2
+          },
+          "note": "2 players: the starting player takes only 1 coin",
+          "ref": "Set-Up"
+        },
+        {
+          "id": "setup-3",
+          "text": "A summary card for each player",
+          "ref": "Set-Up"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The winner of the last game starts",
+          "ref": "Set-Up"
+        }
+      ]
+    }
+  ]
+}

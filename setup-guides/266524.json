@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "gameId": 266524,
+  "gameName": "Parks",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "PARKS rules (Keymaster Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Board in the middle with the two token trays beside it",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "Parks deck shuffled; 3 faceup in the top slots",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "Gear deck shuffled; 3 faceup in the bottom slots",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Season deck shuffled on its area; reveal the top card",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Deal 1 faceup Canteen to each player",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Deal 2 Year cards each: keep 1 facedown, discard the other",
+          "note": "First game: deal just 1",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "2 Hikers on the Trailhead and a Campfire, lit side up",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "trail",
+      "title": "Trail",
+      "steps": [
+        {
+          "id": "trail-1",
+          "text": "Trailhead on the far left",
+          "ref": "Trail Setup"
+        },
+        {
+          "id": "trail-2",
+          "text": "Trail deck: the 5 Basic Sites plus 1 random Advanced Site",
+          "note": "4-5 players: add the Waterfall Site",
+          "ref": "Trail Setup"
+        },
+        {
+          "id": "trail-3",
+          "text": "Other Advanced Sites facedown left of the Trailhead",
+          "ref": "Trail Setup"
+        },
+        {
+          "id": "trail-4",
+          "text": "Shuffle the Trail deck and lay the Sites out to the right one at a time; Trail End last",
+          "ref": "Trail Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "First Hiker Marker to whoever most recently took a hike; Camera to the player on their right",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

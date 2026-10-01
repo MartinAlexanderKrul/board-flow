@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "gameId": 233867,
+  "gameName": "Welcome To...",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Welcome To... rules (Blue Cocker Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 12
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "A player sheet, a pen and a Player Aid each",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "3 random City Plans: one n1, one n2, one n3, Project side up; box the rest",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Shuffle the Construction cards into 3 equal stacks of 27, house number up, with room for discards to their right",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Solo: deal two equal stacks effect side up, shuffle the Solo card into one and put that stack under the other",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Solo Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Flip the top card of each stack; everyone picks a combination at the same time",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

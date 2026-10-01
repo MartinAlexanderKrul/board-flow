@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "gameId": 150376,
+  "gameName": "Dead of Winter: A Crossroads Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Dead of Winter rules (Plaid Hat Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "colony",
+      "title": "Colony",
+      "steps": [
+        {
+          "id": "colony-1",
+          "text": "Colony board in the center with the 6 location cards around it",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "colony-2",
+          "text": "Choose a main objective and set the board up as its card says",
+          "note": "First game: We Need More Samples",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "colony-3",
+          "text": "Crisis cards shuffled onto the colony board",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "colony-4",
+          "text": "Survivor, exiled objective and crossroads decks shuffled to the side",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "colony-5",
+          "text": "Item cards sorted by location, shuffled and placed on their location cards",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Secret objectives: set aside {n} non-betrayal cards, add 1 betrayal card, shuffle and deal 1 each; box the rest unseen",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 6,
+                "4": 8,
+                "5": 10
+              }
+            }
+          },
+          "note": "2 per player",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Shuffle the starter items and deal {n} to each player",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Deal 4 survivors each: keep 2, one as group leader and one in your following",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "Standees of all chosen survivors in the colony",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-5",
+          "text": "Blue marker on the morale track, red marker on the round track",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player whose group leader has the highest influence takes the first player token",
+          "ref": "Game Setup"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "gameId": 10547,
+  "gameName": "Betrayal at House on the Hill",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Betrayal at House on the Hill rules (Avalon Hill, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Set the Traitor's Tome and Secrets of Survival aside until the haunt",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Each player picks a character: board, figure and base, with 4 clips on the green starting numbers",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Event, Item and Omen cards in three shuffled facedown decks; dice within reach",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Monster and Traitor reference cards faceup; a Player reference card each",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "The three starting tiles in the center, 8-10 inches apart; other room tiles shuffled facedown",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-6",
+          "text": "All explorers on the Entrance Hall",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-7",
+          "text": "Choose one of the five Scenario cards together; box the rest",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-8",
+          "text": "Number Track, pointer and tokens aside for the haunt",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player whose explorer has the next birthday goes first; play is clockwise",
+          "ref": "Game Setup"
+        }
+      ]
+    }
+  ]
+}

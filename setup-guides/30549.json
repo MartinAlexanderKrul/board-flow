@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "gameId": 30549,
+  "gameName": "Pandemic",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Pandemic rules (Z-Man Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Research stations and disease cubes by the board, cubes sorted by color; 1 research station in Atlanta",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "board-2",
+          "text": "Outbreaks marker on 0; the 4 cure markers vial side up by the cure indicators",
+          "ref": "Setup 2"
+        },
+        {
+          "id": "board-3",
+          "text": "Infection rate marker on the leftmost 2",
+          "ref": "Setup 3"
+        },
+        {
+          "id": "board-4",
+          "text": "Shuffle the Infection cards: flip 3 and put 3 cubes on each city, 3 more with 2 cubes, 3 more with 1 cube; the 9 cards go to the Infection discard",
+          "ref": "Setup 3"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "A reference card and 1 random Role card each; matching pawns in Atlanta",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "players-2",
+          "text": "Take the Epidemic cards out, shuffle the Player cards and deal {n} each",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 3,
+                "4": 2
+              }
+            }
+          },
+          "ref": "Setup 4"
+        },
+        {
+          "id": "players-3",
+          "text": "Choose 4, 5 or 6 Epidemic cards (Introductory, Standard, Heroic); split the Player cards into that many piles, shuffle 1 Epidemic into each and stack them, smaller piles at the bottom",
+          "ref": "Setup 5"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player with the highest City population in hand goes first",
+          "ref": "Setup 6"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "gameId": 9220,
+  "gameName": "Saboteur",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Saboteur rules (AMIGO, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 10
+  },
+  "sections": [
+    {
+      "id": "each-round",
+      "title": "Each round",
+      "steps": [
+        {
+          "id": "each-round-1",
+          "text": "Dwarf cards: {s}; shuffle and deal 1 each, the leftover card set aside facedown",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "3": "1 saboteur + 3 gold miners",
+                "4": "1 saboteur + 4 gold miners",
+                "5": "2 saboteurs + 4 gold miners",
+                "6": "2 saboteurs + 5 gold miners",
+                "7": "3 saboteurs + 5 gold miners",
+                "8": "3 saboteurs + 6 gold miners",
+                "9": "3 saboteurs + 7 gold miners",
+                "10": "all dwarf cards"
+              }
+            }
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "each-round-2",
+          "text": "Start card faceup; the 3 goal cards shuffled facedown seven card widths away, one card length apart",
+          "ref": "Preparation"
+        },
+        {
+          "id": "each-round-3",
+          "text": "Shuffle the action cards with the other 40 path cards and deal {n} to each player",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": 6,
+                "4": 6,
+                "5": 6,
+                "6": 5,
+                "7": 5,
+                "8": 4,
+                "9": 4,
+                "10": 4
+              }
+            }
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "each-round-4",
+          "text": "Draw pile next to the goal cards; gold nugget cards shuffled facedown",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The youngest player goes first; play passes to the left",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

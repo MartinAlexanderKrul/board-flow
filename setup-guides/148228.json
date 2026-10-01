@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "gameId": 148228,
+  "gameName": "Splendor",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Splendor rules (Space Cowboys, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Shuffle each development deck separately; stack them in a column, level 1 at the bottom",
+          "ref": "Game setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Reveal 4 cards from each level",
+          "ref": "Game setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Shuffle the noble tiles and reveal {n}; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 5
+              }
+            }
+          },
+          "ref": "Game setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Tokens in 6 piles by color: {n} of each gem color; gold untouched",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 5,
+                "4": 7
+              }
+            }
+          },
+          "ref": "Game setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The youngest player begins, then clockwise",
+          "ref": "Game turn"
+        }
+      ]
+    }
+  ]
+}

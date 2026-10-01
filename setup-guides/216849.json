@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "gameId": 216849,
   "gameName": "Dominion (Second Edition) Big Box",
-  "version": 5,
+  "aliasGameIds": [36218],
+  "version": 6,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",

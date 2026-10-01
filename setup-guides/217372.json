@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "gameId": 217372,
+  "gameName": "The Quest for El Dorado",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Quest for El Dorado rules (Ravensburger, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Assemble the map and market board as the setup sheet shows",
+          "ref": "How the game works"
+        },
+        {
+          "id": "setup-2",
+          "text": "Each player: an expedition board and a starting deck of 8 cards - 1 Sailor, 3 Explorers, 4 Travelers - shuffled facedown",
+          "ref": "How the game works"
+        },
+        {
+          "id": "setup-3",
+          "text": "Draw {n} cards",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "How the game works"
+        },
+        {
+          "id": "setup-4",
+          "text": "2 players: each takes a second playing piece; the starting player uses starting spaces 1 and 3",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Two-player rules"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Only the 6 piles on the market board can be bought until a spot empties",
+          "ref": "Buy new cards"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player with the starting player hat goes first",
+          "ref": "Turn structure"
+        }
+      ]
+    }
+  ]
+}

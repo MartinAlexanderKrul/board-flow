@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "gameId": 291453,
+  "gameName": "SCOUT",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "SCOUT rules (Oink Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "game",
+      "title": "Game",
+      "steps": [
+        {
+          "id": "game-1",
+          "text": "Choose a starting player, who takes the Starting Player Marker",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "game-2",
+          "text": "Return to the box: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "the single 9/10 card",
+                "3": "the 9 cards showing a 10",
+                "4": "the single 9/10 card",
+                "5": "nothing"
+              }
+            }
+          },
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "game-3",
+          "text": "Keep one Scout & Show chip per player",
+          "ref": "Setting Up the Game"
+        }
+      ]
+    },
+    {
+      "id": "each-round",
+      "title": "Each round",
+      "steps": [
+        {
+          "id": "each-round-1",
+          "text": "Scout chips in the center; 1 Scout & Show chip each",
+          "ref": "Setting Up the Round"
+        },
+        {
+          "id": "each-round-2",
+          "text": "Shuffle (positions and orientation) and deal all cards: {n} each",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": 12,
+                "4": 11,
+                "5": 9
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Setting Up the Round"
+        },
+        {
+          "id": "each-round-3",
+          "text": "2 players: follow the 2-player rules for dealing",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Setting Up the Round"
+        },
+        {
+          "id": "each-round-4",
+          "text": "Pick up your hand without rearranging it; you may flip the whole hand upside down once, right now",
+          "ref": "Setting Up the Round"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Take turns clockwise from the starting player",
+          "ref": "Playing the round"
+        }
+      ]
+    }
+  ]
+}

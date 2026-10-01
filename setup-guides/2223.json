@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "gameId": 2223,
+  "gameName": "UNO",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "UNO rules (Mattel, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 10
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Everyone draws a card: the highest number deals (action and wild cards count as zero)",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Deal {n} cards to each player",
+          "amounts": {
+            "n": 7
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "The rest is the Draw Pile; turn the top card over to start the Discard Pile",
+          "note": "A Wild Draw Four goes back into the deck; other action cards take effect",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player to the left of the dealer starts; play is clockwise",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

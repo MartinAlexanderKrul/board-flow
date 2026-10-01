@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "gameId": 420087,
+  "gameName": "Flip 7",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Flip 7 rules (The Op, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 18
+  },
+  "sections": [
+    {
+      "id": "each-round",
+      "title": "Each round",
+      "steps": [
+        {
+          "id": "each-round-1",
+          "text": "Shuffle the deck thoroughly and choose a Dealer",
+          "ref": "How to Play"
+        },
+        {
+          "id": "each-round-2",
+          "text": "The Dealer deals 1 card faceup to each player in turn order, themself included",
+          "note": "Stop to resolve any Action card as soon as it appears, then keep dealing",
+          "ref": "How to Play"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "After a round the used cards are set aside, not reshuffled; the deck passes left to the new Dealer",
+          "ref": "End of round"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The Dealer offers each player in turn: Hit or Stay",
+          "ref": "How to Play"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "gameId": 14996,
+  "gameName": "Ticket to Ride: Europe",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Ticket to Ride: Europe rules (Days of Wonder, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player: 45 Train Cars, 3 Train Stations and a Scoring Marker on Start",
+          "ref": "Setting up the Game"
+        },
+        {
+          "id": "setup-2",
+          "text": "Shuffle the Train cards and deal {n} each; turn 5 faceup by the deck",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "Setting up the Game"
+        },
+        {
+          "id": "setup-3",
+          "text": "European Express Bonus and Summary card faceup by the board",
+          "ref": "Setting up the Game"
+        },
+        {
+          "id": "setup-4",
+          "text": "Shuffle the 6 long routes (blue background) and deal 1 each; box the rest unseen",
+          "ref": "Setting up the Game"
+        },
+        {
+          "id": "setup-5",
+          "text": "Shuffle the regular Destination Tickets and deal 3 each",
+          "ref": "Setting up the Game"
+        },
+        {
+          "id": "setup-6",
+          "text": "Before the first turn everyone keeps at least 2 of their tickets; discards go back in the box unseen",
+          "ref": "Beginning of the Game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Take turns clockwise",
+          "ref": "Beginning of the Game"
+        }
+      ]
+    }
+  ]
+}

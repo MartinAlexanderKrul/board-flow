@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "gameId": 1406,
+  "gameName": "Monopoly",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Monopoly rules (Hasbro, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 8
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player picks a token and puts it on GO",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Choose a Banker, who keeps their own money separate from the Bank",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Each player gets {n}: two each of 500, 100 and 50, six 20s, five each of 10, 5 and 1",
+          "amounts": {
+            "n": 1500
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Chance and Community Chest cards facedown on their spaces; the Bank holds the Title Deeds, houses and hotels",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Everyone rolls: the highest roller goes first, then play passes to the left",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

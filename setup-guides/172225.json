@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "gameId": 172225,
+  "gameName": "Exploding Kittens",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Exploding Kittens rules (via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Take all Exploding Kittens and Defuse cards out of the deck",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Deal 1 Defuse to each player; put the extra Defuses back in the deck",
+          "note": "2-3 players: put back only 2 and remove the rest",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Shuffle and deal {n} cards each, for a hand of 8 with the Defuse",
+          "amounts": {
+            "n": 7
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Put {n} Exploding Kittens into the deck (1 fewer than players) and shuffle",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 1,
+                "3": 2,
+                "4": 3,
+                "5": 4
+              }
+            }
+          },
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Pick a player to go first",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

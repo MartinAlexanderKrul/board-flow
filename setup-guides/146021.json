@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "gameId": 146021,
+  "gameName": "Eldritch Horror",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Eldritch Horror rules summary (Fantasy Flight Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 8
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Choose an Ancient One sheet together and resolve its setup effect",
+          "note": "First game: Azathoth",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "setup-2",
+          "text": "Each player picks an investigator: sheet, token and stand; token on its starting space",
+          "ref": "Setup 2-3"
+        },
+        {
+          "id": "setup-3",
+          "text": "Starting possessions from the back of the sheet; Health and Sanity tokens at their maximums",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "setup-4",
+          "text": "Decks: Expedition Encounters shuffled together; Spells and Conditions as two faceup decks; the rest shuffled by card back; Mythos cards aside",
+          "ref": "Setup 5"
+        },
+        {
+          "id": "setup-5",
+          "text": "All Monster tokens in an opaque Monster cup",
+          "ref": "Setup 6"
+        },
+        {
+          "id": "setup-6",
+          "text": "4 Asset cards faceup in the reserve",
+          "ref": "Setup 7"
+        },
+        {
+          "id": "setup-7",
+          "text": "Build the Mythos deck as the bottom of the Ancient One sheet instructs",
+          "ref": "Setup 8"
+        },
+        {
+          "id": "setup-8",
+          "text": "Reference card for your player count by the Mythos deck",
+          "ref": "Setup 9A"
+        },
+        {
+          "id": "setup-9",
+          "text": "Doom token on the space the Ancient One lists; Omen token on the green comet space",
+          "ref": "Setup 9B-C"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Starting with the Lead Investigator and going clockwise, each investigator takes up to two actions",
+          "ref": "Action Phase"
+        }
+      ]
+    }
+  ]
+}

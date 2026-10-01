@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "gameId": 50,
+  "gameName": "Lost Cities",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Lost Cities rules (KOSMOS, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Game board between the two players",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-2",
+          "text": "Shuffle the 60 cards and deal {n} to each player; the rest is the draw pile",
+          "amounts": {
+            "n": 8
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-3",
+          "text": "Pen and paper ready if you play more than one game",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Take turns: play or discard a card, then draw one",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

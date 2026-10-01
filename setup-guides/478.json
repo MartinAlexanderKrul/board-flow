@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "gameId": 478,
+  "gameName": "Citadels",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Citadels rules (Z-Man Games edition, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 8
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Choose the cast of characters and put their tokens in the center in rank order",
+          "note": "First game: the eight characters and 14 unique districts listed in the rulebook",
+          "ref": "Complete Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Shuffle 14 unique districts with the 54 basic districts; deal {n} to each player",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "Complete Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "District deck facedown and all gold in the center as the bank",
+          "ref": "Complete Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Each player takes {n} gold",
+          "amounts": {
+            "n": 2
+          },
+          "ref": "Complete Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "The oldest player takes the crown and the character cards",
+          "ref": "Complete Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Selection phase with 8 characters: 4 players set aside 2 faceup + 1 facedown, 5 players 1 + 1, 6-7 players 0 + 1",
+          "condition": {
+            "minPlayers": 4
+          },
+          "ref": "Selection Phase with 8 Characters"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The crowned player starts the selection phase",
+          "ref": "Complete Setup"
+        }
+      ]
+    }
+  ]
+}

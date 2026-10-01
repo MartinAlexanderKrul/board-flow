@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "gameId": 336755,
   "gameName": "King of Tokyo: Monster Box",
-  "version": 3,
+  "aliasGameIds": [70323],
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",

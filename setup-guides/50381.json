@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "gameId": 50381,
+  "gameName": "Cards Against Humanity",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Cards Against Humanity rules (via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 4,
+    "max": 20
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player draws {n} White Cards",
+          "amounts": {
+            "n": 10
+          },
+          "ref": "Basic rules"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "After each round everyone draws back up to ten White Cards and the Card Czar changes",
+          "ref": "Basic rules"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The person who most recently pooped is the first Card Czar and reads a Black Card aloud",
+          "ref": "Basic rules"
+        }
+      ]
+    }
+  ]
+}

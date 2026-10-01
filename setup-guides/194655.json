@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "gameId": 194655,
+  "gameName": "Santorini",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Santorini rules (Roxley / Spin Master, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "gods",
+      "name": "God Powers"
+    }
+  ],
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Cliff Pedestal on the Ocean Board, Island Board on top",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "God Powers: the Challenger picks one per player and reads them out; clockwise each player takes one, the Challenger gets the last",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "note": "With 3-4 players check that each God Power is compatible",
+          "ref": "God Power Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The youngest player places 2 Workers on any free spaces, then the others place theirs",
+          "condition": {
+            "notModules": [
+              "gods"
+            ]
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "start-2",
+          "text": "The Challenger picks a Start Player, who places 2 Workers; the others place theirs clockwise",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Power Setup"
+        },
+        {
+          "id": "start-3",
+          "text": "On your turn move one Worker, then build with it",
+          "ref": "How to play"
+        }
+      ]
+    }
+  ]
+}

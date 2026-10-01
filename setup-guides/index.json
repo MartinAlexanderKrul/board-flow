@@ -2,12 +2,52 @@
   "schemaVersion": 1,
   "guides": [
     {
+      "gameId": 11,
+      "gameName": "Bohnanza",
+      "gameIds": [11],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "11.json"
+    },
+    {
+      "gameId": 13,
+      "gameName": "Catan",
+      "gameIds": [13],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "13.json"
+    },
+    {
+      "gameId": 50,
+      "gameName": "Lost Cities",
+      "gameIds": [50],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "50.json"
+    },
+    {
       "gameId": 93,
       "gameName": "El Grande",
       "gameIds": [93],
       "version": 1,
       "schemaVersion": 1,
       "path": "93.json"
+    },
+    {
+      "gameId": 171,
+      "gameName": "Chess",
+      "gameIds": [171],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "171.json"
+    },
+    {
+      "gameId": 181,
+      "gameName": "Risk",
+      "gameIds": [181],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "181.json"
     },
     {
       "gameId": 320,
@@ -18,6 +58,14 @@
       "path": "320.json"
     },
     {
+      "gameId": 478,
+      "gameName": "Citadels",
+      "gameIds": [478],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "478.json"
+    },
+    {
       "gameId": 521,
       "gameName": "Crokinole",
       "gameIds": [521],
@@ -26,12 +74,44 @@
       "path": "521.json"
     },
     {
+      "gameId": 1406,
+      "gameName": "Monopoly",
+      "gameIds": [1406],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "1406.json"
+    },
+    {
+      "gameId": 1927,
+      "gameName": "Munchkin",
+      "gameIds": [1927],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "1927.json"
+    },
+    {
+      "gameId": 2223,
+      "gameName": "UNO",
+      "gameIds": [2223],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "2223.json"
+    },
+    {
       "gameId": 2651,
       "gameName": "Power Grid",
       "gameIds": [2651],
       "version": 1,
       "schemaVersion": 1,
       "path": "2651.json"
+    },
+    {
+      "gameId": 2655,
+      "gameName": "Hive",
+      "gameIds": [2655],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "2655.json"
     },
     {
       "gameId": 3076,
@@ -50,6 +130,30 @@
       "path": "3955.json"
     },
     {
+      "gameId": 9209,
+      "gameName": "Ticket to Ride",
+      "gameIds": [9209],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "9209.json"
+    },
+    {
+      "gameId": 9220,
+      "gameName": "Saboteur",
+      "gameIds": [9220],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "9220.json"
+    },
+    {
+      "gameId": 10547,
+      "gameName": "Betrayal at House on the Hill",
+      "gameIds": [10547],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "10547.json"
+    },
+    {
       "gameId": 11971,
       "gameName": "Cockroach Poker",
       "gameIds": [11971],
@@ -64,6 +168,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "12333.json"
+    },
+    {
+      "gameId": 14996,
+      "gameName": "Ticket to Ride: Europe",
+      "gameIds": [14996],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "14996.json"
     },
     {
       "gameId": 27451,
@@ -98,12 +210,28 @@
       "path": "28720.json"
     },
     {
+      "gameId": 30549,
+      "gameName": "Pandemic",
+      "gameIds": [30549],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "30549.json"
+    },
+    {
       "gameId": 31260,
       "gameName": "Agricola",
       "gameIds": [31260],
       "version": 1,
       "schemaVersion": 1,
       "path": "31260.json"
+    },
+    {
+      "gameId": 34635,
+      "gameName": "Stone Age",
+      "gameIds": [34635],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "34635.json"
     },
     {
       "gameId": 35677,
@@ -130,6 +258,30 @@
       "path": "39856.json"
     },
     {
+      "gameId": 40692,
+      "gameName": "Small World",
+      "gameIds": [40692],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "40692.json"
+    },
+    {
+      "gameId": 41114,
+      "gameName": "The Resistance",
+      "gameIds": [41114],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "41114.json"
+    },
+    {
+      "gameId": 50381,
+      "gameName": "Cards Against Humanity",
+      "gameIds": [50381],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "50381.json"
+    },
+    {
       "gameId": 54043,
       "gameName": "Jaipur",
       "gameIds": [54043],
@@ -146,6 +298,14 @@
       "path": "55690.json"
     },
     {
+      "gameId": 65244,
+      "gameName": "Forbidden Island",
+      "gameIds": [65244],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "65244.json"
+    },
+    {
       "gameId": 66056,
       "gameName": "Rivals for Catan",
       "gameIds": [66056],
@@ -160,6 +320,14 @@
       "version": 3,
       "schemaVersion": 1,
       "path": "68448.json"
+    },
+    {
+      "gameId": 70919,
+      "gameName": "Takenoko",
+      "gameIds": [70919],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "70919.json"
     },
     {
       "gameId": 77423,
@@ -186,12 +354,28 @@
       "path": "96848.json"
     },
     {
+      "gameId": 98778,
+      "gameName": "Hanabi",
+      "gameIds": [98778],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "98778.json"
+    },
+    {
       "gameId": 102794,
       "gameName": "Caverna: The Cave Farmers",
       "gameIds": [102794],
       "version": 1,
       "schemaVersion": 1,
       "path": "102794.json"
+    },
+    {
+      "gameId": 110327,
+      "gameName": "Lords of Waterdeep",
+      "gameIds": [110327],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "110327.json"
     },
     {
       "gameId": 115746,
@@ -208,6 +392,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "120677.json"
+    },
+    {
+      "gameId": 121921,
+      "gameName": "Robinson Crusoe: Adventures on the Cursed Island",
+      "gameIds": [121921],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "121921.json"
     },
     {
       "gameId": 124361,
@@ -250,6 +442,22 @@
       "path": "126163.json"
     },
     {
+      "gameId": 129622,
+      "gameName": "Love Letter",
+      "gameIds": [129622],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "129622.json"
+    },
+    {
+      "gameId": 131357,
+      "gameName": "Coup",
+      "gameIds": [131357],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "131357.json"
+    },
+    {
       "gameId": 133473,
       "gameName": "Sushi Go!",
       "gameIds": [133473],
@@ -266,12 +474,68 @@
       "path": "136063.json"
     },
     {
+      "gameId": 143884,
+      "gameName": "Machi Koro",
+      "gameIds": [143884],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "143884.json"
+    },
+    {
+      "gameId": 146021,
+      "gameName": "Eldritch Horror",
+      "gameIds": [146021],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "146021.json"
+    },
+    {
+      "gameId": 147020,
+      "gameName": "Star Realms",
+      "gameIds": [147020],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "147020.json"
+    },
+    {
+      "gameId": 147949,
+      "gameName": "One Night Ultimate Werewolf",
+      "gameIds": [147949],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "147949.json"
+    },
+    {
+      "gameId": 148228,
+      "gameName": "Splendor",
+      "gameIds": [148228],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "148228.json"
+    },
+    {
+      "gameId": 150376,
+      "gameName": "Dead of Winter: A Crossroads Game",
+      "gameIds": [150376],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "150376.json"
+    },
+    {
       "gameId": 157354,
       "gameName": "Five Tribes",
       "gameIds": [157354],
       "version": 1,
       "schemaVersion": 1,
       "path": "157354.json"
+    },
+    {
+      "gameId": 157969,
+      "gameName": "Sheriff of Nottingham",
+      "gameIds": [157969],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "157969.json"
     },
     {
       "gameId": 161533,
@@ -296,6 +560,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "162886.json"
+    },
+    {
+      "gameId": 163412,
+      "gameName": "Patchwork",
+      "gameIds": [163412],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "163412.json"
     },
     {
       "gameId": 164153,
@@ -346,6 +618,14 @@
       "path": "170216.json"
     },
     {
+      "gameId": 172225,
+      "gameName": "Exploding Kittens",
+      "gameIds": [172225],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "172225.json"
+    },
+    {
       "gameId": 172242,
       "gameName": "Exploding Kittens: NSFW Edition",
       "gameIds": [172242],
@@ -384,6 +664,22 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "177736.json"
+    },
+    {
+      "gameId": 178900,
+      "gameName": "Codenames",
+      "gameIds": [178900],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "178900.json"
+    },
+    {
+      "gameId": 181304,
+      "gameName": "Mysterium",
+      "gameIds": [181304],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "181304.json"
     },
     {
       "gameId": 182028,
@@ -474,12 +770,28 @@
       "path": "192135.json"
     },
     {
+      "gameId": 192291,
+      "gameName": "Sushi Go Party!",
+      "gameIds": [192291],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "192291.json"
+    },
+    {
       "gameId": 193738,
       "gameName": "Great Western Trail",
       "gameIds": [193738],
       "version": 1,
       "schemaVersion": 1,
       "path": "193738.json"
+    },
+    {
+      "gameId": 194655,
+      "gameName": "Santorini",
+      "gameIds": [194655],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "194655.json"
     },
     {
       "gameId": 198773,
@@ -496,6 +808,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "199042.json"
+    },
+    {
+      "gameId": 199561,
+      "gameName": "Sagrada",
+      "gameIds": [199561],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "199561.json"
     },
     {
       "gameId": 199792,
@@ -520,6 +840,14 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "201808.json"
+    },
+    {
+      "gameId": 204583,
+      "gameName": "Kingdomino",
+      "gameIds": [204583],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "204583.json"
     },
     {
       "gameId": 205059,
@@ -564,10 +892,18 @@
     {
       "gameId": 216849,
       "gameName": "Dominion (Second Edition) Big Box",
-      "gameIds": [51811, 66098, 66690, 90850, 125403, 137166, 171915, 216849, 257673, 298055],
-      "version": 5,
+      "gameIds": [36218, 51811, 66098, 66690, 90850, 125403, 137166, 171915, 216849, 257673, 298055],
+      "version": 6,
       "schemaVersion": 1,
       "path": "216849.json"
+    },
+    {
+      "gameId": 217372,
+      "gameName": "The Quest for El Dorado",
+      "gameIds": [217372],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "217372.json"
     },
     {
       "gameId": 220308,
@@ -612,8 +948,8 @@
     {
       "gameId": 230914,
       "gameName": "Carcassonne Big Box 6",
-      "gameIds": [2591, 2993, 5405, 15158, 21385, 31784, 33458, 66646, 104634, 118614, 118615, 118616, 118617, 118618, 118619, 120686, 153773, 217006, 230914],
-      "version": 3,
+      "gameIds": [822, 2591, 2993, 5405, 15158, 21385, 31784, 33458, 66646, 104634, 118614, 118615, 118616, 118617, 118618, 118619, 120686, 153773, 217006, 230914],
+      "version": 4,
       "schemaVersion": 1,
       "path": "230914.json"
     },
@@ -640,6 +976,14 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "233371.json"
+    },
+    {
+      "gameId": 233867,
+      "gameName": "Welcome To...",
+      "gameIds": [233867],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "233867.json"
     },
     {
       "gameId": 237182,
@@ -778,6 +1122,14 @@
       "path": "256960.json"
     },
     {
+      "gameId": 263918,
+      "gameName": "Cartographers",
+      "gameIds": [263918],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "263918.json"
+    },
+    {
       "gameId": 266192,
       "gameName": "Wingspan",
       "gameIds": [266192, 290448, 300580, 366161, 461932],
@@ -792,6 +1144,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "266507.json"
+    },
+    {
+      "gameId": 266524,
+      "gameName": "Parks",
+      "gameIds": [266524],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "266524.json"
     },
     {
       "gameId": 266810,
@@ -912,6 +1272,14 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "285967.json"
+    },
+    {
+      "gameId": 291453,
+      "gameName": "SCOUT",
+      "gameIds": [291453],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "291453.json"
     },
     {
       "gameId": 291457,
@@ -1068,8 +1436,8 @@
     {
       "gameId": 336755,
       "gameName": "King of Tokyo: Monster Box",
-      "gameIds": [207292, 233076, 250532, 336755, 364182],
-      "version": 3,
+      "gameIds": [70323, 207292, 233076, 250532, 336755, 364182],
+      "version": 4,
       "schemaVersion": 1,
       "path": "336755.json"
     },
@@ -1368,6 +1736,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "418059.json"
+    },
+    {
+      "gameId": 420087,
+      "gameName": "Flip 7",
+      "gameIds": [420087],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "420087.json"
     },
     {
       "gameId": 421006,

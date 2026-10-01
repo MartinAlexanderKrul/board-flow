@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "gameId": 70919,
+  "gameName": "Takenoko",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Takenoko rules (Bombyx / Matagot, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Pond tile in the center with the gardener and the panda on it",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-2",
+          "text": "Other plot tiles shuffled facedown; irrigation channels and improvements sorted beside them",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-3",
+          "text": "Emperor card aside; plot, gardener and panda objectives in three shuffled facedown piles",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-4",
+          "text": "Each player: an individual board, 2 action tokens and 1 objective of each category",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The tallest player starts",
+          "ref": "Preparation"
+        }
+      ]
+    }
+  ]
+}

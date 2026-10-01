@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "gameId": 41114,
+  "gameName": "The Resistance",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Resistance rules (Indie Boards & Cards, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 5,
+    "max": 10
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Score Tableau in the center with Score Markers, Team cards and Mission cards; Round marker on the 1st Mission",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "2 Vote cards (Approve and Reject) for each player",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Shuffle {r} Resistance and {s} Spy cards and deal 1 facedown to each player",
+          "amounts": {
+            "r": {
+              "byPlayers": {
+                "5": 3,
+                "6": 4,
+                "7": 4,
+                "8": 5,
+                "9": 6,
+                "10": 6
+              }
+            },
+            "s": {
+              "byPlayers": {
+                "5": 2,
+                "6": 2,
+                "7": 3,
+                "8": 3,
+                "9": 3,
+                "10": 4
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Random Leader takes the Leader card",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "Spies Reveal: everyone closes their eyes, the Spies open theirs to see each other, then all open",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The Leader proposes the first Mission team",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

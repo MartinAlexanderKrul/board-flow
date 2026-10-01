@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "gameId": 2655,
+  "gameName": "Hive",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Hive rules (Gen42 Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player takes all 11 pieces of one colour, faceup in front of them",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Your Queen Bee must be placed by your fourth turn",
+          "ref": "Placing"
+        },
+        {
+          "id": "reminders-2",
+          "text": "After each player's first piece, new pieces may not be placed touching an opposing piece",
+          "ref": "Placing"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "One player places a piece in the centre of the table; the other joins a piece to it edge to edge",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

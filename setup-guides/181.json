@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "gameId": 181,
+  "gameName": "Risk",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Risk rules (Hasbro, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player takes {n} Infantry armies",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": 35,
+                "4": 30,
+                "5": 25,
+                "6": 20
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Roll to see who goes first; in turn, each places 1 army on an unoccupied territory until all 42 are claimed",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Continue in turn placing 1 army on a territory you own until all starting armies are placed",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Shuffle the Risk cards beside the board",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Once all armies are placed, start taking turns in the same order",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

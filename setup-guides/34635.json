@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "gameId": 34635,
+  "gameName": "Stone Age",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Stone Age rules (Hans im Gluck / Z-Man, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Food tokens sorted on the hunting grounds",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "28 wood on the forest, 18 clay on the clay mound, 12 stone on the quarry, 10 gold on the river",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "Tool tiles sorted (1/2 and 3/4) on the village",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Civilization cards shuffled; reveal 4 onto their spaces, starting from the rightmost",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "Building tiles shuffled into piles of 7: {n} piles on the board, top tile of each revealed; box the rest unseen",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Small marker on 0 of the agriculture track, big marker on 0 of the scoring track",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Player board with 5 figures and Food worth {n}",
+          "amounts": {
+            "n": 12
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "The other 5 figures per color, the 7 dice and the dice cup by the board",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The youngest player takes the First player token and places figures first",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

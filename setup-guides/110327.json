@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "gameId": 110327,
+  "gameName": "Lords of Waterdeep",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Lords of Waterdeep rules (Wizards of the Coast, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "3 Victory Point tokens on each space of the rounds track",
+          "ref": "Victory Points"
+        },
+        {
+          "id": "board-2",
+          "text": "3 Building tiles faceup in Builder's Hall; the rest facedown beside it",
+          "ref": "Buildings"
+        },
+        {
+          "id": "board-3",
+          "text": "4 Quest cards faceup at Cliffwatch Inn; Quest deck beside it",
+          "ref": "Quests"
+        },
+        {
+          "id": "board-4",
+          "text": "Adventurer cubes and Gold as the supply",
+          "ref": "Adventurers"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Player mat, score marker on 0 and {n} Agents in your Agent Pool",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 3,
+                "4": 2,
+                "5": 2
+              }
+            }
+          },
+          "ref": "Agents"
+        },
+        {
+          "id": "players-2",
+          "text": "1 more Agent of your color by the Round 5 space",
+          "ref": "Agents"
+        },
+        {
+          "id": "players-3",
+          "text": "Deal 1 secret Lord card, 2 faceup Quests and 2 hidden Intrigue cards to each player",
+          "ref": "Lords of Waterdeep"
+        },
+        {
+          "id": "players-4",
+          "text": "Whoever was most recently in another city takes the First Player marker",
+          "ref": "Starting the game"
+        },
+        {
+          "id": "players-5",
+          "text": "Starting Gold: 4 for the first player, then 1 more for each player to the left",
+          "ref": "Starting the game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The first player assigns an Agent; play is clockwise",
+          "ref": "Starting the game"
+        }
+      ]
+    }
+  ]
+}

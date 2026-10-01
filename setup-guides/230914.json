@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "gameId": 230914,
   "gameName": "Carcassonne Big Box 6",
-  "version": 3,
+  "aliasGameIds": [822],
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",

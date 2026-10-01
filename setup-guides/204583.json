@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "gameId": 204583,
+  "gameName": "Kingdomino",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Kingdomino rules (Blue Orange, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player: {s}, a starting tile and their castle on it",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "2 kings",
+                "3": "1 king",
+                "4": "1 king"
+              }
+            }
+          },
+          "ref": "Set-up"
+        },
+        {
+          "id": "setup-2",
+          "text": "Shuffle the dominoes numbered side up into the box: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "remove 24 at random, play with 24",
+                "3": "remove 12 at random, play with 36",
+                "4": "use all 48"
+              }
+            }
+          },
+          "ref": "Set-up"
+        },
+        {
+          "id": "setup-3",
+          "text": "Draw {n} dominoes, line them up in ascending order, then flip them to the landscape side",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "Set-up"
+        },
+        {
+          "id": "setup-4",
+          "text": "Shuffle the kings in your hands and reveal them one by one: each is placed on a free domino of the line",
+          "ref": "Set-up"
+        },
+        {
+          "id": "setup-5",
+          "text": "Draw a new line of dominoes the same way",
+          "ref": "Set-up"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Take turns in the order of the kings along the line",
+          "ref": "Playing the Game"
+        }
+      ]
+    }
+  ]
+}

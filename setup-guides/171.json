@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "gameId": 171,
+  "gameName": "Chess",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "US Chess Federation Official Rules of Chess (via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Board between the players with a white square in each player's near right corner",
+          "ref": "2C Placement"
+        },
+        {
+          "id": "setup-2",
+          "text": "Each side: 16 pieces in the initial position - rooks, knights and bishops from the corners inward, queen and king in the middle, pawns on the rank in front",
+          "ref": "3C Initial position"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "White makes the first move; players then alternate",
+          "ref": "6 The Right to Move"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "gameId": 181304,
+  "gameName": "Mysterium",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Mysterium rules summary (Libellud, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 7
+  },
+  "sections": [
+    {
+      "id": "ghost",
+      "title": "Ghost",
+      "steps": [
+        {
+          "id": "ghost-1",
+          "text": "Choose the Ghost: Screen with the Vision Cards and Ghost Tokens behind it, Culprit Tokens beside it",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "ghost-2",
+          "text": "Crow Tokens according to the difficulty level",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "ghost-3",
+          "text": "Hourglass near the Ghost",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "psychics",
+      "title": "Psychics",
+      "steps": [
+        {
+          "id": "psychics-1",
+          "text": "Each Psychic picks a color and takes its Sleeve",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "psychics-2",
+          "text": "Clairvoyancy Tokens each: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "none",
+                "3": "none",
+                "4": "4 (numbered 1-4)",
+                "5": "4 (numbered 1-4)",
+                "6": "6 (numbered 1-6)",
+                "7": "6 (numbered 1-6)"
+              }
+            }
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "psychics-3",
+          "text": "Clairvoyancy Track in front of the Screen on its 4-5 or 6-7 player side, Level Tokens on 0",
+          "condition": {
+            "minPlayers": 4
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "psychics-4",
+          "text": "Clock Board near the Psychics",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        {
+          "id": "cards-1",
+          "text": "Draw Character Psychic Cards for your difficulty and Psychic count; the Ghost takes the matching Ghost Cards; lay out the Character Progress Board",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "cards-2",
+          "text": "The Ghost keeps one Character per Psychic in the top line of the Screen, assigned to the Psychics; discard extras secretly",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "cards-3",
+          "text": "Repeat for Locations (middle line) and Objects (bottom line)",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "cards-4",
+          "text": "Intuition Pawns on the Character Progress Board; the Ghost draws {n} Vision Cards",
+          "amounts": {
+            "n": 7
+          },
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Play the first hour on the Clock Board",
+          "ref": "Game Setup"
+        }
+      ]
+    }
+  ]
+}

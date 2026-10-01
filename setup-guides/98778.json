@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "gameId": 98778,
+  "gameName": "Hanabi",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Hanabi rules (R&R Games / Cocktail Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "8 blue clock tokens faceup; the 4 black Fuse tokens stacked with the longest fuse on top and the explosion at the bottom",
+          "note": "The multicolor suit is for the advanced variants only",
+          "ref": "Getting Ready"
+        },
+        {
+          "id": "setup-2",
+          "text": "Shuffle the cards and deal {n} to each player",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 5,
+                "3": 5,
+                "4": 4,
+                "5": 4
+              }
+            }
+          },
+          "ref": "Getting Ready"
+        },
+        {
+          "id": "setup-3",
+          "text": "Hold your cards facing outward - never look at your own",
+          "ref": "Getting Ready"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player with the most colorful clothing begins; play is clockwise",
+          "ref": "The Game"
+        }
+      ]
+    }
+  ]
+}
