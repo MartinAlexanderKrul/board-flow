@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "gameId": 128882,
+  "gameName": "The Resistance: Avalon",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Resistance: Avalon rulebook (Indie Boards & Cards)"
+    ]
+  },
+  "players": {
+    "min": 5,
+    "max": 10
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Tableau for your player count in the center, with the Score Markers, Team tokens and Quest cards beside it",
+          "ref": "p.2"
+        },
+        {
+          "id": "setup-2",
+          "text": "Round marker on the 1st Quest space",
+          "ref": "p.2"
+        },
+        {
+          "id": "setup-3",
+          "text": "2 Vote tokens for each player",
+          "ref": "p.2"
+        },
+        {
+          "id": "setup-4",
+          "text": "Random Leader takes the Leader token",
+          "ref": "p.2"
+        },
+        {
+          "id": "setup-5",
+          "text": "Shuffle {g} Good and {e} Evil Character cards and deal 1 facedown to each player",
+          "amounts": {
+            "g": {
+              "byPlayers": {
+                "5": 3,
+                "6": 4,
+                "7": 4,
+                "8": 5,
+                "9": 6,
+                "10": 6
+              }
+            },
+            "e": {
+              "byPlayers": {
+                "5": 2,
+                "6": 2,
+                "7": 3,
+                "8": 3,
+                "9": 3,
+                "10": 4
+              }
+            }
+          },
+          "note": "One Good card is Merlin, one Evil card is the Assassin; the rest are Loyal Servants and Minions",
+          "ref": "p.2"
+        },
+        {
+          "id": "setup-6",
+          "text": "Everyone secretly looks at their card",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "evil-reveals-itself",
+      "title": "Evil reveals itself",
+      "steps": [
+        {
+          "id": "evil-reveals-itself-1",
+          "text": "Leader's script: everyone closes eyes with a fist out; Minions of Mordred open their eyes to see each other, then close them",
+          "ref": "p.2"
+        },
+        {
+          "id": "evil-reveals-itself-2",
+          "text": "Minions raise a thumb; Merlin opens their eyes to see the agents of Evil; thumbs down, Merlin closes eyes; everyone opens eyes",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "First Quest team size: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "5": 2,
+                "6": 2,
+                "7": 2,
+                "8": 3,
+                "9": 3,
+                "10": 3
+              }
+            }
+          },
+          "ref": "p.3"
+        },
+        {
+          "id": "reminders-2",
+          "text": "A single Evil player on a Quest is enough to fail it",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The Leader hands out Team tokens for the first Quest, then everyone votes",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}

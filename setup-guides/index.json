@@ -442,6 +442,14 @@
       "path": "126163.json"
     },
     {
+      "gameId": 128882,
+      "gameName": "The Resistance: Avalon",
+      "gameIds": [128882],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "128882.json"
+    },
+    {
       "gameId": 129622,
       "gameName": "Love Letter",
       "gameIds": [129622],
