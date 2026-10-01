@@ -778,6 +778,14 @@
       "path": "407343.json"
     },
     {
+      "gameId": 409878,
+      "gameName": "Škoda kouzla, které padne vedle",
+      "gameIds": [409878],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "409878.json"
+    },
+    {
       "gameId": 410201,
       "gameName": "Wyrmspan",
       "gameIds": [410201, 453406],
