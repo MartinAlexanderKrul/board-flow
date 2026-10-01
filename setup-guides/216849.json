@@ -2,13 +2,14 @@
   "schemaVersion": 1,
   "gameId": 216849,
   "gameName": "Dominion (Second Edition) Big Box",
-  "version": 4,
+  "version": 5,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "Dominion 2nd Edition rulebook (Rio Grande Games, 2021)",
-      "Dominion expansion rulebooks: Seaside, Alchemy, Prosperity, Cornucopia, Dark Ages, Guilds, Adventures, Menagerie (Rio Grande Games)"
+      "Dominion expansion rulebooks: Seaside, Alchemy, Prosperity, Cornucopia, Dark Ages, Guilds, Adventures, Menagerie (Rio Grande Games)",
+      "Dominion: Renaissance rulebook"
     ]
   },
   "players": {
@@ -205,6 +206,16 @@
             ]
           },
           "ref": "Menagerie rulebook"
+        },
+        {
+          "id": "renaissance",
+          "text": "Renaissance: with cards that use Coffers or Villagers, give each player a Coffers / Villagers mat and put the Coin tokens by the Supply; at most 2 Projects per game recommended",
+          "condition": {
+            "modules": [
+              "renaissance"
+            ]
+          },
+          "ref": "Renaissance rulebook"
         }
       ]
     },
@@ -306,6 +317,11 @@
       "id": "menagerie",
       "name": "Menagerie",
       "bggId": 298055
+    },
+    {
+      "id": "renaissance",
+      "name": "Renaissance",
+      "bggId": 257673
     }
   ]
 }

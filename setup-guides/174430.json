@@ -2,62 +2,213 @@
   "schemaVersion": 1,
   "gameId": 174430,
   "gameName": "Gloomhaven",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Gloomhaven Rules Summary v85 (refs are its sections; [pNN] there points to the rulebook)"]
+    "sources": [
+      "Gloomhaven Rules Summary v85 (refs are its sections; [pNN] there points to the rulebook)",
+      "Forgotten Circles rule book (Cephalofair Games)"
+    ]
   },
-  "players": { "min": 1, "max": 4 },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
   "modules": [
-    { "id": "normal", "name": "Normal", "group": "Difficulty", "defaultEnabled": true },
-    { "id": "easy", "name": "Easy", "group": "Difficulty" },
-    { "id": "hard", "name": "Hard", "group": "Difficulty" },
-    { "id": "very-hard", "name": "Very Hard", "group": "Difficulty" },
-    { "id": "open-info", "name": "Open information", "note": "Playing with open hands also raises monster level and trap damage by 1." }
+    {
+      "id": "normal",
+      "name": "Normal",
+      "group": "Difficulty",
+      "defaultEnabled": true
+    },
+    {
+      "id": "easy",
+      "name": "Easy",
+      "group": "Difficulty"
+    },
+    {
+      "id": "hard",
+      "name": "Hard",
+      "group": "Difficulty"
+    },
+    {
+      "id": "very-hard",
+      "name": "Very Hard",
+      "group": "Difficulty"
+    },
+    {
+      "id": "open-info",
+      "name": "Open information",
+      "note": "Playing with open hands also raises monster level and trap damage by 1."
+    },
+    {
+      "id": "circles",
+      "name": "Forgotten Circles",
+      "bggId": 250337,
+      "note": "New campaign playable after scenario #51; adds the Aesther Diviner."
+    }
   ],
   "sections": [
     {
       "id": "scenario",
       "title": "Scenario",
       "steps": [
-        { "id": "road-event", "text": "Campaign: do a Road Event if the scenario isn't linked to where you are", "ref": "Start of Scenario" },
-        { "id": "read-scenario", "text": "Read the scenario introduction and special rules (not the numbered sections)", "ref": "Start of Scenario" },
+        {
+          "id": "circles",
+          "text": "Forgotten Circles: the Aesther Diviner is unlocked at once - add her unlock City and Road Event cards to their decks; its scenarios also use the Rift overlay tiles and new monsters",
+          "condition": {
+            "modules": [
+              "circles"
+            ]
+          },
+          "ref": "Forgotten Circles p.1"
+        },
+        {
+          "id": "road-event",
+          "text": "Campaign: do a Road Event if the scenario isn't linked to where you are",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "read-scenario",
+          "text": "Read the scenario introduction and special rules (not the numbered sections)",
+          "ref": "Start of Scenario"
+        },
         {
           "id": "scenario-level",
           "text": "Scenario level = average character level / 2, rounded up{adj}",
-          "amounts": { "adj": { "default": "", "cases": [
-            { "when": { "modules": ["easy"] }, "value": " - 1" },
-            { "when": { "modules": ["hard"] }, "value": " + 1" },
-            { "when": { "modules": ["very-hard"] }, "value": " + 2" }
-          ] } },
+          "amounts": {
+            "adj": {
+              "default": "",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "easy"
+                    ]
+                  },
+                  "value": " - 1"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "hard"
+                    ]
+                  },
+                  "value": " + 1"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "very-hard"
+                    ]
+                  },
+                  "value": " + 2"
+                }
+              ]
+            }
+          },
           "ref": "Start of Scenario"
         },
-        { "id": "solo-level", "text": "Solo: +1 to monster level and trap damage", "condition": { "players": [1] }, "ref": "Start of Scenario" },
-        { "id": "open-level", "text": "Open information: +1 to monster level and trap damage", "condition": { "minPlayers": 2, "modules": ["open-info"] }, "ref": "Start of Scenario" },
-        { "id": "map", "text": "Lay out all map tiles; set up only the starting room (overlay tiles and monsters)", "ref": "Start of Scenario" },
-        { "id": "treasure-reset", "text": "Replaying? Reset \"Goal\" treasure tiles, not numbered ones", "ref": "Start of Scenario" }
+        {
+          "id": "solo-level",
+          "text": "Solo: +1 to monster level and trap damage",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "open-level",
+          "text": "Open information: +1 to monster level and trap damage",
+          "condition": {
+            "minPlayers": 2,
+            "modules": [
+              "open-info"
+            ]
+          },
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "map",
+          "text": "Lay out all map tiles; set up only the starting room (overlay tiles and monsters)",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "treasure-reset",
+          "text": "Replaying? Reset \"Goal\" treasure tiles, not numbered ones",
+          "ref": "Start of Scenario"
+        }
       ]
     },
     {
       "id": "monsters",
       "title": "Monsters",
       "steps": [
-        { "id": "standees", "text": "Monsters by the {n}-character row of the scenario; randomize standee numbers", "amounts": { "n": { "byPlayers": { "1": "2", "2": "2", "3": "3", "4": "4" } } }, "note": "Solo still uses at least 2 characters", "ref": "Start of Scenario" },
-        { "id": "stat-cards", "text": "Monster stat cards in sleeves showing the monster level", "ref": "Start of Scenario" },
-        { "id": "ability-decks", "text": "Shuffle the ability deck of each monster type in the room", "ref": "Start of Scenario" },
-        { "id": "monster-modifiers", "text": "Shuffle the shared monster attack modifier deck", "ref": "Start of Scenario" },
-        { "id": "scenario-effects", "text": "Apply scenario effects and add scenario modifier cards to the attack modifier decks", "ref": "Start of Scenario" }
+        {
+          "id": "standees",
+          "text": "Monsters by the {n}-character row of the scenario; randomize standee numbers",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "2",
+                "2": "2",
+                "3": "3",
+                "4": "4"
+              }
+            }
+          },
+          "note": "Solo still uses at least 2 characters",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "stat-cards",
+          "text": "Monster stat cards in sleeves showing the monster level",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "ability-decks",
+          "text": "Shuffle the ability deck of each monster type in the room",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "monster-modifiers",
+          "text": "Shuffle the shared monster attack modifier deck",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "scenario-effects",
+          "text": "Apply scenario effects and add scenario modifier cards to the attack modifier decks",
+          "ref": "Start of Scenario"
+        }
       ]
     },
     {
       "id": "characters",
       "title": "Characters",
       "steps": [
-        { "id": "battle-goals", "text": "Each player draws 2 Battle Goals and secretly keeps 1", "ref": "Start of Scenario" },
-        { "id": "items", "text": "Equip items: 1 head, 1 body, 1 legs, one 2-handed or two 1-handed, small items = half your level rounded up", "ref": "Start of Scenario" },
-        { "id": "modifier-deck", "text": "Shuffle your attack modifier deck: base 20 adjusted for perks, Sanctuary Bless cards, scenario effects and items", "ref": "Start of Scenario" },
-        { "id": "hand", "text": "Build your hand from your active card pool up to your class's hand size", "ref": "Start of Scenario" }
+        {
+          "id": "battle-goals",
+          "text": "Each player draws 2 Battle Goals and secretly keeps 1",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "items",
+          "text": "Equip items: 1 head, 1 body, 1 legs, one 2-handed or two 1-handed, small items = half your level rounded up",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "modifier-deck",
+          "text": "Shuffle your attack modifier deck: base 20 adjusted for perks, Sanctuary Bless cards, scenario effects and items",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "hand",
+          "text": "Build your hand from your active card pool up to your class's hand size",
+          "ref": "Start of Scenario"
+        }
       ]
     },
     {
@@ -65,8 +216,16 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "rooms", "text": "Only the starting room's contents are set up; the rest appear when doors open", "ref": "Start of Scenario" },
-        { "id": "battle-goal-secret", "text": "Battle goals stay secret for the whole scenario", "ref": "Start of Scenario" }
+        {
+          "id": "rooms",
+          "text": "Only the starting room's contents are set up; the rest appear when doors open",
+          "ref": "Start of Scenario"
+        },
+        {
+          "id": "battle-goal-secret",
+          "text": "Battle goals stay secret for the whole scenario",
+          "ref": "Start of Scenario"
+        }
       ]
     },
     {
@@ -74,8 +233,16 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "card-selection", "text": "Everyone picks 2 cards face down, leading card on top", "ref": "Start of Round" },
-        { "id": "monster-cards", "text": "Draw 1 ability card per active monster type; act in initiative order", "ref": "Start of Round" }
+        {
+          "id": "card-selection",
+          "text": "Everyone picks 2 cards face down, leading card on top",
+          "ref": "Start of Round"
+        },
+        {
+          "id": "monster-cards",
+          "text": "Draw 1 ability card per active monster type; act in initiative order",
+          "ref": "Start of Round"
+        }
       ]
     }
   ]

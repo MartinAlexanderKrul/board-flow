@@ -2,14 +2,15 @@
   "schemaVersion": 1,
   "gameId": 68448,
   "gameName": "7 Wonders",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "7 Wonders rulebook (1st edition)",
       "Leaders, Cities, Babel, Armada and Wonder Pack rulebooks",
-      "7 Wonders: Edifice rulebook (Repos Production)"
+      "7 Wonders: Edifice rulebook (Repos Production)",
+      "7 Wonders: Manneken Pis rules"
     ]
   },
   "players": {
@@ -54,6 +55,11 @@
       "name": "Edifice",
       "bggId": 378839,
       "note": "Made for the 2nd edition of 7 Wonders."
+    },
+    {
+      "id": "manneken",
+      "name": "Manneken Pis",
+      "bggId": 83445
     }
   ],
   "sections": [
@@ -149,6 +155,16 @@
       "id": "wonders",
       "title": "Wonders & bank",
       "steps": [
+        {
+          "id": "manneken",
+          "text": "Add the Manneken Pis wonder; its owner starts with 4 extra coins (it produces no resource)",
+          "condition": {
+            "modules": [
+              "manneken"
+            ]
+          },
+          "ref": "Manneken Pis rules"
+        },
         {
           "id": "wonder-pack",
           "text": "Add Wonder Pack's 4 Wonders to the Wonder cards",

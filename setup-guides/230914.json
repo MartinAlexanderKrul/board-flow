@@ -2,13 +2,15 @@
   "schemaVersion": 1,
   "gameId": 230914,
   "gameName": "Carcassonne Big Box 6",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "Carcassonne rulebook (Z-Man, via RulesPal)",
-      "Carcassonne Complete Annotated Rules v7.3 (River, Inns & Cathedrals, Traders & Builders, The Abbot)"
+      "Carcassonne Complete Annotated Rules v7.3 (River, Inns & Cathedrals, Traders & Builders, The Abbot)",
+      "Carcassonne: Under the Big Top rules",
+      "Carcassonne: The School rules"
     ]
   },
   "players": {
@@ -105,6 +107,16 @@
       "id": "sheep",
       "name": "Exp. 9: Hills & Sheep",
       "bggId": 153773
+    },
+    {
+      "id": "bigtop",
+      "name": "Exp. 10: Under the Big Top",
+      "bggId": 217006
+    },
+    {
+      "id": "school",
+      "name": "The School",
+      "bggId": 104634
     }
   ],
   "sections": [
@@ -285,6 +297,26 @@
           "ref": "Annotated Rules p.175"
         },
         {
+          "id": "bigtop-tiles",
+          "text": "Mix in the 20 Under the Big Top tiles; Animal tokens facedown and mixed, with the Circus Tent, beside the play area",
+          "condition": {
+            "modules": [
+              "bigtop"
+            ]
+          },
+          "ref": "Under the Big Top: Setup"
+        },
+        {
+          "id": "school-tiles",
+          "text": "The 2 School tiles side by side next to the start tile; teacher meeple on the school",
+          "condition": {
+            "modules": [
+              "school"
+            ]
+          },
+          "ref": "The School rules"
+        },
+        {
           "id": "stacks",
           "text": "Shuffle the landscape tiles facedown into several stacks within reach",
           "ref": "Components and Setup"
@@ -442,6 +474,16 @@
             ]
           },
           "ref": "Annotated Rules p.175"
+        },
+        {
+          "id": "ringmaster",
+          "text": "Each player takes their Ringmaster",
+          "condition": {
+            "modules": [
+              "bigtop"
+            ]
+          },
+          "ref": "Under the Big Top: Setup"
         }
       ]
     },
