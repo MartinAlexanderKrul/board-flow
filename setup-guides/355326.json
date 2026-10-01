@@ -2,12 +2,14 @@
   "schemaVersion": 1,
   "gameId": 355326,
   "gameName": "Heroes of Might and Magic III: The Board Game",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Heroes of Might and Magic III: The Board Game rulebook (Archon Studio)"
+      "Heroes of Might and Magic III: The Board Game rulebook (Archon Studio)",
+      "Battlefield expansion rulebook",
+      "Expansion Mission Books (Tower, Fortress, Rampart, Inferno, Stronghold, Conflux, Cove, Naval Battles)"
     ]
   },
   "players": {
@@ -41,6 +43,65 @@
       "forcedAtPlayers": [
         1
       ]
+    },
+    {
+      "id": "bf-adventure",
+      "name": "Battlefield: Adventure mode",
+      "group": "Mode",
+      "bggId": 413367,
+      "players": {
+        "min": 2,
+        "max": 2
+      }
+    },
+    {
+      "id": "bf-skirmish",
+      "name": "Battlefield: Skirmish mode",
+      "group": "Mode",
+      "players": {
+        "min": 2,
+        "max": 2
+      }
+    },
+    {
+      "id": "tower",
+      "name": "Tower expansion",
+      "bggId": 411654
+    },
+    {
+      "id": "fortress",
+      "name": "Fortress expansion",
+      "bggId": 412071
+    },
+    {
+      "id": "rampart",
+      "name": "Rampart expansion",
+      "bggId": 412072
+    },
+    {
+      "id": "inferno",
+      "name": "Inferno expansion",
+      "bggId": 412073
+    },
+    {
+      "id": "stronghold",
+      "name": "Stronghold expansion",
+      "bggId": 423894
+    },
+    {
+      "id": "conflux",
+      "name": "Conflux expansion",
+      "bggId": 423895
+    },
+    {
+      "id": "cove",
+      "name": "Cove expansion",
+      "bggId": 423897
+    },
+    {
+      "id": "naval",
+      "name": "Naval Battles expansion",
+      "bggId": 440611
     }
   ],
   "sections": [
@@ -91,8 +152,94 @@
           "id": "components",
           "text": "Take your faction's Hero card, 2 Hero models, 7 Town Building tiles, Town board, 7 Unit cards, 3 Specialty cards and Ability card for your Hero, 20 cubes, Build, Population and Spell Book tokens",
           "ref": "p.7"
+        },
+        {
+          "id": "x-tower",
+          "text": "Tower: its faction components and Mission Book scenarios are available",
+          "condition": {
+            "modules": [
+              "tower"
+            ]
+          },
+          "ref": "Tower Mission Book"
+        },
+        {
+          "id": "x-fortress",
+          "text": "Fortress: its faction components and Mission Book scenarios are available",
+          "condition": {
+            "modules": [
+              "fortress"
+            ]
+          },
+          "ref": "Fortress Mission Book"
+        },
+        {
+          "id": "x-rampart",
+          "text": "Rampart: its faction components and Mission Book scenarios are available",
+          "condition": {
+            "modules": [
+              "rampart"
+            ]
+          },
+          "ref": "Rampart Mission Book"
+        },
+        {
+          "id": "x-inferno",
+          "text": "Inferno: its faction components and Mission Book scenarios are available",
+          "condition": {
+            "modules": [
+              "inferno"
+            ]
+          },
+          "ref": "Inferno Mission Book"
+        },
+        {
+          "id": "x-stronghold",
+          "text": "Stronghold: its faction components and Mission Book scenarios are available",
+          "condition": {
+            "modules": [
+              "stronghold"
+            ]
+          },
+          "ref": "Stronghold Mission Book"
+        },
+        {
+          "id": "x-conflux",
+          "text": "Conflux: its faction components and Mission Book scenarios are available",
+          "condition": {
+            "modules": [
+              "conflux"
+            ]
+          },
+          "ref": "Conflux Mission Book"
+        },
+        {
+          "id": "x-cove",
+          "text": "Cove: its faction components and Mission Book scenarios are available",
+          "condition": {
+            "modules": [
+              "cove"
+            ]
+          },
+          "ref": "Cove Mission Book"
+        },
+        {
+          "id": "x-naval",
+          "text": "Naval Battles: use its Mission Book scenarios and components",
+          "condition": {
+            "modules": [
+              "naval"
+            ]
+          },
+          "ref": "Naval Battles Mission Book"
         }
-      ]
+      ],
+      "condition": {
+        "notModules": [
+          "bf-adventure",
+          "bf-skirmish"
+        ]
+      }
     },
     {
       "id": "map",
@@ -123,7 +270,13 @@
           "text": "All other tokens in piles within reach",
           "ref": "p.8"
         }
-      ]
+      ],
+      "condition": {
+        "notModules": [
+          "bf-adventure",
+          "bf-skirmish"
+        ]
+      }
     },
     {
       "id": "decks",
@@ -174,6 +327,150 @@
           "text": "Rotate your Starting tile as you like; Hero model on the field with the Town",
           "ref": "p.8"
         }
+      ],
+      "condition": {
+        "notModules": [
+          "bf-adventure",
+          "bf-skirmish"
+        ]
+      }
+    },
+    {
+      "id": "battlefield",
+      "title": "Battlefield",
+      "steps": [
+        {
+          "id": "bf-faction",
+          "text": "Both players pick a faction: Hero card, Town board, 7 Unit cards and models, 3 Specialty cards, Ability card, 20 cubes",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          },
+          "ref": "Battlefield p.4"
+        },
+        {
+          "id": "sk-faction",
+          "text": "Both players pick a faction: Hero card, 7 Unit cards and models, 3 Specialty cards, Ability card, 20 cubes",
+          "condition": {
+            "modules": [
+              "bf-skirmish"
+            ]
+          },
+          "ref": "Battlefield p.4"
+        },
+        {
+          "id": "bf-decks",
+          "text": "Prepare the Artifact, Spell and Ability decks; remove Diplomacy and Logistics",
+          "ref": "Battlefield p.4",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          }
+        },
+        {
+          "id": "sk-bf-decks",
+          "text": "Prepare the Artifact, Spell and Ability decks; remove Diplomacy and Logistics",
+          "ref": "Battlefield p.4",
+          "condition": {
+            "modules": [
+              "bf-skirmish"
+            ]
+          }
+        },
+        {
+          "id": "bf-tokens",
+          "text": "Damage and Paralysis/Defense tokens in piles; Attack and Resource dice ready",
+          "note": "Adventure mode also uses resource tokens and Treasure dice",
+          "ref": "Battlefield p.4",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          }
+        },
+        {
+          "id": "sk-bf-tokens",
+          "text": "Damage and Paralysis/Defense tokens in piles; Attack and Resource dice ready",
+          "note": "Adventure mode also uses resource tokens and Treasure dice",
+          "ref": "Battlefield p.4",
+          "condition": {
+            "modules": [
+              "bf-skirmish"
+            ]
+          }
+        },
+        {
+          "id": "bf-round",
+          "text": "Black cube on space 1 of the Round tracker",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          },
+          "ref": "Battlefield p.4"
+        },
+        {
+          "id": "bf-level",
+          "text": "A faction cube on level 1 of your Hero card; build your starting deck of Might and Magic",
+          "ref": "Battlefield p.4",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          }
+        },
+        {
+          "id": "sk-bf-level",
+          "text": "A faction cube on level 1 of your Hero card; build your starting deck of Might and Magic",
+          "ref": "Battlefield p.4",
+          "condition": {
+            "modules": [
+              "bf-skirmish"
+            ]
+          }
+        },
+        {
+          "id": "bf-resources",
+          "text": "Each player: 15 Gold, 3 Building Materials, 1 Valuable; income set to 10 Gold, 0, 0",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          },
+          "ref": "Battlefield p.4"
+        },
+        {
+          "id": "bf-board",
+          "text": "Battlefield board between the players; Positive and Negative Morale decks; Obstacle and Initiative tokens",
+          "ref": "Battlefield p.4",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          }
+        },
+        {
+          "id": "sk-bf-board",
+          "text": "Battlefield board between the players; Positive and Negative Morale decks; Obstacle and Initiative tokens",
+          "ref": "Battlefield p.4",
+          "condition": {
+            "modules": [
+              "bf-skirmish"
+            ]
+          }
+        },
+        {
+          "id": "bf-adventure-deck",
+          "text": "Prepare the Adventure deck",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          },
+          "ref": "Battlefield p.4"
+        }
       ]
     },
     {
@@ -191,7 +488,13 @@
           "text": "Advance the black cube on the Round tracker after every player's turn",
           "ref": "p.8"
         }
-      ]
+      ],
+      "condition": {
+        "notModules": [
+          "bf-adventure",
+          "bf-skirmish"
+        ]
+      }
     },
     {
       "id": "start",
@@ -201,7 +504,33 @@
         {
           "id": "first",
           "text": "Fastest to list 5 Neutral units from HoMM III goes first (or highest Attack die roll)",
-          "ref": "p.8"
+          "ref": "p.8",
+          "condition": {
+            "notModules": [
+              "bf-adventure",
+              "bf-skirmish"
+            ]
+          }
+        },
+        {
+          "id": "bf-first",
+          "text": "Both players roll 2 Resource dice; highest goes first",
+          "condition": {
+            "modules": [
+              "bf-adventure"
+            ]
+          },
+          "ref": "Battlefield p.4"
+        },
+        {
+          "id": "sk-first",
+          "text": "Both players roll 2 Resource dice; highest goes first",
+          "condition": {
+            "modules": [
+              "bf-skirmish"
+            ]
+          },
+          "ref": "Battlefield p.4"
         }
       ]
     }

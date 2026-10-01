@@ -620,8 +620,8 @@
     {
       "gameId": 355326,
       "gameName": "Heroes of Might and Magic III: The Board Game",
-      "gameIds": [355326],
-      "version": 2,
+      "gameIds": [355326, 411654, 412071, 412072, 412073, 413367, 423894, 423895, 423897, 440611],
+      "version": 3,
       "schemaVersion": 1,
       "path": "355326.json"
     },
