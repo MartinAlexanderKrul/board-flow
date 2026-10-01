@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 216849,
   "gameName": "Dominion (Second Edition) Big Box",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Dominion 2nd Edition rulebook (Rio Grande Games, 2021)"
+      "Dominion 2nd Edition rulebook (Rio Grande Games, 2021)",
+      "Dominion expansion rulebooks: Seaside, Alchemy, Prosperity, Cornucopia, Dark Ages, Guilds, Adventures, Menagerie (Rio Grande Games)"
     ]
   },
   "players": {
@@ -103,6 +104,107 @@
           "id": "placeholders",
           "text": "Optional: Randomizers as placeholders under each pile; box unused Kingdom cards",
           "ref": "p.3"
+        },
+        {
+          "id": "seaside-mats",
+          "text": "Seaside: give out the Island, Native Village and Pirate Ship mats and the Embargo / coin tokens only if those cards are in the Kingdom",
+          "condition": {
+            "modules": [
+              "seaside"
+            ]
+          },
+          "ref": "Seaside rulebook"
+        },
+        {
+          "id": "potion",
+          "text": "Alchemy: add the Potion pile if any Kingdom card has a Potion in its cost",
+          "condition": {
+            "modules": [
+              "alchemy"
+            ]
+          },
+          "ref": "Alchemy p.2"
+        },
+        {
+          "id": "colony",
+          "text": "Prosperity: add Platinum and Colony ({n} Colonies) if all Kingdom cards are from Prosperity; with a mix, decide randomly (e.g. if the first Kingdom card dealt is from Prosperity)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 8,
+                "3": 12,
+                "4": 12,
+                "5": 12,
+                "6": 12
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "prosperity"
+            ]
+          },
+          "ref": "Prosperity p.3"
+        },
+        {
+          "id": "prosperity-tokens",
+          "text": "Prosperity: Victory tokens and the Trade Route mat ready if cards use them",
+          "condition": {
+            "modules": [
+              "prosperity"
+            ]
+          },
+          "ref": "Prosperity rulebook"
+        },
+        {
+          "id": "prizes",
+          "text": "Cornucopia: with Tournament, set the 5 Prizes out as a pile; with Young Witch, add a Bane pile",
+          "condition": {
+            "modules": [
+              "cornucopia"
+            ]
+          },
+          "ref": "Cornucopia rulebook"
+        },
+        {
+          "id": "dark-piles",
+          "text": "Dark Ages: Ruins pile (mix of the five Ruins) and Knights pile (ten different Knights) are mixed piles; set out the Spoils pile when a card gains Spoils",
+          "condition": {
+            "modules": [
+              "dark-ages"
+            ]
+          },
+          "ref": "Dark Ages rulebook"
+        },
+        {
+          "id": "coin-tokens",
+          "text": "Guilds: Coin tokens in a supply",
+          "condition": {
+            "modules": [
+              "guilds"
+            ]
+          },
+          "ref": "Guilds rulebook"
+        },
+        {
+          "id": "adventures",
+          "text": "Adventures: each player takes a Tavern mat and their tokens; Events turned over while choosing Kingdom cards don't count toward the 10 (at most 2 recommended)",
+          "condition": {
+            "modules": [
+              "adventures"
+            ]
+          },
+          "ref": "Adventures rulebook"
+        },
+        {
+          "id": "menagerie",
+          "text": "Menagerie: set out the Horse pile; give each player an Exile mat if cards refer to Exile; Events and Ways are not Kingdom cards",
+          "condition": {
+            "modules": [
+              "menagerie"
+            ]
+          },
+          "ref": "Menagerie rulebook"
         }
       ]
     },
@@ -162,6 +264,48 @@
           "ref": "p.4"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "seaside",
+      "name": "Seaside",
+      "bggId": 51811
+    },
+    {
+      "id": "alchemy",
+      "name": "Alchemy",
+      "bggId": 66098
+    },
+    {
+      "id": "prosperity",
+      "name": "Prosperity",
+      "bggId": 66690
+    },
+    {
+      "id": "cornucopia",
+      "name": "Cornucopia",
+      "bggId": 90850
+    },
+    {
+      "id": "dark-ages",
+      "name": "Dark Ages",
+      "bggId": 125403
+    },
+    {
+      "id": "guilds",
+      "name": "Guilds",
+      "bggId": 137166
+    },
+    {
+      "id": "adventures",
+      "name": "Adventures",
+      "bggId": 171915
+    },
+    {
+      "id": "menagerie",
+      "name": "Menagerie",
+      "bggId": 298055
     }
   ]
 }

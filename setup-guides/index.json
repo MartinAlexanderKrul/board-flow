@@ -268,8 +268,8 @@
     {
       "gameId": 216849,
       "gameName": "Dominion (Second Edition) Big Box",
-      "gameIds": [216849],
-      "version": 3,
+      "gameIds": [51811, 66098, 66690, 90850, 125403, 137166, 171915, 216849, 298055],
+      "version": 4,
       "schemaVersion": 1,
       "path": "216849.json"
     },
