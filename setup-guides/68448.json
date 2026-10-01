@@ -2,13 +2,14 @@
   "schemaVersion": 1,
   "gameId": 68448,
   "gameName": "7 Wonders",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "7 Wonders rulebook (1st edition)",
-      "Leaders, Cities, Babel, Armada and Wonder Pack rulebooks"
+      "Leaders, Cities, Babel, Armada and Wonder Pack rulebooks",
+      "7 Wonders: Edifice rulebook (Repos Production)"
     ]
   },
   "players": {
@@ -47,6 +48,12 @@
       "id": "wonder-pack",
       "name": "Wonder Pack",
       "bggId": 133993
+    },
+    {
+      "id": "edifice",
+      "name": "Edifice",
+      "bggId": 378839,
+      "note": "Made for the 2nd edition of 7 Wonders."
     }
   ],
   "sections": [
@@ -277,6 +284,45 @@
           "id": "dockyards",
           "text": "Each player: a Dockyard board right of their Wonder, and a Ship of each color on its Start space",
           "ref": "Armada p.5"
+        }
+      ]
+    },
+    {
+      "id": "edifice",
+      "title": "Edifice",
+      "condition": {
+        "modules": [
+          "edifice"
+        ]
+      },
+      "steps": [
+        {
+          "id": "debt",
+          "text": "Debt tokens in the middle of the table",
+          "ref": "Edifice p.2"
+        },
+        {
+          "id": "edifice-cards",
+          "text": "Edifice cards in 3 decks by Age, each shuffled; 1 random card per Age in the middle, Project side up; box the rest",
+          "ref": "Edifice p.2"
+        },
+        {
+          "id": "pawns",
+          "text": "{n} Participation pawns on each Edifice card; box the rest",
+          "amounts": {
+            "n": {
+              "default": "The rulebook's number of",
+              "byPlayers": {
+                "3": 2,
+                "4": 3,
+                "5": 3,
+                "6": 4,
+                "7": 5
+              }
+            }
+          },
+          "note": "The rulebook's table covers 3-7 players only",
+          "ref": "Edifice p.2"
         }
       ]
     },

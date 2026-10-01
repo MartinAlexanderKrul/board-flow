@@ -2,12 +2,14 @@
   "schemaVersion": 1,
   "gameId": 336755,
   "gameName": "King of Tokyo: Monster Box",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "King of Tokyo rulebook (2nd edition)"
+      "King of Tokyo rulebook (2nd edition)",
+      "Monster Pack: King Kong rules",
+      "Monster Pack: Cthulhu rules"
     ]
   },
   "players": {
@@ -52,6 +54,26 @@
           "id": "dice",
           "text": "6 black dice in the middle; green dice aside",
           "ref": "p.3"
+        },
+        {
+          "id": "tower",
+          "text": "Assemble Tokyo Tower; place its levels near the board",
+          "condition": {
+            "modules": [
+              "king-kong"
+            ]
+          },
+          "ref": "King Kong pack rules"
+        },
+        {
+          "id": "cultists",
+          "text": "Cultist tiles faceup next to the board",
+          "condition": {
+            "modules": [
+              "cthulhu"
+            ]
+          },
+          "ref": "Cthulhu pack rules"
         }
       ]
     },
@@ -71,6 +93,18 @@
           "ref": "p.4"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "king-kong",
+      "name": "Monster Pack: King Kong",
+      "bggId": 233076
+    },
+    {
+      "id": "cthulhu",
+      "name": "Monster Pack: Cthulhu",
+      "bggId": 207292
     }
   ]
 }

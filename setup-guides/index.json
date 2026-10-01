@@ -76,8 +76,8 @@
     {
       "gameId": 68448,
       "gameName": "7 Wonders",
-      "gameIds": [68448, 92539, 111661, 133993, 154638, 247315],
-      "version": 1,
+      "gameIds": [68448, 92539, 111661, 133993, 154638, 247315, 378839],
+      "version": 2,
       "schemaVersion": 1,
       "path": "68448.json"
     },
@@ -580,8 +580,8 @@
     {
       "gameId": 336755,
       "gameName": "King of Tokyo: Monster Box",
-      "gameIds": [336755],
-      "version": 1,
+      "gameIds": [207292, 233076, 336755],
+      "version": 2,
       "schemaVersion": 1,
       "path": "336755.json"
     },
