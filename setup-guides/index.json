@@ -58,6 +58,14 @@
       "path": "11971.json"
     },
     {
+      "gameId": 12333,
+      "gameName": "Twilight Struggle",
+      "gameIds": [12333],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "12333.json"
+    },
+    {
       "gameId": 27451,
       "gameName": "Activity 2",
       "gameIds": [27451],
@@ -256,6 +264,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "157354.json"
+    },
+    {
+      "gameId": 161533,
+      "gameName": "Lisboa",
+      "gameIds": [161533],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "161533.json"
     },
     {
       "gameId": 161936,
@@ -498,6 +514,14 @@
       "path": "201808.json"
     },
     {
+      "gameId": 205059,
+      "gameName": "Mansions of Madness: Second Edition",
+      "gameIds": [205059],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "205059.json"
+    },
+    {
       "gameId": 205637,
       "gameName": "Arkham Horror: The Card Game",
       "gameIds": [205637],
@@ -576,6 +600,14 @@
       "version": 3,
       "schemaVersion": 1,
       "path": "230914.json"
+    },
+    {
+      "gameId": 231733,
+      "gameName": "Obsession",
+      "gameIds": [231733],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "231733.json"
     },
     {
       "gameId": 233078,
@@ -736,6 +768,14 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "266192.json"
+    },
+    {
+      "gameId": 266507,
+      "gameName": "Clank! Legacy: Acquisitions Incorporated",
+      "gameIds": [266507],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "266507.json"
     },
     {
       "gameId": 266810,

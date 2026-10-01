@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "gameId": 12333,
+  "gameName": "Twilight Struggle",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Twilight Struggle rules (GMT Games)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Shuffle the Early War cards and deal {n} to each player; The China Card faceup in front of the USSR player",
+          "amounts": {
+            "n": 8
+          },
+          "note": "You may look at your cards before placing Influence",
+          "ref": "3.1"
+        },
+        {
+          "id": "setup-2",
+          "text": "USSR sets up first, 15 Influence: 1 Syria, 1 Iraq, 3 North Korea, 3 East Germany, 1 Finland, 6 anywhere in Eastern Europe",
+          "ref": "3.2"
+        },
+        {
+          "id": "setup-3",
+          "text": "US sets up second, 20 Influence: 1 each in Iran, Israel, Japan, Australia, Philippines, South Korea, Panama and South Africa, 5 in the United Kingdom, 7 anywhere in Western Europe",
+          "ref": "3.3"
+        },
+        {
+          "id": "setup-4",
+          "text": "Space Race markers left of the Space Race track; Military OP markers on 0",
+          "ref": "3.4"
+        },
+        {
+          "id": "setup-5",
+          "text": "Turn marker on turn 1, DEFCON marker on 5, VP marker on 0",
+          "ref": "3.4"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Turn 4: shuffle the Mid War deck into the draw pile and hand size becomes 9; turn 8: shuffle in the Late War deck",
+          "ref": "4.1"
+        },
+        {
+          "id": "reminders-2",
+          "text": "Scoring cards must be played during the turn they are drawn",
+          "ref": "2.2.1"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Turn 1 of 10 begins",
+          "ref": "4.1"
+        }
+      ]
+    }
+  ]
+}

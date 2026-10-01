@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "gameId": 205059,
+  "gameName": "Mansions of Madness: Second Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Mansions of Madness Second Edition rules summary (The Esoteric Order of Gamers)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Shuffle the damage and horror decks separately, facedown",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Common item, unique item, spell and condition decks sorted alphabetically, faceup",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Map tiles sorted by size; monsters with their tokens; tokens in pools by type",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Run the app, enable your expansions, choose NEW GAME and pick a story together",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "Each player picks an investigator card and figure and enters it in the app",
+          "note": "Solo: choose 2 investigators",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-6",
+          "text": "Take the starting possessions the app lists and share them out as you like",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-7",
+          "text": "Read the prologue aloud; place the starting map tile, figures and tokens as the app shows",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Investigator phase: each investigator takes a turn, then press END PHASE",
+          "ref": "End of Investigator phase"
+        }
+      ]
+    }
+  ]
+}

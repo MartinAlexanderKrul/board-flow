@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "gameId": 161533,
+  "gameName": "Lisboa",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Lisboa rulebook (Eagle-Gryphon Games)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Rubble bag: 1 Royal Favor tile of each character per player; all Clergy tiles in the Clergy Tile bag",
+          "ref": "p.5"
+        },
+        {
+          "id": "players-2",
+          "text": "Player board, Player Aid, 5 Rubble Set markers, 8 houses, 8 Officials",
+          "ref": "p.5 steps 1-5"
+        },
+        {
+          "id": "players-3",
+          "text": "1 Good tile of each type and {n} reis",
+          "amounts": {
+            "n": 10
+          },
+          "ref": "p.5 steps 6-7"
+        },
+        {
+          "id": "players-4",
+          "text": "Draw 2 Clergy tiles, keep 1; draw 1 random Royal Favor tile; take 1 random Starting Plan",
+          "ref": "p.5 steps 8-10"
+        },
+        {
+          "id": "players-5",
+          "text": "On the board: Courtier in the Royal Court, Wigs marker on 5, 1 Official in the Marquis's office",
+          "ref": "p.5"
+        },
+        {
+          "id": "players-6",
+          "text": "2 players: 1 Official of an unused color in each of the three Nobles' offices",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "players-7",
+          "text": "Whoever visited Lisboa most recently starts; Influence discs in turn order on 4, 5, 6, 7",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Public Buildings: shuffle blue side up, split into two stacks of 8, flip one to green; top tile of each onto its architect's plan space",
+          "ref": "p.6 steps 1-2"
+        },
+        {
+          "id": "board-2",
+          "text": "Plan tiles in two faceup stacks by architect, fewest officials on top",
+          "ref": "p.6 step 3"
+        },
+        {
+          "id": "board-3",
+          "text": "4 Price markers on their market track spaces; a City tile on each City Building space",
+          "ref": "p.6 steps 4-5"
+        },
+        {
+          "id": "board-4",
+          "text": "4 Scoring tiles shuffled, one per space below the downtown map",
+          "ref": "p.6 step 6"
+        },
+        {
+          "id": "board-5",
+          "text": "2 players: cover row E with the 2-player overlay",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.6 step 7"
+        },
+        {
+          "id": "board-6",
+          "text": "6 Clergy tiles faceup on the dark Church track spaces; Cardinal on the Influence space",
+          "ref": "p.6 steps 8-9"
+        },
+        {
+          "id": "board-7",
+          "text": "Remaining Royal Favor tiles stacked on their portraits; Treasury marker on 3; goods and money as supply",
+          "ref": "p.6 steps 10-12"
+        }
+      ]
+    },
+    {
+      "id": "cards-rubble",
+      "title": "Cards & rubble",
+      "steps": [
+        {
+          "id": "cards-rubble-1",
+          "text": "Deal 5 blue (1755-1757) Political cards each; box the rest",
+          "ref": "p.7 B"
+        },
+        {
+          "id": "cards-rubble-2",
+          "text": "Red deck (1758-1762) facedown on the Event display by type, top card of each of the 4 decks faceup",
+          "ref": "p.7 C"
+        },
+        {
+          "id": "cards-rubble-3",
+          "text": "Ship cards: {n} of each; blue Ships stacked on red Ships in the shipyard",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 1,
+                "3": 2,
+                "4": 3
+              }
+            }
+          },
+          "ref": "p.7 D-E"
+        },
+        {
+          "id": "cards-rubble-4",
+          "text": "Shuffle the Decree deck; 8 faceup",
+          "note": "2 players: replace Decrees showing the 2-player symbol",
+          "ref": "p.7 F-G"
+        },
+        {
+          "id": "cards-rubble-5",
+          "text": "Rubble: 1 random cube at the bottom of each column and the end of each row, 2 on each Public Building Site, 6 in the Rubble pile",
+          "note": "2 players: skip row E and box the remaining cubes",
+          "ref": "p.7"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Play goes clockwise from the starting player",
+          "ref": "p.5"
+        }
+      ]
+    }
+  ]
+}

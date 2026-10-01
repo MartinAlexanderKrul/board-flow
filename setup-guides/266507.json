@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "gameId": 266507,
+  "gameName": "Clank! Legacy: Acquisitions Incorporated",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Clank! Legacy: Acquisitions Incorporated rulebook (Renegade / Dire Wolf)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "each-game",
+      "title": "Each game",
+      "steps": [
+        {
+          "id": "each-game-1",
+          "text": "Find the current game on the Mission Reports and read its Prologue Passage in the Book of Secrets - it names the board side",
+          "ref": "p.2 step 1"
+        },
+        {
+          "id": "each-game-2",
+          "text": "Contract cards in a row above the board; Patron card (if given) in the Reserve",
+          "ref": "p.2 steps 1-2"
+        },
+        {
+          "id": "each-game-3",
+          "text": "Franchise Board below the game board",
+          "ref": "p.2 step 3"
+        },
+        {
+          "id": "each-game-4",
+          "text": "Bank: Gold tokens and the shuffled facedown minor secrets",
+          "ref": "p.2 step 4"
+        },
+        {
+          "id": "each-game-5",
+          "text": "All black cubes in the Dragon Bag; Dragon Marker on the {s} space of the Rage Track",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "third",
+                "3": "second",
+                "4": "first"
+              }
+            }
+          },
+          "ref": "p.2 step 5"
+        },
+        {
+          "id": "each-game-6",
+          "text": "Reserve: Cultist, Mercenary, Explore and Mysterious Tome piles",
+          "ref": "p.3 step 6"
+        },
+        {
+          "id": "each-game-7",
+          "text": "Shuffle the Adventure Deck and deal 6 faceup; replace any Event or Dragon Attack cards, then shuffle those back in",
+          "ref": "p.3 step 6"
+        },
+        {
+          "id": "each-game-8",
+          "text": "A Mug token per player near HQ; a random major secret on each major secret space; mystic fruit whole side up; Artifacts on their value spaces; market items on the Franchise Board",
+          "ref": "p.3 step 7"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Your deck box: 30 Clank! cubes, your disc on a figure placed on HQ, and a shuffled 10-card starting deck",
+          "ref": "p.3 step 8"
+        },
+        {
+          "id": "players-2",
+          "text": "Random first player, then clockwise; starting Clank! in the Clank! Area: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "3, 2",
+                "3": "3, 2, 1",
+                "4": "3, 2, 1, 0"
+              }
+            }
+          },
+          "ref": "p.3 step 9"
+        },
+        {
+          "id": "players-3",
+          "text": "Draw 5 cards",
+          "ref": "p.3 step 11"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Franchise Board stickers, Patrons and Contracts may change these setup steps",
+          "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The starting player takes the first turn",
+          "ref": "p.3 step 11"
+        }
+      ]
+    }
+  ]
+}

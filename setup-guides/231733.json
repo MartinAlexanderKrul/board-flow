@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "gameId": 231733,
+  "gameName": "Obsession",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Obsession rulebook, 2.3 edition (Kayenta Games)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "player-area",
+      "title": "Player area",
+      "steps": [
+        {
+          "id": "player-area-1",
+          "text": "Choose a starting player: purple 1st player pawn",
+          "ref": "p.3 step 1"
+        },
+        {
+          "id": "player-area-2",
+          "text": "From the player on their left, clockwise, pick a Player Board (each has a Family Bonus)",
+          "note": "Asquith: extra family member. Cavendish: reputation position 4. Ponsonby: 300 pounds. York: 2 footmen",
+          "ref": "p.3 step 2"
+        },
+        {
+          "id": "player-area-3",
+          "text": "Reputation counter 1 on the wheel, wheel marker on position 1; other counters nearby",
+          "ref": "p.3 steps 3-4"
+        },
+        {
+          "id": "player-area-4",
+          "text": "5 starting servants in Available Service: Butler, Housekeeper, Valet, Lady's Maid, Footman",
+          "ref": "p.3 step 5"
+        },
+        {
+          "id": "player-area-5",
+          "text": "Country Estate Organiser by your board with the 5 START Improvement Tiles, building icon up",
+          "ref": "p.3 steps 6-7"
+        },
+        {
+          "id": "player-area-6",
+          "text": "Gentry deck: your 4 family cards plus 2 random Starter Guests",
+          "ref": "p.3 steps 8-9"
+        },
+        {
+          "id": "player-area-7",
+          "text": "Deal 5 Objective Cards each",
+          "note": "Extended play: 4 cards, and add the 7/8 reputation counter",
+          "ref": "p.3 step 10"
+        }
+      ]
+    },
+    {
+      "id": "central-area",
+      "title": "Central area",
+      "steps": [
+        {
+          "id": "central-area-1",
+          "text": "Servants for Hire: 2 Underbutlers, {f} Footmen, {v} Valets, {v} Lady's Maids",
+          "amounts": {
+            "f": {
+              "byPlayers": {
+                "2": 4,
+                "3": 6,
+                "4": 8
+              }
+            },
+            "v": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "p.4 step 1"
+        },
+        {
+          "id": "central-area-2",
+          "text": "Remaining Objective Cards and the coin bank on the supply board",
+          "ref": "p.4 steps 2-3"
+        },
+        {
+          "id": "central-area-3",
+          "text": "Casual guests: shuffle the leftover Starter Guests with the 35 casual guests; shuffle the 25 prestige guests",
+          "ref": "p.4 steps 4-5"
+        },
+        {
+          "id": "central-area-4",
+          "text": "Tile bag: all improvement tiles except monuments and unused START tiles, plus monuments: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "Sculpture Garden + 2 of your choice",
+                "3": "Sculpture Garden + 3 of your choice",
+                "4": "5 of your choice"
+              }
+            }
+          },
+          "ref": "p.4 step 6"
+        },
+        {
+          "id": "central-area-5",
+          "text": "Round track (16-round side for standard play) with the white pawn on 1; Victory Point and Theme Cards shuffled on it",
+          "ref": "p.4-5 step 7"
+        },
+        {
+          "id": "central-area-6",
+          "text": "A Reminder Tile per player; Charles and Elizabeth Fairchild cards by the round track",
+          "ref": "p.5 step 7"
+        },
+        {
+          "id": "central-area-7",
+          "text": "Builders' Market: draw qualifying tiles (prestige 1-3, Brushing Room, Barn, Butler's Pantry, Servants' Quarters) to fill it, in ascending Tile Sorting Number order",
+          "ref": "p.5 step 8"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "An Underbutler is only gained by buying a Butler's Pantry tile, never hired by the Butler",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Reveal a Theme Card to begin the first season; the 1st player takes the first turn",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}
