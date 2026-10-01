@@ -2,23 +2,19 @@
 
 Expansions listed on BoardGameGeek for games that have a Quick Setup guide, and that no guide covers yet.
 Names are BGG's original names; each links to its BGG page (rules, if any, are under Files).
-Promos, accessories and fan-made items are filtered out. Some entries may still be covered by a guide option that has no BGG id attached.
-Generated 2026-10-01.
+Promos, accessories, single promo cards and fan-made items are filtered out.
+Updated 2026-10-01.
 
 ## 7 Wonders
-Already in the guide: Leaders, Cities, Babel: Tower, Babel: Great Projects, Armada, Wonder Pack
+Already in the guide: Leaders, Cities, Babel: Tower, Babel: Great Projects, Armada, Wonder Pack, Edifice
 
 - [ ] [7 Wonders: Manneken Pis](https://boardgamegeek.com/boardgameexpansion/83445) (2010)
 - [ ] [7 Wonders: Catan](https://boardgamegeek.com/boardgameexpansion/110308) (2011)
 - [ ] [7 Wonders: Leaders – Stevie](https://boardgamegeek.com/boardgameexpansion/99315) (2011)
-- [ ] [7 Wonders: Companion App](https://boardgamegeek.com/boardgameexpansion/368780) (2012)
 - [ ] [7 Wonders: Leaders – Esteban](https://boardgamegeek.com/boardgameexpansion/130236) (2012)
 - [ ] [7 Wonders: Leaders – Louis](https://boardgamegeek.com/boardgameexpansion/127838) (2012)
 - [ ] [7 Wonders: Leaders – Nimrod](https://boardgamegeek.com/boardgameexpansion/166329) (2014)
-- [ ] [7 Wonders: Cities Anniversary Pack](https://boardgamegeek.com/boardgameexpansion/231168) (2017)
-- [ ] [7 Wonders: Leaders Anniversary Pack](https://boardgamegeek.com/boardgameexpansion/231167) (2017)
 - [ ] [7 Wonders: Armada – Siracusa](https://boardgamegeek.com/boardgameexpansion/262276) (2018)
-- [ ] [7 Wonders: Edifice](https://boardgamegeek.com/boardgameexpansion/378839) (2023)
 - [ ] [7 Wonders: The Great Wall](https://boardgamegeek.com/boardgameexpansion/447859) (2024)
 - [ ] [7 Wonders: Diceopolis](https://boardgamegeek.com/boardgameexpansion/456148) (2025)
 
@@ -75,8 +71,6 @@ Already in the guide: Pharaoh, Pantheon
 
 - [ ] [Ankh: Gods of Egypt – Tomb of Wonders](https://boardgamegeek.com/boardgameexpansion/308966) (2021)
 - [ ] [Ankh: Gods of Egypt – Guardians Set](https://boardgamegeek.com/boardgameexpansion/308321) (2021)
-- [ ] [Iron Maiden Pack #2](https://boardgamegeek.com/boardgameexpansion/372782) (2023)
-- [ ] [Iron Maiden Pack #1](https://boardgamegeek.com/boardgameexpansion/372781) (2023)
 - [ ] [Ankh (2nd Edition): Eternal Expansion Pack](https://boardgamegeek.com/boardgameexpansion/452695) (2026)
 
 ## Ark Nova
@@ -84,8 +78,6 @@ Already in the guide: Map A, Map 0, Advanced maps 1-8, Marine Worlds
 
 - [ ] [Ark Nova: Zoo Map Pack 1](https://boardgamegeek.com/boardgameexpansion/368158) (2022)
 - [ ] [Ark Nova: Zoo Map Pack 2](https://boardgamegeek.com/boardgameexpansion/426978) (2024)
-- [ ] [Ark Nova: Board Game Arena Maps](https://boardgamegeek.com/boardgameexpansion/452699) (2026)
-- [ ] [Ark Nova: 3Dition](https://boardgamegeek.com/boardgameexpansion/450126) (2026)
 
 ## BANG!
 Already in the guide: Simplified (no book cards), High Noon, A Fistful of Cards, BANG! Legends
@@ -124,29 +116,21 @@ Already in the guide: Gods of Asgard, Mystics of Midgard
 - [ ] [Blood Rage (2nd Edition): End Times](https://boardgamegeek.com/boardgameexpansion/452690) (2026)
 
 ## Bunny Kingdom
+Already in the guide: In the Sky
 
 - [ ] [Bunny Kingdom: Bunny Jones](https://boardgamegeek.com/boardgameexpansion/238619) (2017)
 - [ ] [Bunny Kingdom: Bunnoleon](https://boardgamegeek.com/boardgameexpansion/238618) (2017)
 - [ ] [Bunny Kingdom: Collector](https://boardgamegeek.com/boardgameexpansion/263758) (2018)
 - [ ] [Bunny Kingdom: Rolling Tower](https://boardgamegeek.com/boardgameexpansion/270267) (2019)
-- [ ] [Bunny Kingdom: In the Sky](https://boardgamegeek.com/boardgameexpansion/264396) (2019)
 - [ ] [Bunny Kingdom: Bunny Express](https://boardgamegeek.com/boardgameexpansion/373425) (2023)
 
 ## Carcassonne Big Box 6
-Already in the guide: The River, The Abbot, Inns & Cathedrals, Traders & Builders
+Already in the guide: The River, The Abbot, Inns & Cathedrals, Traders & Builders, Mini 1: The Flying Machines, Mini 2: The Messengers, Mini 3: The Ferries, Mini 4: The Gold Mines, Mini 5: Mage & Witch, Mini 6: The Robbers, Corn Circles II, Exp. 3: The Princess & the Dragon, Exp. 4: The Tower, Exp. 5: Abbey & Mayor, Exp. 6: Count, King & Robber, Exp. 8: Bridges, Castles & Bazaars, Exp. 9: Hills & Sheep
 
-- [ ] [Carcassonne: Dragon & Fairy](https://boardgamegeek.com/boardgameexpansion/15158) (2005)
-- [ ] [Carcassonne: Towers & Thieves](https://boardgamegeek.com/boardgameexpansion/21385) (2006)
-- [ ] [Carcassonne: Expansion 6 – Count, King & Robber](https://boardgamegeek.com/boardgameexpansion/33458) (2007)
-- [ ] [Carcassonne: Abbey & Mayor](https://boardgamegeek.com/boardgameexpansion/31784) (2007)
-- [ ] [Carcassonne: Expansion 8 – Bridges, Castles and Bazaars](https://boardgamegeek.com/boardgameexpansion/66646) (2010)
 - [ ] [Carcassonne: The School](https://boardgamegeek.com/boardgameexpansion/104634) (2011)
-- [ ] [Carcassonne: Sheep & Shepherds](https://boardgamegeek.com/boardgameexpansion/153773) (2014)
-- [ ] [Carcassonne: Bonusplättchen Spiel 2016](https://boardgamegeek.com/boardgameexpansion/210799) (2016)
 - [ ] [Carcassonne: German Cathedrals](https://boardgamegeek.com/boardgameexpansion/196080) (2016)
 - [ ] [Carcassonne: Das Labyrinth](https://boardgamegeek.com/boardgameexpansion/195771) (2016)
 - [ ] [Carcassonne: Circus & Artists](https://boardgamegeek.com/boardgameexpansion/217006) (2017)
-- [ ] [Carcassonne: Bonusplättchen Spiel 2020](https://boardgamegeek.com/boardgameexpansion/321496) (2020)
 - [ ] [Carcassonne: The Wonders of Humanity Set II](https://boardgamegeek.com/boardgameexpansion/428459) (2024)
 
 ## Cascadia
@@ -163,14 +147,6 @@ Already in the guide: Standard, Family variant, Intermediate variant, Landmarks 
 ## Claim 2
 Already in the guide: Custom deck (with Claim)
 
-- [ ] [Claim Scenario Card 15: The Battle of... The Inn at the Top of the World](https://boardgamegeek.com/boardgameexpansion/448671) (0)
-- [ ] [Claim Scenario Card 11: The Battle of... The Broken Islands](https://boardgamegeek.com/boardgameexpansion/448667) (0)
-- [ ] [Claim Scenario Card 9: The Battle of... The Tower of Trees](https://boardgamegeek.com/boardgameexpansion/448665) (0)
-- [ ] [Claim Scenario Card 8: The Battle of... The Floating Pyramid](https://boardgamegeek.com/boardgameexpansion/448664) (0)
-- [ ] [Claim Scenario Card 7: The Battle of... The Hole in the Farmlands](https://boardgamegeek.com/boardgameexpansion/448663) (0)
-- [ ] [Claim Scenario Card 6: The Battle of... The Crossing at Two-Peaks](https://boardgamegeek.com/boardgameexpansion/448662) (0)
-- [ ] [Claim Scenario Card 4: The Battle of... The Sunken Pyramid](https://boardgamegeek.com/boardgameexpansion/448660) (0)
-- [ ] [Claim Scenario Card 2: The Battle of... The Overgrown Dungeon](https://boardgamegeek.com/boardgameexpansion/448658) (0)
 - [ ] [Claim: Reinforcements – Sky](https://boardgamegeek.com/boardgameexpansion/340767) (0)
 - [ ] [Claim: Mermaids](https://boardgamegeek.com/boardgameexpansion/325438) (0)
 - [ ] [Claim: Minotaurs](https://boardgamegeek.com/boardgameexpansion/325436) (0)
@@ -181,7 +157,6 @@ Already in the guide: Custom deck (with Claim)
 - [ ] [Claim: Ghosts](https://boardgamegeek.com/boardgameexpansion/267315) (2019)
 - [ ] [Claim: Satyrs](https://boardgamegeek.com/boardgameexpansion/365696) (2020)
 - [ ] [Claim: Awakeners](https://boardgamegeek.com/boardgameexpansion/365695) (2020)
-- [ ] [Claim: Storage Box](https://boardgamegeek.com/boardgameexpansion/313128) (2020)
 - [ ] [Claim: Reinforcements – Frost](https://boardgamegeek.com/boardgameexpansion/305661) (2020)
 - [ ] [Claim: Reinforcements – Fire](https://boardgamegeek.com/boardgameexpansion/305657) (2020)
 - [ ] [Claim: Reinforcements – Fear](https://boardgamegeek.com/boardgameexpansion/305656) (2020)
@@ -198,8 +173,6 @@ Already in the guide: Eradikus' flagship, Cyber Station 11, Pulsarcade (Master C
 - [ ] [Clank! In! Space!: Code Red](https://boardgamegeek.com/boardgameexpansion/233378) (2017)
 - [ ] [Clank! In! Space!: Apocalypse! – Planetary Destruction](https://boardgamegeek.com/boardgameexpansion/257662) (2018)
 - [ ] [Clank! In! Space!: W.H.I.S.K.E.R.S.](https://boardgamegeek.com/boardgameexpansion/257661) (2018)
-- [ ] [Level Up Loot 2](https://boardgamegeek.com/boardgameexpansion/290834) (2019)
-- [ ] [Dire Wolf Game Room](https://boardgamegeek.com/boardgameexpansion/368867) (2020)
 - [ ] [Clank! In! Space!: The Last Starkiller](https://boardgamegeek.com/boardgameexpansion/333621) (2021)
 
 ## Clank!: A Deck-Building Adventure
@@ -208,9 +181,7 @@ Already in the guide: Original board, Sunken Treasures board, Mummy's Curse boar
 - [ ] [Santa's Renegades](https://boardgamegeek.com/boardgameexpansion/215186) (2016)
 - [ ] [Clank!: The Mummy's Curse – Mummy Hunters](https://boardgamegeek.com/boardgameexpansion/250994) (2018)
 - [ ] [Clank! Legacy: Acquisitions Incorporated – The "C" Team Pack](https://boardgamegeek.com/boardgameexpansion/289559) (2019)
-- [ ] [Level Up Loot: One](https://boardgamegeek.com/boardgameexpansion/283282) (2019)
 - [ ] [Clank! Legacy: Acquisitions Incorporated – Upper Management Pack](https://boardgamegeek.com/boardgameexpansion/275532) (2019)
-- [ ] [Dire Wolf Game Room](https://boardgamegeek.com/boardgameexpansion/368867) (2020)
 - [ ] [Clank!: Adventuring Party](https://boardgamegeek.com/boardgameexpansion/308918) (2020)
 - [ ] [Clank!: Traveler's Hat](https://boardgamegeek.com/boardgameexpansion/460386) (2025)
 - [ ] [Clank!: The Forgotten Vault](https://boardgamegeek.com/boardgameexpansion/477934) (2027)
@@ -220,7 +191,6 @@ Already in the guide: Adventuring Party
 
 - [ ] [Clank! Legacy: Acquisitions Incorporated – The "C" Team Pack](https://boardgamegeek.com/boardgameexpansion/289559) (2019)
 - [ ] [Clank! Legacy: Acquisitions Incorporated – Upper Management Pack](https://boardgamegeek.com/boardgameexpansion/275532) (2019)
-- [ ] [Dire Wolf Game Room](https://boardgamegeek.com/boardgameexpansion/368867) (2020)
 - [ ] [Clank!: Adventuring Party](https://boardgamegeek.com/boardgameexpansion/308918) (2020)
 - [ ] [Clank!: Catacombs – Lairs and Lost Chambers](https://boardgamegeek.com/boardgameexpansion/422869) (2024)
 - [ ] [Clank!: Traveler's Hat](https://boardgamegeek.com/boardgameexpansion/460386) (2025)
@@ -228,25 +198,12 @@ Already in the guide: Adventuring Party
 
 ## Codenames: Duet
 
-- [ ] [Codenames: Bonus Pack – CGE Games](https://boardgamegeek.com/boardgameexpansion/215603) (2016)
 - [ ] [Codenames: Authors & Games](https://boardgamegeek.com/boardgameexpansion/213294) (2016)
-- [ ] [Tajniacy: Sami Nieswoi](https://boardgamegeek.com/boardgameexpansion/234644) (2017)
-- [ ] [Tajniacy: Nowi Agenci](https://boardgamegeek.com/boardgameexpansion/234643) (2017)
-- [ ] [Codenames: Bonus Pack – Board Gaming (English)](https://boardgamegeek.com/boardgameexpansion/224198) (2017)
-- [ ] [Tajniacy: Obcy Agenci](https://boardgamegeek.com/boardgameexpansion/253443) (2018)
-- [ ] [Codenames: Bonus Pack – Through the Ages](https://boardgamegeek.com/boardgameexpansion/293928) (2019)
-- [ ] [Tajniacy: Fantastyczne Światy](https://boardgamegeek.com/boardgameexpansion/307032) (2020)
-- [ ] [Tajniacy: Agenci na kwarantannie](https://boardgamegeek.com/boardgameexpansion/347651) (2021)
-- [ ] [Codenames: Bonus Pack – Schweiz](https://boardgamegeek.com/boardgameexpansion/387517) (2023)
 - [ ] [Codenames: Sci-Fi Expansion Pack](https://boardgamegeek.com/boardgameexpansion/464604) (2026)
 - [ ] [Codenames: Fairy Tales Expansion Pack](https://boardgamegeek.com/boardgameexpansion/464602) (2026)
 
 ## Codenames: Pictures
 
-- [ ] [Tajniacy: Sami Nieswoi](https://boardgamegeek.com/boardgameexpansion/234644) (2017)
-- [ ] [Tajniacy: Nowi Agenci](https://boardgamegeek.com/boardgameexpansion/234643) (2017)
-- [ ] [Tajniacy: Obcy Agenci](https://boardgamegeek.com/boardgameexpansion/253443) (2018)
-- [ ] [Tajniacy: Agenci na kwarantannie](https://boardgamegeek.com/boardgameexpansion/347651) (2021)
 - [ ] [Codenames: Sci-Fi Expansion Pack](https://boardgamegeek.com/boardgameexpansion/464604) (2026)
 - [ ] [Codenames: Fairy Tales Expansion Pack](https://boardgamegeek.com/boardgameexpansion/464602) (2026)
 - [ ] [Codenames: Pictures – Cute Critters Expansion Pack](https://boardgamegeek.com/boardgameexpansion/464600) (2026)
@@ -270,7 +227,6 @@ Already in the guide: Team play
 - [ ] [Destinies: Character Traits Module](https://boardgamegeek.com/boardgameexpansion/373548) (2023)
 - [ ] [Destinies: Adversity Module](https://boardgamegeek.com/boardgameexpansion/373547) (2023)
 - [ ] [Destinies: Witchwood](https://boardgamegeek.com/boardgameexpansion/368270) (2023)
-- [ ] [Предназначение: Дополнения "Ведьмин лес: Всё то золото", "Препятствия", "Способности" (Destinies: Modules)](https://boardgamegeek.com/boardgameexpansion/445089) (2025)
 
 ## Disney Villainous: The Worst Takes it All
 
@@ -280,49 +236,28 @@ Already in the guide: Team play
 ## Dixit
 
 - [ ] [Dixit: Quest](https://boardgamegeek.com/boardgameexpansion/55660) (2010)
-- [ ] [Dixit: 2012 Asmodee Special Cards](https://boardgamegeek.com/boardgameexpansion/132022) (2012)
 - [ ] [Dixit 3: Journey](https://boardgamegeek.com/boardgameexpansion/119657) (2012)
 - [ ] [Dixit: Origins](https://boardgamegeek.com/boardgameexpansion/145325) (2013)
 - [ ] [Dixit: Odyssey (expansion)](https://boardgamegeek.com/boardgameexpansion/138547) (2013)
 - [ ] [Dixit: Daydreams](https://boardgamegeek.com/boardgameexpansion/156189) (2014)
 - [ ] [Dixit: Memories](https://boardgamegeek.com/boardgameexpansion/174090) (2015)
-- [ ] [Dixit: Anniversary Pack](https://boardgamegeek.com/boardgameexpansion/174089) (2015)
 - [ ] [Dixit: Revelations](https://boardgamegeek.com/boardgameexpansion/205761) (2016)
 - [ ] [Dixit: Harmonies](https://boardgamegeek.com/boardgameexpansion/234553) (2017)
 - [ ] [Dixit: Anniversary](https://boardgamegeek.com/boardgameexpansion/256237) (2018)
-- [ ] [Dixit: Chilean Way](https://boardgamegeek.com/boardgameexpansion/287250) (2019)
-- [ ] [Dixit: Chilean Way](https://boardgamegeek.com/boardgameexpansion/333835) (2020)
 - [ ] [Dixit: Mirrors](https://boardgamegeek.com/boardgameexpansion/301112) (2020)
-- [ ] [Dixit Cards with Original Pocket Vinyl Paintings](https://boardgamegeek.com/boardgameexpansion/415362) (2023)
-- [ ] [Dixit: MNK](https://boardgamegeek.com/boardgameexpansion/395883) (2023)
 
 ## Dominion (Second Edition) Big Box
+Already in the guide: Seaside, Alchemy, Prosperity, Cornucopia, Dark Ages, Guilds, Adventures, Menagerie
 
-- [ ] [Dominion: Seaside](https://boardgamegeek.com/boardgameexpansion/51811) (2009)
-- [ ] [Dominion: Prosperity](https://boardgamegeek.com/boardgameexpansion/66690) (2010)
-- [ ] [Dominion: Alchemy](https://boardgamegeek.com/boardgameexpansion/66098) (2010)
 - [ ] [Dominion: Hinterlands](https://boardgamegeek.com/boardgameexpansion/104557) (2011)
-- [ ] [Dominion: Cornucopia](https://boardgamegeek.com/boardgameexpansion/90850) (2011)
-- [ ] [Dominion: Dark Ages](https://boardgamegeek.com/boardgameexpansion/125403) (2012)
-- [ ] [Dominion: Guilds](https://boardgamegeek.com/boardgameexpansion/137166) (2013)
 - [ ] [Dominion: Alchemisten & Reiche Ernte – Mixbox](https://boardgamegeek.com/boardgameexpansion/172592) (2014)
 - [ ] [Dominion: Guilds & Cornucopia](https://boardgamegeek.com/boardgameexpansion/177903) (2015)
-- [ ] [Dominion: Adventures](https://boardgamegeek.com/boardgameexpansion/171915) (2015)
 - [ ] [Dominion: Empires](https://boardgamegeek.com/boardgameexpansion/192951) (2016)
 - [ ] [Dominion: Nocturne](https://boardgamegeek.com/boardgameexpansion/232452) (2017)
 - [ ] [Dominion: Renaissance](https://boardgamegeek.com/boardgameexpansion/257673) (2018)
-- [ ] [Dominion: Menagerie](https://boardgamegeek.com/boardgameexpansion/298055) (2020)
 - [ ] [Dominion: Plunder](https://boardgamegeek.com/boardgameexpansion/369536) (2022)
-- [ ] [Dominion: Hinterlands (Second Edition)](https://boardgamegeek.com/boardgameexpansion/365432) (2022)
-- [ ] [Dominion: Hinterlands – Update Pack](https://boardgamegeek.com/boardgameexpansion/365192) (2022)
-- [ ] [Dominion: Prosperity – Update Pack](https://boardgamegeek.com/boardgameexpansion/364019) (2022)
-- [ ] [Dominion: Prosperity (Second Edition)](https://boardgamegeek.com/boardgameexpansion/362517) (2022)
-- [ ] [Dominion: Seaside – Update Pack](https://boardgamegeek.com/boardgameexpansion/356205) (2022)
-- [ ] [Dominion: Seaside (Second Edition)](https://boardgamegeek.com/boardgameexpansion/355958) (2022)
 - [ ] [Dominion: Allies](https://boardgamegeek.com/boardgameexpansion/347307) (2022)
 - [ ] [Dominion: Rising Sun](https://boardgamegeek.com/boardgameexpansion/420298) (2024)
-- [ ] [Dominion: Cornucopia & Guilds – Update Pack](https://boardgamegeek.com/boardgameexpansion/416002) (2024)
-- [ ] [Dominion: Cornucopia & Guilds (Second Edition)](https://boardgamegeek.com/boardgameexpansion/415317) (2024)
 
 ## Dune: Imperium
 Already in the guide: Rise of Ix, Epic mode, Immortality, Bloodlines, Bloodlines Tech Module, Novice (Mercenary), Veteran (Sardaukar), Expert (Mentat)
@@ -359,10 +294,8 @@ Already in the guide: Co-op
 ## Everdell
 Already in the guide: Pearlbrook, Spirecrest, Bellfaire, Newleaf, Mistwood cards, Nightweave's Lair, Player Powers, Legends, Extra! Extra!, Rugwort cards
 
-- [ ] [Everdell: Pearlbrook – Collector's Edition](https://boardgamegeek.com/boardgameexpansion/319420) (2019)
 - [ ] [Everdell: Glimmergold Pack](https://boardgamegeek.com/boardgameexpansion/289405) (2019)
 - [ ] [Everdell: Spirecrest – Trailblazers Pack](https://boardgamegeek.com/boardgameexpansion/334946) (2020)
-- [ ] [Everdell: Spirecrest – Collector's Edition](https://boardgamegeek.com/boardgameexpansion/319419) (2020)
 - [ ] [Everdell: Pearlbrook – Freshwater Pack](https://boardgamegeek.com/boardgameexpansion/292794) (2020)
 
 ## Exploding Kittens: NSFW Edition
@@ -388,25 +321,17 @@ Already in the guide: Advanced variant, People from Below
 ## Frosthaven
 Already in the guide: Challenges (sticker 1), Pets (sticker 3), New character
 
-- [ ] [Frosthaven: Removable Sticker Set](https://boardgamegeek.com/boardgameexpansion/306152) (2022)
 - [ ] [Frosthaven: Solo Scenarios](https://boardgamegeek.com/boardgameexpansion/306151) (2022)
-- [ ] [Gloomhaven: Envelope X Reward](https://boardgamegeek.com/boardgameexpansion/380753) (2023)
 - [ ] [Frosthaven: Warriors from Lands Beyond, Season 2](https://boardgamegeek.com/boardgameexpansion/455987) (2024)
-- [ ] [Gloomhaven: Mercenary Pack – Satha, Mayor of Frosthaven](https://boardgamegeek.com/boardgameexpansion/457842) (2025)
-- [ ] [Gloomhaven: Mercenary Pack – Cassandra, Forgotten Diviner](https://boardgamegeek.com/boardgameexpansion/457840) (2025)
-- [ ] [Gloomhaven: Mercenary Pack – Hail, Irritable Enchanter](https://boardgamegeek.com/boardgameexpansion/457838) (2025)
-- [ ] [Gloomhaven: Mercenary Pack – Anaphi, Fallen Lion](https://boardgamegeek.com/boardgameexpansion/457837) (2025)
 - [ ] [Gloomhaven: 2025 ConQuests](https://boardgamegeek.com/boardgameexpansion/451931) (2025)
 
 ## Gloomhaven
 Already in the guide: Normal, Easy, Hard, Very Hard, Open information
 
-- [ ] [Gloomhaven: Removable Sticker Set](https://boardgamegeek.com/boardgameexpansion/236232) (2017)
 - [ ] [Gloomhaven: Solo Scenarios](https://boardgamegeek.com/boardgameexpansion/226868) (2017)
 - [ ] [Gloomhaven: Forgotten Circles](https://boardgamegeek.com/boardgameexpansion/250337) (2019)
 - [ ] [The Crimson Scales: Class Pack Add-on](https://boardgamegeek.com/boardgameexpansion/367749) (2021)
 - [ ] [The Crimson Scales](https://boardgamegeek.com/boardgameexpansion/365186) (2021)
-- [ ] [Gloomhaven: Envelope X Reward](https://boardgamegeek.com/boardgameexpansion/380753) (2023)
 - [ ] [The Crimson Scales: Trail of Ashes](https://boardgamegeek.com/boardgameexpansion/367751) (2023)
 - [ ] [Gloomhaven: Warriors from Lands Beyond](https://boardgamegeek.com/boardgameexpansion/455986) (2024)
 - [ ] [Gloomhaven: 2025 ConQuests](https://boardgamegeek.com/boardgameexpansion/451931) (2025)
@@ -419,16 +344,6 @@ Already in the guide: Normal, Easy, Hard, Very Hard, Open information
 - [ ] [Gloomhaven: Buttons & Bugs – Arena Challenge Scenario](https://boardgamegeek.com/boardgameexpansion/423822) (2024)
 - [ ] [Gloomhaven: Buttons & Bugs – The Flames of Ashtar](https://boardgamegeek.com/boardgameexpansion/473808) (2026)
 - [ ] [Buttons & Bugs: Pub Crawlers](https://boardgamegeek.com/boardgameexpansion/473161) (2026)
-
-## Gloomhaven: Jaws of the Lion
-Already in the guide: Normal, Easy, Hard, Very Hard
-
-- [ ] [Gloomhaven: Jaws of the Lion – Removable Sticker Set and Map](https://boardgamegeek.com/boardgameexpansion/338400) (2021)
-- [ ] [Gloomhaven: Envelope X Reward](https://boardgamegeek.com/boardgameexpansion/380753) (2023)
-- [ ] [Gloomhaven: Mercenary Pack – Satha, Mayor of Frosthaven](https://boardgamegeek.com/boardgameexpansion/457842) (2025)
-- [ ] [Gloomhaven: Mercenary Pack – Cassandra, Forgotten Diviner](https://boardgamegeek.com/boardgameexpansion/457840) (2025)
-- [ ] [Gloomhaven: Mercenary Pack – Hail, Irritable Enchanter](https://boardgamegeek.com/boardgameexpansion/457838) (2025)
-- [ ] [Gloomhaven: Mercenary Pack – Anaphi, Fallen Lion](https://boardgamegeek.com/boardgameexpansion/457837) (2025)
 
 ## Golem
 
@@ -444,18 +359,8 @@ Already in the guide: Normal, Easy, Hard, Very Hard
 
 ## Harry Potter: Hogwarts Battle
 
-- [ ] [Harry Potter: Hogwarts Battle – Item: Basilisk Fang](https://boardgamegeek.com/boardgameexpansion/216012) (2016)
-- [ ] [Harry Potter: Hogwarts Battle – Ally: The Dursleys](https://boardgamegeek.com/boardgameexpansion/216011) (2016)
-- [ ] [Harry Potter: Hogwarts Battle – Spell: Silencio!](https://boardgamegeek.com/boardgameexpansion/216010) (2016)
-- [ ] [Harry Potter: Hogwarts Battle – Spell: Sunshine Daisy, Butter Mellow, Turn This Stupid Fat Rat Yellow!](https://boardgamegeek.com/boardgameexpansion/215822) (2016)
-- [ ] [Harry Potter: Hogwarts Battle – Ally: Seamus Finnigan](https://boardgamegeek.com/boardgameexpansion/215820) (2016)
-- [ ] [Harry Potter: Hogwarts Battle – Spell: Eye of Rabbit, Harp String Hum, Turn This Water Into Rum!](https://boardgamegeek.com/boardgameexpansion/215123) (2016)
-- [ ] [Harry Potter: Hogwarts Battle – Spell: Reducto!](https://boardgamegeek.com/boardgameexpansion/233771) (2017)
-- [ ] [Harry Potter: Hogwarts Battle – Item: Quibbler](https://boardgamegeek.com/boardgameexpansion/233770) (2017)
-- [ ] [Harry Potter: Hogwarts Battle – Ally: Xenophilius Lovegood](https://boardgamegeek.com/boardgameexpansion/233769) (2017)
 - [ ] [Harry Potter: Hogwarts Battle – The Monster Box of Monsters Expansion](https://boardgamegeek.com/boardgameexpansion/223494) (2017)
 - [ ] [Harry Potter: Hogwarts Battle – The Charms and Potions Expansion](https://boardgamegeek.com/boardgameexpansion/304297) (2020)
-- [ ] [Harry Potter: Hogwarts Battle – Ally: Scabbers](https://boardgamegeek.com/boardgameexpansion/347318) (2021)
 
 ## Here to Slay
 
@@ -468,23 +373,10 @@ Already in the guide: Normal, Easy, Hard, Very Hard
 - [ ] [Here to Slay: Sorcerers & Squires](https://boardgamegeek.com/boardgameexpansion/468270) (2027)
 
 ## Heroes of Might and Magic III: The Board Game
-Already in the guide: Clash, Co-op, Solo campaign
+Already in the guide: Clash, Co-op, Solo campaign, Battlefield: Adventure mode, Battlefield: Skirmish mode, Tower expansion, Fortress expansion, Rampart expansion, Inferno expansion, Stronghold expansion, Conflux expansion, Cove expansion, Naval Battles expansion
 
-- [ ] [Heroes of Might and Magic III: The Board Game – Battlefield Expansion](https://boardgamegeek.com/boardgameexpansion/413367) (2024)
-- [ ] [Heroes of Might and Magic III: The Board Game – Inferno Expansion](https://boardgamegeek.com/boardgameexpansion/412073) (2024)
-- [ ] [Heroes of Might and Magic III: The Board Game – Rampart Expansion](https://boardgamegeek.com/boardgameexpansion/412072) (2024)
-- [ ] [Heroes of Might and Magic III: The Board Game – Fortress Expansion](https://boardgamegeek.com/boardgameexpansion/412071) (2024)
-- [ ] [Heroes of Might and Magic III: The Board Game – Tower Expansion](https://boardgamegeek.com/boardgameexpansion/411654) (2024)
-- [ ] [Heroes of Might and Magic III: The Board Game – Naval Battles Expansion](https://boardgamegeek.com/boardgameexpansion/440611) (2025)
 - [ ] [Heroes of Might and Magic III: The Board Game – Big Box Expansion](https://boardgamegeek.com/boardgameexpansion/430981) (2025)
 - [ ] [Heroes of Might and Magic III: The Board Game – Stretch Goals Regular](https://boardgamegeek.com/boardgameexpansion/467792) (2026)
-- [ ] [Heroes of Might and Magic III: The Board Game – Cove Expansion](https://boardgamegeek.com/boardgameexpansion/423897) (2026)
-- [ ] [Heroes of Might and Magic III: The Board Game – Conflux Expansion](https://boardgamegeek.com/boardgameexpansion/423895) (2026)
-- [ ] [Heroes of Might and Magic III: The Board Game – Stronghold Expansion](https://boardgamegeek.com/boardgameexpansion/423894) (2026)
-
-## How Dare You?
-
-- [ ] [How Dare You?: Game Boy Geek Trivia Card](https://boardgamegeek.com/boardgameexpansion/431010) (2024)
 
 ## Ironwood
 Already in the guide: Solo: you play Woodwalkers, Solo: you play Ironclad
@@ -501,7 +393,6 @@ Already in the guide: Empire side A, Empire side B, Corruption & Ascension
 
 ## Just One
 
-- [ ] [Deutscher Spielepreis Classic Goodie Box](https://boardgamegeek.com/boardgameexpansion/286086) (2019)
 - [ ] [Just One: Neue Begriffe](https://boardgamegeek.com/boardgameexpansion/317124) (2020)
 
 ## Karak
@@ -516,13 +407,11 @@ Already in the guide: Empire side A, Empire side B, Corruption & Ascension
 - [ ] [Karak II: Inferno](https://boardgamegeek.com/boardgameexpansion/470886) (2026)
 
 ## King of Tokyo: Monster Box
+Already in the guide: Monster Pack: King Kong, Monster Pack: Cthulhu
 
 - [ ] [King of New York: Power Up!](https://boardgamegeek.com/boardgameexpansion/193320) (2016)
-- [ ] [King of Tokyo/New York: Monster Pack – King Kong](https://boardgamegeek.com/boardgameexpansion/233076) (2017)
-- [ ] [King of Tokyo/New York: Monster Pack – Cthulhu](https://boardgamegeek.com/boardgameexpansion/207292) (2017)
 - [ ] [King of Tokyo/New York: Monster Pack – Anubis](https://boardgamegeek.com/boardgameexpansion/250532) (2018)
 - [ ] [King of Tokyo/New York: Monster Pack – Cybertooth](https://boardgamegeek.com/boardgameexpansion/282788) (2019)
-- [ ] [King of Tokyo: Dark Edition – Super Jump Goodie Card](https://boardgamegeek.com/boardgameexpansion/318580) (2020)
 - [ ] [King of Tokyo: Even More Wicked!](https://boardgamegeek.com/boardgameexpansion/364182) (2023)
 - [ ] [King of Tokyo: Mindbug](https://boardgamegeek.com/boardgameexpansion/438686) (2025)
 - [ ] [King of Tokyo/New York: Monster Pack – Luchador](https://boardgamegeek.com/boardgameexpansion/430575) (2025)
@@ -580,11 +469,6 @@ Already in the guide: Competitive, Co-op vs the Lord Ruler
 
 - [ ] [Not Enough Mana: Spellsmiths & Summoners](https://boardgamegeek.com/boardgameexpansion/453087) (2025)
 
-## Oathsworn: Into the Deepwood
-Already in the guide: New campaign, Instant Action mode, Journeyman (+2 defense), Pilgrim (+1 defense), Free Company (standard), Grim (5 HP), Dread (4 HP)
-
-- [ ] [Oathsworn: Into the Deepwood – Dennis the Geek Ally](https://boardgamegeek.com/boardgameexpansion/406500) (2024)
-
 ## Pantheum: Demigods of Olympia
 
 - [ ] [Pantheum: Monsters & Mandates](https://boardgamegeek.com/boardgameexpansion/444371) (2025)
@@ -597,35 +481,23 @@ Already in the guide: Archway, Horseman, Teapot
 - [ ] [Rising Sun: Kami Unbound](https://boardgamegeek.com/boardgameexpansion/224479) (2018)
 - [ ] [Rising Sun: Dynasty Invasion](https://boardgamegeek.com/boardgameexpansion/223782) (2018)
 - [ ] [Rising Sun: Tower Season Cards Set](https://boardgamegeek.com/boardgameexpansion/274087) (2019)
-- [ ] [Rising Sun: Comic Book Extras](https://boardgamegeek.com/boardgameexpansion/313314) (2021)
-- [ ] [Iron Maiden Pack #1](https://boardgamegeek.com/boardgameexpansion/372781) (2023)
 - [ ] [Rising Sun (2nd Edition): Celestial Influence](https://boardgamegeek.com/boardgameexpansion/452693) (2026)
 
 ## Rivals for Catan
 Already in the guide: Introductory Game, Era of Gold, Era of Turmoil, Era of Progress
 
 - [ ] [The Rivals for Catan: Axel the Innovator](https://boardgamegeek.com/boardgameexpansion/88610) (2010)
-- [ ] [Die Fürsten von Catan: Sonderkarte 2011 – Carol, die Spieleerklärerin](https://boardgamegeek.com/boardgameexpansion/118173) (2011)
 - [ ] [The Rivals for Catan: Johannes the Advocate](https://boardgamegeek.com/boardgameexpansion/111255) (2011)
 - [ ] [Rivals for Catan: Age of Darkness](https://boardgamegeek.com/boardgameexpansion/93401) (2011)
 - [ ] [The Rivals for Catan: Alexander and Sebastian, the Bookkeepers](https://boardgamegeek.com/boardgameexpansion/133042) (2012)
-- [ ] [Die Fürsten von Catan: Sonderkarte Frühjahr 2012 – Catan Mobil](https://boardgamegeek.com/boardgameexpansion/131707) (2012)
 - [ ] [Rivals for Catan: Age of Enlightenment](https://boardgamegeek.com/boardgameexpansion/127437) (2012)
 - [ ] [The Rivals for Catan: Gavin the Polyglot](https://boardgamegeek.com/boardgameexpansion/149833) (2013)
-- [ ] [Die Fürsten von Catan: Sonderkarte 2014 – Arnd, der Fischer](https://boardgamegeek.com/boardgameexpansion/168216) (2014)
 - [ ] [The Rivals for Catan: Ron the Well-Travelled Man](https://boardgamegeek.com/boardgameexpansion/186789) (2015)
 - [ ] [The Rivals for Catan: Heiko the Master Swimmer](https://boardgamegeek.com/boardgameexpansion/186788) (2015)
 - [ ] [The Rivals for Catan: Participation in the Big Game](https://boardgamegeek.com/boardgameexpansion/186215) (2015)
-- [ ] [Catan: Das Duell – Sonderkarte 2016: Michael der Wagemutige](https://boardgamegeek.com/boardgameexpansion/212234) (2016)
-- [ ] [Catan: Das Duell – Sonderkarte 2016: 20 Jahre Catan, das Spiel für 2](https://boardgamegeek.com/boardgameexpansion/211557) (2016)
-- [ ] [Catan: Das Duell – Sonderkarte 2017: Isabell, die Handelsagentin](https://boardgamegeek.com/boardgameexpansion/238673) (2017)
 - [ ] [Rivals for Catan: Hostel Scenario](https://boardgamegeek.com/boardgameexpansion/348682) (2020)
-- [ ] [Catan: Das Duell – Sonderkarte 2021: 25 Jahre CATAN-Kartenspiel](https://boardgamegeek.com/boardgameexpansion/350674) (2021)
-- [ ] [Catan: Das Duell – Sonderkarte 2021: Weinberg](https://boardgamegeek.com/boardgameexpansion/350673) (2021)
 - [ ] [Catan: Zusatzmaterial für Das Duell – Bonus Box](https://boardgamegeek.com/boardgameexpansion/341591) (2021)
 - [ ] [Catan: Das Duell – Finstere & Goldene Zeiten](https://boardgamegeek.com/boardgameexpansion/324882) (2021)
-- [ ] [Catan: Das Duell – Sonderkarte 2022: Sonja, die Schäferin](https://boardgamegeek.com/boardgameexpansion/372567) (2022)
-- [ ] [Catan: Das Duell – Sonderkarte 2023: Klaus, Hüter von Catan](https://boardgamegeek.com/boardgameexpansion/402962) (2023)
 
 ## Root
 Already in the guide: Riverfolk, Underworld, Marauder, Homeland, Clockwork (bots), Advanced setup
@@ -641,17 +513,9 @@ Already in the guide: Riverfolk, Underworld, Marauder, Homeland, Clockwork (bots
 - [ ] [Root: The Squires and Disciples Deck](https://boardgamegeek.com/boardgameexpansion/431218) (2026)
 
 ## Rune Stones
+Already in the guide: Nocturnal Creatures, Enchanted Forest
 
 - [ ] [Rune Stones: Queenie 1 – New Rune Stones](https://boardgamegeek.com/boardgameexpansion/290076) (2019)
-- [ ] [Rune Stones: Nocturnal Creatures](https://boardgamegeek.com/boardgameexpansion/286291) (2019)
-- [ ] [Rune Stones: Enchanted Forest](https://boardgamegeek.com/boardgameexpansion/296313) (2020)
-
-## Scrabble
-
-- [ ] [Improving Games: Scrabble](https://boardgamegeek.com/boardgameexpansion/352255) (2016)
-- [ ] [Scrabble: Big Eszett (ß)](https://boardgamegeek.com/boardgameexpansion/238822) (2017)
-- [ ] [Scrabble: Genderstein](https://boardgamegeek.com/boardgameexpansion/374309) (2022)
-- [ ] [Scrabble Streaks Word Search](https://boardgamegeek.com/boardgameexpansion/445367) (2025)
 
 ## Scythe
 Already in the guide: Invaders from Afar, Wind Gambit: Airships, Wind Gambit: Resolutions
@@ -670,46 +534,19 @@ Already in the guide: Invaders from Afar, Wind Gambit: Airships, Wind Gambit: Re
 - [ ] [Sleeping Gods: Dungeons](https://boardgamegeek.com/boardgameexpansion/287670) (2021)
 - [ ] [Sleeping Gods: Tides of Ruin](https://boardgamegeek.com/boardgameexpansion/283766) (2021)
 
-## Spirit Island
-Already in the guide: Branch & Claw, Jagged Earth, Nature Incarnate, Feather & Flame
-
-- [ ] [Spirit Island: Unter der Insel schlummernde Schlange](https://boardgamegeek.com/boardgameexpansion/275756) (2018)
-- [ ] [Spirit Island: Seele des Flächenbrands](https://boardgamegeek.com/boardgameexpansion/292800) (2019)
-- [ ] [Spirit Island: Finder unsichtbarer Wege](https://boardgamegeek.com/boardgameexpansion/346618) (2021)
-- [ ] [Spirit Island: Sturzregen durchnässt die Welt](https://boardgamegeek.com/boardgameexpansion/368827) (2022)
-- [ ] [Spirit Island: Sonnenheller Wirbelwind](https://boardgamegeek.com/boardgameexpansion/401144) (2023)
-- [ ] [Spirit Island: Zunehmende Hitze in Stein und Sand](https://boardgamegeek.com/boardgameexpansion/401143) (2023)
-- [ ] [Spirit Island: Bodenloser Schlamm der Sümpfe](https://boardgamegeek.com/boardgameexpansion/401141) (2023)
-- [ ] [Spirit Island: Wachende Augen in Bäumen](https://boardgamegeek.com/boardgameexpansion/401140) (2023)
-- [ ] [Spirit Island: Unterirdisch lauernde Reißzähne](https://boardgamegeek.com/boardgameexpansion/401139) (2023)
-
-## Sushi Go!
-
-- [ ] [Stadt Land Spielt Limitierte Sonderdrucke 2015](https://boardgamegeek.com/boardgameexpansion/186885) (2015)
-
 ## Talisman: Revised 4th Edition
+Already in the guide: The Reaper, The Frostmarch, The Dungeon, The Highland, The Sacred Pool, The Dragon, The Blood Moon, The City, The Firelands, The Harbinger, The Cataclysm, Alternative Ending card
 
 - [ ] [Talisman (4th Edition): Rod of Ruin](https://boardgamegeek.com/boardgameexpansion/67060) (2007)
 - [ ] [Talisman (4th Edition): Arena](https://boardgamegeek.com/boardgameexpansion/67059) (2007)
 - [ ] [Talisman (4th Edition): Optional Characters](https://boardgamegeek.com/boardgameexpansion/67299) (2008)
 - [ ] [Talisman (Revised 4th Edition): Doppelganger](https://boardgamegeek.com/boardgameexpansion/67058) (2008)
 - [ ] [Talisman (Revised 4th Edition): Instructor](https://boardgamegeek.com/boardgameexpansion/67057) (2008)
-- [ ] [Talisman (Revised 4th Edition): The Reaper Expansion](https://boardgamegeek.com/boardgameexpansion/38025) (2008)
 - [ ] [Talisman (Revised 4th Edition): Danse Macabre](https://boardgamegeek.com/boardgameexpansion/67056) (2009)
 - [ ] [Talisman (Revised 4th Edition): Crown of Command](https://boardgamegeek.com/boardgameexpansion/67054) (2009)
-- [ ] [Talisman (Revised 4th Edition): The Frostmarch Expansion](https://boardgamegeek.com/boardgameexpansion/54475) (2009)
-- [ ] [Talisman (Revised 4th Edition): The Dungeon Expansion](https://boardgamegeek.com/boardgameexpansion/41064) (2009)
-- [ ] [Talisman (Revised 4th Edition): The Sacred Pool Expansion](https://boardgamegeek.com/boardgameexpansion/75857) (2010)
-- [ ] [Talisman (Revised 4th Edition): The Highland Expansion](https://boardgamegeek.com/boardgameexpansion/67051) (2010)
-- [ ] [Talisman (Revised 4th Edition): The Dragon Expansion](https://boardgamegeek.com/boardgameexpansion/99815) (2011)
-- [ ] [Talisman (Revised 4th Edition): The Blood Moon Expansion](https://boardgamegeek.com/boardgameexpansion/121786) (2012)
 - [ ] [Talisman (Revised 4th Edition): The Nether Realm Expansion](https://boardgamegeek.com/boardgameexpansion/152319) (2013)
-- [ ] [Talisman (Revised 4th Edition): The City Expansion](https://boardgamegeek.com/boardgameexpansion/131816) (2013)
 - [ ] [Talisman (Revised 4th Edition): The Woodland Expansion](https://boardgamegeek.com/boardgameexpansion/158979) (2014)
-- [ ] [Talisman (Revised 4th Edition): The Firelands Expansion](https://boardgamegeek.com/boardgameexpansion/152318) (2014)
-- [ ] [Talisman (Revised 4th Edition): The Harbinger Expansion](https://boardgamegeek.com/boardgameexpansion/177211) (2015)
 - [ ] [Talisman (Revised 4th Edition): The Deep Realms Expansion](https://boardgamegeek.com/boardgameexpansion/169254) (2015)
-- [ ] [Talisman (Revised 4th Edition): The Cataclysm Expansion](https://boardgamegeek.com/boardgameexpansion/189950) (2016)
 - [ ] [Talisman (Revised 4th Edition): The Lost Realms](https://boardgamegeek.com/boardgameexpansion/248506) (2018)
 
 ## The Dwarves
@@ -758,7 +595,6 @@ Already in the guide: Part 1 (chapters 19-28), Part 2 (chapter 29 on)
 
 - [ ] [The Witcher: Old World – Kickstarter Expansion](https://boardgamegeek.com/boardgameexpansion/369048) (2023)
 - [ ] [The Witcher: Old World – Exclusive Monster Pack](https://boardgamegeek.com/boardgameexpansion/364789) (2023)
-- [ ] [The Witcher: Old World – Mounted Eredin Miniature](https://boardgamegeek.com/boardgameexpansion/345378) (2023)
 - [ ] [The Witcher: Old World – Ciri](https://boardgamegeek.com/boardgameexpansion/342705) (2023)
 - [ ] [The Witcher: Old World – Lost Mount](https://boardgamegeek.com/boardgameexpansion/342212) (2023)
 - [ ] [The Witcher: Old World – Monster Trail](https://boardgamegeek.com/boardgameexpansion/341023) (2023)
@@ -791,7 +627,6 @@ Already in the guide: The Edge of the World, Striga, The Lesser Evil, Legendary 
 - [ ] [Too Many Bones: Age of Tyranny](https://boardgamegeek.com/boardgameexpansion/239291) (2018)
 - [ ] [Too Many Bones: Gasket](https://boardgamegeek.com/boardgameexpansion/239290) (2018)
 - [ ] [Too Many Bones: Bloodthirsty Gila Goblin](https://boardgamegeek.com/boardgameexpansion/330275) (2019)
-- [ ] [Too Many Bones: Chinese Edition Baddies](https://boardgamegeek.com/boardgameexpansion/299653) (2019)
 - [ ] [Too Many Bones: Trollin' 4 Fools! Tyrant Pack](https://boardgamegeek.com/boardgameexpansion/276939) (2019)
 - [ ] [Too Many Bones: Ace in the Troll Card Pack](https://boardgamegeek.com/boardgameexpansion/319418) (2020)
 - [ ] [Too Many Bones: Lab Rats](https://boardgamegeek.com/boardgameexpansion/283862) (2020)
@@ -841,16 +676,6 @@ Already in the guide: Team play
 - [ ] [War of the Ring: Kings and Lords of Middle-Earth – Limited Edition](https://boardgamegeek.com/boardgameexpansion/407813) (2024)
 - [ ] [War of the Ring: Sieges of Middle-earth](https://boardgamegeek.com/boardgameexpansion/463030) (2026)
 
-## Wingspan
-Already in the guide: European Expansion, Oceania Expansion, Americas Expansion, Wingspan Asia (Flock mode)
-
-- [ ] [Wingspan: Fan-Designed Card Packs – Set 1](https://boardgamegeek.com/boardgameexpansion/471469) (2026)
-
-## Wingspan Asia
-Already in the guide: Duet map, Original goal board
-
-- [ ] [Wingspan: Fan-Designed Card Packs – Set 1](https://boardgamegeek.com/boardgameexpansion/471469) (2026)
-
 ## Škoda kouzla, které padne vedle
 Already in the guide: Duel, 3 players: lone wizard vs allies (Velké rozšíření), 3 players: elimination (Velké rozšíření), Free-for-all (Velké rozšíření), Solo vs the Cave Lord (Velké rozšíření)
 
@@ -858,7 +683,7 @@ Already in the guide: Duel, 3 players: lone wizard vs allies (Velké rozšířen
 
 # Living card games
 
-These are mostly hero, scenario and adventure packs that add cards but do not change the general setup.
+Mostly hero, scenario and adventure packs that add cards but do not change the general setup.
 
 ## Arkham Horror: The Card Game
 
