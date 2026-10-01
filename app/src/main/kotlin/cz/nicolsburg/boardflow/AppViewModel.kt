@@ -854,6 +854,48 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /**
+     * A fresh install connected to BGG has a full play history but no roster, which leaves the
+     * Players tab and every roster-based stat empty. Seed the roster once from the names in
+     * that history; an install that already has players is never touched.
+     */
+    private suspend fun seedRosterFromBggHistoryIfEmpty(plays: List<LoggedPlay>) {
+        if (prefs.rosterSeededFromHistory || plays.isEmpty()) return
+        val store = container.canonicalCollectionStore
+        val hasRoster = store.getPlayers().isNotEmpty() ||
+            withContext(Dispatchers.IO) { prefs.getPlayers() }.isNotEmpty()
+        if (hasRoster) {
+            prefs.rosterSeededFromHistory = true
+            return
+        }
+
+        val spellings = mutableMapOf<String, MutableMap<String, Int>>()
+        val lastPlayed = mutableMapOf<String, Long>()
+        plays.forEach { play ->
+            val ts = play.playedAt ?: play.date.toLocalDateOrNull()?.toEpochDay()?.times(86400000L)
+            play.players.forEach { pr ->
+                val name = pr.name.trim()
+                if (name.isBlank()) return@forEach
+                val key = name.lowercase()
+                spellings.getOrPut(key) { mutableMapOf() }.merge(name, 1, Int::plus)
+                if (ts != null) lastPlayed[key] = maxOf(lastPlayed[key] ?: 0L, ts)
+            }
+        }
+        if (spellings.isEmpty()) return
+
+        val seeded = spellings.map { (key, counts) ->
+            Player(
+                id = UUID.randomUUID().toString(),
+                displayName = counts.maxByOrNull { it.value }?.key ?: key,
+                aliases = emptyList(),
+                lastPlayedAt = lastPlayed[key]
+            )
+        }.sortedBy { it.displayName.lowercase() }
+        store.replacePlayers(seeded)
+        _players.value = seeded
+        prefs.rosterSeededFromHistory = true
+    }
+
     fun addNewPlayer(displayName: String) {
         if (displayName.isBlank()) return
         val list = (_players.value + Player(UUID.randomUUID().toString(), displayName.trim(), emptyList())).sortedBy { it.displayName.lowercase() }
@@ -1422,8 +1464,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val scope: StatsPlayScope
     )
 
+    // Stats read the merged history, not just local plays: on a fresh install every play
+    // lives in the BGG cache and the local table is empty.
     val playStats: StateFlow<PlayStats?> = combine(
-        _playHistory, _players, _statsTimeRange, _statsPlayScope
+        historyPlays, _players, _statsTimeRange, _statsPlayScope
     ) { plays, roster, range, scope -> StatsInputs(plays, roster, range, scope) }
         .mapLatest { inputs ->
             val scopedPlays = when (inputs.scope) {
@@ -1431,8 +1475,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 StatsPlayScope.COUNTED_ONLY -> inputs.plays.filter { it.nowInStats }
             }
             computePlayStats(
-                store             = container.canonicalCollectionStore,
-                sourcePlays       = scopedPlays,
+                sourcePlays      = scopedPlays,
                 filteredPlays     = scopedPlays.filterByTimeRange(inputs.range),
                 roster            = inputs.roster,
                 timeRange         = inputs.range,
@@ -1451,6 +1494,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     container.canonicalCollectionStore.saveBggPlaysCache(reconciled)
                     val withMemory = container.canonicalCollectionStore.getBggPlaysCache()
                     _bggPlays.value = mergeBggPlayLists(withMemory)
+                    seedRosterFromBggHistoryIfEmpty(_bggPlays.value)
                     reconcilePendingLocalPlays(_bggPlays.value)
                     pruneLocalPlaysDeletedOnBgg(rawPlays)
                     _bggPlaysCacheAgeMinutes.value = container.canonicalCollectionStore.getBggPlaysCacheAgeMinutes()
@@ -1471,6 +1515,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             _bggPlaysCacheAgeMinutes.value = container.canonicalCollectionStore.getBggPlaysCacheAgeMinutes()
             if (reconciled.isNotEmpty()) {
                 _bggPlays.value = mergeBggPlayLists(_bggPlays.value, reconciled)
+                seedRosterFromBggHistoryIfEmpty(_bggPlays.value)
                 reconcilePendingLocalPlays(_bggPlays.value)
                 fetchMissingHistoryThumbnails()
             }

@@ -9,7 +9,6 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
-import cz.nicolsburg.boardflow.data.CanonicalCollectionStore
 import cz.nicolsburg.boardflow.data.DatePlayRow
 import cz.nicolsburg.boardflow.data.NamePlayRow
 import cz.nicolsburg.boardflow.model.LoggedPlay
@@ -81,8 +80,11 @@ fun emptyPlayStats(scope: StatsPlayScope) = PlayStats(
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
-suspend fun computePlayStats(
-    store: CanonicalCollectionStore,
+/**
+ * [sourcePlays] and [filteredPlays] must come from the merged history (local plays plus the
+ * cached BGG plays), already narrowed to the stats scope - a fresh install has BGG plays only.
+ */
+fun computePlayStats(
     sourcePlays: List<LoggedPlay>,
     filteredPlays: List<LoggedPlay>,
     roster: List<Player>,
@@ -92,25 +94,28 @@ suspend fun computePlayStats(
 ): PlayStats {
     if (sourcePlays.isEmpty()) return emptyPlayStats(scope)
 
-    val countAll = scope == StatsPlayScope.ALL_PLAYS
-    val afterDate = timeRange.toAfterDate()
-
-    val summary = store.getPlaySummary(countAll, afterDate)
-    val topGameRows = store.getTopGamesByPlays(countAll, afterDate)
-    val datePlayRows = store.getPlaysByDate(countAll, afterDate)
-    val gamePlayCounts = store.getGamePlayCounts(countAll, afterDate)
-    val longestSessionRow = store.getLongestSession(countAll, afterDate)
+    val namedPlays = filteredPlays.filter { it.gameName.isNotEmpty() }
+    val datePlayRows = filteredPlays.groupBy { it.date }
+        .map { (date, plays) -> DatePlayRow(date, plays.sumOf { it.quantity.coerceAtLeast(1) }) }
+        .sortedBy { it.date }
+    val gamePlayCounts = namedPlays.groupBy { it.gameName }
+        .map { (name, plays) -> NamePlayRow(name, plays.sumOf { it.quantity.coerceAtLeast(1) }) }
 
     val activePlayers = filteredPlays
         .flatMap { play -> play.players.map { it.name.trim().lowercase() } }
         .filter { it.isNotBlank() }.toSet().size
 
-    val topGames = topGameRows.map { GameStat(it.gameId, it.gameName, it.plays) }
+    val topGames = namedPlays.groupBy { it.gameId }
+        .map { (gameId, plays) -> GameStat(gameId, plays.first().gameName, plays.sumOf { it.quantity.coerceAtLeast(1) }) }
+        .sortedByDescending { it.plays }
+        .take(10)
     val topPlayers = buildTopPlayers(filteredPlays, roster)
     val hIndex = computeHIndexFromCounts(gamePlayCounts)
     val activity = buildActivityBucketsFromData(datePlayRows, timeRange)
     val (curStreak, bestStreak) = computeStreaks(filteredPlays)
-    val longestSession = longestSessionRow?.let { it.gameName to it.plays }
+    val longestSession = filteredPlays.filter { it.durationMinutes > 0 }
+        .maxByOrNull { it.durationMinutes }
+        ?.let { it.gameName to it.durationMinutes }
     val hotStreak = filteredPlays.hotPlayerStreak(roster)
     val mostThisMonth = if (timeRange == StatsTimeRange.ALL) filteredPlays.mostPlayedThisMonth() else null
     val insights = buildInsights(filteredPlays, topGames, topPlayers, hIndex, curStreak, bestStreak, longestSession, hotStreak, mostThisMonth)
@@ -128,9 +133,9 @@ suspend fun computePlayStats(
 
     return PlayStats(
         hasSourcePlays = true,
-        totalPlays = summary.totalPlays,
-        uniqueGames = summary.uniqueGames,
-        totalMinutes = summary.totalMinutes,
+        totalPlays = filteredPlays.sumOf { it.quantity.coerceAtLeast(1) },
+        uniqueGames = filteredPlays.map { it.gameName }.distinct().size,
+        totalMinutes = filteredPlays.sumOf { it.durationMinutes.coerceAtLeast(0) },
         activePlayers = activePlayers,
         activity = activity,
         topGames = topGames,

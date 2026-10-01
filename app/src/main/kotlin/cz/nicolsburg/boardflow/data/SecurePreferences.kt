@@ -64,6 +64,11 @@ class SecurePreferences(context: Context) {
         get() = prefs.getBoolean(KEY_CHRONICLE_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_CHRONICLE_ENABLED, value).apply()
 
+    /** Set once the roster was seeded from BGG history (or already existed), so it never re-seeds. */
+    var rosterSeededFromHistory: Boolean
+        get() = prefs.getBoolean(KEY_ROSTER_SEEDED_FROM_HISTORY, false)
+        set(value) = prefs.edit().putBoolean(KEY_ROSTER_SEEDED_FROM_HISTORY, value).apply()
+
     var recommendationsEnabled: Boolean
         get() = prefs.getBoolean(KEY_RECOMMENDATIONS_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_RECOMMENDATIONS_ENABLED, value).apply()
@@ -752,6 +757,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_CUSTOM_MOODS             = "custom_moods"
         private const val KEY_MOOD_USAGE_ORDER         = "mood_usage_order"
         private const val KEY_CHRONICLE_ENABLED       = "chronicle_enabled"
+        private const val KEY_ROSTER_SEEDED_FROM_HISTORY = "roster_seeded_from_history"
         private const val KEY_RECOMMENDATIONS_ENABLED = "recommendations_enabled"
         private const val KEY_GEMINI_EXTRA_KEYS          = "gemini_api_keys_extra"
         private const val KEY_GEMINI_EXHAUSTED_MODELS    = "gemini_exhausted_models"
