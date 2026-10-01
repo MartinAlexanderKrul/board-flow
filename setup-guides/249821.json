@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "gameId": 249821,
+  "gameName": "Codenames: Harry Potter",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Codenames: Harry Potter rulebook (USAopoly / CGE, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 8 },
+  "modules": [
+    { "id": "mission", "name": "Mission Log", "note": "Campaign of missions with their own turn and mistake limits." }
+  ],
+  "sections": [
+    {
+      "id": "grid",
+      "title": "Grid",
+      "steps": [
+        { "id": "seats", "text": "Partners sit on opposite sides of the table", "ref": "Setup" },
+        { "id": "cards", "text": "Shuffle the Code cards; deal {n} into a 5 x 5 grid", "amounts": { "n": 25 }, "note": "First games: use only the picture or only the word side", "ref": "Setup" },
+        { "id": "agents", "text": "Red Order of the Phoenix cards and the blue Death Eater card within reach", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "time",
+      "title": "Time bank & key",
+      "steps": [
+        { "id": "tokens", "text": "{n} Time-Turner tokens Ministry Official side up as the time bank; teal extras stay in the box", "amounts": { "n": 10 }, "note": "Add the 11th / 12th token to make it easier", "condition": { "notModules": ["mission"] }, "ref": "Setup" },
+        { "id": "mission-tokens", "text": "Mission tokens: first number = Time-Turner tokens in the bank; only the second number of them Ministry Official side up, the rest flipped", "note": "e.g. #4 Privet Drive 10/5", "condition": { "modules": ["mission"] }, "ref": "Mission Parameters" },
+        { "id": "key", "text": "Stand beside the grid; draw a random Key card into it so each player sees only their side (wider than tall)", "note": "Draw from the middle of a vertically held deck", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "goal", "text": "Find all 15 Order of the Phoenix members before time runs out", "ref": "Goal" },
+        { "id": "death-eaters", "text": "Guessing a Death Eater from your partner's side loses immediately", "ref": "Key Cards" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "clue", "text": "Either partner gives the first one-word clue for their red cards", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

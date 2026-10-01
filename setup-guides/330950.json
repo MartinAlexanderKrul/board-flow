@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "gameId": 330950,
+  "gameName": "Age of Galaxy",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Age of Galaxy rulebook (via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "draft", "name": "Faction drafting" },
+    { "id": "explored", "name": "Explored Galaxy" }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board & Galaxy",
+      "steps": [
+        { "id": "board", "text": "Main board in the center", "ref": "Setup" },
+        { "id": "trade", "text": "Draw {n} Trade cards faceup above the board; box the rest", "amounts": { "n": 3 }, "ref": "Setup" },
+        { "id": "order", "text": "First player: last winner (first game: random); others take Turn Order tokens clockwise", "ref": "Setup" },
+        { "id": "blockers", "text": "Non-player-color Action discs on board and Trade card spaces marked for your player count", "condition": { "maxPlayers": 3 }, "ref": "Setup" },
+        { "id": "systems", "text": "5 random System cards in a row below the board: {x}", "amounts": { "x": { "default": "2 leftmost faceup, the rest facedown", "cases": [{ "when": { "modules": ["explored"] }, "value": "all faceup" }] } }, "ref": "Setup, Explored Galaxy" },
+        { "id": "fleet", "text": "Galactic Fleet token at the top of the leftmost System", "ref": "Setup" },
+        { "id": "planets", "text": "Random faceup Planet tokens and facedown Exploration tokens on the icons for your player count", "ref": "Setup" },
+        { "id": "supply", "text": "Player-color Action discs and Cruisers plus all other tokens in a common supply; box unused colors", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        { "id": "players-board", "text": "Each player: a Player board and Tip card", "ref": "Setup" },
+        { "id": "prestige", "text": "An Action disc on 0 of the Prestige track (first player's on top)", "ref": "Setup" },
+        { "id": "counters", "text": "Credit and Strength counters on 0, Productivity on 3", "ref": "Setup" },
+        { "id": "hand", "text": "Draw 7 Faction cards; discard up to 3 and redraw to 7", "condition": { "notModules": ["draft"] }, "ref": "Setup" },
+        { "id": "draft-hand", "text": "Deal 7 Faction cards each; keep 1, pass the rest left, until you hold 7", "condition": { "modules": ["draft"] }, "ref": "Faction Drafting" },
+        { "id": "debut", "text": "In player order, play a Faction card to start your Alliance and gain its Debut bonus", "ref": "Setup" }
+      ]
+    },
+    {
+      "id": "solo",
+      "title": "Solo",
+      "condition": { "players": [1] },
+      "steps": [
+        { "id": "two-player", "text": "Set up as a 2-player game", "ref": "Standard Solo Variant" },
+        { "id": "opponent", "text": "Virtual Opponent color: 2 Cruisers and all its Action discs", "ref": "Standard Solo Variant" },
+        { "id": "deck", "text": "Remaining Faction cards as a deck", "ref": "Standard Solo Variant" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "no-more", "text": "You get no more Faction cards during the game", "ref": "Setup" },
+        { "id": "war", "text": "5 rounds; skip the War phase in round 1", "ref": "Gameplay" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "production", "text": "Round 1: Production phase", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

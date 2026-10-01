@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "gameId": 254192,
+  "gameName": "Harry Potter: Hogwarts Battle – Defence Against the Dark Arts",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Defence Against the Dark Arts rulebook (USAopoly, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 2 },
+  "sections": [
+    {
+      "id": "mat",
+      "title": "Practice Mat",
+      "steps": [
+        { "id": "mat", "text": "Practice Mat lengthwise between the players, tokens nearby", "ref": "Set Up" },
+        { "id": "house", "text": "Each player chooses a House (may be the same): House card in front of you, mover on START on your side", "ref": "Set Up" }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Decks",
+      "steps": [
+        { "id": "classroom", "text": "Shuffle the Hogwarts cards; reveal {n} faceup along the mat as the Classroom", "amounts": { "n": 4 }, "ref": "Four Decks" },
+        { "id": "hex", "text": "Shuffled Hex cards facedown", "ref": "Four Decks" },
+        { "id": "library", "text": "Book cards faceup as the Library", "ref": "Four Decks" },
+        { "id": "starting", "text": "Each player: 7 Alohomora!, 1 Wand, 1 Cauldron + one Ally (Cat, Toad or Owl); box the other Allies", "ref": "Four Decks" },
+        { "id": "draw", "text": "Shuffle your 10 cards facedown; draw {n}", "amounts": { "n": 5 }, "ref": "Four Decks" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "win", "text": "Stun your opponent three times to win", "ref": "End of Game" },
+        { "id": "library-any", "text": "Library cards can be acquired whenever you could acquire from the Classroom", "ref": "Four Decks" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "start-hex", "text": "First turn: resolve Hex cards, then play cards", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

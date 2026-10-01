@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "gameId": 302336,
+  "gameName": "Marvel Villainous: Infinite Power",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Marvel Villainous: Infinite Power rulebook (Ravensburger, via RulesPal)"]
+  },
+  "players": { "min": 2, "max": 4 },
+  "modules": [
+    { "id": "omnipotent", "name": "Omnipotent (easy)", "group": "Mode", "note": "No Events - good for a first game." },
+    { "id": "inevitable", "name": "Inevitable (intermediate)", "group": "Mode", "defaultEnabled": true },
+    { "id": "undying", "name": "Undying (difficult)", "group": "Mode" }
+  ],
+  "sections": [
+    {
+      "id": "villains",
+      "title": "Villains",
+      "steps": [
+        { "id": "choose", "text": "Each player takes a Villain's Domain, mover, guide, Villain deck and Fate deck, plus a reference card; box the rest", "note": "Some Villains have unique setup in their guides", "ref": "Setup 1" },
+        { "id": "domain", "text": "Domain in front of you; Villain mover on the portrait", "ref": "Setup 2" },
+        { "id": "villain-deck", "text": "Shuffle your Villain deck facedown left of your Domain, room for a discard pile", "ref": "Setup 4" },
+        { "id": "hand", "text": "Draw {n} cards (secret)", "amounts": { "n": 4 }, "ref": "Setup 6" }
+      ]
+    },
+    {
+      "id": "shared",
+      "title": "Fate deck & Vault",
+      "steps": [
+        { "id": "fate", "text": "Shuffle the Common Fate deck with the Fate decks of all Villains in play; room for a discard", "ref": "Setup 3" },
+        { "id": "no-events", "text": "Remove all Events and ignore Event references", "condition": { "modules": ["omnipotent"] }, "ref": "Game Modes" },
+        { "id": "vault", "text": "Power/Strength tokens in the Vault within reach", "ref": "Setup 5" }
+      ]
+    },
+    {
+      "id": "order",
+      "title": "Turn order",
+      "steps": [
+        { "id": "first", "text": "Last to read a Marvel comic goes first (else the oldest); clockwise", "ref": "Setup 7" },
+        { "id": "power", "text": "Starting Power: 1st player 0, 2nd 1, 3rd and 4th 2", "ref": "Setup 7" },
+        { "id": "objectives", "text": "In turn order, read your objective aloud", "ref": "Setup 8" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "events", "text": "Events go in the center as a shared location - no movers or Heroes there", "condition": { "notModules": ["omnipotent"] }, "ref": "Events" },
+        { "id": "undying", "text": "Undying: no limit on Global Events in play - stack them", "condition": { "modules": ["undying"] }, "ref": "Events" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "move", "text": "First player moves their Villain to a new location", "ref": "On Your Turn" }
+      ]
+    }
+  ]
+}

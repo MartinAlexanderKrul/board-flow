@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "gameId": 251661,
+  "gameName": "Oathsworn: Into the Deepwood",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Oathsworn: Into the Deepwood Story Rule Book (Shadowborne Games, via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "new", "name": "New campaign", "note": "Start of chapter 1." },
+    { "id": "instant", "name": "Instant Action mode", "note": "Skip the Story; go straight to the chapter's Encounter." },
+    { "id": "journeyman", "name": "Journeyman (+2 defense)", "group": "Difficulty" },
+    { "id": "pilgrim", "name": "Pilgrim (+1 defense)", "group": "Difficulty" },
+    { "id": "free", "name": "Free Company (standard)", "group": "Difficulty", "defaultEnabled": true },
+    { "id": "grim", "name": "Grim (5 HP)", "group": "Difficulty" },
+    { "id": "dread", "name": "Dread (4 HP)", "group": "Difficulty" }
+  ],
+  "sections": [
+    {
+      "id": "company",
+      "title": "Free Company",
+      "steps": [
+        { "id": "four", "text": "Always 4 Oathsworn in total, split between the players; each is a full character or a simpler companion", "ref": "Forming a Free Company" },
+        { "id": "full", "text": "Full character: Player Board (room on all sides), model, Character Sheet, Regen tracker token and max-Animus gems on the reserve side", "ref": "Full Character Setup" },
+        { "id": "companion", "text": "Companion: Companion Card from its Save Bag, model, Character Sheet, 2 Animus gems", "ref": "Companion Setup" },
+        { "id": "hp", "text": "HP die to {n} at a new chapter (Encounter: HP from your sheet)", "amounts": { "n": { "default": 6, "cases": [{ "when": { "modules": ["grim"] }, "value": 5 }, { "when": { "modules": ["dread"] }, "value": 4 }] } }, "ref": "Character Setup, Difficulty Levels" },
+        { "id": "start-items", "text": "Chapter 1 Common Item Cards (organizer 1) per your character's starting list; 3 Iron each", "condition": { "modules": ["new"] }, "ref": "Starting Item Cards" },
+        { "id": "might", "text": "Colored cubes on your Might Track as your items show", "ref": "Full Character Setup" },
+        { "id": "defense", "text": "Defense tracker = item Defense total (min 1); companions +2 (min 3){x}", "amounts": { "x": { "default": "", "cases": [{ "when": { "modules": ["journeyman"] }, "value": "; +2 for Journeyman" }, { "when": { "modules": ["pilgrim"] }, "value": "; +1 for Pilgrim" }] } }, "ref": "Full Character Setup, Companion Setup" }
+      ]
+    },
+    {
+      "id": "story",
+      "title": "Story setup",
+      "steps": [
+        { "id": "trays", "text": "Token Tray, dice, Card Organizer 1, Player and Encounter Might Deck Organizers, Might Cubes and Iron tokens near the play area", "ref": "Component Setup 1-6" },
+        { "id": "bag", "text": "Empty the Free Company Bag: Ally Cards faceup, Backpack Card on top of the Item pile, 2 Player Aids per player", "ref": "Component Setup 7" },
+        { "id": "special", "text": "Special Rules Board for this chapter facedown - don't look", "ref": "Component Setup 8" },
+        { "id": "time", "text": "Time Tokens and Location Tokens (1-30) number side up nearby", "condition": { "notModules": ["instant"] }, "ref": "Component Setup 9" },
+        { "id": "events", "text": "Event decks: City Event 1-6 and Deepwood Event 1-6 from organizer 1, each shuffled", "note": "Later chapters: take them from the Free Company Bag", "condition": { "notModules": ["instant"] }, "ref": "Event Decks" },
+        { "id": "instant", "text": "Open the Encounter Book's Instant Action page for your chapter and follow it", "condition": { "modules": ["instant"] }, "ref": "Instant Action Mode" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "map-later", "text": "Game Map, Time Track and Path Card are placed when the story says so", "ref": "Component Setup" },
+        { "id": "grim-items", "text": "Grim: 1 extra Unique or Common Item each Encounter", "condition": { "modules": ["grim"] }, "ref": "Difficulty Levels" },
+        { "id": "dread-items", "text": "Dread: 2 extra Unique or Common Items each Encounter", "condition": { "modules": ["dread"] }, "ref": "Difficulty Levels" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "story", "text": "Open the Story Book at your chapter and start reading", "ref": "Map Navigation" }
+      ]
+    }
+  ]
+}

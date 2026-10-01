@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "gameId": 326934,
+  "gameName": "Unmatched: Hell's Kitchen",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Unmatched: Hell's Kitchen rulebook (Restoration Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "ffa",
+      "name": "Free-for-all",
+      "group": "Mode",
+      "players": {
+        "min": 3,
+        "max": 4
+      }
+    },
+    {
+      "id": "teams",
+      "name": "Team play",
+      "group": "Mode",
+      "players": {
+        "min": 3,
+        "max": 4
+      },
+      "note": "Needs a battlefield with 4 starting spaces."
+    }
+  ],
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Fighters",
+      "steps": [
+        {
+          "id": "battlefield",
+          "text": "Choose a battlefield and place it on the table",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "hero",
+          "text": "Each player chooses a hero: action cards, character card, hero figure, sidekicks and health dials",
+          "ref": "Setup 2"
+        },
+        {
+          "id": "health",
+          "text": "Set hero and sidekick health dials to the starting health on the character card",
+          "note": "Sidekicks without a dial have 1 health",
+          "ref": "Setup 3"
+        },
+        {
+          "id": "deck",
+          "text": "Shuffle your action cards facedown; draw 5",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "items",
+          "text": "One random Battlefield Item token on each designated space (faceup or facedown)",
+          "ref": "Battlefield Items"
+        }
+      ]
+    },
+    {
+      "id": "placement",
+      "title": "Placement",
+      "steps": [
+        {
+          "id": "younger",
+          "text": "Younger player: hero on space 1, sidekicks on separate spaces in the same zone",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Setup 5"
+        },
+        {
+          "id": "older",
+          "text": "Older player: hero on space 2, sidekicks the same way",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Setup 6"
+        },
+        {
+          "id": "team-place",
+          "text": "Place heroes alternating: Team A 1st player on space 1, Team B 1st on 2, Team A 2nd on 3, Team B 2nd on 4; sidekicks in the same zone",
+          "condition": {
+            "modules": [
+              "teams"
+            ]
+          },
+          "ref": "Team Play"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "win",
+          "text": "Defeat the opposing hero to win (in teams, both opposing heroes)",
+          "ref": "Winning the Game"
+        },
+        {
+          "id": "team-order",
+          "text": "Teams: turns alternate Team A, Team B, Team A, Team B; teammates may talk tactics",
+          "condition": {
+            "modules": [
+              "teams"
+            ]
+          },
+          "ref": "Team Play"
+        },
+        {
+          "id": "ffa-first",
+          "text": "Free-for-all: on your first turn you may only attack the next hero in order or one who has already gone",
+          "condition": {
+            "modules": [
+              "ffa"
+            ]
+          },
+          "ref": "Free-for-All"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The younger player takes the first turn",
+          "ref": "Setup 7"
+        }
+      ]
+    }
+  ]
+}

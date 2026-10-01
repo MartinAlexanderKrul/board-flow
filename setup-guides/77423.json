@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "gameId": 77423,
+  "gameName": "The Lord of the Rings: The Card Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["The Lord of the Rings: The Card Game core rulebook (Fantasy Flight Games, via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 4 },
+  "modules": [
+    { "id": "first-game", "name": "First game (starter decks)" }
+  ],
+  "sections": [
+    {
+      "id": "first",
+      "title": "First game",
+      "condition": { "modules": ["first-game"] },
+      "steps": [
+        { "id": "spheres", "text": "Each player takes a sphere's starter deck and its 3 heroes", "note": "Leadership 13-27: Aragorn, Gloin, Theodred; Tactics 28-42: Legolas, Gimli, Thalin; Spirit 43-57: Eowyn, Dunhere, Eleanor; Lore 58-72: Glorfindel, Denethor, Beravor", "ref": "For the First Game" },
+        { "id": "gandalf", "text": "Add 1 Gandalf (card 73) to each starter deck", "ref": "For the First Game" },
+        { "id": "mirkwood", "text": "Scenario: Passage Through Mirkwood - quest cards 120-123 + Passage Through Mirkwood, Spiders of Mirkwood and Dol Guldur Orcs encounter cards", "ref": "For the First Game" }
+      ]
+    },
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        { "id": "shuffle", "text": "Shuffle each player deck and the encounter deck separately (not quest cards, not heroes)", "ref": "Setup 1" },
+        { "id": "heroes", "text": "Each player places their heroes and sets their threat tracker to the heroes' total threat cost", "ref": "Setup 2" },
+        { "id": "bank", "text": "Damage, progress and resource tokens in a bank next to the encounter deck", "ref": "Setup 3" },
+        { "id": "first-player", "text": "Choose a first player by majority (else random); they take the first player token", "ref": "Setup 4" },
+        { "id": "hand", "text": "Each player draws {n}; one mulligan allowed (shuffle back, draw 6, keep)", "amounts": { "n": 6 }, "ref": "Setup 5" },
+        { "id": "quest", "text": "Quest cards in order, stage 1A on top, near the encounter deck", "ref": "Setup 6" },
+        { "id": "scenario", "text": "Follow any setup instructions on the back of the first quest card before flipping it", "ref": "Setup 7" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "round", "text": "Begin the first round (resource phase)", "ref": "Round Sequence" }
+      ]
+    }
+  ]
+}

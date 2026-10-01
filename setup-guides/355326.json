@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "gameId": 355326,
+  "gameName": "Heroes of Might and Magic III: The Board Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Heroes of Might and Magic III: The Board Game rulebook (Archon Studio, via RulesPal)"]
+  },
+  "players": { "min": 1, "max": 3 },
+  "modules": [
+    { "id": "clash", "name": "Clash", "group": "Mode", "defaultEnabled": true, "players": { "min": 2, "max": 3 } },
+    { "id": "coop", "name": "Co-op", "group": "Mode", "players": { "min": 2, "max": 3 } },
+    { "id": "campaign", "name": "Solo campaign", "group": "Mode", "forcedAtPlayers": [1] }
+  ],
+  "sections": [
+    {
+      "id": "scenario",
+      "title": "Scenario",
+      "steps": [
+        { "id": "scenario", "text": "Pick a {m} scenario from the Mission Book and set up its map and rules", "amounts": { "m": { "default": "Clash", "cases": [{ "when": { "modules": ["coop"] }, "value": "Co-op" }, { "when": { "modules": ["campaign"] }, "value": "solo campaign" }] } }, "note": "Tutorial: Brave New World (Mission Book p.7)", "ref": "Game Setup 1" }
+      ]
+    },
+    {
+      "id": "factions",
+      "title": "Factions",
+      "steps": [
+        { "id": "faction", "text": "Choose a faction: Castle, Dungeon or Necropolis (tie: highest Resource die roll picks first)", "ref": "Game Setup 2" },
+        { "id": "hero", "text": "Choose one of your faction's Heroes as your Main Hero", "ref": "Game Setup 3" },
+        { "id": "components", "text": "Take your faction's Hero card, 2 Hero models, 7 Town Building tiles, Town board, 7 Unit cards, 3 Specialty cards and 1 Ability card for your Hero, 20 cubes, Build, Population and Spell Book tokens", "ref": "Game Setup 4" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        { "id": "rounds", "text": "Rounds alternate: Resource round (collect income), then Astrologers' round (draw a Proclaim card)", "ref": "Round Order" },
+        { "id": "tracker", "text": "Advance the black cube on the Round tracker after every player's turn", "ref": "Round Order" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "Begin with a Resource round", "ref": "Round Order" }
+      ]
+    }
+  ]
+}

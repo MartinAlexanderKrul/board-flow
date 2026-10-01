@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "gameId": 450782,
+  "gameName": "Codenames: Back to Hogwarts",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": ["Codenames: Back to Hogwarts rulebook (CGE, via RulesPal)"]
+  },
+  "players": { "min": 4, "max": 12 },
+  "modules": [
+    { "id": "houses", "name": "House vs House (abilities)", "note": "All four Houses with special abilities." }
+  ],
+  "sections": [
+    {
+      "id": "grid",
+      "title": "Grid",
+      "steps": [
+        { "id": "side", "text": "Choose words or pictures; lay out {n} random cards in a 5 x 5 grid with the middle empty", "amounts": { "n": 24 }, "ref": "Words or Pictures?" },
+        { "id": "check", "text": "Make sure everyone knows every card; replace unknown ones", "ref": "Gameplay" }
+      ]
+    },
+    {
+      "id": "houses",
+      "title": "Houses & prefects",
+      "steps": [
+        { "id": "teams", "text": "Split into 2 roughly even teams; each picks a prefect", "ref": "Houses, Prefects" },
+        { "id": "first-houses", "text": "More glasses-wearers: Gryffindor (red tiles); the other team: Slytherin (green)", "note": "Or flip a coin", "condition": { "notModules": ["houses"] }, "ref": "Houses" },
+        { "id": "seats", "text": "Both prefects sit on the same side, opposite their teams", "ref": "Prefects" },
+        { "id": "tiles", "text": "Each prefect keeps their House tiles; locked door tiles and Argus Filch between them", "ref": "Tiles" }
+      ]
+    },
+    {
+      "id": "map",
+      "title": "Map & Sorting Hat",
+      "steps": [
+        { "id": "map", "text": "Prefects put a red-and-green map in the stand, random side up (prefects only)", "condition": { "notModules": ["houses"] }, "ref": "Map Card" },
+        { "id": "hat", "text": "The edge color of the map goes first - give that House the Sorting Hat", "condition": { "notModules": ["houses"] }, "ref": "The Hat" },
+        { "id": "hat-houses", "text": "Give the Sorting Hat to a random team; draw a random map: the Hat team plays the edge-color House, the other team the other color shown", "condition": { "modules": ["houses"] }, "ref": "Sorting Ceremony" },
+        { "id": "abilities", "text": "Each team takes its House ability card on the going-first or going-second side, plus any tokens shown", "condition": { "modules": ["houses"] }, "ref": "House Abilities" },
+        { "id": "center", "text": "The middle-color team (going second) puts one House tile in the empty center", "note": "Not for Hufflepuff", "ref": "The Central Tile" },
+        { "id": "box", "text": "Return unused Houses' tiles{x} to the box", "amounts": { "x": { "default": " and ability / House Cup components", "cases": [{ "when": { "modules": ["houses"] }, "value": "" }] } }, "ref": "The Central Tile" }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        { "id": "first", "text": "The Sorting Hat team's prefect gives the first clue", "ref": "Gameplay" }
+      ]
+    }
+  ]
+}

@@ -82,6 +82,14 @@
       "path": "68448.json"
     },
     {
+      "gameId": 77423,
+      "gameName": "The Lord of the Rings: The Card Game",
+      "gameIds": [77423],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "77423.json"
+    },
+    {
       "gameId": 133473,
       "gameName": "Sushi Go!",
       "gameIds": [133473],
@@ -290,6 +298,30 @@
       "path": "249763.json"
     },
     {
+      "gameId": 249821,
+      "gameName": "Codenames: Harry Potter",
+      "gameIds": [249821],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "249821.json"
+    },
+    {
+      "gameId": 251661,
+      "gameName": "Oathsworn: Into the Deepwood",
+      "gameIds": [251661],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "251661.json"
+    },
+    {
+      "gameId": 254192,
+      "gameName": "Harry Potter: Hogwarts Battle – Defence Against the Dark Arts",
+      "gameIds": [254192],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "254192.json"
+    },
+    {
       "gameId": 254640,
       "gameName": "Just One",
       "gameIds": [254640],
@@ -352,6 +384,22 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "271324.json"
+    },
+    {
+      "gameId": 283211,
+      "gameName": "Harry Potter: Death Eaters Rising",
+      "gameIds": [283211],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "283211.json"
+    },
+    {
+      "gameId": 284778,
+      "gameName": "Unmatched: Jurassic Park – Dr. Sattler vs. T. Rex",
+      "gameIds": [284778],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "284778.json"
     },
     {
       "gameId": 285192,
@@ -434,6 +482,14 @@
       "path": "299252.json"
     },
     {
+      "gameId": 302336,
+      "gameName": "Marvel Villainous: Infinite Power",
+      "gameIds": [302336],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "302336.json"
+    },
+    {
       "gameId": 312484,
       "gameName": "Lost Ruins of Arnak",
       "gameIds": [312484],
@@ -456,6 +512,30 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "322708.json"
+    },
+    {
+      "gameId": 326934,
+      "gameName": "Unmatched: Hell's Kitchen",
+      "gameIds": [326934],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "326934.json"
+    },
+    {
+      "gameId": 326937,
+      "gameName": "Unmatched: For King and Country",
+      "gameIds": [326937],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "326937.json"
+    },
+    {
+      "gameId": 330950,
+      "gameName": "Age of Galaxy",
+      "gameIds": [330950],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "330950.json"
     },
     {
       "gameId": 336755,
@@ -496,6 +576,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "345584.json"
+    },
+    {
+      "gameId": 355326,
+      "gameName": "Heroes of Might and Magic III: The Board Game",
+      "gameIds": [355326],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "355326.json"
     },
     {
       "gameId": 357563,
@@ -602,6 +690,14 @@
       "path": "393530.json"
     },
     {
+      "gameId": 393672,
+      "gameName": "Gloomhaven: Buttons & Bugs",
+      "gameIds": [393672],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "393672.json"
+    },
+    {
       "gameId": 394106,
       "gameName": "Everdell Farshore",
       "gameIds": [394106],
@@ -688,6 +784,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "436821.json"
+    },
+    {
+      "gameId": 450782,
+      "gameName": "Codenames: Back to Hogwarts",
+      "gameIds": [450782],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "450782.json"
     },
     {
       "gameId": 455843,
