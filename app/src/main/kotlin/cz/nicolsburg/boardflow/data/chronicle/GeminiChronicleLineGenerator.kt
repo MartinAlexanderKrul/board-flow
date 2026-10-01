@@ -76,12 +76,12 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
                             }
                             return@runCatching parsed
                         }
-                        response.code == 404 -> {
-                            // Model retired or not offered to this key — drop it and try the next one.
+                        response.code == 404 || (response.code == 400 && GeminiModels.isModelRejection(body)) -> {
+                            // Model retired, not offered to this key, or unable to take this request — drop it and try the next one.
                             config.onModelUnavailable?.invoke(currentModel)
                             val nextModel = findNextModel(currentModel, config.availableModels, malformedModels)
                             if (nextModel != null && attempts < MAX_ATTEMPTS) {
-                                logGemini("rotate-model chronicle http=404 from=$currentModel to=$nextModel attempt=$attempts/$MAX_ATTEMPTS")
+                                logGemini("rotate-model chronicle http=${response.code} from=$currentModel to=$nextModel attempt=$attempts/$MAX_ATTEMPTS")
                                 currentModel = nextModel
                                 currentKeyIndex = 0
                                 continue
@@ -223,7 +223,8 @@ class GeminiChronicleLineGenerator : ChronicleLineGenerator {
                 JSONObject().apply {
                     put("temperature", 1.0)
                     put("topP", 0.95)
-                    put("maxOutputTokens", 96)
+                    // Flash models reason before answering and that counts against this limit.
+                    put("maxOutputTokens", 1024)
                     put("responseMimeType", "application/json")
                 }
             )

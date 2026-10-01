@@ -1854,7 +1854,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
             _chroniclePendingPlayIds.value = _chroniclePendingPlayIds.value + play.id
             val aiConfig = if (isOnline() && prefs.hasGeminiKey()) {
-                val candidates = prefs.getGeminiModelCandidates()
+                val candidates = prefs.getGeminiModelCandidates(preferLite = true)
                 ChronicleAiConfig(
                     apiKey = prefs.geminiApiKey,
                     modelName = candidates.first(),

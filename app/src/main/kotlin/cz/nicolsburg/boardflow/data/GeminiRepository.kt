@@ -79,22 +79,24 @@ class GeminiRepository {
                     val responseText = response.body?.string() ?: ""
                     logGemini("response score-extract attempt=$attempts/$maxAttempts model=$currentModel code=${response.code} elapsedMs=$attemptMs body=${compactJson(responseText)}")
 
-                    when (response.code) {
-                        404 -> {
-                            // Model retired or not offered to this key — drop it and try the next one.
+                    val modelGone = response.code == 404 ||
+                        (response.code == 400 && GeminiModels.isModelRejection(responseText))
+                    when {
+                        modelGone -> {
+                            // Model retired, not offered to this key, or unable to take this request — drop it and try the next one.
                             onModelUnavailable?.invoke(currentModel)
                             val nextModel = findNextModel(currentModel, availableModels)
                             if (nextModel != null && attempts < maxAttempts) {
-                                logGemini("rotate-model score-extract http=404 from=$currentModel to=$nextModel attempt=$attempts/$maxAttempts")
+                                logGemini("rotate-model score-extract http=${response.code} from=$currentModel to=$nextModel attempt=$attempts/$maxAttempts")
                                 currentModel = nextModel
                                 currentKeyIndex = 0
                                 onModelChanged?.invoke(nextModel)
                                 continue
                             }
-                            logGemini("failure score-extract http=404 no-fallback model=$currentModel attempts=$attempts")
+                            logGemini("failure score-extract http=${response.code} no-fallback model=$currentModel attempts=$attempts")
                             throw Exception("Gemini model $currentModel is no longer available. Refresh the model list in Settings.")
                         }
-                        503, 429 -> {
+                        response.code == 503 || response.code == 429 -> {
                             if (attempts >= maxAttempts) {
                                 logGemini("failure score-extract http=${response.code} no-fallback attempts=$attempts")
                                 throw Exception("All models are currently experiencing high demand (${response.code}). Please try again in a moment.")
@@ -307,7 +309,8 @@ class GeminiRepository {
             put("generationConfig", JSONObject().apply {
                 put("temperature", 0.15)
                 put("topP", 0.90)
-                put("maxOutputTokens", 2048)
+                // Flash models reason before answering and that counts against this limit.
+                put("maxOutputTokens", 4096)
                 put("responseMimeType", "application/json")
             })
         }.toString()

@@ -21,11 +21,29 @@ class GeminiModelsTest {
             listOf(
                 "gemini-flash-latest", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash",
                 "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite",
-                "gemini-pro-latest", "gemini-2.5-pro",
                 "gemini-3-flash-preview"
             ),
             GeminiModels.candidates(GeminiModels.AUTO, listed)
         )
+    }
+
+    @Test
+    fun `chronicle order puts flash-lite first`() {
+        assertEquals(
+            listOf(
+                "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite",
+                "gemini-flash-latest", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash",
+                "gemini-3-flash-preview"
+            ),
+            GeminiModels.candidates(GeminiModels.AUTO, listed, preferLite = true)
+        )
+    }
+
+    @Test
+    fun `only model capability errors count as a model rejection`() {
+        assertTrue(GeminiModels.isModelRejection("Image input modality is not enabled for this model"))
+        assertTrue(GeminiModels.isModelRejection("JSON mode is not enabled for models/x"))
+        assertFalse(GeminiModels.isModelRejection("API key not valid. Please pass a valid API key."))
     }
 
     @Test
@@ -48,6 +66,8 @@ class GeminiModelsTest {
         assertFalse(GeminiModels.isUsable("gemini-3.8-flash-tts"))
         assertFalse(GeminiModels.isUsable("gemini-3.1-flash-image"))
         assertFalse(GeminiModels.isUsable("lyria-3.5"))
+        assertFalse(GeminiModels.isUsable("gemini-pro-latest"))
+        assertFalse(GeminiModels.isUsable("gemini-3.1-pro-preview"))
         assertTrue(GeminiModels.isUsable("gemini-flash-lite-latest"))
     }
 

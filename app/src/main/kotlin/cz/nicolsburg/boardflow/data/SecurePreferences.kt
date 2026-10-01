@@ -170,10 +170,10 @@ class SecurePreferences(context: Context) {
     }
 
     /** Models to try in order: the pinned one (if any), then the automatic order, minus exhausted ones. */
-    fun getGeminiModelCandidates(): List<String> {
+    fun getGeminiModelCandidates(preferLite: Boolean = false): List<String> {
         val now = System.currentTimeMillis()
         val exhausted = getExhaustedModels().filterValues { now < it }.keys
-        val all = GeminiModels.candidates(geminiModelEndpoint, getAvailableModels())
+        val all = GeminiModels.candidates(geminiModelEndpoint, getAvailableModels(), preferLite)
         return all.filter { it !in exhausted }.ifEmpty { all }
     }
 
