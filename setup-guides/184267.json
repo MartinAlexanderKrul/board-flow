@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 184267,
   "gameName": "On Mars",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -11,7 +11,7 @@
     ]
   },
   "players": {
-    "min": 2,
+    "min": 1,
     "max": 4
   },
   "sections": [
@@ -32,7 +32,8 @@
               "byPlayers": {
                 "2": 2,
                 "3": 3,
-                "4": 3
+                "4": 3,
+                "1": 2
               }
             }
           },
@@ -143,6 +144,42 @@
           "id": "players-5",
           "text": "5 Progress cubes, one below each Resource; deal 3 secret Private Goal cards each",
           "ref": "p.6 steps 13-14"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-1",
+          "text": "Choose a colour for yourself and one for Lacerda; set up both Player boards and the main board as for 2 players",
+          "ref": "p.22"
+        },
+        {
+          "id": "solo-2",
+          "text": "Lacerda gets no Private Goal cards; his Bot goes on the Mine icon in the Progress Area instead of his Shelter",
+          "ref": "p.22"
+        },
+        {
+          "id": "solo-3",
+          "text": "Shuffle the solo deck facedown nearby",
+          "ref": "p.22"
+        },
+        {
+          "id": "solo-4",
+          "text": "A random First Colonists tile gives Lacerda's starting Turn Order space; then choose yours and take its benefit",
+          "ref": "p.22"
+        },
+        {
+          "id": "solo-5",
+          "text": "The Shuttle starts on the red space on the same side as Lacerda",
+          "ref": "p.22"
         }
       ]
     },

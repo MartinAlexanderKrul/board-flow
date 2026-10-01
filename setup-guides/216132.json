@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 216132,
   "gameName": "Clans of Caledonia",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -90,6 +90,32 @@
           "id": "players-7",
           "text": "Draw Clan tiles equal to players + 1, a random Starting tile beside each; in reverse turn order each picks a pair and takes its goods and money",
           "ref": "Clans (p.3)"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-1",
+          "text": "Play on the smaller 2-player map",
+          "ref": "p.8"
+        },
+        {
+          "id": "solo-2",
+          "text": "Put Workers of other colours as neutral pieces on every active-map space that costs 1 - they are unavailable all game",
+          "ref": "p.8"
+        },
+        {
+          "id": "solo-3",
+          "text": "5 random Export contracts faceup on the Export board",
+          "ref": "p.8"
         }
       ]
     },

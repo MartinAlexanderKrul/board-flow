@@ -229,7 +229,7 @@
       "gameId": 31260,
       "gameName": "Agricola",
       "gameIds": [31260],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "31260.json"
     },
@@ -437,7 +437,7 @@
       "gameId": 125153,
       "gameName": "The Gallerist",
       "gameIds": [125153],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "125153.json"
     },
@@ -733,7 +733,7 @@
       "gameId": 184267,
       "gameName": "On Mars",
       "gameIds": [184267],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "184267.json"
     },
@@ -901,7 +901,7 @@
       "gameId": 216132,
       "gameName": "Clans of Caledonia",
       "gameIds": [216132],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "216132.json"
     },
@@ -973,7 +973,7 @@
       "gameId": 231733,
       "gameName": "Obsession",
       "gameIds": [231733],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "231733.json"
     },
@@ -1165,7 +1165,7 @@
       "gameId": 266524,
       "gameName": "Parks",
       "gameIds": [266524],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "266524.json"
     },

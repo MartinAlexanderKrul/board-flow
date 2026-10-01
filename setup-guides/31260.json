@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 31260,
   "gameName": "Agricola",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -11,7 +11,7 @@
     ]
   },
   "players": {
-    "min": 2,
+    "min": 1,
     "max": 5
   },
   "sections": [
@@ -43,7 +43,10 @@
         {
           "id": "players-5",
           "text": "Choose a starting player: Starting player marker and 2 Food; everyone else 3 Food",
-          "ref": "p.3"
+          "ref": "p.3",
+          "condition": {
+            "minPlayers": 2
+          }
         }
       ]
     },
@@ -70,7 +73,8 @@
                 "2": "none",
                 "3": "4 cards",
                 "4": "6 cards",
-                "5": "6 cards"
+                "5": "6 cards",
+                "1": "none"
               }
             }
           },
@@ -80,6 +84,27 @@
           "id": "boards-4",
           "text": "10 Major Improvements faceup on their board; Begging cards beside the play area",
           "ref": "p.3 E-F"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-1",
+          "text": "Start with 0 Food",
+          "ref": "p.9"
+        },
+        {
+          "id": "solo-2",
+          "text": "No green Action cards: the left-hand spaces of the left board stay empty, as in the 2-player game",
+          "ref": "p.9"
         }
       ]
     },

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 231733,
   "gameName": "Obsession",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -11,7 +11,7 @@
     ]
   },
   "players": {
-    "min": 2,
+    "min": 1,
     "max": 4
   },
   "sections": [
@@ -70,14 +70,16 @@
               "byPlayers": {
                 "2": 4,
                 "3": 6,
-                "4": 8
+                "4": 8,
+                "1": 4
               }
             },
             "v": {
               "byPlayers": {
                 "2": 2,
                 "3": 3,
-                "4": 4
+                "4": 4,
+                "1": 2
               }
             }
           },
@@ -101,7 +103,8 @@
               "byPlayers": {
                 "2": "Sculpture Garden + 2 of your choice",
                 "3": "Sculpture Garden + 3 of your choice",
-                "4": "5 of your choice"
+                "4": "5 of your choice",
+                "1": "Sculpture Garden + 2 of your choice"
               }
             }
           },
@@ -121,6 +124,37 @@
           "id": "central-area-7",
           "text": "Builders' Market: draw qualifying tiles (prestige 1-3, Brushing Room, Barn, Butler's Pantry, Servants' Quarters) to fill it, in ascending Tile Sorting Number order",
           "ref": "p.5 step 8"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-1",
+          "text": "You are always the starting player; choose any family board and set up your player area as usual",
+          "ref": "p.14"
+        },
+        {
+          "id": "solo-2",
+          "text": "Round track and supply board as for 2 players, Standard Play side; closed courtship is used",
+          "ref": "p.14"
+        },
+        {
+          "id": "solo-3",
+          "text": "Choose one of the 12 Solitaire opponent cards (beginner, intermediate or expert) and place it by your board",
+          "ref": "p.14"
+        },
+        {
+          "id": "solo-4",
+          "text": "Solitaire AI card and the 20-sided dice near the Builders' Market",
+          "ref": "p.14"
         }
       ]
     },

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 266524,
   "gameName": "Parks",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -11,7 +11,7 @@
     ]
   },
   "players": {
-    "min": 2,
+    "min": 1,
     "max": 5
   },
   "sections": [
@@ -87,6 +87,37 @@
           "id": "trail-4",
           "text": "Shuffle the Trail deck and lay the Sites out to the right one at a time; Trail End last",
           "ref": "Trail Setup"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-1",
+          "text": "Shuffle the Gear deck onto its slot but reveal no Gear cards",
+          "ref": "p.11"
+        },
+        {
+          "id": "solo-2",
+          "text": "Trail End on its SOLO side",
+          "ref": "p.11"
+        },
+        {
+          "id": "solo-3",
+          "text": "Pick a second colour for the Rangers (no Campfire); your Hikers and the Rangers start at the Trailhead",
+          "ref": "p.11"
+        },
+        {
+          "id": "solo-4",
+          "text": "Ranger Tracker by your play area; shuffle the Event deck and reveal its top card lined up with the Tracker",
+          "ref": "p.11"
         }
       ]
     },

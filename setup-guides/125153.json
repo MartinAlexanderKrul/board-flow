@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 125153,
   "gameName": "The Gallerist",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -147,6 +147,22 @@
           "id": "your-gallery-3",
           "text": "Deal each player 1 Art Dealer card and 1 Curator card, kept secret",
           "ref": "Setup (p.3)"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-1",
+          "text": "Pick a colour for the dummy player Lacerda; his Gallerist pawn and all his Assistants near the board",
+          "ref": "p.16"
         }
       ]
     },
