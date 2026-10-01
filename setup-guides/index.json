@@ -1074,6 +1074,14 @@
       "path": "336755.json"
     },
     {
+      "gameId": 337627,
+      "gameName": "Voidfall",
+      "gameIds": [337627],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "337627.json"
+    },
+    {
       "gameId": 338960,
       "gameName": "Slay the Spire: The Board Game",
       "gameIds": [338960],

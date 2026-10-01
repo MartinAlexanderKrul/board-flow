@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "gameId": 337627,
+  "gameName": "Voidfall",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Voidfall rulebook, Kickstarter version (Mindclash Games)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "competitive",
+      "name": "Competitive",
+      "group": "Mode",
+      "defaultEnabled": true,
+      "note": "2-4 players."
+    },
+    {
+      "id": "coop",
+      "name": "Cooperative / solo",
+      "group": "Mode"
+    }
+  ],
+  "sections": [
+    {
+      "id": "supply-galactic-board",
+      "title": "Supply & Galactic Board",
+      "steps": [
+        {
+          "id": "supply-galactic-board-1",
+          "text": "Agenda cards: three shuffled facedown decks by back, the top card of each faceup beside it",
+          "ref": "p.6 step 1"
+        },
+        {
+          "id": "supply-galactic-board-2",
+          "text": "Bounty and Reclaim tokens in shuffled facedown pools; Guilds, Installations, Voidborn Fleet markers, Population dice, Corruption markers, Fleet bases and Fleet Type figures in a common supply",
+          "ref": "p.6 step 2"
+        },
+        {
+          "id": "supply-galactic-board-3",
+          "text": "Galactic Board on its competitive or cooperative side",
+          "ref": "p.6 step 3"
+        },
+        {
+          "id": "supply-galactic-board-4",
+          "text": "Trade tokens on the six spaces: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "1": "1 each, leftmost space empty",
+                "2": "1 each",
+                "3": "2 each, leftmost space empty",
+                "4": "2 each"
+              }
+            }
+          },
+          "ref": "p.6 step 3A"
+        },
+        {
+          "id": "supply-galactic-board-5",
+          "text": "Event deck: shuffle each Cycle's Galactic Events, take 2 unseen from each, stack Cycle 1 on top and Cycle 3 at the bottom",
+          "ref": "p.6 step 3B"
+        },
+        {
+          "id": "supply-galactic-board-6",
+          "text": "Shuffle the Priority cards and reveal {n} in ascending order below the board; deck to their right",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 2,
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "competitive"
+            ]
+          },
+          "ref": "p.6 step 3C"
+        },
+        {
+          "id": "supply-galactic-board-7",
+          "text": "Shuffle the Priority cards and deal {n} to each player, kept hidden; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 5,
+                "3": 4,
+                "4": 3
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "coop"
+            ],
+            "minPlayers": 2
+          },
+          "ref": "p.6 step 3C"
+        },
+        {
+          "id": "supply-galactic-board-8",
+          "text": "Solo: remove Priority cards 1, 2, 3, 12, 13 and 14, shuffle and deal yourself 5",
+          "condition": {
+            "modules": [
+              "coop"
+            ],
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.6 step 3C"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Player board, Focus cards, 14 Fleet Power markers and your other markers",
+          "ref": "p.6 step 4"
+        },
+        {
+          "id": "players-2",
+          "text": "Influence dial at {n}; all production and Stockpile dials at zero",
+          "amounts": {
+            "n": 20
+          },
+          "ref": "p.6 steps 4A-4B"
+        },
+        {
+          "id": "players-3",
+          "text": "Set your Innovation Focus card aside - it is not available in the first Cycle",
+          "ref": "p.6 step 4D"
+        },
+        {
+          "id": "players-4",
+          "text": "Solo: swap your Leadership Focus for Unity Focus I; Unity Focus II waits beside the Innovation Focus",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.6 step 4E"
+        }
+      ]
+    },
+    {
+      "id": "scenario",
+      "title": "Scenario",
+      "steps": [
+        {
+          "id": "scenario-1",
+          "text": "Pick a Scenario from the Compendium and build its map: Home sectors nearest each player, then the other sectors and Voidstorm tokens",
+          "note": "First games: First Spark (competitive) or First Strike (cooperative)",
+          "ref": "p.7 step 5"
+        },
+        {
+          "id": "scenario-2",
+          "text": "Population dice, Corruption tokens, Voidborn fleets, Sector Defences and facedown Bounty and Reclaim tokens on sectors as the Scenario indicates",
+          "ref": "p.7 steps 5B-5C"
+        },
+        {
+          "id": "scenario-3",
+          "text": "Technology Tableau: the Scenario's 8 Technologies, each as a stack with the 3-Influence copy on top of the credit-cost copy",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "p.7 step 6A"
+        },
+        {
+          "id": "scenario-4",
+          "text": "Solo Technology Tableau: for 3 random Technologies keep only the credit-cost copy, for the other 5 only the Influence copy",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "p.7 step 6A"
+        },
+        {
+          "id": "scenario-5",
+          "text": "Shuffle the 8 matching Improved Technologies: 4 faceup on the Breakthrough Market, 4 in a facedown deck to their left",
+          "ref": "p.7 step 6B"
+        },
+        {
+          "id": "scenario-6",
+          "text": "Fallen House cards on the sectors the Scenario names, if any; box the rest",
+          "ref": "p.7 steps 6C-6D"
+        }
+      ]
+    },
+    {
+      "id": "cooperative",
+      "title": "Cooperative",
+      "condition": {
+        "modules": [
+          "coop"
+        ]
+      },
+      "steps": [
+        {
+          "id": "cooperative-1",
+          "text": "Void board where everyone can see it",
+          "ref": "p.7 step 7A"
+        },
+        {
+          "id": "cooperative-2",
+          "text": "Crisis deck: {s}, drawn at random by type and shuffled together",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "1": "4 economic, 4 military, 3 general, 4 war",
+                "2": "9 economic, 9 military, 6 general, 6 war",
+                "3": "14 economic, 14 military, 9 general, 8 war",
+                "4": "19 economic, 19 military, 12 general, 10 war"
+              }
+            }
+          },
+          "note": "First game: challenge cards go back in the box. Solo: first remove the general crisis cards marked with the solo icon",
+          "ref": "p.7 step 7C"
+        },
+        {
+          "id": "cooperative-3",
+          "text": "A Harbinger on the first space of the Economic Threat track and of the Military Threat track",
+          "ref": "p.7 step 7E"
+        },
+        {
+          "id": "cooperative-4",
+          "text": "Draw crisis cards until the second space of each Threat track holds one (economic or general; military or general)",
+          "ref": "p.7 step 7F"
+        }
+      ]
+    },
+    {
+      "id": "houses",
+      "title": "Houses",
+      "steps": [
+        {
+          "id": "houses-1",
+          "text": "Competitive: box the Void board, Crisis cards, Leadership and Unity Focus cards, Joint Focus cards and Harbingers",
+          "condition": {
+            "modules": [
+              "competitive"
+            ]
+          },
+          "ref": "p.7 step 8"
+        },
+        {
+          "id": "houses-2",
+          "text": "Each player picks a House from the Scenario: House mat slid into the player board, both Origin cards",
+          "note": "First play: Valnis, Belitan, Dunlork, Cortozaar",
+          "ref": "p.7 step 9"
+        },
+        {
+          "id": "houses-3",
+          "text": "Corruption token on the bottommost Agenda slot; Upkeep tracker cubes on 0",
+          "ref": "p.7 steps 9D-9E"
+        },
+        {
+          "id": "houses-4",
+          "text": "Choose one Origin card: its 3-Influence Technology onto your board, the Improved version into your hand",
+          "note": "3-4 players: the other basic copy joins the Technology Tableau. 1-2 players: box it",
+          "ref": "p.8 step 10A"
+        },
+        {
+          "id": "houses-5",
+          "text": "Set up your Home sector and Outpost as the Origin card shows: Population die, Fleets, Guilds and Installations",
+          "ref": "p.8 steps 10B-10C"
+        },
+        {
+          "id": "houses-6",
+          "text": "Set production dials, gain the listed resources, Fleet Power markers, track advances and Trade token",
+          "note": "Don't take extra benefits for these - they are already counted in the Origin card",
+          "ref": "p.8 steps 10D-10F"
+        },
+        {
+          "id": "houses-7",
+          "text": "In ascending order of the Origin cards' initial time, each player puts their Turn Order marker above a Priority card",
+          "condition": {
+            "modules": [
+              "competitive"
+            ]
+          },
+          "ref": "p.8 step 10G"
+        },
+        {
+          "id": "houses-8",
+          "text": "Flip your Origin card to its starting Agenda in the topmost Agenda space; a Trade token gained goes on it",
+          "ref": "p.8 steps 10H-10I"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Start Cycle 1 of 3 with the Preparation Phase (its first step is skipped in the first Cycle)",
+          "ref": "p.8"
+        }
+      ]
+    }
+  ]
+}
