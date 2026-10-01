@@ -188,8 +188,8 @@
     {
       "gameId": 184921,
       "gameName": "Bunny Kingdom",
-      "gameIds": [184921, 264396],
-      "version": 2,
+      "gameIds": [184921, 264396, 373425],
+      "version": 3,
       "schemaVersion": 1,
       "path": "184921.json"
     },
@@ -500,8 +500,8 @@
     {
       "gameId": 298383,
       "gameName": "Golem",
-      "gameIds": [298383],
-      "version": 1,
+      "gameIds": [298383, 455453],
+      "version": 2,
       "schemaVersion": 1,
       "path": "298383.json"
     },
@@ -580,8 +580,8 @@
     {
       "gameId": 336755,
       "gameName": "King of Tokyo: Monster Box",
-      "gameIds": [207292, 233076, 336755],
-      "version": 2,
+      "gameIds": [207292, 233076, 250532, 336755, 364182],
+      "version": 3,
       "schemaVersion": 1,
       "path": "336755.json"
     },
@@ -684,8 +684,8 @@
     {
       "gameId": 367966,
       "gameName": "Endeavor: Deep Sea",
-      "gameIds": [367966],
-      "version": 2,
+      "gameIds": [367966, 446892],
+      "version": 3,
       "schemaVersion": 1,
       "path": "367966.json"
     },
@@ -756,8 +756,8 @@
     {
       "gameId": 401325,
       "gameName": "The Witcher: Path of Destiny",
-      "gameIds": [401325, 405401],
-      "version": 2,
+      "gameIds": [401325, 404367, 405401, 405402],
+      "version": 3,
       "schemaVersion": 1,
       "path": "401325.json"
     },
@@ -796,8 +796,8 @@
     {
       "gameId": 421006,
       "gameName": "The Lord of the Rings: Duel for Middle-earth",
-      "gameIds": [421006],
-      "version": 1,
+      "gameIds": [421006, 450429],
+      "version": 2,
       "schemaVersion": 1,
       "path": "421006.json"
     },
@@ -812,8 +812,8 @@
     {
       "gameId": 422780,
       "gameName": "Mistborn: The Deckbuilding Game",
-      "gameIds": [422780],
-      "version": 2,
+      "gameIds": [422780, 472577],
+      "version": 3,
       "schemaVersion": 1,
       "path": "422780.json"
     },

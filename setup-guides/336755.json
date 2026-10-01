@@ -2,14 +2,16 @@
   "schemaVersion": 1,
   "gameId": 336755,
   "gameName": "King of Tokyo: Monster Box",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "King of Tokyo rulebook (2nd edition)",
       "Monster Pack: King Kong rules",
-      "Monster Pack: Cthulhu rules"
+      "Monster Pack: Cthulhu rules",
+      "Monster Pack: Anubis rules",
+      "Even More Wicked! rules"
     ]
   },
   "players": {
@@ -74,6 +76,37 @@
             ]
           },
           "ref": "Cthulhu pack rules"
+        },
+        {
+          "id": "fate",
+          "text": "Die of Fate with the dice; shuffle the Curse cards facedown and reveal the top one - it affects everyone until replaced",
+          "condition": {
+            "modules": [
+              "anubis"
+            ]
+          },
+          "ref": "Anubis pack rules"
+        },
+        {
+          "id": "wicked-board",
+          "text": "Wickedness board next to the Tokyo board; a counter for each Monster in play at the bottom of the Wickedness Gauge",
+          "condition": {
+            "modules": [
+              "wicked"
+            ]
+          },
+          "ref": "Even More Wicked!: Setup"
+        },
+        {
+          "id": "wicked-tiles",
+          "text": "Wickedness tiles stacked by the gauge: 4 next to 3, 4 next to 6, 2 next to 10",
+          "note": "First game: orange side up",
+          "condition": {
+            "modules": [
+              "wicked"
+            ]
+          },
+          "ref": "Even More Wicked!: Setup"
         }
       ]
     },
@@ -105,6 +138,16 @@
       "id": "cthulhu",
       "name": "Monster Pack: Cthulhu",
       "bggId": 207292
+    },
+    {
+      "id": "anubis",
+      "name": "Monster Pack: Anubis",
+      "bggId": 250532
+    },
+    {
+      "id": "wicked",
+      "name": "Even More Wicked!",
+      "bggId": 364182
     }
   ]
 }

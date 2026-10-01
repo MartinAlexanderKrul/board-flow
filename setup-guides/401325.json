@@ -2,13 +2,15 @@
   "schemaVersion": 1,
   "gameId": 401325,
   "gameName": "The Witcher: Path of Destiny",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "The Witcher: Path of Destiny rulebook (Go On Board, via RulesPal)",
-      "Legendary Monsters rulebook (Go On Board)"
+      "Legendary Monsters rulebook (Go On Board)",
+      "Wild Hunt rulebook (Go On Board)",
+      "Naglfar rulebook (Go On Board)"
     ]
   },
   "players": {
@@ -39,6 +41,19 @@
       "group": "Tale",
       "bggId": 405401,
       "note": "Fight a Legendary Monster together; no other modules."
+    },
+    {
+      "id": "wild-hunt",
+      "name": "Wild Hunt (one vs all)",
+      "group": "Tale",
+      "bggId": 404367,
+      "note": "One player (or the Automa solo) plays the Wild Hunt."
+    },
+    {
+      "id": "naglfar",
+      "name": "Naglfar",
+      "bggId": 405402,
+      "note": "Add-on for the Wild Hunt."
     }
   ],
   "sections": [
@@ -69,7 +84,8 @@
             "notModules": [
               "legendary"
             ]
-          }
+          },
+          "note": "Wild Hunt: use its own Tale cards"
         },
         {
           "id": "destiny",
@@ -79,7 +95,8 @@
             "notModules": [
               "legendary"
             ]
-          }
+          },
+          "note": "Wild Hunt: no Path tokens"
         },
         {
           "id": "pool",
@@ -280,9 +297,78 @@
       ],
       "condition": {
         "notModules": [
-          "legendary"
+          "legendary",
+          "wild-hunt"
         ]
       }
+    },
+    {
+      "id": "wild-hunt",
+      "title": "Wild Hunt",
+      "condition": {
+        "modules": [
+          "wild-hunt"
+        ]
+      },
+      "steps": [
+        {
+          "id": "generals-mat",
+          "text": "Generals playmat next to the main playmat, in front of the Wild Hunt player",
+          "ref": "Wild Hunt: Setup 1"
+        },
+        {
+          "id": "wh-player",
+          "text": "One player takes the Wild Hunt (solo: the Automa controls it): 6 Action cards in hand, 5 Ability markers with 1 active on the leftmost Ability",
+          "ref": "Wild Hunt: Setup 6"
+        },
+        {
+          "id": "wh-vp",
+          "text": "Ciri's Victory Point marker on 0 (solo and 2 players: on 9); Wild Hunt scoring miniature on 0",
+          "ref": "Wild Hunt: Setup 6b"
+        },
+        {
+          "id": "wh-side-quests",
+          "text": "Use this expansion's Side Quest cards, on the side for your number of Heroes",
+          "ref": "Wild Hunt: Setup 6d"
+        },
+        {
+          "id": "traits",
+          "text": "General Trait deck in 4 piles; 1 random card of each faceup in order: Imlerith, Eredin, Nithral, Caranthir",
+          "ref": "Wild Hunt: Setup 7a"
+        },
+        {
+          "id": "weaknesses",
+          "text": "General Weakness deck in 4 piles, each shuffled facedown on its space",
+          "ref": "Wild Hunt: Setup 7b"
+        },
+        {
+          "id": "generals",
+          "text": "4 Generals miniatures on their starting spaces",
+          "ref": "Wild Hunt: Setup 7c"
+        },
+        {
+          "id": "naglfar-mini",
+          "text": "Naglfar miniature next to the Generals playmat",
+          "condition": {
+            "modules": [
+              "wild-hunt",
+              "naglfar"
+            ]
+          },
+          "ref": "Naglfar: Setup 7d"
+        },
+        {
+          "id": "sextant",
+          "text": "Shuffle the 4 Broken Sextant cards, remove 1 from the game, the rest facedown by the Generals playmat",
+          "condition": {
+            "modules": [
+              "wild-hunt",
+              "naglfar"
+            ]
+          },
+          "ref": "Naglfar: Setup 7e"
+        }
+      ]
     },
     {
       "id": "start",

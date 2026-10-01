@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 367966,
   "gameName": "Endeavor: Deep Sea",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Endeavor: Deep Sea rulebook (Burnt Island Games)"
+      "Endeavor: Deep Sea rulebook (Burnt Island Games)",
+      "Endeavor: Deep Sea - Uncharted Waters rules"
     ]
   },
   "players": {
@@ -22,6 +23,12 @@
         1
       ],
       "note": "Every scenario can be played co-op; solo is 1-player co-op."
+    },
+    {
+      "id": "uncharted",
+      "name": "Uncharted Waters",
+      "bggId": 446892,
+      "note": "Content expansion: more boards, journals, dive tokens, specialists and 4 new missions."
     }
   ],
   "sections": [
@@ -50,6 +57,17 @@
           "id": "dive",
           "text": "Shuffle the Dive tokens facedown; draw the indicated number onto every zone with a Dive site",
           "ref": "p.4"
+        },
+        {
+          "id": "uw-boards",
+          "text": "Mix the 11 familiar-backed Uncharted Waters Ocean boards into the stacks; keep the 8 special zones separate until a scenario or board calls for them",
+          "note": "Consider leaving out the Blue Hole Opening board at first",
+          "condition": {
+            "modules": [
+              "uncharted"
+            ]
+          },
+          "ref": "Uncharted Waters p.1"
         }
       ]
     },
@@ -75,6 +93,16 @@
           "text": "Tier 5: shuffle Junior side up, 3 random tiles in each pocket of the rightmost column",
           "note": "Re-randomize every game",
           "ref": "p.4"
+        },
+        {
+          "id": "uw-journals",
+          "text": "Shuffle the 4 familiar-backed new Journals into the Journal deck; keep the 3 different-backed ones aside; mix in the new Dive tokens and Specialists",
+          "condition": {
+            "modules": [
+              "uncharted"
+            ]
+          },
+          "ref": "Uncharted Waters p.1"
         }
       ]
     },

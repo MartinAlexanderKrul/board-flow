@@ -2,13 +2,14 @@
   "schemaVersion": 1,
   "gameId": 298383,
   "gameName": "Golem",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "Golem rulebook (EN)",
-      "Golem Automa rulebook"
+      "Golem Automa rulebook",
+      "Golem: Seals & Deals rulebook"
     ]
   },
   "players": {
@@ -196,6 +197,47 @@
       ]
     },
     {
+      "id": "seals",
+      "title": "Seals & Deals",
+      "condition": {
+        "modules": [
+          "seals"
+        ]
+      },
+      "steps": [
+        {
+          "id": "mechanisms",
+          "text": "9 Mechanism tokens on the three Student streets: one under columns III, V and VII of each",
+          "ref": "Seals & Deals: Setup 1"
+        },
+        {
+          "id": "extension",
+          "text": "Board extension below the main board",
+          "ref": "Seals & Deals: Setup 2"
+        },
+        {
+          "id": "missions",
+          "text": "Shuffle the 3 Mission decks separately, facedown next to the board",
+          "ref": "Seals & Deals: Setup 3"
+        },
+        {
+          "id": "neutral-golems",
+          "text": "1 neutral Golem on the leftmost block of each district",
+          "ref": "Seals & Deals: Setup 4"
+        },
+        {
+          "id": "mission-boards",
+          "text": "Each player: a Mission board next to their player board with 6 cubes of their color on it",
+          "ref": "Seals & Deals: Setup 5"
+        },
+        {
+          "id": "gold",
+          "text": "10 extra Gold pieces into the supply",
+          "ref": "Seals & Deals: Setup 6"
+        }
+      ]
+    },
+    {
       "id": "start",
       "title": "Start playing",
       "kind": "START",
@@ -206,6 +248,13 @@
           "ref": "p.6"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "seals",
+      "name": "Seals & Deals",
+      "bggId": 455453
     }
   ]
 }

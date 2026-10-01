@@ -2,13 +2,14 @@
   "schemaVersion": 1,
   "gameId": 184921,
   "gameName": "Bunny Kingdom",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "Bunny Kingdom rulebook",
-      "Bunny Kingdom: In the Sky rulebook (IELLO)"
+      "Bunny Kingdom: In the Sky rulebook (IELLO)",
+      "Bunny Kingdom: Bunny Express rulebook (IELLO)"
     ]
   },
   "players": {
@@ -69,6 +70,37 @@
             ]
           },
           "ref": "In the Sky p.2"
+        },
+        {
+          "id": "station",
+          "text": "Draw base Exploration cards until a New World Territory shows: Central Station and Water Tower go on it; that card is boxed, the Central Station card joins the deck",
+          "note": "Tracks never cross a Lava Flow",
+          "condition": {
+            "modules": [
+              "express"
+            ]
+          },
+          "ref": "Bunny Express: Setup 2"
+        },
+        {
+          "id": "express-deck",
+          "text": "Shuffle the Bunny Express Exploration cards into the deck",
+          "condition": {
+            "modules": [
+              "express"
+            ]
+          },
+          "ref": "Bunny Express: Setup 3"
+        },
+        {
+          "id": "sheriff",
+          "text": "A random player becomes the Sheriff and takes the Star token",
+          "condition": {
+            "modules": [
+              "express"
+            ]
+          },
+          "ref": "Bunny Express: Setup 4"
         }
       ]
     },
@@ -149,6 +181,11 @@
       "bggId": 264396,
       "extendsMaxPlayers": 5,
       "note": "Adds the Great Cloud board and a 5th player."
+    },
+    {
+      "id": "express",
+      "name": "Bunny Express",
+      "bggId": 373425
     }
   ]
 }
