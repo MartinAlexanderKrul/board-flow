@@ -52,8 +52,6 @@ import cz.nicolsburg.boardflow.data.setupguide.SetupGuideAvailability
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideSummary
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.RecommendationLane
 import cz.nicolsburg.boardflow.model.RecommendationPick
@@ -350,14 +348,6 @@ fun NewPlayScreen(
                                 end = if (showScrollBar) 20.dp else 0.dp
                             )
                         ) {
-                            if (setupTab && query.isBlank()) {
-                                val withGuides = results.filter { it.id in setupGuideAvailability }
-                                if (withGuides.isNotEmpty()) {
-                                    item(key = "setup-available") {
-                                        AvailableGuidesStrip(games = withGuides, onOpen = { onOpenQuickSetup(it.id) })
-                                    }
-                                }
-                            }
                             if (!setupTab && recommendationsEnabled && query.isBlank() && recommendationLanes.isNotEmpty()) {
                                 item {
                                     RecommendationsSection(
@@ -984,38 +974,6 @@ private fun GameRow(
 private enum class NewPlayTab(val label: String) {
     LOG_PLAY("Log Play"),
     QUICK_SETUP("Quick Guides")
-}
-
-/** Games that already have a guide, so they are not buried in a long alphabetical list. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun AvailableGuidesStrip(games: List<BggGame>, onOpen: (BggGame) -> Unit) {
-    Column(
-        modifier = Modifier.padding(bottom = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            "Available now",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            games.forEach { game ->
-                BoardFlowFilterChip(
-                    selected = false,
-                    onClick = { onOpen(game) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Checklist, contentDescription = null, modifier = Modifier.size(16.dp))
-                    },
-                    label = { Text(game.name) }
-                )
-            }
-        }
-    }
 }
 
 @Composable
