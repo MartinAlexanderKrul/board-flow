@@ -188,8 +188,8 @@
     {
       "gameId": 184921,
       "gameName": "Bunny Kingdom",
-      "gameIds": [184921],
-      "version": 1,
+      "gameIds": [184921, 264396],
+      "version": 2,
       "schemaVersion": 1,
       "path": "184921.json"
     },
@@ -444,8 +444,8 @@
     {
       "gameId": 285265,
       "gameName": "Rune Stones",
-      "gameIds": [285265],
-      "version": 1,
+      "gameIds": [285265, 286291, 296313],
+      "version": 2,
       "schemaVersion": 1,
       "path": "285265.json"
     },

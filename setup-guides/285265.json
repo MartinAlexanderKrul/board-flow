@@ -2,12 +2,14 @@
   "schemaVersion": 1,
   "gameId": 285265,
   "gameName": "Rune Stones",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Rune Stones rulebook (EN)"
+      "Rune Stones rulebook (EN)",
+      "Rune Stones: Nocturnal Creatures rules",
+      "Rune Stones: Enchanted Forest rules"
     ]
   },
   "players": {
@@ -57,6 +59,66 @@
           "id": "creatures",
           "text": "Shuffle the creatures; reveal 6 into the display left to right (white dragons go back in)",
           "ref": "p.3"
+        },
+        {
+          "id": "banshees",
+          "text": "Shuffle the 16 Banshee cards into the creature draw pile",
+          "condition": {
+            "modules": [
+              "nocturnal"
+            ]
+          },
+          "ref": "Nocturnal Creatures p.1"
+        },
+        {
+          "id": "night-board",
+          "text": "Night board next to the game board; wisp tiles shuffled facedown on its left-most space, top 4 revealed as the display",
+          "condition": {
+            "modules": [
+              "nocturnal"
+            ]
+          },
+          "ref": "Nocturnal Creatures p.1"
+        },
+        {
+          "id": "night-tokens",
+          "text": "Shuffle the night tokens facedown; one faceup on the power point track every 5 steps, up to space 50",
+          "condition": {
+            "modules": [
+              "nocturnal"
+            ]
+          },
+          "ref": "Nocturnal Creatures p.1"
+        },
+        {
+          "id": "forest-board",
+          "text": "Enchanted Forest board next to the game board; familiars on their starting spaces",
+          "condition": {
+            "modules": [
+              "forest"
+            ]
+          },
+          "ref": "Enchanted Forest p.1"
+        },
+        {
+          "id": "toadstools",
+          "text": "Toadstool tokens shuffled facedown next to the forest board",
+          "condition": {
+            "modules": [
+              "forest"
+            ]
+          },
+          "ref": "Enchanted Forest p.1"
+        },
+        {
+          "id": "forge-token",
+          "text": "Forge token above the second forge on the game board",
+          "condition": {
+            "modules": [
+              "forest"
+            ]
+          },
+          "ref": "Enchanted Forest p.1"
         }
       ]
     },
@@ -100,6 +162,18 @@
           "ref": "p.3"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "nocturnal",
+      "name": "Nocturnal Creatures",
+      "bggId": 286291
+    },
+    {
+      "id": "forest",
+      "name": "Enchanted Forest",
+      "bggId": 296313
     }
   ]
 }

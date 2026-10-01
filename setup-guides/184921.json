@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 184921,
   "gameName": "Bunny Kingdom",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Bunny Kingdom rulebook"
+      "Bunny Kingdom rulebook",
+      "Bunny Kingdom: In the Sky rulebook (IELLO)"
     ]
   },
   "players": {
@@ -38,6 +39,36 @@
           "id": "deck",
           "text": "Shuffle the Exploration cards facedown by the board",
           "ref": "p.5"
+        },
+        {
+          "id": "cloud",
+          "text": "Great Cloud board next to the New World board with the 12 Wondrous Farm tokens, 2 Rainbow tokens (one per color) and the 4 expansion Cities of each level",
+          "condition": {
+            "modules": [
+              "sky"
+            ]
+          },
+          "ref": "In the Sky p.2"
+        },
+        {
+          "id": "sky-supply",
+          "text": "Coins, Carrotadels and other tokens within reach",
+          "condition": {
+            "modules": [
+              "sky"
+            ]
+          },
+          "ref": "In the Sky p.2"
+        },
+        {
+          "id": "sky-deck",
+          "text": "Shuffle the expansion and base Exploration cards together as the draw pile",
+          "condition": {
+            "modules": [
+              "sky"
+            ]
+          },
+          "ref": "In the Sky p.2"
         }
       ]
     },
@@ -80,9 +111,44 @@
               }
             }
           },
-          "ref": "p.6"
+          "ref": "p.6",
+          "condition": {
+            "notModules": [
+              "sky"
+            ],
+            "maxPlayers": 4
+          }
+        },
+        {
+          "id": "deal-sky",
+          "text": "Deal each player {n} cards and start the draft",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "12",
+                "3": "15 (pick 3)",
+                "4": "12",
+                "5": "10"
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "sky"
+            ]
+          },
+          "ref": "In the Sky p.2"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "sky",
+      "name": "In the Sky",
+      "bggId": 264396,
+      "extendsMaxPlayers": 5,
+      "note": "Adds the Great Cloud board and a 5th player."
     }
   ]
 }
