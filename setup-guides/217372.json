@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 217372,
   "gameName": "The Quest for El Dorado",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,12 +22,12 @@
         {
           "id": "setup-1",
           "text": "Assemble the map and market board as the setup sheet shows",
-          "ref": "How the game works"
+          "ref": "How the game works (p.2)"
         },
         {
           "id": "setup-2",
           "text": "Each player: an expedition board and a starting deck of 8 cards - 1 Sailor, 3 Explorers, 4 Travelers - shuffled facedown",
-          "ref": "How the game works"
+          "ref": "How the game works (p.2)"
         },
         {
           "id": "setup-3",
@@ -35,7 +35,7 @@
           "amounts": {
             "n": 4
           },
-          "ref": "How the game works"
+          "ref": "How the game works (p.2)"
         },
         {
           "id": "setup-4",
@@ -69,7 +69,7 @@
         {
           "id": "start-1",
           "text": "The player with the starting player hat goes first",
-          "ref": "Turn structure"
+          "ref": "Turn structure (p.2)"
         }
       ]
     }

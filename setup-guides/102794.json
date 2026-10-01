@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 102794,
   "gameName": "Caverna: The Cave Farmers",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,12 +22,12 @@
         {
           "id": "players-1",
           "text": "Each player: a Home board, 5 Dwarfs and 3 Stables; 2 Dwarfs in the Entry-level dwelling; one of each Overview card",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "players-2",
           "text": "Random Starting player; Food clockwise from them: 1, 1, 2, then 3 for everyone else",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -50,7 +50,7 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "boards-2",
@@ -67,7 +67,7 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "boards-3",
@@ -75,7 +75,7 @@
           "condition": {
             "minPlayers": 3
           },
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "boards-4",
@@ -85,24 +85,24 @@
               2
             ]
           },
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "boards-5",
           "text": "Supply boards (Introductory or Full side) with the Furnishing tiles; spare Dwelling tiles in reserve",
           "note": "6-7 players: use the Full game side",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "boards-6",
           "text": "Action space cards facedown, stacked: stage 4 at the bottom, then stage 3, stage 2, the round 4 card (Wish for children), stage 1 on top",
           "note": "2 players: remove the Exploration card with the Level 4 expedition and cover round space 9 with a Dwarf card",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "boards-7",
           "text": "Landscape tiles sorted by type; building materials, animals and Weapon strength markers in piles",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -114,7 +114,7 @@
         {
           "id": "start-1",
           "text": "Round 1: reveal the top Action space card; the Starting player places the first Dwarf",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     }

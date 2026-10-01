@@ -45,7 +45,7 @@
       "gameId": 181,
       "gameName": "Risk",
       "gameIds": [181],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "181.json"
     },
@@ -61,7 +61,7 @@
       "gameId": 478,
       "gameName": "Citadels",
       "gameIds": [478],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "478.json"
     },
@@ -85,7 +85,7 @@
       "gameId": 1927,
       "gameName": "Munchkin",
       "gameIds": [1927],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "1927.json"
     },
@@ -101,7 +101,7 @@
       "gameId": 2651,
       "gameName": "Power Grid",
       "gameIds": [2651],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "2651.json"
     },
@@ -117,7 +117,7 @@
       "gameId": 3076,
       "gameName": "Puerto Rico",
       "gameIds": [3076],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "3076.json"
     },
@@ -125,7 +125,7 @@
       "gameId": 3955,
       "gameName": "BANG!",
       "gameIds": [3955, 8269, 9653, 20237, 66508, 107794, 130046, 349886, 401241],
-      "version": 3,
+      "version": 4,
       "schemaVersion": 1,
       "path": "3955.json"
     },
@@ -133,7 +133,7 @@
       "gameId": 9209,
       "gameName": "Ticket to Ride",
       "gameIds": [9209],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "9209.json"
     },
@@ -141,7 +141,7 @@
       "gameId": 9220,
       "gameName": "Saboteur",
       "gameIds": [9220],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "9220.json"
     },
@@ -173,7 +173,7 @@
       "gameId": 14996,
       "gameName": "Ticket to Ride: Europe",
       "gameIds": [14996],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "14996.json"
     },
@@ -205,7 +205,7 @@
       "gameId": 28143,
       "gameName": "Race for the Galaxy",
       "gameIds": [28143],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "28143.json"
     },
@@ -213,7 +213,7 @@
       "gameId": 28720,
       "gameName": "Brass: Lancashire",
       "gameIds": [28720],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "28720.json"
     },
@@ -221,7 +221,7 @@
       "gameId": 30549,
       "gameName": "Pandemic",
       "gameIds": [30549],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "30549.json"
     },
@@ -269,7 +269,7 @@
       "gameId": 40692,
       "gameName": "Small World",
       "gameIds": [40692],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "40692.json"
     },
@@ -309,7 +309,7 @@
       "gameId": 65244,
       "gameName": "Forbidden Island",
       "gameIds": [65244],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "65244.json"
     },
@@ -317,7 +317,7 @@
       "gameId": 66056,
       "gameName": "Rivals for Catan",
       "gameIds": [66056],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "66056.json"
     },
@@ -349,7 +349,7 @@
       "gameId": 84876,
       "gameName": "The Castles of Burgundy",
       "gameIds": [84876],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "84876.json"
     },
@@ -373,7 +373,7 @@
       "gameId": 102794,
       "gameName": "Caverna: The Cave Farmers",
       "gameIds": [102794],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "102794.json"
     },
@@ -381,7 +381,7 @@
       "gameId": 110327,
       "gameName": "Lords of Waterdeep",
       "gameIds": [110327],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "110327.json"
     },
@@ -397,7 +397,7 @@
       "gameId": 120677,
       "gameName": "Terra Mystica",
       "gameIds": [120677],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "120677.json"
     },
@@ -405,7 +405,7 @@
       "gameId": 121921,
       "gameName": "Robinson Crusoe: Adventures on the Cursed Island",
       "gameIds": [121921],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "121921.json"
     },
@@ -429,7 +429,7 @@
       "gameId": 124742,
       "gameName": "Android: Netrunner",
       "gameIds": [124742],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "124742.json"
     },
@@ -437,7 +437,7 @@
       "gameId": 125153,
       "gameName": "The Gallerist",
       "gameIds": [125153],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "125153.json"
     },
@@ -445,7 +445,7 @@
       "gameId": 126163,
       "gameName": "Tzolk'in: The Mayan Calendar",
       "gameIds": [126163],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "126163.json"
     },
@@ -461,7 +461,7 @@
       "gameId": 129622,
       "gameName": "Love Letter",
       "gameIds": [129622],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "129622.json"
     },
@@ -469,7 +469,7 @@
       "gameId": 131357,
       "gameName": "Coup",
       "gameIds": [131357],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "131357.json"
     },
@@ -485,7 +485,7 @@
       "gameId": 136063,
       "gameName": "Forbidden Desert",
       "gameIds": [136063],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "136063.json"
     },
@@ -501,7 +501,7 @@
       "gameId": 146021,
       "gameName": "Eldritch Horror",
       "gameIds": [146021],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "146021.json"
     },
@@ -525,7 +525,7 @@
       "gameId": 148228,
       "gameName": "Splendor",
       "gameIds": [148228],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "148228.json"
     },
@@ -533,7 +533,7 @@
       "gameId": 150376,
       "gameName": "Dead of Winter: A Crossroads Game",
       "gameIds": [150376],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "150376.json"
     },
@@ -541,7 +541,7 @@
       "gameId": 157354,
       "gameName": "Five Tribes",
       "gameIds": [157354],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "157354.json"
     },
@@ -549,7 +549,7 @@
       "gameId": 157969,
       "gameName": "Sheriff of Nottingham",
       "gameIds": [157969],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "157969.json"
     },
@@ -565,7 +565,7 @@
       "gameId": 161936,
       "gameName": "Pandemic Legacy: Season 1",
       "gameIds": [161936],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "161936.json"
     },
@@ -589,7 +589,7 @@
       "gameId": 164153,
       "gameName": "Star Wars: Imperial Assault",
       "gameIds": [164153],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "164153.json"
     },
@@ -605,7 +605,7 @@
       "gameId": 167355,
       "gameName": "Nemesis",
       "gameIds": [167355],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "167355.json"
     },
@@ -613,7 +613,7 @@
       "gameId": 167791,
       "gameName": "Terraforming Mars",
       "gameIds": [167791],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "167791.json"
     },
@@ -637,7 +637,7 @@
       "gameId": 172225,
       "gameName": "Exploding Kittens",
       "gameIds": [172225],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "172225.json"
     },
@@ -669,7 +669,7 @@
       "gameId": 175914,
       "gameName": "Food Chain Magnate",
       "gameIds": [175914],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "175914.json"
     },
@@ -685,7 +685,7 @@
       "gameId": 178900,
       "gameName": "Codenames",
       "gameIds": [178900],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "178900.json"
     },
@@ -701,7 +701,7 @@
       "gameId": 182028,
       "gameName": "Through the Ages: A New Story of Civilization",
       "gameIds": [182028],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "182028.json"
     },
@@ -709,7 +709,7 @@
       "gameId": 182094,
       "gameName": "BANG! The Duel",
       "gameIds": [182094, 288429],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "182094.json"
     },
@@ -717,7 +717,7 @@
       "gameId": 182874,
       "gameName": "Grand Austria Hotel",
       "gameIds": [182874],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "182874.json"
     },
@@ -725,7 +725,7 @@
       "gameId": 183394,
       "gameName": "Viticulture Essential Edition",
       "gameIds": [183394],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "183394.json"
     },
@@ -749,7 +749,7 @@
       "gameId": 185343,
       "gameName": "Anachrony",
       "gameIds": [185343],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "185343.json"
     },
@@ -789,7 +789,7 @@
       "gameId": 192291,
       "gameName": "Sushi Go Party!",
       "gameIds": [192291],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "192291.json"
     },
@@ -797,7 +797,7 @@
       "gameId": 193738,
       "gameName": "Great Western Trail",
       "gameIds": [193738],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "193738.json"
     },
@@ -805,7 +805,7 @@
       "gameId": 194655,
       "gameName": "Santorini",
       "gameIds": [194655],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "194655.json"
     },
@@ -829,7 +829,7 @@
       "gameId": 199561,
       "gameName": "Sagrada",
       "gameIds": [199561],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "199561.json"
     },
@@ -845,7 +845,7 @@
       "gameId": 200680,
       "gameName": "Agricola (Revised Edition)",
       "gameIds": [200680],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "200680.json"
     },
@@ -877,7 +877,7 @@
       "gameId": 205637,
       "gameName": "Arkham Horror: The Card Game",
       "gameIds": [205637],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "205637.json"
     },
@@ -901,7 +901,7 @@
       "gameId": 216132,
       "gameName": "Clans of Caledonia",
       "gameIds": [216132],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "216132.json"
     },
@@ -917,7 +917,7 @@
       "gameId": 217372,
       "gameName": "The Quest for El Dorado",
       "gameIds": [217372],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "217372.json"
     },
@@ -925,7 +925,7 @@
       "gameId": 220308,
       "gameName": "Gaia Project",
       "gameIds": [220308],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "220308.json"
     },
@@ -933,7 +933,7 @@
       "gameId": 221107,
       "gameName": "Pandemic Legacy: Season 2",
       "gameIds": [221107],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "221107.json"
     },
@@ -949,7 +949,7 @@
       "gameId": 224517,
       "gameName": "Brass: Birmingham",
       "gameIds": [224517],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "224517.json"
     },
@@ -957,7 +957,7 @@
       "gameId": 230802,
       "gameName": "Azul",
       "gameIds": [230802],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "230802.json"
     },
@@ -981,7 +981,7 @@
       "gameId": 233078,
       "gameName": "Twilight Imperium: Fourth Edition",
       "gameIds": [233078],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "233078.json"
     },
@@ -997,7 +997,7 @@
       "gameId": 233867,
       "gameName": "Welcome To...",
       "gameIds": [233867],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "233867.json"
     },
@@ -1021,7 +1021,7 @@
       "gameId": 241477,
       "gameName": "Karak",
       "gameIds": [241477, 291436],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "241477.json"
     },
@@ -1029,7 +1029,7 @@
       "gameId": 244521,
       "gameName": "Quacks",
       "gameIds": [244521],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "244521.json"
     },
@@ -1053,7 +1053,7 @@
       "gameId": 247763,
       "gameName": "Underwater Cities",
       "gameIds": [247763],
-      "version": 1,
+      "version": 3,
       "schemaVersion": 1,
       "path": "247763.json"
     },
@@ -1061,7 +1061,7 @@
       "gameId": 249763,
       "gameName": "Claim 2",
       "gameIds": [249763],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "249763.json"
     },
@@ -1069,7 +1069,7 @@
       "gameId": 249821,
       "gameName": "Codenames: Harry Potter",
       "gameIds": [249821],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "249821.json"
     },
@@ -1093,7 +1093,7 @@
       "gameId": 253344,
       "gameName": "Cthulhu: Death May Die",
       "gameIds": [253344],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "253344.json"
     },
@@ -1101,7 +1101,7 @@
       "gameId": 254192,
       "gameName": "Harry Potter: Hogwarts Battle – Defence Against the Dark Arts",
       "gameIds": [254192],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "254192.json"
     },
@@ -1133,7 +1133,7 @@
       "gameId": 256960,
       "gameName": "Pax Pamir: Second Edition",
       "gameIds": [256960],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "256960.json"
     },
@@ -1141,7 +1141,7 @@
       "gameId": 263918,
       "gameName": "Cartographers",
       "gameIds": [263918],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "263918.json"
     },
@@ -1165,7 +1165,7 @@
       "gameId": 266524,
       "gameName": "Parks",
       "gameIds": [266524],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "266524.json"
     },
@@ -1173,7 +1173,7 @@
       "gameId": 266810,
       "gameName": "Paladins of the West Kingdom",
       "gameIds": [266810],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "266810.json"
     },
@@ -1181,7 +1181,7 @@
       "gameId": 270239,
       "gameName": "Moonrakers",
       "gameIds": [270239],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "270239.json"
     },
@@ -1189,7 +1189,7 @@
       "gameId": 270633,
       "gameName": "Aeon's End: The New Age",
       "gameIds": [270633],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "270633.json"
     },
@@ -1221,7 +1221,7 @@
       "gameId": 277659,
       "gameName": "Final Girl",
       "gameIds": [277659],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "277659.json"
     },
@@ -1285,7 +1285,7 @@
       "gameId": 285967,
       "gameName": "Ankh: Gods of Egypt",
       "gameIds": [285967, 307807, 308505],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "285967.json"
     },
@@ -1317,7 +1317,7 @@
       "gameId": 295770,
       "gameName": "Frosthaven",
       "gameIds": [295770],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "295770.json"
     },
@@ -1341,7 +1341,7 @@
       "gameId": 299252,
       "gameName": "Here to Slay",
       "gameIds": [299252],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "299252.json"
     },
@@ -1349,7 +1349,7 @@
       "gameId": 302336,
       "gameName": "Marvel Villainous: Infinite Power",
       "gameIds": [302336],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "302336.json"
     },
@@ -1365,7 +1365,7 @@
       "gameId": 314040,
       "gameName": "Pandemic Legacy: Season 0",
       "gameIds": [314040],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "314040.json"
     },
@@ -1381,7 +1381,7 @@
       "gameId": 321608,
       "gameName": "Hegemony: Lead Your Class to Victory",
       "gameIds": [321608],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "321608.json"
     },
@@ -1389,7 +1389,7 @@
       "gameId": 322289,
       "gameName": "Darwin's Journey",
       "gameIds": [322289],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "322289.json"
     },
@@ -1413,7 +1413,7 @@
       "gameId": 326934,
       "gameName": "Unmatched: Hell's Kitchen",
       "gameIds": [326934],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "326934.json"
     },
@@ -1421,7 +1421,7 @@
       "gameId": 326937,
       "gameName": "Unmatched: For King and Country",
       "gameIds": [326937],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "326937.json"
     },
@@ -1429,7 +1429,7 @@
       "gameId": 330950,
       "gameName": "Age of Galaxy",
       "gameIds": [330950],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "330950.json"
     },
@@ -1445,7 +1445,7 @@
       "gameId": 332772,
       "gameName": "Revive",
       "gameIds": [332772],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "332772.json"
     },
@@ -1469,7 +1469,7 @@
       "gameId": 338960,
       "gameName": "Slay the Spire: The Board Game",
       "gameIds": [338960],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "338960.json"
     },
@@ -1477,7 +1477,7 @@
       "gameId": 341169,
       "gameName": "Great Western Trail: Second Edition",
       "gameIds": [341169],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "341169.json"
     },
@@ -1525,7 +1525,7 @@
       "gameId": 357873,
       "gameName": "The Old King's Crown",
       "gameIds": [357873],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "357873.json"
     },
@@ -1533,7 +1533,7 @@
       "gameId": 359502,
       "gameName": "Casting Shadows",
       "gameIds": [359502],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "359502.json"
     },
@@ -1549,7 +1549,7 @@
       "gameId": 366013,
       "gameName": "Heat: Pedal to the Metal",
       "gameIds": [366013],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "366013.json"
     },
@@ -1629,7 +1629,7 @@
       "gameId": 383179,
       "gameName": "Age of Innovation",
       "gameIds": [383179],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "383179.json"
     },
@@ -1653,7 +1653,7 @@
       "gameId": 390092,
       "gameName": "Ticket to Ride Legacy: Legends of the West",
       "gameIds": [390092],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "390092.json"
     },
@@ -1661,7 +1661,7 @@
       "gameId": 393530,
       "gameName": "Karak II",
       "gameIds": [393530],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "393530.json"
     },
@@ -1677,7 +1677,7 @@
       "gameId": 394106,
       "gameName": "Everdell Farshore",
       "gameIds": [394106],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "394106.json"
     },
@@ -1693,7 +1693,7 @@
       "gameId": 401325,
       "gameName": "The Witcher: Path of Destiny",
       "gameIds": [401325, 404367, 405401, 405402],
-      "version": 3,
+      "version": 4,
       "schemaVersion": 1,
       "path": "401325.json"
     },
@@ -1709,7 +1709,7 @@
       "gameId": 407343,
       "gameName": "Ironwood",
       "gameIds": [407343],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "407343.json"
     },
@@ -1733,7 +1733,7 @@
       "gameId": 413246,
       "gameName": "Bomb Busters",
       "gameIds": [413246],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "413246.json"
     },
@@ -1741,7 +1741,7 @@
       "gameId": 414317,
       "gameName": "Harmonies",
       "gameIds": [414317],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "414317.json"
     },
@@ -1749,7 +1749,7 @@
       "gameId": 418059,
       "gameName": "SETI: Search for Extraterrestrial Intelligence",
       "gameIds": [418059],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "418059.json"
     },
@@ -1765,7 +1765,7 @@
       "gameId": 421006,
       "gameName": "The Lord of the Rings: Duel for Middle-earth",
       "gameIds": [421006, 450429],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "421006.json"
     },
@@ -1773,7 +1773,7 @@
       "gameId": 421165,
       "gameName": "Pantheum: Demigods of Olympia",
       "gameIds": [421165, 444371],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "421165.json"
     },
@@ -1797,7 +1797,7 @@
       "gameId": 429293,
       "gameName": "The Lord of the Rings: The Fellowship of the Ring – Trick-Taking Game",
       "gameIds": [429293],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "429293.json"
     },
@@ -1821,7 +1821,7 @@
       "gameId": 436821,
       "gameName": "Everdell Silverfrost",
       "gameIds": [436821],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "436821.json"
     },
@@ -1837,7 +1837,7 @@
       "gameId": 450782,
       "gameName": "Codenames: Back to Hogwarts",
       "gameIds": [450782],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "450782.json"
     },
@@ -1845,7 +1845,7 @@
       "gameId": 455843,
       "gameName": "Everdell Emerland",
       "gameIds": [455843],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "455843.json"
     }

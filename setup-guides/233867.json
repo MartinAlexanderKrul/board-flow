@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 233867,
   "gameName": "Welcome To...",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,12 +22,12 @@
         {
           "id": "setup-1",
           "text": "A player sheet, a pen and a Player Aid each",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "setup-2",
           "text": "3 random City Plans: one n1, one n2, one n3, Project side up; box the rest",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "setup-3",
@@ -35,7 +35,7 @@
           "condition": {
             "minPlayers": 2
           },
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "setup-4",

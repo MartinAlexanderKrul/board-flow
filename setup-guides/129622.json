@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "gameId": 129622,
   "gameName": "Love Letter",
-  "version": 1,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
+      "Love Letter rulebook (AEG, 16-card edition)",
       "Love Letter rules (Z-Man Games, via RulesPal)"
     ]
   },
@@ -22,12 +23,32 @@
         {
           "id": "each-round-1",
           "text": "A reference card for each player",
-          "ref": "Setup"
+          "ref": "Setup",
+          "condition": {
+            "modules": [
+              "new"
+            ]
+          }
         },
         {
           "id": "each-round-2",
+          "text": "Shuffle the 16 cards; remove the top card from the game facedown, unseen",
+          "ref": "Setup (p.9)",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          }
+        },
+        {
+          "id": "each-round-2b",
           "text": "Shuffle the 21 character cards; set the top card aside facedown, unseen",
-          "ref": "Setup"
+          "ref": "Setup",
+          "condition": {
+            "modules": [
+              "new"
+            ]
+          }
         },
         {
           "id": "each-round-3",
@@ -37,12 +58,12 @@
               2
             ]
           },
-          "ref": "Setup"
+          "ref": "Setup (p.9)"
         },
         {
           "id": "each-round-4",
           "text": "Deal 1 card to each player",
-          "ref": "Setup"
+          "ref": "Setup (p.9)"
         }
       ]
     },
@@ -53,10 +74,40 @@
       "steps": [
         {
           "id": "start-1",
+          "text": "Whoever was most recently on a date goes first (ties: the younger player)",
+          "ref": "Setup (p.9)",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          }
+        },
+        {
+          "id": "start-1b",
           "text": "Whoever most recently hand-wrote a letter goes first; later rounds start with the previous round's winner",
-          "ref": "Setup"
+          "ref": "Setup",
+          "condition": {
+            "modules": [
+              "new"
+            ]
+          }
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "classic",
+      "name": "Original (16 cards)",
+      "group": "Edition",
+      "defaultEnabled": true,
+      "note": "2-4 players."
+    },
+    {
+      "id": "new",
+      "name": "2019 edition (21 cards)",
+      "group": "Edition",
+      "note": "Plays up to 6."
     }
   ]
 }

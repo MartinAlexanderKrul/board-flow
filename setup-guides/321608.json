@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 321608,
   "gameName": "Hegemony: Lead Your Class to Victory",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -80,12 +80,12 @@
         {
           "id": "classes-1",
           "text": "Working Class: Population 10, Prosperity 0, 30 money, 1 Influence, 3 red Bill markers; draw 7 Action cards; 2 Cooperative Farm cards aside; place starting Workers",
-          "ref": "Working Class Setup"
+          "ref": "Working Class Setup (p.10)"
         },
         {
           "id": "classes-2",
           "text": "Capitalist Class: 120 in Revenue; 1 Food, 2 Luxury, 2 Education, 1 Influence in Storage (Food price 12, others 8); Free Trade Zone; 3 blue Bill markers; draw 7 Action cards; reveal 4 Companies as your Market",
-          "ref": "Capitalist Class Setup"
+          "ref": "Capitalist Class Setup (p.10)"
         },
         {
           "id": "classes-3",
@@ -93,7 +93,7 @@
           "condition": {
             "minPlayers": 3
           },
-          "ref": "Middle Class Setup"
+          "ref": "Middle Class Setup (p.10)"
         },
         {
           "id": "classes-4",
@@ -103,7 +103,7 @@
               4
             ]
           },
-          "ref": "State Setup"
+          "ref": "State Setup (p.10)"
         }
       ]
     },
@@ -115,7 +115,7 @@
         {
           "id": "reminders-1",
           "text": "The Preparation Phase is skipped in round 1",
-          "ref": "Preparation Phase"
+          "ref": "Preparation Phase (p.11)"
         }
       ]
     },
@@ -127,7 +127,7 @@
         {
           "id": "start-1",
           "text": "Round 1 starts with the Action Phase",
-          "ref": "Preparation Phase"
+          "ref": "Preparation Phase (p.11)"
         }
       ]
     }

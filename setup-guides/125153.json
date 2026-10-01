@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 125153,
   "gameName": "The Gallerist",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "board-1",
           "text": "Player boards around the game board, each by the Gallery of its color; Influence markers on 10",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-2",
@@ -37,7 +37,7 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-3",
@@ -52,42 +52,42 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-4",
           "text": "Shuffle the contracts facedown on the leftmost Sales office space; 4 faceup on the display",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-5",
           "text": "Shuffle the 16 Artist tiles and place them one at a time on spaces matching color and Art form; box any whose space is taken",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-6",
           "text": "The first blue Artist drawn is faceup with a white cube on its starting Fame; the rest facedown",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-7",
           "text": "A random Artist bonus tile on each Artist; a white Visitor on each red Artist; both Signature tokens beside each Artist",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-8",
           "text": "Works of Art shuffled per Art form, faceup by their studios; set the top tile of each stack aside",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-9",
           "text": "Random Visitors on each top Work of Art equal to its tickets",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-10",
           "text": "Promotion tokens stacked on their numbered Media spaces",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-11",
@@ -102,7 +102,7 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-12",
@@ -117,12 +117,12 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "board-13",
           "text": "4 random Visitors in the Plaza and 1 in each player's Lobby",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         }
       ]
     },
@@ -133,7 +133,7 @@
         {
           "id": "your-gallery-1",
           "text": "8 Assistants on the unemployment queue, 2 at desks in the office",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "your-gallery-2",
@@ -141,12 +141,12 @@
           "amounts": {
             "n": 10
           },
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "your-gallery-3",
           "text": "Deal each player 1 Art Dealer card and 1 Curator card, kept secret",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         }
       ]
     },
@@ -158,7 +158,7 @@
         {
           "id": "start-1",
           "text": "From the Start Player clockwise: choose a Location and one of its two actions",
-          "ref": "Overview of the Game"
+          "ref": "Overview of the Game (p.1)"
         }
       ]
     }

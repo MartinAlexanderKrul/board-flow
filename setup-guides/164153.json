@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 164153,
   "gameName": "Star Wars: Imperial Assault",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,28 +22,28 @@
         {
           "id": "campaign-setup-1",
           "text": "Choose the Imperial player (the most experienced); everyone else plays Rebel heroes for the whole campaign",
-          "ref": "Campaign Setup 1"
+          "ref": "Campaign Setup 1 (p.7)"
         },
         {
           "id": "campaign-setup-2",
           "text": "Each Rebel picks a Hero sheet, figure and Class deck; basic Item cards (no XP cost) faceup",
           "note": "A single Rebel player controls 2 heroes",
-          "ref": "Campaign Setup 2"
+          "ref": "Campaign Setup 2 (p.7)"
         },
         {
           "id": "campaign-setup-3",
           "text": "Imperial player picks an Imperial Class deck and lays out its basic Class card",
-          "ref": "Campaign Setup 3"
+          "ref": "Campaign Setup 3 (p.7)"
         },
         {
           "id": "campaign-setup-4",
           "text": "Agenda deck: the Imperial player picks 6 Agenda sets and shuffles those 18 cards",
-          "ref": "Campaign Setup 4"
+          "ref": "Campaign Setup 4 (p.7)"
         },
         {
           "id": "campaign-setup-5",
           "text": "Side Mission deck: each hero's red card, 4 green cards of the heroes' choice and 4 random gray cards, unseen",
-          "ref": "Campaign Setup 5"
+          "ref": "Campaign Setup 5 (p.7)"
         },
         {
           "id": "campaign-setup-6",
@@ -82,7 +82,7 @@
         {
           "id": "each-mission-3",
           "text": "Build the map and deploy figures as the mission shows",
-          "ref": "Mission Setup"
+          "ref": "Mission Setup (p.18)"
         }
       ]
     },
@@ -106,7 +106,7 @@
         {
           "id": "start-1",
           "text": "Start with the introductory mission",
-          "ref": "Campaign Setup"
+          "ref": "Campaign Setup (p.7)"
         }
       ]
     }

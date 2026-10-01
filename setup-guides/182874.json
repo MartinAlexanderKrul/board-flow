@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 182874,
   "gameName": "Grand Austria Hotel",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,28 +22,28 @@
         {
           "id": "boards-1",
           "text": "Game board and action board side by side; dustbin, VP markers, dishes and drinks nearby",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "boards-2",
           "text": "Shuffle the Guest cards; 5 faceup on the Guest spaces",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "boards-3",
           "text": "Shuffle the Staff cards facedown",
           "note": "First play: use the recommended sets",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "boards-4",
           "text": "One Politics card and one Emperor tile from each of A, B and C, faceup",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "boards-5",
           "text": "Room tiles sorted by color",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "boards-6",
@@ -57,12 +57,12 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "boards-7",
           "text": "Round marker on 1",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     },
@@ -73,7 +73,7 @@
         {
           "id": "players-1",
           "text": "Each player: Overview card, Hotel board (all on the same side; first play: front) and 6 disks",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-2",
@@ -81,27 +81,27 @@
           "amounts": {
             "n": 10
           },
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-3",
           "text": "A coffee, wine, cake and strudel in your Kitchen; draw 6 Staff cards",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-4",
           "text": "Random start player takes Turn Order tile 1, the next 2, and so on",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-5",
           "text": "From the last player, counterclockwise: each takes a faceup guest into their Cafe for free (slide and refill)",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-6",
           "text": "Each player prepares up to 3 rooms, starting bottom left, paying the printed cost",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     },
@@ -113,7 +113,7 @@
         {
           "id": "start-1",
           "text": "The start player rolls all dice and sorts them onto the Action spaces",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     }

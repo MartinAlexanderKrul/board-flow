@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 413246,
   "gameName": "Bomb Busters",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,17 +22,17 @@
         {
           "id": "mission-1",
           "text": "Pick a Mission card (play them in order)",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "mission-2",
           "text": "Captain: random for the first mission, then passes left; Captain card in front of them, everyone else picks a character card",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "mission-3",
           "text": "Captain reads the Mission card aloud and leaves it flipped at the bottom left of the board",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "mission-4",
@@ -47,28 +47,28 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "mission-5",
           "text": "Take all 48 blue wires (not in training missions 1-3) plus the number of random red and yellow wires the Mission card shows",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "mission-6",
           "text": "Mark the drawn red and yellow values on the board with their markers, blank side up",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "mission-7",
           "text": "Shuffle all wires facedown and deal them as evenly as possible among all tile stands",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "mission-8",
           "text": "Sort your wires in ascending order left to right, facing you",
           "note": "With 2 stands, deal and sort each separately",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -80,7 +80,7 @@
         {
           "id": "start-1",
           "text": "From the Captain clockwise: Dual Cut, Solo Cut or Reveal Your Red Wires",
-          "ref": "The Game"
+          "ref": "The Game (p.5)"
         }
       ]
     }

@@ -2,18 +2,34 @@
   "schemaVersion": 1,
   "gameId": 478,
   "gameName": "Citadels",
-  "version": 1,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Citadels rules (Z-Man Games edition, via RulesPal)"
+      "Citadels rulebook (Fantasy Flight Games, classic edition)",
+      "Citadels rules, 2016 edition (Z-Man Games, via RulesPal)"
     ]
   },
   "players": {
     "min": 2,
     "max": 8
   },
+  "modules": [
+    {
+      "id": "classic",
+      "name": "Classic edition",
+      "group": "Edition",
+      "defaultEnabled": true,
+      "note": "8 characters; plays 2-7."
+    },
+    {
+      "id": "new",
+      "name": "2016 edition",
+      "group": "Edition",
+      "note": "Character tokens and unique districts; plays up to 8."
+    }
+  ],
   "sections": [
     {
       "id": "setup",
@@ -21,35 +37,75 @@
       "steps": [
         {
           "id": "setup-1",
+          "text": "Remove the bonus character and district cards (marked with a white star)",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "p.3 step 1"
+        },
+        {
+          "id": "setup-2",
+          "text": "Shuffle the 8 character cards into the Character Deck",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "p.3 step 2"
+        },
+        {
+          "id": "setup-3",
+          "text": "Shuffle the remaining district cards into the District Deck",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "p.3 step 3"
+        },
+        {
+          "id": "setup-4",
           "text": "Choose the cast of characters and put their tokens in the center in rank order",
+          "condition": {
+            "modules": [
+              "new"
+            ]
+          },
           "note": "First game: the eight characters and 14 unique districts listed in the rulebook",
           "ref": "Complete Setup"
         },
         {
-          "id": "setup-2",
-          "text": "Shuffle 14 unique districts with the 54 basic districts; deal {n} to each player",
+          "id": "setup-5",
+          "text": "Shuffle 14 unique districts with the 54 basic districts",
+          "condition": {
+            "modules": [
+              "new"
+            ]
+          },
+          "ref": "Complete Setup"
+        },
+        {
+          "id": "setup-6",
+          "text": "Deal {n} district cards to each player",
           "amounts": {
             "n": 4
           },
-          "ref": "Complete Setup"
+          "ref": "p.3 step 4"
         },
         {
-          "id": "setup-3",
-          "text": "District deck facedown and all gold in the center as the bank",
-          "ref": "Complete Setup"
-        },
-        {
-          "id": "setup-4",
-          "text": "Each player takes {n} gold",
+          "id": "setup-7",
+          "text": "Each player takes {n} gold from the bank",
           "amounts": {
             "n": 2
           },
-          "ref": "Complete Setup"
+          "ref": "p.3 step 5"
         },
         {
-          "id": "setup-5",
-          "text": "The oldest player takes the crown and the character cards",
-          "ref": "Complete Setup"
+          "id": "setup-8",
+          "text": "The oldest player takes the Crown",
+          "ref": "p.3 step 6"
         }
       ]
     },
@@ -60,11 +116,32 @@
       "steps": [
         {
           "id": "reminders-1",
-          "text": "Selection phase with 8 characters: 4 players set aside 2 faceup + 1 facedown, 5 players 1 + 1, 6-7 players 0 + 1",
+          "text": "Each round: 1 character facedown out of the round, then faceup characters: 4 players 2, 5 players 1, 6-7 players 0",
           "condition": {
-            "minPlayers": 4
+            "minPlayers": 4,
+            "maxPlayers": 7
           },
-          "ref": "Selection Phase with 8 Characters"
+          "ref": "p.4-5"
+        },
+        {
+          "id": "reminders-2",
+          "text": "If the King would be set aside faceup, replace it and shuffle it back in",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "reminders-3",
+          "text": "2, 3 or 7 players use the special rules",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "p.8-9"
         }
       ]
     },
@@ -75,8 +152,8 @@
       "steps": [
         {
           "id": "start-1",
-          "text": "The crowned player starts the selection phase",
-          "ref": "Complete Setup"
+          "text": "The player with the Crown takes the Character Deck and chooses first",
+          "ref": "p.5"
         }
       ]
     }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 332772,
   "gameName": "Revive",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,37 +22,37 @@
         {
           "id": "board-1",
           "text": "5 starting area tiles shuffled faceup on the middle spaces; the other 25 area tiles shuffled facedown on the rest",
-          "ref": "General Setup"
+          "ref": "General Setup (p.5)"
         },
         {
           "id": "board-2",
           "text": "4 of the 5 large location tiles, random side up, on the corner spaces; box the fifth",
-          "ref": "General Setup"
+          "ref": "General Setup (p.5)"
         },
         {
           "id": "board-3",
           "text": "Citizen cards shuffled facedown; 5 faceup",
-          "ref": "General Setup"
+          "ref": "General Setup (p.5)"
         },
         {
           "id": "board-4",
           "text": "Machine tokens in 3 piles by color; 3 from each faceup",
-          "ref": "General Setup"
+          "ref": "General Setup (p.5)"
         },
         {
           "id": "board-5",
           "text": "Slot modules shuffled facedown; 5 faceup",
-          "ref": "General Setup"
+          "ref": "General Setup (p.5)"
         },
         {
           "id": "board-6",
           "text": "Crate tokens shuffled in a facedown stack",
-          "ref": "General Setup"
+          "ref": "General Setup (p.5)"
         },
         {
           "id": "board-7",
           "text": "Leave the campaign deck unshuffled and unseen; falcon and red punch boards stay in the box",
-          "ref": "General Components"
+          "ref": "General Components (p.2)"
         }
       ]
     },
@@ -63,37 +63,37 @@
         {
           "id": "players-1",
           "text": "Player board and a random tribe board, sun side up, to its left",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.6)"
         },
         {
           "id": "players-2",
           "text": "Grey, green and yellow machine track markers on space 1; 1 energy in your storage; switch token slid up",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.6)"
         },
         {
           "id": "players-3",
           "text": "A set of 6 starting citizen cards with the same letter: shuffle, 3 facedown to the right (resting area), 3 faceup below your tribe board",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.6)"
         },
         {
           "id": "players-4",
           "text": "5 small and 3 large buildings and 7 population figures on your tribe board",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.6)"
         },
         {
           "id": "players-5",
           "text": "Pawns: one on 0 of the point track, one on the lowest hibernation space",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.6)"
         },
         {
           "id": "players-6",
           "text": "20 progress markers: 15 on the machine track reward spaces, 5 along the bottom of your tribe board",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.6)"
         },
         {
           "id": "players-7",
           "text": "4 resource markers on the bottom of the resource tracks",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.6)"
         },
         {
           "id": "players-8",
@@ -101,7 +101,7 @@
           "condition": {
             "minPlayers": 2
           },
-          "ref": "Starting Resources"
+          "ref": "Starting Resources (p.7)"
         },
         {
           "id": "players-9",
@@ -111,7 +111,7 @@
               1
             ]
           },
-          "ref": "Starting Resources"
+          "ref": "Starting Resources (p.7)"
         }
       ]
     },
@@ -123,7 +123,7 @@
         {
           "id": "start-1",
           "text": "Pick a starting player at random",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.6)"
         }
       ]
     }

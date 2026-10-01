@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 224517,
   "gameName": "Brass: Birmingham",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "board-1",
           "text": "Board on its day or night side",
-          "ref": "Board Setup"
+          "ref": "Board Setup (p.3)"
         },
         {
           "id": "board-2",
@@ -30,38 +30,38 @@
           "condition": {
             "maxPlayers": 3
           },
-          "ref": "Board Setup"
+          "ref": "Board Setup (p.3)"
         },
         {
           "id": "board-3",
           "text": "Wild Location and Wild Industry cards faceup on 2 Card Draw Areas; shuffle the rest facedown on the third as the Draw Deck",
-          "ref": "Board Setup"
+          "ref": "Board Setup (p.3)"
         },
         {
           "id": "board-4",
           "text": "Shuffle the Merchant tiles; 1 faceup on each Merchant space marked for your player count",
           "note": "2 players: none in Warrington or Nottingham; 3 players: none in Nottingham",
-          "ref": "Board Setup"
+          "ref": "Board Setup (p.3)"
         },
         {
           "id": "board-5",
           "text": "1 beer barrel on each barrel space beside a non-blank Merchant tile",
-          "ref": "Board Setup"
+          "ref": "Board Setup (p.3)"
         },
         {
           "id": "board-6",
           "text": "Coal Market: a black cube on every space except one of the 1-pound spaces",
-          "ref": "Board Setup"
+          "ref": "Board Setup (p.3)"
         },
         {
           "id": "board-7",
           "text": "Iron Market: an orange cube on every space except both 1-pound spaces",
-          "ref": "Board Setup"
+          "ref": "Board Setup (p.3)"
         },
         {
           "id": "board-8",
           "text": "Remaining cubes and barrels as the General Supply; money as the Bank",
-          "ref": "Board Setup"
+          "ref": "Board Setup (p.3)"
         }
       ]
     },
@@ -75,22 +75,22 @@
           "amounts": {
             "n": 17
           },
-          "ref": "Player Area Setup"
+          "ref": "Player Area Setup (p.3)"
         },
         {
           "id": "players-2",
           "text": "Choose a Character tile; matching Link tiles in your area",
-          "ref": "Player Area Setup"
+          "ref": "Player Area Setup (p.3)"
         },
         {
           "id": "players-3",
           "text": "Stack your Industry tiles on their mat slots, black-top side facedown",
-          "ref": "Player Area Setup"
+          "ref": "Player Area Setup (p.3)"
         },
         {
           "id": "players-4",
           "text": "VP marker on 0 and Income marker on 10 of the Progress Track",
-          "ref": "Player Area Setup"
+          "ref": "Player Area Setup (p.3)"
         },
         {
           "id": "players-5",
@@ -98,12 +98,12 @@
           "amounts": {
             "n": 8
           },
-          "ref": "Player Area Setup"
+          "ref": "Player Area Setup (p.3)"
         },
         {
           "id": "players-6",
           "text": "Shuffle all Character tiles and place them in random order on the Turn Order Track",
-          "ref": "Player Area Setup"
+          "ref": "Player Area Setup (p.3)"
         }
       ]
     },
@@ -115,7 +115,7 @@
         {
           "id": "start-1",
           "text": "First round of the Canal Era: follow the Turn Order Track",
-          "ref": "Playing the Game"
+          "ref": "Playing the Game (p.4)"
         }
       ]
     }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 285967,
   "gameName": "Ankh: Gods of Egypt",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -24,12 +24,12 @@
         {
           "id": "god",
           "text": "Each player picks a god: God figure, 6 Warriors, God and Merged God dashboards, Ankh tokens, 7 Battle cards, Player Aid",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "specials",
           "text": "Ra takes 3 Sun tokens, Osiris 3 Underworld tokens, Amun the Amun token",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "follower",
@@ -37,12 +37,12 @@
           "amounts": {
             "n": 1
           },
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "ankhs",
           "text": "6 Ankh tokens on the bottom row of your god dashboard; the rest as your personal pool",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         }
       ]
     },
@@ -53,12 +53,12 @@
         {
           "id": "first",
           "text": "Random first player (or whoever owns the most cats); clockwise order",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "devotion",
           "text": "In reverse order, stack plastic Ankh tokens on the bottom of the Devotion track (first player on top)",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "actions",
@@ -68,27 +68,27 @@
               "default": "your number of"
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "event",
           "text": "Event marker on the first space of the Events track",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "scenario",
           "text": "Choose a scenario that allows your player count",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "monuments",
           "text": "Monuments, Conflict Order tokens and Camels as the scenario shows; rest (and the Battle Tiebreaker) in the supply",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "figures",
           "text": "Figures and Ankh tokens per the scenario; the first player is player #1, then clockwise",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         }
       ]
     },
@@ -99,7 +99,7 @@
         {
           "id": "cards",
           "text": "Choose one Level 1, one Level 2 and one Level 3 Guardian card",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "guardian-figures",
@@ -114,12 +114,12 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "additional",
           "text": "Apply the scenario's Additional Setup Rules",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         }
       ]
     },
@@ -172,7 +172,7 @@
         {
           "id": "regions",
           "text": "Conflict Order tokens belong to whole regions, not single spaces",
-          "ref": "Setup"
+          "ref": "Setup (p.12)"
         },
         {
           "id": "pantheon-gods",
@@ -204,7 +204,7 @@
         {
           "id": "first-turn",
           "text": "The first player takes an action",
-          "ref": "Gameplay"
+          "ref": "Gameplay (p.2)"
         }
       ]
     }

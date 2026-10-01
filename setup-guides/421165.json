@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 421165,
   "gameName": "Pantheum: Demigods of Olympia",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -23,12 +23,12 @@
         {
           "id": "tiles",
           "text": "City Tiles randomly in a 4x4 grid; flip the top-right one to show the Pit of Tartarus",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "epic",
           "text": "Epic Demigod Market: 1 random green, red and blue Epic Demigod, each with the other card of its color underneath",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "demigods",
@@ -36,7 +36,7 @@
           "amounts": {
             "n": 4
           },
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "favor",
@@ -51,17 +51,17 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "landscapes",
           "text": "Stacks of 6 Forest, 6 Mountain and 6 River Landscape Tiles right of the city",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "bank",
           "text": "Bank: green, red and blue Element Tokens (or the Element Tray)",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     },
@@ -72,12 +72,12 @@
         {
           "id": "boards",
           "text": "Each player: Action Board, Quick Guide Card and God Standee",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "plan",
           "text": "Draw a random Divine Plan Card, rotate its dark square to match the Pit of Tartarus from your view; hide it in a white stand",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "off-board",
@@ -98,17 +98,17 @@
         {
           "id": "kronos",
           "text": "Kronos on the Pit of Tartarus; shuffle the Kronos Action Cards facedown",
-          "ref": "Solo Mode"
+          "ref": "Solo Mode (p.3)"
         },
         {
           "id": "blight",
           "text": "Blight Tokens by the Element Tokens in the Bank",
-          "ref": "Solo Mode"
+          "ref": "Solo Mode (p.3)"
         },
         {
           "id": "pandora",
           "text": "Remove the Pandora Demigod Cards from the Demigod Deck",
-          "ref": "Solo Mode"
+          "ref": "Solo Mode (p.3)"
         }
       ]
     },

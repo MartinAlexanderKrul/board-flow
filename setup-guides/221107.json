@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 221107,
   "gameName": "Pandemic Legacy: Season 2",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,38 +22,38 @@
         {
           "id": "each-game-1",
           "text": "Supply cubes into the stockpile as the supply track shows for the month; extras to the reserve",
-          "ref": "Setup 1"
+          "ref": "Setup 1 (p.8)"
         },
         {
           "id": "each-game-2",
           "text": "Objectives and turning points from earlier games onto the board",
-          "ref": "Setup 1"
+          "ref": "Setup 1 (p.8)"
         },
         {
           "id": "each-game-3",
           "text": "Plague cubes on their spot; Incident marker on 0; Infection Rate marker on the leftmost 2",
-          "ref": "Setup 1"
+          "ref": "Setup 1 (p.8)"
         },
         {
           "id": "each-game-4",
           "text": "Read the Legacy deck one card at a time until a PAUSE or STOP card",
-          "ref": "Setup 2"
+          "ref": "Setup 2 (p.8)"
         },
         {
           "id": "each-game-5",
           "text": "Place all stockpile Supply cubes on grid locations, any number per location",
-          "ref": "Setup 3"
+          "ref": "Setup 3 (p.8)"
         },
         {
           "id": "each-game-6",
           "text": "Shuffle the Infection cards and flip 9: move 1 Supply cube from each city to the stockpile, or add a Plague cube and advance the Incident marker if it has none",
           "note": "Rule stickers change this step later in the campaign",
-          "ref": "Setup 4"
+          "ref": "Setup 4 (p.8)"
         },
         {
           "id": "each-game-7",
           "text": "Choose Rationed Event cards up to your rationing level (4 at the start); shuffle with the Produce Supplies and City cards",
-          "ref": "Setup 6"
+          "ref": "Setup 6 (p.8)"
         },
         {
           "id": "each-game-8",
@@ -67,17 +67,17 @@
               }
             }
           },
-          "ref": "Setup 6"
+          "ref": "Setup 6 (p.8)"
         },
         {
           "id": "each-game-9",
           "text": "Split the rest into 5 piles with 1 Epidemic shuffled into each; stack them, smaller piles at the bottom",
-          "ref": "Setup 7"
+          "ref": "Setup 7 (p.8)"
         },
         {
           "id": "each-game-10",
           "text": "Each player picks a character: pawn and Reference cards; pawn at their home",
-          "ref": "Setup 8"
+          "ref": "Setup 8 (p.8)"
         }
       ]
     },
@@ -89,7 +89,7 @@
         {
           "id": "start-1",
           "text": "Pick a pawn at random: that player goes first, then clockwise",
-          "ref": "Setup 9"
+          "ref": "Setup 9 (p.8)"
         }
       ]
     }

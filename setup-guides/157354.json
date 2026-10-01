@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 157354,
   "gameName": "Five Tribes",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -25,7 +25,7 @@
           "condition": {
             "minPlayers": 3
           },
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         },
         {
           "id": "setup-2",
@@ -35,7 +35,7 @@
               2
             ]
           },
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         },
         {
           "id": "setup-3",
@@ -44,37 +44,37 @@
             "n": 50
           },
           "note": "9 fives and 5 ones",
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         },
         {
           "id": "setup-4",
           "text": "Mix the 30 Tiles into a faceup 5 x 6 rectangle",
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         },
         {
           "id": "setup-5",
           "text": "Mix the 90 Meeples in the bag and drop 3 at random on each Tile",
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         },
         {
           "id": "setup-6",
           "text": "Bid Order and Turn Order tracks beside it; Turn markers placed randomly on the Bid Order track",
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         },
         {
           "id": "setup-7",
           "text": "Resource cards shuffled; 9 faceup in a row",
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         },
         {
           "id": "setup-8",
           "text": "Djinn cards shuffled; 3 faceup",
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         },
         {
           "id": "setup-9",
           "text": "Palm Trees, Palaces and remaining Gold Coins in the bank",
-          "ref": "Setting up the game"
+          "ref": "Setting up the game (p.2)"
         }
       ]
     },

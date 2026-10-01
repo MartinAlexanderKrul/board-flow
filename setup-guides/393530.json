@@ -2,34 +2,83 @@
   "schemaVersion": 1,
   "gameId": 393530,
   "gameName": "Karak II",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Karak II rulebook (Albi, via RulesPal)"]
+    "sources": [
+      "Karak II rulebook (Albi, via RulesPal)"
+    ]
   },
-  "players": { "min": 2, "max": 5 },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
   "sections": [
     {
       "id": "landscape",
       "title": "Landscape",
       "steps": [
-        { "id": "start-tile", "text": "Starting landscape tile (three connected tiles) in the middle", "ref": "Setting Up the Game" },
-        { "id": "tiers", "text": "Shuffle each tier of landscape tiles separately", "ref": "Setting Up the Game" },
-        { "id": "deck", "text": "Tier-2 deck facedown, tier-1 deck on top of it as one deck", "ref": "Setting Up the Game" },
-        { "id": "bag", "text": "All monster army tokens in the bag", "ref": "Setting Up the Game" },
-        { "id": "general", "text": "Dark General standee, Praetorian tokens and the Plague token by the bag", "ref": "Setting Up the Game" },
-        { "id": "tray", "text": "Resource tray (food, wood, stone and Unit dice) within everyone's reach", "ref": "Setting Up the Game" }
+        {
+          "id": "start-tile",
+          "text": "Starting landscape tile (three connected tiles) in the middle",
+          "ref": "Setting Up the Game (p.3)"
+        },
+        {
+          "id": "tiers",
+          "text": "Shuffle each tier of landscape tiles separately",
+          "ref": "Setting Up the Game (p.3)"
+        },
+        {
+          "id": "deck",
+          "text": "Tier-2 deck facedown, tier-1 deck on top of it as one deck",
+          "ref": "Setting Up the Game (p.3)"
+        },
+        {
+          "id": "bag",
+          "text": "All monster army tokens in the bag",
+          "ref": "Setting Up the Game (p.3)"
+        },
+        {
+          "id": "general",
+          "text": "Dark General standee, Praetorian tokens and the Plague token by the bag",
+          "ref": "Setting Up the Game (p.3)"
+        },
+        {
+          "id": "tray",
+          "text": "Resource tray (food, wood, stone and Unit dice) within everyone's reach",
+          "ref": "Setting Up the Game (p.3)"
+        }
       ]
     },
     {
       "id": "players",
       "title": "Players",
       "steps": [
-        { "id": "board", "text": "Each player: a Hero board, 1 city token, {l} life tokens (heart up) and 6 building tokens (grey side up) on their spaces", "amounts": { "l": 5 }, "ref": "Setting Up the Game" },
-        { "id": "banner", "text": "Banner token above the 0 space", "ref": "Setting Up the Game" },
-        { "id": "hero", "text": "Shuffle the 6 Hero cards facedown; each player draws 1 onto their board; box the rest", "note": "Or choose heroes in die-roll order", "ref": "Setting Up the Game" },
-        { "id": "city", "text": "Your Hero's city token in front of you, grey (unbuilt) side up", "ref": "Setting Up the Game" }
+        {
+          "id": "board",
+          "text": "Each player: a Hero board, 1 city token, {l} life tokens (heart up) and 6 building tokens (grey side up) on their spaces",
+          "amounts": {
+            "l": 5
+          },
+          "ref": "Setting Up the Game (p.3)"
+        },
+        {
+          "id": "banner",
+          "text": "Banner token above the 0 space",
+          "ref": "Setting Up the Game (p.3)"
+        },
+        {
+          "id": "hero",
+          "text": "Shuffle the 6 Hero cards facedown; each player draws 1 onto their board; box the rest",
+          "note": "Or choose heroes in die-roll order",
+          "ref": "Setting Up the Game (p.3)"
+        },
+        {
+          "id": "city",
+          "text": "Your Hero's city token in front of you, grey (unbuilt) side up",
+          "ref": "Setting Up the Game (p.3)"
+        }
       ]
     },
     {
@@ -37,7 +86,11 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "move", "text": "2 actions per turn; before each action you may move 1 tile", "ref": "Playing the Game" }
+        {
+          "id": "move",
+          "text": "2 actions per turn; before each action you may move 1 tile",
+          "ref": "Playing the Game (p.4)"
+        }
       ]
     },
     {
@@ -45,7 +98,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "Players take turns clockwise", "ref": "Playing the Game" }
+        {
+          "id": "first",
+          "text": "Players take turns clockwise",
+          "ref": "Playing the Game (p.4)"
+        }
       ]
     }
   ]

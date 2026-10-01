@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 9220,
   "gameName": "Saboteur",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -36,12 +36,12 @@
               }
             }
           },
-          "ref": "Preparation"
+          "ref": "Preparation (p.1)"
         },
         {
           "id": "each-round-2",
           "text": "Start card faceup; the 3 goal cards shuffled facedown seven card widths away, one card length apart",
-          "ref": "Preparation"
+          "ref": "Preparation (p.1)"
         },
         {
           "id": "each-round-3",
@@ -60,12 +60,12 @@
               }
             }
           },
-          "ref": "Preparation"
+          "ref": "Preparation (p.1)"
         },
         {
           "id": "each-round-4",
           "text": "Draw pile next to the goal cards; gold nugget cards shuffled facedown",
-          "ref": "Preparation"
+          "ref": "Preparation (p.1)"
         }
       ]
     },

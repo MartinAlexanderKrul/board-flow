@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 241477,
   "gameName": "Karak",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -23,12 +23,12 @@
         {
           "id": "start-tile",
           "text": "Starting dungeon tile in the middle of the table",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "tiles",
           "text": "Shuffle the other tiles facedown within everyone's reach",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "bag",
@@ -57,17 +57,17 @@
           "amounts": {
             "n": 5
           },
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "hero",
           "text": "Each player picks a hero card (chosen or random) onto their sheet",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "figures",
           "text": "Hero figures in their stands (stand color matches the card) on the starting tile",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         }
       ]
     },
@@ -101,7 +101,7 @@
         {
           "id": "first",
           "text": "Roll the dice to determine the starting player",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         }
       ]
     }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 148228,
   "gameName": "Splendor",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,12 +22,12 @@
         {
           "id": "setup-1",
           "text": "Shuffle each development deck separately; stack them in a column, level 1 at the bottom",
-          "ref": "Game setup"
+          "ref": "Game setup (p.2)"
         },
         {
           "id": "setup-2",
           "text": "Reveal 4 cards from each level",
-          "ref": "Game setup"
+          "ref": "Game setup (p.2)"
         },
         {
           "id": "setup-3",
@@ -41,7 +41,7 @@
               }
             }
           },
-          "ref": "Game setup"
+          "ref": "Game setup (p.2)"
         },
         {
           "id": "setup-4",
@@ -55,7 +55,7 @@
               }
             }
           },
-          "ref": "Game setup"
+          "ref": "Game setup (p.2)"
         }
       ]
     },

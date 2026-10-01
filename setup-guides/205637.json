@@ -2,39 +2,112 @@
   "schemaVersion": 1,
   "gameId": 205637,
   "gameName": "Arkham Horror: The Card Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Arkham Horror: The Card Game Learn to Play (Revised Core Set, via RulesPal)"]
+    "sources": [
+      "Arkham Horror: The Card Game Learn to Play (Revised Core Set, via RulesPal)"
+    ]
   },
-  "players": { "min": 1, "max": 4 },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
   "sections": [
     {
       "id": "investigators",
       "title": "Investigators",
       "steps": [
-        { "id": "choose", "text": "Each player chooses an investigator and takes their pack", "note": "Solo: Roland Banks recommended", "ref": "First Game Setup 1" },
-        { "id": "deck", "text": "Investigator card faceup in your play area; shuffle your deck", "ref": "First Game Setup 2" },
-        { "id": "lead", "text": "Choose a lead investigator: they take the lead investigator token and the Campaign Guide", "ref": "First Game Setup 3" },
-        { "id": "tokens", "text": "Damage, horror, clue/doom and resource tokens in a pool within reach", "ref": "First Game Setup 4" },
-        { "id": "chaos", "text": "Chaos bag: the tokens for your chosen difficulty (first game: the 16 shown)", "ref": "First Game Setup 5" },
-        { "id": "resources", "text": "Each investigator takes {n} resources", "amounts": { "n": 5 }, "ref": "First Game Setup 6" },
-        { "id": "hand", "text": "Draw {n}; set aside weaknesses and redraw; one mulligan of up to 5 cards; shuffle set-aside cards back", "amounts": { "n": 5 }, "ref": "First Game Setup 7" }
+        {
+          "id": "choose",
+          "text": "Each player chooses an investigator and takes their pack",
+          "note": "Solo: Roland Banks recommended",
+          "ref": "First Game Setup 1 (p.6)"
+        },
+        {
+          "id": "deck",
+          "text": "Investigator card faceup in your play area; shuffle your deck",
+          "ref": "First Game Setup 2 (p.6)"
+        },
+        {
+          "id": "lead",
+          "text": "Choose a lead investigator: they take the lead investigator token and the Campaign Guide",
+          "ref": "First Game Setup 3 (p.6)"
+        },
+        {
+          "id": "tokens",
+          "text": "Damage, horror, clue/doom and resource tokens in a pool within reach",
+          "ref": "First Game Setup 4 (p.6)"
+        },
+        {
+          "id": "chaos",
+          "text": "Chaos bag: the tokens for your chosen difficulty (first game: the 16 shown)",
+          "ref": "First Game Setup 5 (p.6)"
+        },
+        {
+          "id": "resources",
+          "text": "Each investigator takes {n} resources",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "First Game Setup 6 (p.6)"
+        },
+        {
+          "id": "hand",
+          "text": "Draw {n}; set aside weaknesses and redraw; one mulligan of up to 5 cards; shuffle set-aside cards back",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "First Game Setup 7 (p.6)"
+        }
       ]
     },
     {
       "id": "scenario",
       "title": "Scenario",
       "steps": [
-        { "id": "gather", "text": "Gather every card of each encounter set the Campaign Guide lists for the scenario", "note": "First scenario: The Gathering", "ref": "Scenario Setup 8" },
-        { "id": "agenda", "text": "Agenda deck in order, 1a on top", "ref": "Scenario Setup 9" },
-        { "id": "act", "text": "Act deck in order, 1a on top", "ref": "Scenario Setup 10" },
-        { "id": "reference", "text": "Scenario reference card next to the agenda deck", "ref": "Scenario Setup 11" },
-        { "id": "locations", "text": "Put the starting locations into play unrevealed side up as the guide says; set aside the rest", "ref": "Scenario Setup 12" },
-        { "id": "encounter", "text": "Set aside the cards the scenario names; shuffle the rest into the encounter deck", "ref": "Scenario Setup 13" },
-        { "id": "intro", "text": "Read the scenario introduction and the faceup agenda and act", "ref": "Scenario Setup 14" },
-        { "id": "place", "text": "Place investigators at the starting location and reveal it (clues = its clue value, often per investigator)", "ref": "Scenario Setup 15" }
+        {
+          "id": "gather",
+          "text": "Gather every card of each encounter set the Campaign Guide lists for the scenario",
+          "note": "First scenario: The Gathering",
+          "ref": "Scenario Setup 8 (p.8)"
+        },
+        {
+          "id": "agenda",
+          "text": "Agenda deck in order, 1a on top",
+          "ref": "Scenario Setup 9 (p.8)"
+        },
+        {
+          "id": "act",
+          "text": "Act deck in order, 1a on top",
+          "ref": "Scenario Setup 10 (p.8)"
+        },
+        {
+          "id": "reference",
+          "text": "Scenario reference card next to the agenda deck",
+          "ref": "Scenario Setup 11 (p.8)"
+        },
+        {
+          "id": "locations",
+          "text": "Put the starting locations into play unrevealed side up as the guide says; set aside the rest",
+          "ref": "Scenario Setup 12 (p.8)"
+        },
+        {
+          "id": "encounter",
+          "text": "Set aside the cards the scenario names; shuffle the rest into the encounter deck",
+          "ref": "Scenario Setup 13 (p.8)"
+        },
+        {
+          "id": "intro",
+          "text": "Read the scenario introduction and the faceup agenda and act",
+          "ref": "Scenario Setup 14 (p.8)"
+        },
+        {
+          "id": "place",
+          "text": "Place investigators at the starting location and reveal it (clues = its clue value, often per investigator)",
+          "ref": "Scenario Setup 15 (p.8)"
+        }
       ]
     },
     {
@@ -42,7 +115,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "round", "text": "Round 1 skips the Mythos phase - start with the Investigation phase", "ref": "Round Sequence" }
+        {
+          "id": "round",
+          "text": "Round 1 skips the Mythos phase - start with the Investigation phase",
+          "ref": "Round Sequence (p.11)"
+        }
       ]
     }
   ]

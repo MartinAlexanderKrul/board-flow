@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 244521,
   "gameName": "Quacks",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,18 +22,18 @@
         {
           "id": "table-1",
           "text": "Scoring Track in the middle; Flame on space 1 of the Turn Indicator; 4 seal tiles on the seal spaces, 0 up",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "table-2",
           "text": "Orange and black books out (black book on the page for your player count)",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "table-3",
           "text": "Green, blue and red books from one set, chips sorted beside them; yellow and purple books aside until turns 2 and 3",
           "note": "First game: Set 1 (one bookmark)",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -44,17 +44,17 @@
         {
           "id": "players-1",
           "text": "Each player: a pot (side without test tubes up), a bag, a scoring marker on their seal tile, droplet on 0",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "players-2",
           "text": "Flask full side up on the large trivet; rat stone on the small trivet",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "players-3",
           "text": "Into your bag: 4 white 1-chips, 2 white 2-chips, 1 white 3-chip, 1 orange 1-chip, 1 green 1-chip",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -66,7 +66,7 @@
         {
           "id": "start-1",
           "text": "The last person to cook goes first; they shuffle the Fortune Teller cards into a facedown pile",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     }

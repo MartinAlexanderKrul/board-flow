@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 414317,
   "gameName": "Harmonies",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -25,33 +25,33 @@
           "condition": {
             "minPlayers": 2
           },
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-2",
           "text": "All tokens in the Pouch next to the Central board",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-3",
           "text": "Fill each of the 5 Central board spaces with 3 random tokens",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-4",
           "text": "Shuffle the Animal cards; 5 faceup next to the board, the rest as a draw pile; Animal cubes within reach",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-5",
           "text": "Each player takes a Personal board (everyone on the same side) and the matching Reminder card",
           "note": "First games: Side A; leave the Nature's Spirit cards in the box",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-6",
           "text": "Whoever last saw a magnificent landscape is first; point the Central board's arrow at them",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },

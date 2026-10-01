@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 175914,
   "gameName": "Food Chain Magnate",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Food Chain Magnate rules overview (Splotter Spellen, via RulesPal)"
+      "Food Chain Magnate rulebook (Splotter Spellen)"
     ]
   },
   "players": {
@@ -21,22 +21,57 @@
       "steps": [
         {
           "id": "setup-1",
-          "text": "Lay out the employee and milestone cards, removing some employee types by player count",
-          "ref": "Setup"
+          "text": "Lay out the employee and milestone cards as the rulebook pictures",
+          "ref": "p.4"
+        },
+        {
+          "id": "limit",
+          "text": "For each employee card type marked with the limit symbol, keep only {n} card(s)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 1,
+                "3": 1,
+                "4": 2,
+                "5": 3
+              }
+            }
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "billboards",
+          "text": "Billboards back in the box: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "#12, #15, #16",
+                "3": "#15, #16",
+                "4": "#16",
+                "5": "none"
+              }
+            }
+          },
+          "ref": "p.4"
         },
         {
           "id": "setup-2",
-          "text": "Build a map of randomly drawn, randomly rotated tiles (size by player count)",
-          "ref": "Setup"
-        },
-        {
-          "id": "setup-3",
-          "text": "Each player: a CEO card, 3 restaurants and 3 bank reserve cards",
-          "ref": "Setup"
+          "text": "Map: random tiles, each randomly rotated, in a {s} grid",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "3x3",
+                "3": "3x4",
+                "4": "4x4",
+                "5": "5x4"
+              }
+            }
+          },
+          "ref": "p.4"
         },
         {
           "id": "setup-4",
-          "text": "Bank: {n} dollars; players start with no money",
+          "text": "Bank: {n} dollars in small bills; players start with no money",
           "amounts": {
             "n": {
               "byPlayers": {
@@ -47,17 +82,28 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "p.6"
+        },
+        {
+          "id": "setup-3",
+          "text": "Each player picks a restaurant chain: a CEO card, 3 restaurants and 3 bank reserve cards",
+          "ref": "p.6"
+        },
+        {
+          "id": "order",
+          "text": "Shuffle the turn order markers and place them on the track in the order drawn",
+          "ref": "p.6"
         },
         {
           "id": "setup-5",
-          "text": "Random turn order; from last to first, each player places one starting restaurant (entrance on a road, not sharing a tile entrance)",
-          "ref": "Setup"
+          "text": "From last to first in turn order, each player places a starting restaurant or passes; anyone who passed must place in a second round in turn order",
+          "note": "Entrance next to a road, on empty squares, not on the same tile as another restaurant's entrance",
+          "ref": "p.6"
         },
         {
           "id": "setup-6",
-          "text": "Each player secretly chooses one bank reserve card",
-          "ref": "Setup"
+          "text": "Each player secretly chooses one bank reserve card, facedown by the bank; discard the others unseen",
+          "ref": "p.6"
         }
       ]
     },
@@ -68,8 +114,8 @@
       "steps": [
         {
           "id": "start-1",
-          "text": "Round 1: restructure your company",
-          "ref": "Round"
+          "text": "Phase 1, Restructuring: in the first turn the CEO is the only card played",
+          "ref": "p.6"
         }
       ]
     }

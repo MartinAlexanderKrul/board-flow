@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 167355,
   "gameName": "Nemesis",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -85,7 +85,7 @@
         {
           "id": "reminders-1",
           "text": "The first player token passes left each round, but not on the first turn",
-          "ref": "Round"
+          "ref": "Round (p.28)"
         }
       ]
     },
@@ -97,7 +97,7 @@
         {
           "id": "start-1",
           "text": "From the first player clockwise, each performs 2 Actions or passes",
-          "ref": "Player Rounds"
+          "ref": "Player Rounds (p.10)"
         }
       ]
     }

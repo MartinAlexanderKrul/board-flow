@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 178900,
   "gameName": "Codenames",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -23,12 +23,12 @@
           "id": "setup-1",
           "text": "Split into two teams; each picks a spymaster, both spymasters sitting on the same side",
           "note": "Standard game needs 4+ players; 2-3 player variants are on the back of the rules",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-2",
           "text": "25 random codenames in a 5 x 5 grid",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-3",

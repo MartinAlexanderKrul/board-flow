@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 266524,
   "gameName": "Parks",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,22 +22,22 @@
         {
           "id": "board-1",
           "text": "Board in the middle with the two token trays beside it",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "board-2",
           "text": "Parks deck shuffled; 3 faceup in the top slots",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "board-3",
           "text": "Gear deck shuffled; 3 faceup in the bottom slots",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "board-4",
           "text": "Season deck shuffled on its area; reveal the top card",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -48,18 +48,18 @@
         {
           "id": "players-1",
           "text": "Deal 1 faceup Canteen to each player",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "players-2",
           "text": "Deal 2 Year cards each: keep 1 facedown, discard the other",
           "note": "First game: deal just 1",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "players-3",
           "text": "2 Hikers on the Trailhead and a Campfire, lit side up",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -98,7 +98,7 @@
         {
           "id": "start-1",
           "text": "First Hiker Marker to whoever most recently took a hike; Camera to the player on their right",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     }

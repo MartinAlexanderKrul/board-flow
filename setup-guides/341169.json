@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 341169,
   "gameName": "Great Western Trail: Second Edition",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,32 +22,32 @@
         {
           "id": "board-1",
           "text": "Game board in the middle",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-2",
           "text": "Shuffle the station master tiles; one faceup on each of the 5 station master spaces; box the other 4",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-3",
           "text": "7 neutral building tiles on the neutral spaces: by matching letter A-G for a first game, random afterwards",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-4",
           "text": "Job market token on the top dashed space of the job market",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-5",
           "text": "Worker, outlaw and hazard tiles facedown, sorted by the number on their backs (1, 2, 3) into their bags next to Kansas City",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-6",
           "text": "Reveal tiles with a 1 one by one onto the board until 7 are placed",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     },
@@ -96,7 +96,7 @@
         {
           "id": "reminders-1",
           "text": "At the start of your very first turn, discard down to 4 cards",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     },

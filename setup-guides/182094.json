@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 182094,
   "gameName": "BANG! The Duel",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -53,7 +53,7 @@
         {
           "id": "sides",
           "text": "One player is the Law, the other the Outlaws; keep the summary cards handy",
-          "ref": "Setup",
+          "ref": "Setup (p.2)",
           "condition": {
             "notModules": [
               "third-law",
@@ -68,27 +68,27 @@
             "n": 4
           },
           "note": "Draw more for a longer game",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "reserve",
           "text": "Look at them, shuffle facedown into your reserve pile",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "active",
           "text": "Draw 2 from the reserve; choose your Active Character secretly, then both reveal and place the AC token",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "rearguard",
           "text": "Reveal the other as your Rearguard Character next to the AC",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "bullets",
           "text": "Matching bullet tokens on each character; leftover bullets in the middle",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -99,12 +99,12 @@
         {
           "id": "deck",
           "text": "Shuffle your 40-card deck facedown in front of you",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "hands",
           "text": "Starting hands: the Law draws 4, the Outlaws draw 5",
-          "ref": "Setup",
+          "ref": "Setup (p.2)",
           "condition": {
             "notModules": [
               "third-law",
@@ -142,7 +142,7 @@
         {
           "id": "discard",
           "text": "Both players share one discard pile",
-          "ref": "Object of the Game"
+          "ref": "Object of the Game (p.3)"
         }
       ]
     },
@@ -154,7 +154,7 @@
         {
           "id": "first",
           "text": "The Law begins: draw 2 cards",
-          "ref": "Playing the Game",
+          "ref": "Playing the Game (p.4)",
           "condition": {
             "notModules": [
               "third-law",

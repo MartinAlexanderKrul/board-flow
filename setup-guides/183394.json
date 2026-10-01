@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 183394,
   "gameName": "Viticulture Essential Edition",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "board-1",
           "text": "Each player: rooster above the wake-up chart, cork on the start of the victory point track, wine bottle on the middle of the Residual Payment Tracker",
-          "ref": "Game Board Setup"
+          "ref": "Game Board Setup (p.3)"
         },
         {
           "id": "board-2",
@@ -43,28 +43,28 @@
         {
           "id": "players-2",
           "text": "Draw a random rooster: that player is first and takes the first player token",
-          "ref": "First Player"
+          "ref": "First Player (p.2)"
         },
         {
           "id": "players-3",
           "text": "Shuffle the mama and papa cards; deal one of each faceup to each player",
           "note": "Variant: draw 2 of each and choose 1",
-          "ref": "Mamas and Papas"
+          "ref": "Mamas and Papas (p.4)"
         },
         {
           "id": "players-4",
           "text": "Mama: 2 regular workers and the cards she shows as your opening hand",
-          "ref": "Mamas and Papas"
+          "ref": "Mamas and Papas (p.4)"
         },
         {
           "id": "players-5",
           "text": "Papa: 1 grande worker and his lira; in clockwise order choose his structure or the extra lira",
-          "ref": "Mamas and Papas"
+          "ref": "Mamas and Papas (p.4)"
         },
         {
           "id": "players-6",
           "text": "Discard the mama and papa cards",
-          "ref": "Mamas and Papas"
+          "ref": "Mamas and Papas (p.4)"
         }
       ]
     },
@@ -76,7 +76,7 @@
         {
           "id": "reminders-1",
           "text": "You can't drop below -5 victory points",
-          "ref": "Game Board Setup"
+          "ref": "Game Board Setup (p.3)"
         }
       ]
     },

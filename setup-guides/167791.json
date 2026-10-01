@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 167791,
   "gameName": "Terraforming Mars",
-  "version": 1,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,22 +22,22 @@
         {
           "id": "board-1",
           "text": "Game board in the center; 9 ocean tiles on their reserved space",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         },
         {
           "id": "board-2",
           "text": "Temperature and oxygen markers on their starting positions; generation marker on 1",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         },
         {
           "id": "board-3",
           "text": "Resource cubes and remaining tiles within reach",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         },
         {
           "id": "board-4",
           "text": "Remove Corporate Era cards (red-and-white icon) from the project and corporation cards; shuffle the project deck beside the board",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         }
       ]
     },
@@ -48,32 +48,32 @@
         {
           "id": "players-1",
           "text": "First player marker to the most recent winner",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         },
         {
           "id": "players-2",
           "text": "Each player: a color's markers and a player board, a marker on 1 of each production track, one on 20 of the TR track",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         },
         {
           "id": "players-3",
-          "text": "New players: a Beginner Corporation - 42 MegaCredits and 10 project cards as their hand",
-          "ref": "Setup"
+          "text": "New players: a Beginner Corporation each - they keep all 10 project cards for free",
+          "ref": "Setup (p.7)"
         },
         {
           "id": "players-4",
           "text": "Everyone else: 2 corporation cards (from the 10 standard ones) and 10 project cards",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         },
         {
           "id": "players-5",
           "text": "Choose 1 corporation and which project cards to keep; discard the rest facedown",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         },
         {
           "id": "players-6",
           "text": "In player order: reveal your corporation, take its starting resources and production, pay 3 MegaCredits per card kept",
-          "ref": "Setup"
+          "ref": "Setup (p.7)"
         }
       ]
     },

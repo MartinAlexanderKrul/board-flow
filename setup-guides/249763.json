@@ -2,25 +2,63 @@
   "schemaVersion": 1,
   "gameId": 249763,
   "gameName": "Claim 2",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Claim 2 rulebook (White Goblin Games, via RulesPal)"]
+    "sources": [
+      "Claim 2 rulebook (White Goblin Games, via RulesPal)"
+    ]
   },
-  "players": { "min": 2, "max": 2 },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
   "modules": [
-    { "id": "custom", "name": "Custom deck (with Claim)", "note": "Mix factions from Claim and Claim 2." }
+    {
+      "id": "custom",
+      "name": "Custom deck (with Claim)",
+      "note": "Mix factions from Claim and Claim 2."
+    }
   ],
   "sections": [
     {
       "id": "deck",
       "title": "Deck",
       "steps": [
-        { "id": "pair", "text": "Use either Knights & Goblins (Claim) or Gnomes & Giants (Claim 2); box the other pair", "condition": { "modules": ["custom"] }, "ref": "Custom deck" },
-        { "id": "factions", "text": "Pick 3 factions from Claim and/or Claim 2; box the unused ones", "condition": { "modules": ["custom"] }, "ref": "Custom deck" },
-        { "id": "shuffle", "text": "Shuffle all cards facedown as a deck in the middle", "ref": "Set up" },
-        { "id": "deal", "text": "Deal each player {n} cards (keep them hidden)", "amounts": { "n": 13 }, "ref": "Set up" }
+        {
+          "id": "pair",
+          "text": "Use either Knights & Goblins (Claim) or Gnomes & Giants (Claim 2); box the other pair",
+          "condition": {
+            "modules": [
+              "custom"
+            ]
+          },
+          "ref": "Custom deck"
+        },
+        {
+          "id": "factions",
+          "text": "Pick 3 factions from Claim and/or Claim 2; box the unused ones",
+          "condition": {
+            "modules": [
+              "custom"
+            ]
+          },
+          "ref": "Custom deck"
+        },
+        {
+          "id": "shuffle",
+          "text": "Shuffle all cards facedown as a deck in the middle",
+          "ref": "Set up (p.1)"
+        },
+        {
+          "id": "deal",
+          "text": "Deal each player {n} cards (keep them hidden)",
+          "amounts": {
+            "n": 13
+          },
+          "ref": "Set up (p.1)"
+        }
       ]
     },
     {
@@ -28,8 +66,16 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "follow", "text": "Follow the Leader's faction if you can", "ref": "Phase One" },
-        { "id": "win", "text": "Win the majority in at least 3 factions to win", "ref": "Game overview" }
+        {
+          "id": "follow",
+          "text": "Follow the Leader's faction if you can",
+          "ref": "Phase One (p.1)"
+        },
+        {
+          "id": "win",
+          "text": "Win the majority in at least 3 factions to win",
+          "ref": "Game overview (p.1)"
+        }
       ]
     },
     {
@@ -37,7 +83,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "reveal", "text": "Flip the top deck card between you; the youngest player leads the first trick", "ref": "Phase One" }
+        {
+          "id": "reveal",
+          "text": "Flip the top deck card between you; the youngest player leads the first trick",
+          "ref": "Phase One (p.1)"
+        }
       ]
     }
   ]

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 326937,
   "gameName": "Unmatched: For King and Country",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -43,29 +43,29 @@
         {
           "id": "battlefield",
           "text": "Choose a battlefield and place it on the table",
-          "ref": "Setup 1"
+          "ref": "Setup 1 (p.6)"
         },
         {
           "id": "hero",
           "text": "Each player chooses a hero: action cards, character card, hero figure, sidekicks and health dials",
-          "ref": "Setup 2"
+          "ref": "Setup 2 (p.6)"
         },
         {
           "id": "health",
           "text": "Set hero and sidekick health dials to the starting health on the character card",
           "note": "Sidekicks without a dial have 1 health",
-          "ref": "Setup 3"
+          "ref": "Setup 3 (p.6)"
         },
         {
           "id": "deck",
           "text": "Shuffle your action cards facedown; draw 5",
-          "ref": "Setup 4",
+          "ref": "Setup 4 (p.6)",
           "note": "Black Widow also starts with The Moscow Protocol"
         },
         {
           "id": "items",
           "text": "One random Battlefield Item token on each designated space (faceup or facedown)",
-          "ref": "Battlefield Items"
+          "ref": "Battlefield Items (p.4)"
         }
       ]
     },
@@ -81,7 +81,7 @@
               2
             ]
           },
-          "ref": "Setup 5"
+          "ref": "Setup 5 (p.6)"
         },
         {
           "id": "older",
@@ -91,7 +91,7 @@
               2
             ]
           },
-          "ref": "Setup 6"
+          "ref": "Setup 6 (p.6)"
         },
         {
           "id": "team-place",
@@ -101,7 +101,7 @@
               "teams"
             ]
           },
-          "ref": "Team Play"
+          "ref": "Team Play (p.19)"
         }
       ]
     },
@@ -113,7 +113,7 @@
         {
           "id": "win",
           "text": "Defeat the opposing hero to win (in teams, both opposing heroes)",
-          "ref": "Winning the Game"
+          "ref": "Winning the Game (p.13)"
         },
         {
           "id": "team-order",
@@ -123,7 +123,7 @@
               "teams"
             ]
           },
-          "ref": "Team Play"
+          "ref": "Team Play (p.19)"
         },
         {
           "id": "ffa-first",
@@ -145,7 +145,7 @@
         {
           "id": "first",
           "text": "The younger player takes the first turn",
-          "ref": "Setup 7"
+          "ref": "Setup 7 (p.6)"
         }
       ]
     }

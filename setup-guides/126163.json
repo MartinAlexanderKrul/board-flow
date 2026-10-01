@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 126163,
   "gameName": "Tzolk'in: The Mayan Calendar",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "board-1",
           "text": "Wood, stone, gold, crystal skulls and unused workers in the bank; corn in the middle of the Tzolk'in gear",
-          "ref": "Bank"
+          "ref": "Bank (p.4)"
         },
         {
           "id": "board-2",
@@ -36,17 +36,17 @@
               }
             }
           },
-          "ref": "Jungle"
+          "ref": "Jungle (p.4)"
         },
         {
           "id": "board-3",
           "text": "Turn the Tzolk'in gear so the arrowhead points at a blue-green end-of-age Food Day tooth",
-          "ref": "Calendar"
+          "ref": "Calendar (p.4)"
         },
         {
           "id": "board-4",
           "text": "Shuffle Age 1 buildings, Age 2 buildings and monuments separately",
-          "ref": "Buildings & Monuments"
+          "ref": "Buildings & Monuments (p.7)"
         },
         {
           "id": "board-5",
@@ -60,12 +60,12 @@
               }
             }
           },
-          "ref": "Buildings & Monuments"
+          "ref": "Buildings & Monuments (p.7)"
         },
         {
           "id": "board-6",
           "text": "Deal 6 Age 1 buildings faceup; both building stacks facedown by the board",
-          "ref": "Buildings & Monuments"
+          "ref": "Buildings & Monuments (p.7)"
         }
       ]
     },
@@ -76,22 +76,22 @@
         {
           "id": "players-1",
           "text": "Each player: a player board (lighter side up), 3 workers, 7 markers and a scoring counter on 0",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.5)"
         },
         {
           "id": "players-2",
           "text": "Markers: 1 on the white step of each of the 3 temples, 1 on the leftmost space of each of the 4 technology tracks",
-          "ref": "Player Setup"
+          "ref": "Player Setup (p.5)"
         },
         {
           "id": "players-3",
           "text": "Starting Player Marker to whoever most recently sacrificed something",
-          "ref": "Starting Player"
+          "ref": "Starting Player (p.2)"
         },
         {
           "id": "players-4",
           "text": "Deal each player 4 Starting Wealth Tiles; keep 2, then all reveal and take what they show",
-          "ref": "Starting Wealth Tiles"
+          "ref": "Starting Wealth Tiles (p.2)"
         }
       ]
     },
@@ -103,7 +103,7 @@
         {
           "id": "reminders-1",
           "text": "The Starting Player Marker doesn't rotate - take it with a worker on the Starting Player Space",
-          "ref": "Starting Player"
+          "ref": "Starting Player (p.2)"
         }
       ]
     },
@@ -115,7 +115,7 @@
         {
           "id": "start-1",
           "text": "The starting player places or picks up workers, then clockwise",
-          "ref": "Starting Player"
+          "ref": "Starting Player (p.2)"
         }
       ]
     }

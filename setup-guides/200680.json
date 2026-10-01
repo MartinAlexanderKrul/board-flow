@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 200680,
   "gameName": "Agricola (Revised Edition)",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -32,12 +32,12 @@
         {
           "id": "players-3",
           "text": "Deal each player 7 minor improvements",
-          "ref": "Minor Improvements"
+          "ref": "Minor Improvements (p.9)"
         },
         {
           "id": "players-4",
           "text": "Remove occupations not used at your player count ([3+], [4]); deal each player 7",
-          "ref": "Occupations"
+          "ref": "Occupations (p.3)"
         }
       ]
     },
@@ -58,7 +58,7 @@
         {
           "id": "board-3",
           "text": "Major improvements on the supply board",
-          "ref": "Major Improvements"
+          "ref": "Major Improvements (p.9)"
         },
         {
           "id": "board-4",

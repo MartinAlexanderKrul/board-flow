@@ -2,59 +2,181 @@
   "schemaVersion": 1,
   "gameId": 407343,
   "gameName": "Ironwood",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Ironwood rulebook (via RulesPal)"]
+    "sources": [
+      "Ironwood rulebook (via RulesPal)"
+    ]
   },
-  "players": { "min": 1, "max": 2 },
+  "players": {
+    "min": 1,
+    "max": 2
+  },
   "modules": [
-    { "id": "solo-ww", "name": "Solo: you play Woodwalkers", "group": "Solo side", "defaultEnabled": true, "players": { "min": 1, "max": 1 } },
-    { "id": "solo-ic", "name": "Solo: you play Ironclad", "group": "Solo side", "players": { "min": 1, "max": 1 } }
+    {
+      "id": "solo-ww",
+      "name": "Solo: you play Woodwalkers",
+      "group": "Solo side",
+      "defaultEnabled": true,
+      "players": {
+        "min": 1,
+        "max": 1
+      }
+    },
+    {
+      "id": "solo-ic",
+      "name": "Solo: you play Ironclad",
+      "group": "Solo side",
+      "players": {
+        "min": 1,
+        "max": 1
+      }
+    }
   ],
   "sections": [
     {
       "id": "duel",
       "title": "Two-player setup",
-      "condition": { "players": [2] },
+      "condition": {
+        "players": [
+          2
+        ]
+      },
       "steps": [
-        { "id": "factions", "text": "Choose or randomly assign the Ironclad and the Woodwalkers", "ref": "Setup" },
-        { "id": "board", "text": "Main board 2-player side up; each player's faction board 2-player side up", "ref": "Setup" },
-        { "id": "base", "text": "Each player takes their 3 base cards (star)", "ref": "Setup" },
-        { "id": "special", "text": "Each player shuffles their special-card deck facedown by their board", "ref": "Setup" },
-        { "id": "ww-vision", "text": "Woodwalkers: shuffle the 4 inner-forest vision cards (3 crystals), draw 1 secretly; shuffle the other 3 into the vision deck on your board", "ref": "Setup" },
-        { "id": "ww-fighters", "text": "Woodwalkers: 2 Fighters on each outer forest; Totems and other Fighters by your board", "ref": "Setup" },
-        { "id": "ic-drill", "text": "Ironclad: Drill and 1 Fighter on Ferrum, 3 Fighters on each inner mountain connected to Ferrum", "ref": "Setup" },
-        { "id": "ic-forge", "text": "Ironclad: all Forge tokens on your board; other Fighters and Golems nearby", "ref": "Setup" },
-        { "id": "supply", "text": "All markers and crystals as a common supply", "ref": "Setup" }
+        {
+          "id": "factions",
+          "text": "Choose or randomly assign the Ironclad and the Woodwalkers",
+          "ref": "Setup (p.2)"
+        },
+        {
+          "id": "board",
+          "text": "Main board 2-player side up; each player's faction board 2-player side up",
+          "ref": "Setup (p.2)"
+        },
+        {
+          "id": "base",
+          "text": "Each player takes their 3 base cards (star)",
+          "ref": "Setup (p.2)"
+        },
+        {
+          "id": "special",
+          "text": "Each player shuffles their special-card deck facedown by their board",
+          "ref": "Setup (p.2)"
+        },
+        {
+          "id": "ww-vision",
+          "text": "Woodwalkers: shuffle the 4 inner-forest vision cards (3 crystals), draw 1 secretly; shuffle the other 3 into the vision deck on your board",
+          "ref": "Setup (p.2)"
+        },
+        {
+          "id": "ww-fighters",
+          "text": "Woodwalkers: 2 Fighters on each outer forest; Totems and other Fighters by your board",
+          "ref": "Setup (p.2)"
+        },
+        {
+          "id": "ic-drill",
+          "text": "Ironclad: Drill and 1 Fighter on Ferrum, 3 Fighters on each inner mountain connected to Ferrum",
+          "ref": "Setup (p.2)"
+        },
+        {
+          "id": "ic-forge",
+          "text": "Ironclad: all Forge tokens on your board; other Fighters and Golems nearby",
+          "ref": "Setup (p.2)"
+        },
+        {
+          "id": "supply",
+          "text": "All markers and crystals as a common supply",
+          "ref": "Setup (p.2)"
+        }
       ]
     },
     {
       "id": "solo-ww",
       "title": "Solo vs the Ironbot",
-      "condition": { "modules": ["solo-ww"] },
+      "condition": {
+        "modules": [
+          "solo-ww"
+        ]
+      },
       "steps": [
-        { "id": "ww-board", "text": "Main board solo side up; crystals in reach; your Woodwalker board and the Ironclad board solo side up", "ref": "Solo Setup" },
-        { "id": "ww-hands", "text": "Your 3 base cards in hand; the bot's 3 base cards facedown as the \"bot's hand\"", "ref": "Solo Setup" },
-        { "id": "ww-decks", "text": "Remove WW17, WW19, WW22, WW36 from your deck; shuffle yours and the bot's decks onto their spaces", "ref": "Solo Setup" },
-        { "id": "ww-solo-vision", "text": "Shuffle the 4 inner-mountain vision cards, draw 1; shuffle the other 3 into the vision deck", "ref": "Solo Setup" },
-        { "id": "ww-pieces", "text": "2 Woodwalker Fighters on every outer forest; Drill and 1 Ironclad Fighter on Ferrum, 3 on each adjacent inner mountain", "ref": "Solo Setup" },
-        { "id": "ww-aid", "text": "Bot Control Aid open, marker on the Expansive Stance; Turn Procedure card Alert side up; Magic die in reach", "ref": "Solo Setup" }
+        {
+          "id": "ww-board",
+          "text": "Main board solo side up; crystals in reach; your Woodwalker board and the Ironclad board solo side up",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ww-hands",
+          "text": "Your 3 base cards in hand; the bot's 3 base cards facedown as the \"bot's hand\"",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ww-decks",
+          "text": "Remove WW17, WW19, WW22, WW36 from your deck; shuffle yours and the bot's decks onto their spaces",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ww-solo-vision",
+          "text": "Shuffle the 4 inner-mountain vision cards, draw 1; shuffle the other 3 into the vision deck",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ww-pieces",
+          "text": "2 Woodwalker Fighters on every outer forest; Drill and 1 Ironclad Fighter on Ferrum, 3 on each adjacent inner mountain",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ww-aid",
+          "text": "Bot Control Aid open, marker on the Expansive Stance; Turn Procedure card Alert side up; Magic die in reach",
+          "ref": "Solo Setup"
+        }
       ]
     },
     {
       "id": "solo-ic",
       "title": "Solo vs the Woodbot",
-      "condition": { "modules": ["solo-ic"] },
+      "condition": {
+        "modules": [
+          "solo-ic"
+        ]
+      },
       "steps": [
-        { "id": "ic-board", "text": "Main board (numbered locations) solo side up; crystals in reach; your Ironclad board and the Woodwalker board solo side up", "ref": "Solo Setup" },
-        { "id": "ic-hands", "text": "Your 3 base cards in hand; the bot's 3 base cards facedown as the \"bot's hand\"", "ref": "Solo Setup" },
-        { "id": "ic-decks", "text": "Remove IC13, IC17, IC27, IC33, IC36 from your deck; shuffle yours and the bot's decks onto their spaces", "ref": "Solo Setup" },
-        { "id": "ic-vision", "text": "The 4 inner-mountain vision cards shuffled as the vision deck; the other 6 faceup right of the bot board as its discard", "ref": "Solo Setup" },
-        { "id": "ic-markers", "text": "A marker on all four inner mountains' marking slots", "ref": "Solo Setup" },
-        { "id": "ic-pieces", "text": "2 Woodwalker Fighters on every outer forest; Drill and 1 of your Fighters on Ferrum, 3 on each adjacent mountain", "ref": "Solo Setup" },
-        { "id": "ic-aid", "text": "Closed Bot Control Aid and the Magic die in reach", "ref": "Solo Setup" }
+        {
+          "id": "ic-board",
+          "text": "Main board (numbered locations) solo side up; crystals in reach; your Ironclad board and the Woodwalker board solo side up",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ic-hands",
+          "text": "Your 3 base cards in hand; the bot's 3 base cards facedown as the \"bot's hand\"",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ic-decks",
+          "text": "Remove IC13, IC17, IC27, IC33, IC36 from your deck; shuffle yours and the bot's decks onto their spaces",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ic-vision",
+          "text": "The 4 inner-mountain vision cards shuffled as the vision deck; the other 6 faceup right of the bot board as its discard",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ic-markers",
+          "text": "A marker on all four inner mountains' marking slots",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ic-pieces",
+          "text": "2 Woodwalker Fighters on every outer forest; Drill and 1 of your Fighters on Ferrum, 3 on each adjacent mountain",
+          "ref": "Solo Setup"
+        },
+        {
+          "id": "ic-aid",
+          "text": "Closed Bot Control Aid and the Magic die in reach",
+          "ref": "Solo Setup"
+        }
       ]
     },
     {
@@ -62,9 +184,21 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "order", "text": "The Woodwalkers always go first in turn order", "ref": "Turn order" },
-        { "id": "crystals", "text": "Each round: Woodwalkers gain 1 crystal, Ironclad 2", "ref": "I/1" },
-        { "id": "first-draw", "text": "First round: you may draw 4 special cards, keep 2 and shuffle 2 back", "ref": "I/2" }
+        {
+          "id": "order",
+          "text": "The Woodwalkers always go first in turn order",
+          "ref": "Turn order (p.2)"
+        },
+        {
+          "id": "crystals",
+          "text": "Each round: Woodwalkers gain 1 crystal, Ironclad 2",
+          "ref": "I/1 (p.5)"
+        },
+        {
+          "id": "first-draw",
+          "text": "First round: you may draw 4 special cards, keep 2 and shuffle 2 back",
+          "ref": "I/2"
+        }
       ]
     },
     {
@@ -72,7 +206,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "prep", "text": "Preparation phase: gain crystals and draw 2 special cards", "ref": "Round Steps" }
+        {
+          "id": "prep",
+          "text": "Preparation phase: gain crystals and draw 2 special cards",
+          "ref": "Round Steps (p.2)"
+        }
       ]
     }
   ]

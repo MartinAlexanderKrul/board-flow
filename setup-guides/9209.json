@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 9209,
   "gameName": "Ticket to Ride",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "setup-1",
           "text": "Each player: 45 Train Cars and a Scoring Marker on Start",
-          "ref": "Setting up the Game"
+          "ref": "Setting up the Game (p.2)"
         },
         {
           "id": "setup-2",
@@ -30,17 +30,17 @@
           "amounts": {
             "n": 4
           },
-          "ref": "Setting up the Game"
+          "ref": "Setting up the Game (p.2)"
         },
         {
           "id": "setup-3",
           "text": "Longest Path Bonus card faceup by the board",
-          "ref": "Setting up the Game"
+          "ref": "Setting up the Game (p.2)"
         },
         {
           "id": "setup-4",
           "text": "Deal 3 Destination Tickets each: keep at least 2, return the rest to the bottom of the deck",
-          "ref": "Setting up the Game"
+          "ref": "Setting up the Game (p.2)"
         }
       ]
     },
@@ -52,7 +52,7 @@
         {
           "id": "start-1",
           "text": "The most experienced traveler goes first, then clockwise",
-          "ref": "The Game Turn"
+          "ref": "The Game Turn (p.2)"
         }
       ]
     }

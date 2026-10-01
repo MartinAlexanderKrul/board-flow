@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 1927,
   "gameName": "Munchkin",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -42,7 +42,7 @@
         {
           "id": "start-1",
           "text": "Roll the dice to decide who goes first; play passes to the left",
-          "ref": "Starting and Finishing the Game"
+          "ref": "Starting and Finishing the Game (p.1)"
         }
       ]
     }

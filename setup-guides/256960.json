@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 256960,
   "gameName": "Pax Pamir: Second Edition",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "deck-market-1",
           "text": "Favored suit marker next to the political suit",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "deck-market-2",
@@ -39,27 +39,27 @@
             }
           },
           "note": "5 + 1 per player; solo counts Wakhan",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "deck-market-3",
           "text": "One Dominance Check in each of the 4 rightmost piles",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "deck-market-4",
           "text": "Shuffle the other event cards: 2 into the second pile from the left, 1 into each of the 4 piles to its right",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "deck-market-5",
           "text": "Shuffle each pile separately, then stack them with the Dominance Check piles at the bottom - don't shuffle the deck",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "deck-market-6",
           "text": "Market: 12 faceup cards in 2 rows of 6, filling column by column from the left, top row first",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     },
@@ -73,22 +73,22 @@
           "amounts": {
             "n": 4
           },
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-2",
           "text": "One cylinder on 0 of the victory point track, the rest on your board",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-3",
           "text": "Coins and coalition blocks near the play area",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-4",
           "text": "From a random player clockwise, each sets their loyalty dial",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "players-5",
@@ -98,7 +98,7 @@
               1
             ]
           },
-          "ref": "Wakhan"
+          "ref": "Wakhan (p.3)"
         }
       ]
     },
@@ -110,7 +110,7 @@
         {
           "id": "start-1",
           "text": "The last player to choose loyalty takes the first turn",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     }

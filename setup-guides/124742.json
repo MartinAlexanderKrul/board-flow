@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 124742,
   "gameName": "Android: Netrunner",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -23,12 +23,12 @@
           "id": "setup-1",
           "text": "Decide who is the Runner and who the Corporation; identity card faceup, take the matching deck",
           "note": "First game: Shaper and Jinteki starter decks (a faction's cards plus that side's neutral cards)",
-          "ref": "Setup 1"
+          "ref": "Setup 1 (p.5)"
         },
         {
           "id": "setup-2",
           "text": "Token bank: credits, advancement, brain damage, tag, bad publicity and generic tokens",
-          "ref": "Setup 2"
+          "ref": "Setup 2 (p.5)"
         },
         {
           "id": "setup-3",
@@ -36,12 +36,12 @@
           "amounts": {
             "n": 5
           },
-          "ref": "Setup 3"
+          "ref": "Setup 3 (p.5)"
         },
         {
           "id": "setup-4",
           "text": "Shuffle your deck and offer it to your opponent to shuffle",
-          "ref": "Setup 4"
+          "ref": "Setup 4 (p.5)"
         },
         {
           "id": "setup-5",
@@ -50,7 +50,7 @@
             "n": 5
           },
           "note": "A mulligan hand must be kept",
-          "ref": "Setup 5"
+          "ref": "Setup 5 (p.5)"
         }
       ]
     },
@@ -62,7 +62,7 @@
         {
           "id": "start-1",
           "text": "The Corporation always takes the first turn",
-          "ref": "Setup"
+          "ref": "Setup (p.5)"
         }
       ]
     }

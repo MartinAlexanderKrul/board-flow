@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 161936,
   "gameName": "Pandemic Legacy: Season 1",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,22 +22,22 @@
         {
           "id": "board-1",
           "text": "Structures nearby; disease cubes in 4 supply piles by color",
-          "ref": "Setup"
+          "ref": "Setup (p.6)"
         },
         {
           "id": "board-2",
           "text": "A research station in each city with a starting research station sticker (at first only Atlanta)",
-          "ref": "Setup"
+          "ref": "Setup (p.6)"
         },
         {
           "id": "board-3",
           "text": "Infection rate marker on the leftmost space; outbreaks marker and cure markers in place",
-          "ref": "Setup"
+          "ref": "Setup (p.6)"
         },
         {
           "id": "board-4",
           "text": "Shuffle the Infection Deck; infect the first cities with 3, 2 and 1 cubes as directed",
-          "ref": "Setup"
+          "ref": "Setup (p.6)"
         }
       ]
     },
@@ -48,17 +48,17 @@
         {
           "id": "players-1",
           "text": "Deal each player a hand of City cards and give each a role",
-          "ref": "Setup"
+          "ref": "Setup (p.6)"
         },
         {
           "id": "players-2",
           "text": "Build the Player Deck: City and Event cards with Epidemic cards shuffled in for your difficulty",
-          "ref": "Setup"
+          "ref": "Setup (p.6)"
         },
         {
           "id": "players-3",
           "text": "Read the Mission Briefing and this month's objectives",
-          "ref": "Setup"
+          "ref": "Setup (p.6)"
         }
       ]
     },
@@ -70,7 +70,7 @@
         {
           "id": "reminders-1",
           "text": "Stickers add setup steps as the campaign goes on - check the rulebook's setup page each game",
-          "ref": "Setup"
+          "ref": "Setup (p.6)"
         }
       ]
     },

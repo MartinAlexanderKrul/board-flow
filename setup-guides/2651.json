@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 2651,
   "gameName": "Power Grid",
-  "version": 1,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -33,27 +33,53 @@
               }
             }
           },
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "board-2",
           "text": "Fill the resource market: coal on spaces 1-8, oil 3-8, garbage 6-8, uranium 14-16",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "board-3",
           "text": "Other resource tokens and the money by the board; the resource refill card for your player count beside the market",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "board-4",
           "text": "Shuffle the plug-backed power plants (03-15); draw 8 faceup: the 4 smallest in the top row (current market), the other 4 below (future market), each row ascending",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "board-5",
           "text": "Set 1 more plug-backed power plant aside facedown",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
+        },
+        {
+          "id": "remove",
+          "text": "Set the Step 3 card aside; shuffle the socket-backed plants and remove unseen: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "1 plug-backed and 5 socket-backed plants",
+                "3": "2 plug-backed and 6 socket-backed plants",
+                "4": "1 plug-backed and 3 socket-backed plants",
+                "5": "none",
+                "6": "none"
+              }
+            }
+          },
+          "ref": "Preparation (p.3)"
+        },
+        {
+          "id": "stack",
+          "text": "Shuffle all remaining plants into the facedown supply stack; Step 3 card facedown underneath, the set-aside plug-backed plant facedown on top",
+          "ref": "Preparation (p.3)"
+        },
+        {
+          "id": "hammer",
+          "text": "Auction hammer and discount token by the market; the two barriers by the scoring track",
+          "ref": "Preparation (p.3)"
         }
       ]
     },
@@ -67,12 +93,12 @@
           "amounts": {
             "n": 50
           },
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "players-2",
           "text": "One house on 0 of the scoring track; one house each drawn at random onto the player order track",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         }
       ]
     },
@@ -84,7 +110,7 @@
         {
           "id": "reminders-1",
           "text": "Whenever a plant is added, re-sort the market so the 4 cheapest are the current market",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         }
       ]
     },
@@ -96,7 +122,7 @@
         {
           "id": "start-1",
           "text": "Auction power plants in player order; each player may buy at most 1 per round",
-          "ref": "Playing the game"
+          "ref": "Playing the game (p.4)"
         }
       ]
     }

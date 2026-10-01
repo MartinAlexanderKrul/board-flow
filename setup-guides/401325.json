@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 401325,
   "gameName": "The Witcher: Path of Destiny",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -64,7 +64,7 @@
         {
           "id": "playmat",
           "text": "Playmat on the table with room for each Player board and Timeline",
-          "ref": "Setup 1"
+          "ref": "Setup 1 (p.20)"
         },
         {
           "id": "monster-card",
@@ -79,7 +79,7 @@
         {
           "id": "tale-deck",
           "text": "Tale card deck on its spot, cover faceup like a book",
-          "ref": "Setup 2a",
+          "ref": "Setup 2a (p.20)",
           "condition": {
             "notModules": [
               "legendary"
@@ -90,7 +90,7 @@
         {
           "id": "destiny",
           "text": "Destiny and Path tokens by the Tale cards: Destiny III at the bottom, II, then I on top",
-          "ref": "Setup 2b",
+          "ref": "Setup 2b (p.20)",
           "condition": {
             "notModules": [
               "legendary"
@@ -110,18 +110,18 @@
               }
             }
           },
-          "ref": "Setup 3",
+          "ref": "Setup 3 (p.20)",
           "note": "Legendary Monsters: first remove Main deck cards 2, 7, 9 and 50"
         },
         {
           "id": "extra-xp",
           "text": "Extra Experience token next to the bottom available row",
-          "ref": "Setup 4"
+          "ref": "Setup 4 (p.20)"
         },
         {
           "id": "symbols",
           "text": "Symbol tokens on the table",
-          "ref": "Setup 5"
+          "ref": "Setup 5 (p.20)"
         }
       ]
     },
@@ -132,28 +132,28 @@
         {
           "id": "draft",
           "text": "Whoever last read a Witcher book picks first: shuffle Player boards facedown, take 2, keep 1, return 1; clockwise",
-          "ref": "Setup 6",
+          "ref": "Setup 6 (p.20)",
           "note": "Legendary Monsters: Dandelion may not be chosen; no Side Quests"
         },
         {
           "id": "xp",
           "text": "Regular Experience marker on 0; Golden marker on the spot shown right of the track",
-          "ref": "Player Components"
+          "ref": "Player Components (p.10)"
         },
         {
           "id": "abilities",
           "text": "1 Ability token active side up on the leftmost Ability; the other 3 beside the board",
-          "ref": "Player Components"
+          "ref": "Player Components (p.10)"
         },
         {
           "id": "standee",
           "text": "Standees on the Initiative track in the Tale's order (highest closest to the Tale cards)",
-          "ref": "Setup 2c"
+          "ref": "Setup 2c (p.20)"
         },
         {
           "id": "vp",
           "text": "One Player token on 0 of the Victory Point track",
-          "ref": "Player Components",
+          "ref": "Player Components (p.10)",
           "condition": {
             "notModules": [
               "legendary"
@@ -163,7 +163,7 @@
         {
           "id": "hand",
           "text": "Your 5 starting Action cards as your hand; Side Quest card tucked faceup under your board",
-          "ref": "Player Components"
+          "ref": "Player Components (p.10)"
         },
         {
           "id": "health",
@@ -234,12 +234,12 @@
         {
           "id": "automa",
           "text": "Automa board of a remaining character as the second player; its Experience markers and VP token as normal",
-          "ref": "Solo Mode"
+          "ref": "Solo Mode (p.5)"
         },
         {
           "id": "solo-token",
           "text": "Solo Mode Destiny token nearby; box the Automa character's other components",
-          "ref": "Solo Mode"
+          "ref": "Solo Mode (p.5)"
         }
       ]
     },
@@ -292,7 +292,7 @@
         {
           "id": "tale-rules",
           "text": "Finish setup with the chosen Tale's own section in the rulebook",
-          "ref": "Setup 7"
+          "ref": "Setup 7 (p.20)"
         }
       ],
       "condition": {
@@ -378,7 +378,7 @@
         {
           "id": "intro",
           "text": "Turn over the first Tale card and read the introduction",
-          "ref": "Gameplay",
+          "ref": "Gameplay (p.11)",
           "condition": {
             "notModules": [
               "legendary"

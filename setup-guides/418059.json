@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 418059,
   "gameName": "SETI: Search for Extraterrestrial Intelligence",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,18 +22,18 @@
         {
           "id": "board-1",
           "text": "Assemble the main board from the planetary, solar system and tech boards",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-2",
           "text": "Shuffle the 5 alien species boards facedown; 2 random ones in the slots on the planetary board; box the rest unseen",
           "note": "Alien cards and components stay in the box until discovered",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-3",
           "text": "Solar system: the 3 discs and 4 sector boards in a random configuration forming 8 clear sectors",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-4",
@@ -41,22 +41,22 @@
           "amounts": {
             "n": 3
           },
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-5",
           "text": "Credit and energy tokens near the board",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-6",
           "text": "Fill each nearby star's data slot with data tokens; the rest nearby",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-7",
           "text": "The 4 gold scoring tiles beside the board, random side up",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-8",
@@ -71,12 +71,12 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         },
         {
           "id": "board-9",
           "text": "For each of the 12 techs: shuffle its 4 tiles onto its space, technology side down, with a 2-point tile on top",
-          "ref": "Setup"
+          "ref": "Setup (p.4)"
         }
       ]
     },

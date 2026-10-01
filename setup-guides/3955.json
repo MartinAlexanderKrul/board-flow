@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 3955,
   "gameName": "BANG!",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -120,7 +120,7 @@
         {
           "id": "boards",
           "text": "Each player takes a playing board",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "roles",
@@ -141,12 +141,12 @@
         {
           "id": "deal-roles",
           "text": "Shuffle and deal 1 role facedown each; the Sheriff reveals, everyone else keeps theirs secret",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "characters",
           "text": "Deal 1 character faceup each; announce names and abilities",
-          "ref": "Preparation",
+          "ref": "Preparation (p.2)",
           "condition": {
             "notModules": [
               "legends"
@@ -156,12 +156,12 @@
         {
           "id": "bullets",
           "text": "Take as many bullets as your character shows; the Sheriff takes one extra",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "box",
           "text": "Box the remaining roles, boards and characters",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "legend-chars",
@@ -227,12 +227,12 @@
               "simple"
             ]
           },
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "deal",
           "text": "Shuffle the playing cards; deal each player as many cards as their bullets",
-          "ref": "Preparation",
+          "ref": "Preparation (p.2)",
           "condition": {
             "notModules": [
               "legends"
@@ -242,7 +242,7 @@
         {
           "id": "draw",
           "text": "Draw pile facedown in the middle, room for a discard pile",
-          "ref": "Preparation"
+          "ref": "Preparation (p.2)"
         },
         {
           "id": "legend-hands",
@@ -349,12 +349,12 @@
         {
           "id": "colt",
           "text": "Everyone starts with a Colt .45 (range 1) printed on their board",
-          "ref": "Weapons"
+          "ref": "Weapons (p.5)"
         },
         {
           "id": "hand-limit",
           "text": "Hand limit at end of turn = your current life points",
-          "ref": "Characters"
+          "ref": "Characters (p.2)"
         },
         {
           "id": "event-cards",
@@ -419,7 +419,7 @@
         {
           "id": "first",
           "text": "The Sheriff begins; play is clockwise",
-          "ref": "The Game"
+          "ref": "The Game (p.3)"
         }
       ]
     }

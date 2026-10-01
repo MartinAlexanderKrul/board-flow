@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 194655,
   "gameName": "Santorini",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -28,7 +28,7 @@
         {
           "id": "setup-1",
           "text": "Cliff Pedestal on the Ocean Board, Island Board on top",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "setup-2",
@@ -39,7 +39,7 @@
             ]
           },
           "note": "With 3-4 players check that each God Power is compatible",
-          "ref": "God Power Setup"
+          "ref": "God Power Setup (p.2)"
         }
       ]
     },
@@ -56,7 +56,7 @@
               "gods"
             ]
           },
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         },
         {
           "id": "start-2",
@@ -66,12 +66,12 @@
               "gods"
             ]
           },
-          "ref": "God Power Setup"
+          "ref": "God Power Setup (p.2)"
         },
         {
           "id": "start-3",
           "text": "On your turn move one Worker, then build with it",
-          "ref": "How to play"
+          "ref": "How to play (p.1)"
         }
       ]
     }

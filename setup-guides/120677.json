@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 120677,
   "gameName": "Terra Mystica",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,32 +22,32 @@
         {
           "id": "boards-1",
           "text": "Game board in the middle, Cult board next to it",
-          "ref": "Setup"
+          "ref": "Setup (p.3)"
         },
         {
           "id": "boards-2",
           "text": "Favor tiles laid out in a 3 x 4 pattern",
-          "ref": "Game and Cult board"
+          "ref": "Game and Cult board (p.3)"
         },
         {
           "id": "boards-3",
           "text": "Scoring tiles in their order; Game end token covering the right half of the uppermost one",
-          "ref": "Game and Cult board"
+          "ref": "Game and Cult board (p.3)"
         },
         {
           "id": "boards-4",
           "text": "An Action token above each of the 6 Power action spaces; the rest beside the board",
-          "ref": "Game and Cult board"
+          "ref": "Game and Cult board (p.3)"
         },
         {
           "id": "boards-5",
           "text": "Workers, Coins and the 10 faceup Town tiles within reach",
-          "ref": "Game and Cult board"
+          "ref": "Game and Cult board (p.3)"
         },
         {
           "id": "boards-6",
           "text": "Bonus cards (scrolls) for your player count",
-          "ref": "Game and Cult board"
+          "ref": "Game and Cult board (p.3)"
         }
       ]
     },
@@ -58,7 +58,7 @@
         {
           "id": "factions-1",
           "text": "Starting player: whoever most recently dug a planting bed; they take the Starting player token",
-          "ref": "Game and Cult board"
+          "ref": "Game and Cult board (p.3)"
         },
         {
           "id": "factions-2",
@@ -74,38 +74,38 @@
             }
           },
           "note": "Later games: from the starting player, each chooses a Faction board and side",
-          "ref": "First Play"
+          "ref": "First Play (p.3)"
         },
         {
           "id": "factions-3",
           "text": "7 Priests and 3 Bridges next to your Faction board; Structures on their spaces",
-          "ref": "Components in faction colors"
+          "ref": "Components in faction colors (p.3)"
         },
         {
           "id": "factions-4",
           "text": "Markers: Shipping track 0, bottom of the Exchange track, 20 on the Victory point track, 0 on each of the 4 Cult tracks",
           "note": "Mermaids start Shipping at 1; Fakirs and Dwarves have no Shipping; Darklings no Exchange marker",
-          "ref": "Components in faction colors"
+          "ref": "Components in faction colors (p.3)"
         },
         {
           "id": "factions-5",
           "text": "Take the starting Workers, Coins and Priests shown on your Faction board",
-          "ref": "Faction setup"
+          "ref": "Faction setup (p.3)"
         },
         {
           "id": "factions-6",
           "text": "Advance on the Cult board once per Cult symbol shown on your Faction board",
-          "ref": "Faction setup"
+          "ref": "Faction setup (p.3)"
         },
         {
           "id": "factions-7",
           "text": "12 Power tokens split between Bowls I and II as your Faction board shows",
-          "ref": "Faction setup"
+          "ref": "Faction setup (p.3)"
         },
         {
           "id": "factions-8",
           "text": "Place your starting Dwellings on the map (first game: as the rulebook shows)",
-          "ref": "Game and Cult board"
+          "ref": "Game and Cult board (p.3)"
         }
       ]
     },
@@ -117,7 +117,7 @@
         {
           "id": "reminders-1",
           "text": "Make sure everyone knows the abilities of the factions in play",
-          "ref": "Game and Cult board"
+          "ref": "Game and Cult board (p.3)"
         }
       ]
     },

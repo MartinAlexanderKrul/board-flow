@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 110327,
   "gameName": "Lords of Waterdeep",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,22 +22,22 @@
         {
           "id": "board-1",
           "text": "3 Victory Point tokens on each space of the rounds track",
-          "ref": "Victory Points"
+          "ref": "Victory Points (p.3)"
         },
         {
           "id": "board-2",
           "text": "3 Building tiles faceup in Builder's Hall; the rest facedown beside it",
-          "ref": "Buildings"
+          "ref": "Buildings (p.2)"
         },
         {
           "id": "board-3",
           "text": "4 Quest cards faceup at Cliffwatch Inn; Quest deck beside it",
-          "ref": "Quests"
+          "ref": "Quests (p.12)"
         },
         {
           "id": "board-4",
           "text": "Adventurer cubes and Gold as the supply",
-          "ref": "Adventurers"
+          "ref": "Adventurers (p.2)"
         }
       ]
     },
@@ -58,17 +58,17 @@
               }
             }
           },
-          "ref": "Agents"
+          "ref": "Agents (p.2)"
         },
         {
           "id": "players-2",
           "text": "1 more Agent of your color by the Round 5 space",
-          "ref": "Agents"
+          "ref": "Agents (p.2)"
         },
         {
           "id": "players-3",
           "text": "Deal 1 secret Lord card, 2 faceup Quests and 2 hidden Intrigue cards to each player",
-          "ref": "Lords of Waterdeep"
+          "ref": "Lords of Waterdeep (p.11)"
         },
         {
           "id": "players-4",

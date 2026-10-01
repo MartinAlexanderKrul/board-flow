@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 220308,
   "gameName": "Gaia Project",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "boards-1",
           "text": "Choose a first player; they take the first player marker",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.1)"
         },
         {
           "id": "boards-2",
@@ -37,27 +37,27 @@
               }
             }
           },
-          "ref": "Game Board"
+          "ref": "Game Board (p.4)"
         },
         {
           "id": "boards-3",
           "text": "Research board beside it: the 9 green-marked standard tech tiles randomly on the tech spaces, the rest stacked on their matching tiles",
-          "ref": "Research Board"
+          "ref": "Research Board (p.2)"
         },
         {
           "id": "boards-4",
           "text": "One random advanced tech tile between levels 4 and 5 of each research area; box the rest",
-          "ref": "Research Board"
+          "ref": "Research Board (p.2)"
         },
         {
           "id": "boards-5",
           "text": "Set aside the Gleens' federation token; a random federation token on level 5 of Terraforming; stack the rest in 6 piles, green side up",
-          "ref": "Research Board"
+          "ref": "Research Board (p.2)"
         },
         {
           "id": "boards-6",
           "text": "Scoring board: a random round scoring tile on each numbered space and a random final scoring tile on each space by the ranking tracks",
-          "ref": "Scoring Board"
+          "ref": "Scoring Board (p.2)"
         },
         {
           "id": "boards-7",
@@ -73,12 +73,12 @@
             }
           },
           "note": "Players + 3; solo counts the Automa",
-          "ref": "Round Boosters"
+          "ref": "Round Boosters (p.2)"
         },
         {
           "id": "boards-8",
           "text": "Action tokens, Gaia Planet tokens, Lost Planet, power tokens, Q.I.C. and record tokens as the supply",
-          "ref": "Round Boosters"
+          "ref": "Round Boosters (p.2)"
         }
       ]
     },
@@ -100,27 +100,27 @@
             }
           },
           "note": "Later games: choose any faction board in turn order",
-          "ref": "The First Game"
+          "ref": "The First Game (p.6)"
         },
         {
           "id": "factions-2",
           "text": "Set up your faction board with its structures, resources and research tokens; take any level-1 one-time bonuses",
-          "ref": "Choosing a Faction"
+          "ref": "Choosing a Faction (p.6)"
         },
         {
           "id": "factions-3",
           "text": "A player token on 10 VP; one satellite on each 0 space of the scoring board",
-          "ref": "Choosing a Faction"
+          "ref": "Choosing a Faction (p.6)"
         },
         {
           "id": "factions-4",
           "text": "Place your first mines (first game: as the rulebook diagram shows), taking them left to right",
-          "ref": "Placing Your First Structures"
+          "ref": "Placing Your First Structures (p.7)"
         },
         {
           "id": "factions-5",
           "text": "From the last player counterclockwise, each chooses a round booster",
-          "ref": "Choosing Your First Round Booster"
+          "ref": "Choosing Your First Round Booster (p.7)"
         },
         {
           "id": "factions-6",
@@ -138,7 +138,7 @@
               1
             ]
           },
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.1)"
         }
       ]
     },
@@ -150,7 +150,7 @@
         {
           "id": "start-1",
           "text": "Round 1, Phase I: Income",
-          "ref": "Phase I: Income"
+          "ref": "Phase I: Income (p.10)"
         }
       ]
     }

@@ -2,60 +2,225 @@
   "schemaVersion": 1,
   "gameId": 270633,
   "gameName": "Aeon's End: The New Age",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Aeon's End: The New Age rulebook (Indie Boards & Cards, via RulesPal)"]
+    "sources": [
+      "Aeon's End: The New Age rulebook (Indie Boards & Cards, via RulesPal)"
+    ]
   },
-  "players": { "min": 1, "max": 4 },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
   "modules": [
-    { "id": "expedition", "name": "Expedition", "note": "Campaign of 4 battles using the Barracks." },
-    { "id": "harder-3", "name": "Harder: No Choice token", "players": { "min": 3, "max": 3 } },
-    { "id": "easier-4", "name": "Easier: 1/2 and 3/4 tokens", "players": { "min": 4, "max": 4 } }
+    {
+      "id": "expedition",
+      "name": "Expedition",
+      "note": "Campaign of 4 battles using the Barracks."
+    },
+    {
+      "id": "harder-3",
+      "name": "Harder: No Choice token",
+      "players": {
+        "min": 3,
+        "max": 3
+      }
+    },
+    {
+      "id": "easier-4",
+      "name": "Easier: 1/2 and 3/4 tokens",
+      "players": {
+        "min": 4,
+        "max": 4
+      }
+    }
   ],
   "sections": [
     {
       "id": "mages",
       "title": "Breach mages",
       "steps": [
-        { "id": "mage", "text": "Each player chooses a breach mage and lays out its mat (room left for deck, right for discard, above for breaches)", "note": "Expedition: only mages in the Barracks", "ref": "Setup 1" },
-        { "id": "hand-deck", "text": "Take your STARTHAND (SD cards) into hand; build your STARTDECK in the exact order on your mat - never shuffle it", "ref": "Setup 2" },
-        { "id": "mage-back", "text": "Follow any setup instructions on the back of your mage", "ref": "Setup 2" },
-        { "id": "treasures", "text": "Treasures for this battle: battle 2 tier 1; battle 3 tiers 1-2; battle 4 tiers 1-3", "note": "Tier 1 replaces a Splinter/Spark in your deck; tier 2 one for the group; tier 3 on your mat", "condition": { "modules": ["expedition"] }, "ref": "Setup 3" },
-        { "id": "breaches", "text": "Lay out breaches I-IV as your mat shows: active faceup, dark facedown with the bright area pointing as shown", "ref": "Setup 4" },
-        { "id": "life", "text": "{n} life tokens on your mat's LIFE area", "amounts": { "n": 10 }, "ref": "Setup 4" }
+        {
+          "id": "mage",
+          "text": "Each player chooses a breach mage and lays out its mat (room left for deck, right for discard, above for breaches)",
+          "note": "Expedition: only mages in the Barracks",
+          "ref": "Setup 1 (p.6)"
+        },
+        {
+          "id": "hand-deck",
+          "text": "Take your STARTHAND (SD cards) into hand; build your STARTDECK in the exact order on your mat - never shuffle it",
+          "ref": "Setup 2 (p.6)"
+        },
+        {
+          "id": "mage-back",
+          "text": "Follow any setup instructions on the back of your mage",
+          "ref": "Setup 2 (p.6)"
+        },
+        {
+          "id": "treasures",
+          "text": "Treasures for this battle: battle 2 tier 1; battle 3 tiers 1-2; battle 4 tiers 1-3",
+          "note": "Tier 1 replaces a Splinter/Spark in your deck; tier 2 one for the group; tier 3 on your mat",
+          "condition": {
+            "modules": [
+              "expedition"
+            ]
+          },
+          "ref": "Setup 3 (p.6)"
+        },
+        {
+          "id": "breaches",
+          "text": "Lay out breaches I-IV as your mat shows: active faceup, dark facedown with the bright area pointing as shown",
+          "ref": "Setup 4 (p.6)"
+        },
+        {
+          "id": "life",
+          "text": "{n} life tokens on your mat's LIFE area",
+          "amounts": {
+            "n": 10
+          },
+          "ref": "Setup 4 (p.6)"
+        }
       ]
     },
     {
       "id": "supply",
       "title": "Supplies",
       "steps": [
-        { "id": "supplies", "text": "9 Supply stacks: 4 Spells (5 each), 3 Crystals (7 each), 2 Artifacts (5 each) - free choice or by selector cards", "note": "Tip: include a Crystal costing 3", "ref": "Setup 5" },
-        { "id": "banish", "text": "Choose from the Barracks; banish the Supplies not chosen for the rest of the expedition", "condition": { "modules": ["expedition"] }, "ref": "Setup 5" }
+        {
+          "id": "supplies",
+          "text": "9 Supply stacks: 4 Spells (5 each), 3 Crystals (7 each), 2 Artifacts (5 each) - free choice or by selector cards",
+          "note": "Tip: include a Crystal costing 3",
+          "ref": "Setup 5 (p.6)"
+        },
+        {
+          "id": "banish",
+          "text": "Choose from the Barracks; banish the Supplies not chosen for the rest of the expedition",
+          "condition": {
+            "modules": [
+              "expedition"
+            ]
+          },
+          "ref": "Setup 5 (p.6)"
+        }
       ]
     },
     {
       "id": "nemesis",
       "title": "Nemesis",
       "steps": [
-        { "id": "choose", "text": "Choose a nemesis (difficulty on the back of its mat); room below for its play area", "note": "Further expeditions: draw a nemesis selector for this battle", "ref": "Setup 6" },
-        { "id": "general", "text": "Shuffle GENERAL cards by level; draw level 1/2/3: {n}", "amounts": { "n": { "byPlayers": { "1": "1 / 3 / 7 (TrueSolo)", "2": "3 / 5 / 7", "3": "5 / 6 / 7", "4": "8 / 7 / 7" } } }, "ref": "Setup 7, Solo Play" },
-        { "id": "upgraded", "text": "Each UPGRADED card received replaces one GENERAL card of its level", "condition": { "modules": ["expedition"] }, "ref": "Setup 7A" },
-        { "id": "deck", "text": "Mix each level with that nemesis's own cards of the level; stack level 3 at the bottom, 2, then 1 on top - don't shuffle", "ref": "Setup 7" },
-        { "id": "in-setup", "text": "Carry out the \"In Setup\" instructions on the nemesis mat's back", "ref": "Setup 8" },
-        { "id": "dials", "text": "Nemesis dial to its life; Gravehold dial to {n}", "amounts": { "n": 30 }, "ref": "Setup 9-10" }
+        {
+          "id": "choose",
+          "text": "Choose a nemesis (difficulty on the back of its mat); room below for its play area",
+          "note": "Further expeditions: draw a nemesis selector for this battle",
+          "ref": "Setup 6 (p.6)"
+        },
+        {
+          "id": "general",
+          "text": "Shuffle GENERAL cards by level; draw level 1/2/3: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "1 / 3 / 7 (TrueSolo)",
+                "2": "3 / 5 / 7",
+                "3": "5 / 6 / 7",
+                "4": "8 / 7 / 7"
+              }
+            }
+          },
+          "ref": "Setup 7, Solo Play"
+        },
+        {
+          "id": "upgraded",
+          "text": "Each UPGRADED card received replaces one GENERAL card of its level",
+          "condition": {
+            "modules": [
+              "expedition"
+            ]
+          },
+          "ref": "Setup 7A (p.6)"
+        },
+        {
+          "id": "deck",
+          "text": "Mix each level with that nemesis's own cards of the level; stack level 3 at the bottom, 2, then 1 on top - don't shuffle",
+          "ref": "Setup 7 (p.6)"
+        },
+        {
+          "id": "in-setup",
+          "text": "Carry out the \"In Setup\" instructions on the nemesis mat's back",
+          "ref": "Setup 8 (p.6)"
+        },
+        {
+          "id": "dials",
+          "text": "Nemesis dial to its life; Gravehold dial to {n}",
+          "amounts": {
+            "n": 30
+          },
+          "ref": "Setup 9-10 (p.6)"
+        }
       ]
     },
     {
       "id": "turn-order",
       "title": "Turn order",
       "steps": [
-        { "id": "tokens", "text": "Randomly deal turn order tokens 1..players", "condition": { "notModules": ["easier-4"], "minPlayers": 2 }, "ref": "Setup 11" },
-        { "id": "no-choice", "text": "Give the No Choice token to a random player", "condition": { "modules": ["harder-3"] }, "ref": "Setup 11" },
-        { "id": "easier-tokens", "text": "Place the 1/2 token between two neighbors and the 3/4 token between the other two", "condition": { "modules": ["easier-4"] }, "ref": "Setup 11" },
-        { "id": "turn-order-deck", "text": "Turn order deck: 2 Nemesis cards + {p}; shuffle facedown", "amounts": { "p": { "byPlayers": { "1": "player cards 1, 2, 3", "2": "player cards 1, 1, 2, 2", "3": "player cards 1, 2, 3 and Your Choice", "4": "player cards 1, 2, 3, 4" } } }, "ref": "Setup 12, Solo Play" },
-        { "id": "easier-deck", "text": "Use the two 1/2 and two 3/4 turn order cards instead", "condition": { "modules": ["easier-4"] }, "ref": "Setup 12" }
+        {
+          "id": "tokens",
+          "text": "Randomly deal turn order tokens 1..players",
+          "condition": {
+            "notModules": [
+              "easier-4"
+            ],
+            "minPlayers": 2
+          },
+          "ref": "Setup 11 (p.6)"
+        },
+        {
+          "id": "no-choice",
+          "text": "Give the No Choice token to a random player",
+          "condition": {
+            "modules": [
+              "harder-3"
+            ]
+          },
+          "ref": "Setup 11 (p.6)"
+        },
+        {
+          "id": "easier-tokens",
+          "text": "Place the 1/2 token between two neighbors and the 3/4 token between the other two",
+          "condition": {
+            "modules": [
+              "easier-4"
+            ]
+          },
+          "ref": "Setup 11 (p.6)"
+        },
+        {
+          "id": "turn-order-deck",
+          "text": "Turn order deck: 2 Nemesis cards + {p}; shuffle facedown",
+          "amounts": {
+            "p": {
+              "byPlayers": {
+                "1": "player cards 1, 2, 3",
+                "2": "player cards 1, 1, 2, 2",
+                "3": "player cards 1, 2, 3 and Your Choice",
+                "4": "player cards 1, 2, 3, 4"
+              }
+            }
+          },
+          "ref": "Setup 12, Solo Play"
+        },
+        {
+          "id": "easier-deck",
+          "text": "Use the two 1/2 and two 3/4 turn order cards instead",
+          "condition": {
+            "modules": [
+              "easier-4"
+            ]
+          },
+          "ref": "Setup 12 (p.6)"
+        }
       ]
     },
     {
@@ -63,8 +228,16 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "special", "text": "Read the nemesis's SPECIAL RULES before starting", "ref": "Setup 13" },
-        { "id": "no-shuffle", "text": "Your deck is never shuffled", "ref": "Setup 2" }
+        {
+          "id": "special",
+          "text": "Read the nemesis's SPECIAL RULES before starting",
+          "ref": "Setup 13 (p.6)"
+        },
+        {
+          "id": "no-shuffle",
+          "text": "Your deck is never shuffled",
+          "ref": "Setup 2 (p.6)"
+        }
       ]
     },
     {
@@ -72,7 +245,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "draw", "text": "Flip the top turn order card to see who goes first", "ref": "Game Flow" }
+        {
+          "id": "draw",
+          "text": "Flip the top turn order card to see who goes first",
+          "ref": "Game Flow"
+        }
       ]
     }
   ]

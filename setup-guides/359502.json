@@ -2,40 +2,92 @@
   "schemaVersion": 1,
   "gameId": 359502,
   "gameName": "Casting Shadows",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Casting Shadows rulebook (Unstable Games, via RulesPal)"]
+    "sources": [
+      "Casting Shadows rulebook (Unstable Games, via RulesPal)"
+    ]
   },
-  "players": { "min": 2, "max": 4 },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
   "sections": [
     {
       "id": "characters",
       "title": "Characters",
       "steps": [
-        { "id": "character", "text": "Each player chooses a Character: Player Board and matching Meeple", "ref": "How to Start" },
-        { "id": "trackers", "text": "HP Tracker on {hp}, Shadow Tracker on 0; Base Form side up (HP tracker on the right)", "amounts": { "hp": 18 }, "ref": "How to Start" },
-        { "id": "spellbook", "text": "Room right of your board for your Spell Book (5 slots); take a reference card if you like", "ref": "How to Start" }
+        {
+          "id": "character",
+          "text": "Each player chooses a Character: Player Board and matching Meeple",
+          "ref": "How to Start (p.2)"
+        },
+        {
+          "id": "trackers",
+          "text": "HP Tracker on {hp}, Shadow Tracker on 0; Base Form side up (HP tracker on the right)",
+          "amounts": {
+            "hp": 18
+          },
+          "ref": "How to Start (p.2)"
+        },
+        {
+          "id": "spellbook",
+          "text": "Room right of your board for your Spell Book (5 slots); take a reference card if you like",
+          "ref": "How to Start (p.2)"
+        }
       ]
     },
     {
       "id": "map",
       "title": "Map",
       "steps": [
-        { "id": "center", "text": "Ancient Rune Hex in the center; Dusty Desert and Underground Volcano Hexes on opposite sides of it", "ref": "How to Start" },
-        { "id": "order", "text": "Youngest player is Player 1, then clockwise", "ref": "How to Start" },
-        { "id": "homes", "text": "Each player places their Home Hex as shown and their Meeple on it", "note": "Frill - Lilypad, Kit - Gale, Nuzzle - Thornwood, Haze - Greentongue", "ref": "How to Start" }
+        {
+          "id": "center",
+          "text": "Ancient Rune Hex in the center; Dusty Desert and Underground Volcano Hexes on opposite sides of it",
+          "ref": "How to Start (p.2)"
+        },
+        {
+          "id": "order",
+          "text": "Youngest player is Player 1, then clockwise",
+          "ref": "How to Start (p.2)"
+        },
+        {
+          "id": "homes",
+          "text": "Each player places their Home Hex as shown and their Meeple on it",
+          "note": "Frill - Lilypad, Kit - Gale, Nuzzle - Thornwood, Haze - Greentongue",
+          "ref": "How to Start (p.2)"
+        }
       ]
     },
     {
       "id": "decks",
       "title": "Decks",
       "steps": [
-        { "id": "counterspell", "text": "Shuffle the Counterspell deck facedown next to the Dusty Desert Hex", "ref": "How to Start" },
-        { "id": "main", "text": "Shuffle the Main deck; flip 1 card faceup next to each Hex around the Ancient Rune Hex, except the Dusty Desert; rest facedown, room for a discard pile", "ref": "How to Start" },
-        { "id": "companions", "text": "Shuffle the Companion deck facedown; flip {n} faceup as the Companion Portal", "amounts": { "n": 3 }, "ref": "How to Start" },
-        { "id": "tokens", "text": "All tokens and dice within reach", "ref": "How to Start" }
+        {
+          "id": "counterspell",
+          "text": "Shuffle the Counterspell deck facedown next to the Dusty Desert Hex",
+          "ref": "How to Start (p.2)"
+        },
+        {
+          "id": "main",
+          "text": "Shuffle the Main deck; flip 1 card faceup next to each Hex around the Ancient Rune Hex, except the Dusty Desert; rest facedown, room for a discard pile",
+          "ref": "How to Start (p.2)"
+        },
+        {
+          "id": "companions",
+          "text": "Shuffle the Companion deck facedown; flip {n} faceup as the Companion Portal",
+          "amounts": {
+            "n": 3
+          },
+          "ref": "How to Start (p.2)"
+        },
+        {
+          "id": "tokens",
+          "text": "All tokens and dice within reach",
+          "ref": "How to Start (p.2)"
+        }
       ]
     },
     {
@@ -43,7 +95,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "Player 1 goes first, then clockwise; last player standing wins", "ref": "How to Start" }
+        {
+          "id": "first",
+          "text": "Player 1 goes first, then clockwise; last player standing wins",
+          "ref": "How to Start (p.2)"
+        }
       ]
     }
   ]

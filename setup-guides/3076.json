@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 3076,
   "gameName": "Puerto Rico",
-  "version": 1,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Puerto Rico rules (alea / Ravensburger, via RulesPal)"
+      "Puerto Rico rulebook (alea / Ravensburger)",
+      "Puerto Rico rules, 2-player game (via RulesPal)"
     ]
   },
   "players": {
@@ -21,11 +22,114 @@
       "steps": [
         {
           "id": "board-1",
-          "text": "Game board in the middle; basic buildings on their spaces; doubloons sorted on the bank",
-          "ref": "Preparation"
+          "text": "Game board in the middle; all buildings on their spaces; doubloons sorted on the bank",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.2"
         },
         {
           "id": "board-2",
+          "text": "Victory point chips in 2 piles: {n} points",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": 75,
+                "4": 100,
+                "5": 122
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "board-3",
+          "text": "All 8 quarry tiles faceup; the other plantation tiles shuffled in 5 facedown stacks, with {n} turned faceup beside the quarries",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": 4,
+                "4": 5,
+                "5": 6
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "board-4",
+          "text": "Role cards: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "3": "all except both prospectors (6 cards)",
+                "4": "all except one prospector (7 cards)",
+                "5": "all 8 cards"
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "board-5",
+          "text": "Cargo ships with {s} spaces",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "3": "4, 5 and 6",
+                "4": "5, 6 and 7",
+                "5": "6, 7 and 8"
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "board-6",
+          "text": "Colonist ship with {a} colonists on it; {b} colonists as the supply",
+          "amounts": {
+            "a": {
+              "byPlayers": {
+                "3": 3,
+                "4": 4,
+                "5": 5
+              }
+            },
+            "b": {
+              "byPlayers": {
+                "3": 55,
+                "4": 75,
+                "5": 95
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "board-7",
+          "text": "Goods in 5 piles; trading house out; unused material back in the box",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "board-8",
           "text": "2 players: one of each beige building and two of each production building",
           "condition": {
             "players": [
@@ -35,7 +139,7 @@
           "ref": "2-player Preparation"
         },
         {
-          "id": "board-3",
+          "id": "board-9",
           "text": "2 players: remove 3 of each plantation type and 3 quarries; reveal 3 plantations next to the quarries",
           "condition": {
             "players": [
@@ -45,7 +149,7 @@
           "ref": "2-player Preparation"
         },
         {
-          "id": "board-4",
+          "id": "board-10",
           "text": "2 players: 65 VP, 40 colonists plus 2 on the colonist ship, the 4- and 6-space cargo ships, 2 fewer of each good",
           "condition": {
             "players": [
@@ -73,12 +177,12 @@
               }
             }
           },
-          "ref": "Preparation"
+          "ref": "p.2"
         },
         {
           "id": "players-2",
-          "text": "Choose a starting player: governor placard and an indigo plantation",
-          "ref": "Preparation"
+          "text": "Choose a starting player: governor card and an indigo plantation",
+          "ref": "p.2"
         },
         {
           "id": "players-3",
@@ -93,7 +197,7 @@
               }
             }
           },
-          "ref": "Preparation"
+          "ref": "p.2"
         }
       ]
     },
@@ -104,7 +208,7 @@
       "steps": [
         {
           "id": "reminders-1",
-          "text": "After each round put 1 doubloon on every role placard nobody took; the governor passes left",
+          "text": "After each round put 1 doubloon on every role card nobody took; the governor passes left",
           "ref": "Playing the game"
         }
       ]
@@ -116,7 +220,7 @@
       "steps": [
         {
           "id": "start-1",
-          "text": "The governor picks a role placard; everyone takes its action clockwise",
+          "text": "The governor picks a role card; everyone takes its action clockwise",
           "ref": "Playing the game"
         }
       ]

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 247763,
   "gameName": "Underwater Cities",
-  "version": 1,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -11,7 +11,7 @@
     ]
   },
   "players": {
-    "min": 1,
+    "min": 2,
     "max": 4
   },
   "sections": [
@@ -32,27 +32,27 @@
               }
             }
           },
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         },
         {
           "id": "board-2",
           "text": "Cities, tunnels, buildings and resources in a common supply",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         },
         {
           "id": "board-3",
           "text": "Shuffle the Era I cards thoroughly onto the board; set the Era II and III decks aside",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         },
         {
           "id": "board-4",
           "text": "Era marker on the start of the era track; a score marker per player on 0",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         },
         {
           "id": "board-5",
           "text": "Special cards: shuffle the 1-2 credit deck onto the board with its top card faceup; deal 6 of the 3-credit cards faceup, box the rest",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.3)"
         },
         {
           "id": "board-6",
@@ -75,7 +75,7 @@
               }
             }
           },
-          "ref": "Setup for 2 or 3 players"
+          "ref": "Setup for 2 or 3 players (p.3)"
         }
       ]
     },
@@ -85,13 +85,55 @@
       "steps": [
         {
           "id": "players-1",
-          "text": "Each player sets up their player board, action tiles and starting resources as the rulebook shows",
-          "ref": "Game Setup"
+          "text": "Each player: 3 action tiles, a Personal Assistant card, a final scoring card and a player info card",
+          "ref": "Player Setup (p.4)"
+        },
+        {
+          "id": "resources",
+          "text": "Starting resources: 1 kelp, 1 steelplast, 1 science and {n} credits",
+          "amounts": {
+            "n": 2
+          },
+          "ref": "Player Setup (p.4)"
+        },
+        {
+          "id": "pboard",
+          "text": "A random player board each; your starting nonsymbiotic city (white dome) in its lower right corner",
+          "note": "Basic game: the one-star board side",
+          "ref": "Player Board Setup (p.4)"
+        },
+        {
+          "id": "metropolis",
+          "text": "1 random brown metropolis tile on the upper-left hex and 2 random blue ones on the other two hexes",
+          "ref": "Player Board Setup (p.4)"
+        },
+        {
+          "id": "order",
+          "text": "Play-order markers placed randomly; on the Federation track place them in the opposite order as shown",
+          "ref": "Order of Play (p.4)"
+        },
+        {
+          "id": "bonus3",
+          "text": "The player in 3rd position starts with 1 extra credit",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Order of Play (p.4)"
+        },
+        {
+          "id": "bonus4",
+          "text": "The player who plays last starts with 1 extra credit and 1 extra steelplast",
+          "condition": {
+            "players": [
+              4
+            ]
+          },
+          "ref": "Order of Play (p.4)"
         },
         {
           "id": "players-2",
-          "text": "Each player starts their turn with 3 cards",
-          "ref": "A Turn"
+          "text": "Draw 6 cards from the Era I deck, keep 3 and discard 3",
+          "ref": "Player Cards (p.4)"
         }
       ]
     },
@@ -103,7 +145,7 @@
         {
           "id": "reminders-1",
           "text": "Era I has 4 rounds, Eras II and III have 3; each connected city consumes 1 kelp at Production",
-          "ref": "An Era"
+          "ref": "An Era (p.4)"
         }
       ]
     },
@@ -115,7 +157,7 @@
         {
           "id": "start-1",
           "text": "Take turns in play-order track order: play a card and take an action slot",
-          "ref": "A Turn"
+          "ref": "A Turn (p.4)"
         }
       ]
     }

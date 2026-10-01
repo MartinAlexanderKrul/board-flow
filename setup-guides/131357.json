@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 131357,
   "gameName": "Coup",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -25,7 +25,7 @@
           "amounts": {
             "n": 2
           },
-          "ref": "Set-Up"
+          "ref": "Set-Up (p.1)"
         },
         {
           "id": "setup-2",
@@ -34,12 +34,12 @@
             "n": 2
           },
           "note": "2 players: the starting player takes only 1 coin",
-          "ref": "Set-Up"
+          "ref": "Set-Up (p.1)"
         },
         {
           "id": "setup-3",
           "text": "A summary card for each player",
-          "ref": "Set-Up"
+          "ref": "Set-Up (p.1)"
         }
       ]
     },
@@ -51,7 +51,7 @@
         {
           "id": "start-1",
           "text": "The winner of the last game starts",
-          "ref": "Set-Up"
+          "ref": "Set-Up (p.1)"
         }
       ]
     }

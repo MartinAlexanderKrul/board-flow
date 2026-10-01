@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 277659,
   "gameName": "Final Girl",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,28 +22,28 @@
         {
           "id": "core-box-1",
           "text": "Choose a Killer and a Location from your Feature Films",
-          "ref": "Setup"
+          "ref": "Setup (p.5)"
         },
         {
           "id": "core-box-2",
           "text": "Pick a Final Girl card; place it faceup below the Player board, Victim Saved spaces showing",
           "note": "First games: normal difficulty side of the Player board",
-          "ref": "Core Box"
+          "ref": "Core Box (p.3)"
         },
         {
           "id": "core-box-3",
           "text": "6 dice to the side",
-          "ref": "Core Box"
+          "ref": "Core Box (p.3)"
         },
         {
           "id": "core-box-4",
           "text": "The 6 Zero Cost Action cards are your starting hand",
-          "ref": "Core Box"
+          "ref": "Core Box (p.3)"
         },
         {
           "id": "core-box-5",
           "text": "Other Action cards sorted by name into the two-row Action Tableau",
-          "ref": "Core Box"
+          "ref": "Core Box (p.3)"
         }
       ]
     },
@@ -54,37 +54,37 @@
         {
           "id": "feature-film-1",
           "text": "Killer board above the Player board, Location board to its right",
-          "ref": "Feature Film Box"
+          "ref": "Feature Film Box (p.5)"
         },
         {
           "id": "feature-film-2",
           "text": "1 random Finale card facedown on the Killer board, 1 random Dark Power card facedown below it",
-          "ref": "Feature Film Box"
+          "ref": "Feature Film Box (p.5)"
         },
         {
           "id": "feature-film-3",
           "text": "Shuffle the Killer's and Location's Terror cards together; deal 10 facedown as the Terror deck",
-          "ref": "Feature Film Box"
+          "ref": "Feature Film Box (p.5)"
         },
         {
           "id": "feature-film-4",
           "text": "Shuffle the Item cards into 3 facedown piles of 4 above the Location; flip the top card of each",
-          "ref": "Feature Film Box"
+          "ref": "Feature Film Box (p.5)"
         },
         {
           "id": "feature-film-5",
           "text": "Draw 1 Location Setup card and place the Final Girl, Killer and Victim meeples as it shows; keep it faceup",
-          "ref": "Feature Film Box"
+          "ref": "Feature Film Box (p.5)"
         },
         {
           "id": "feature-film-6",
           "text": "Mix the 9 black Final Health tokens facedown: 1 unseen on the Killer board, 1 unseen on the Player board, box the rest unseen",
-          "ref": "Feature Film Box"
+          "ref": "Feature Film Box (p.5)"
         },
         {
           "id": "feature-film-7",
           "text": "Health markers up to each maximum health, counting the black token as one of them",
-          "ref": "Feature Film Box"
+          "ref": "Feature Film Box (p.5)"
         }
       ]
     },
@@ -96,7 +96,7 @@
         {
           "id": "start-1",
           "text": "Play turns of five phases until you or the Killer are dead",
-          "ref": "Gameplay"
+          "ref": "Gameplay (p.6)"
         }
       ]
     }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 263918,
   "gameName": "Cartographers",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,7 +22,7 @@
         {
           "id": "setup-1",
           "text": "A map sheet and pencil each; everyone uses the same side (wilderness or wastelands)",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.4)"
         },
         {
           "id": "setup-2",
@@ -30,32 +30,32 @@
           "condition": {
             "minPlayers": 2
           },
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.4)"
         },
         {
           "id": "setup-3",
           "text": "The 4 edict cards faceup in a row, A to D",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.4)"
         },
         {
           "id": "setup-4",
           "text": "Scoring cards in 4 stacks by back: 1 random card from each below an edict; box the rest",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.4)"
         },
         {
           "id": "setup-5",
           "text": "Season cards stacked faceup: spring on top, then summer, fall, winter",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.4)"
         },
         {
           "id": "setup-6",
           "text": "Shuffle the 4 ambush cards facedown",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.4)"
         },
         {
           "id": "setup-7",
           "text": "Shuffle the explore cards with the top ambush card, unseen",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.4)"
         },
         {
           "id": "setup-8",
@@ -65,7 +65,7 @@
               1
             ]
           },
-          "ref": "Changes to Setup"
+          "ref": "Changes to Setup (p.12)"
         }
       ]
     },
@@ -77,7 +77,7 @@
         {
           "id": "reminders-1",
           "text": "Each new season: reshuffle the explore deck and add another unseen ambush card",
-          "ref": "Preparing for the Next Season"
+          "ref": "Preparing for the Next Season (p.9)"
         }
       ]
     },
@@ -89,7 +89,7 @@
         {
           "id": "start-1",
           "text": "Reveal the top explore card; everyone draws at the same time",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.4)"
         }
       ]
     }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 146021,
   "gameName": "Eldritch Horror",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -23,47 +23,47 @@
           "id": "setup-1",
           "text": "Choose an Ancient One sheet together and resolve its setup effect",
           "note": "First game: Azathoth",
-          "ref": "Setup 1"
+          "ref": "Setup 1 (p.3)"
         },
         {
           "id": "setup-2",
           "text": "Each player picks an investigator: sheet, token and stand; token on its starting space",
-          "ref": "Setup 2-3"
+          "ref": "Setup 2-3 (p.3)"
         },
         {
           "id": "setup-3",
           "text": "Starting possessions from the back of the sheet; Health and Sanity tokens at their maximums",
-          "ref": "Setup 4"
+          "ref": "Setup 4 (p.3)"
         },
         {
           "id": "setup-4",
           "text": "Decks: Expedition Encounters shuffled together; Spells and Conditions as two faceup decks; the rest shuffled by card back; Mythos cards aside",
-          "ref": "Setup 5"
+          "ref": "Setup 5 (p.3)"
         },
         {
           "id": "setup-5",
           "text": "All Monster tokens in an opaque Monster cup",
-          "ref": "Setup 6"
+          "ref": "Setup 6 (p.3)"
         },
         {
           "id": "setup-6",
           "text": "4 Asset cards faceup in the reserve",
-          "ref": "Setup 7"
+          "ref": "Setup 7 (p.3)"
         },
         {
           "id": "setup-7",
           "text": "Build the Mythos deck as the bottom of the Ancient One sheet instructs",
-          "ref": "Setup 8"
+          "ref": "Setup 8 (p.3)"
         },
         {
           "id": "setup-8",
           "text": "Reference card for your player count by the Mythos deck",
-          "ref": "Setup 9A"
+          "ref": "Setup 9A (p.3)"
         },
         {
           "id": "setup-9",
           "text": "Doom token on the space the Ancient One lists; Omen token on the green comet space",
-          "ref": "Setup 9B-C"
+          "ref": "Setup 9B-C (p.3)"
         }
       ]
     },
@@ -75,7 +75,7 @@
         {
           "id": "start-1",
           "text": "Starting with the Lead Investigator and going clockwise, each investigator takes up to two actions",
-          "ref": "Action Phase"
+          "ref": "Action Phase (p.8)"
         }
       ]
     }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 150376,
   "gameName": "Dead of Winter: A Crossroads Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,28 +22,28 @@
         {
           "id": "colony-1",
           "text": "Colony board in the center with the 6 location cards around it",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         },
         {
           "id": "colony-2",
           "text": "Choose a main objective and set the board up as its card says",
           "note": "First game: We Need More Samples",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         },
         {
           "id": "colony-3",
           "text": "Crisis cards shuffled onto the colony board",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         },
         {
           "id": "colony-4",
           "text": "Survivor, exiled objective and crossroads decks shuffled to the side",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         },
         {
           "id": "colony-5",
           "text": "Item cards sorted by location, shuffled and placed on their location cards",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         }
       ]
     },
@@ -65,7 +65,7 @@
             }
           },
           "note": "2 per player",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         },
         {
           "id": "players-2",
@@ -73,22 +73,22 @@
           "amounts": {
             "n": 5
           },
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         },
         {
           "id": "players-3",
           "text": "Deal 4 survivors each: keep 2, one as group leader and one in your following",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         },
         {
           "id": "players-4",
           "text": "Standees of all chosen survivors in the colony",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         },
         {
           "id": "players-5",
           "text": "Blue marker on the morale track, red marker on the round track",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         }
       ]
     },
@@ -100,7 +100,7 @@
         {
           "id": "start-1",
           "text": "The player whose group leader has the highest influence takes the first player token",
-          "ref": "Game Setup"
+          "ref": "Game Setup (p.6)"
         }
       ]
     }

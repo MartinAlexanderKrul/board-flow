@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 192291,
   "gameName": "Sushi Go Party!",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -22,24 +22,24 @@
         {
           "id": "setup-1",
           "text": "Board in the center; each pawn on 0",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-2",
           "text": "Choose the menu: nigiri plus 1 roll, 3 appetizers, 2 specials and 1 dessert",
           "note": "No menu or special order with 7-8 players; no spoon or edamame with 2 players",
-          "ref": "Card Selections"
+          "ref": "Card Selections (p.2)"
         },
         {
           "id": "setup-3",
           "text": "Matching menu tiles into the slots on the board",
           "note": "6-8 players with maki: flip its tile to the 6-8 player scoring",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         },
         {
           "id": "setup-4",
           "text": "Dessert cards shuffled facedown to one side; all other chosen cards shuffled into the deck",
-          "ref": "Setup"
+          "ref": "Setup (p.2)"
         }
       ]
     },
@@ -63,7 +63,7 @@
               }
             }
           },
-          "ref": "Starting a Round"
+          "ref": "Starting a Round (p.3)"
         },
         {
           "id": "each-round-2",
@@ -81,7 +81,7 @@
               }
             }
           },
-          "ref": "Starting a Round"
+          "ref": "Starting a Round (p.3)"
         }
       ]
     },
@@ -93,7 +93,7 @@
         {
           "id": "start-1",
           "text": "Everyone picks 1 card at the same time, reveals, then passes the hand to the left",
-          "ref": "Playing a Turn"
+          "ref": "Playing a Turn (p.3)"
         }
       ]
     }

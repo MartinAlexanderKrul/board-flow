@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 233078,
   "gameName": "Twilight Imperium: Fourth Edition",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -107,7 +107,7 @@
         {
           "id": "reminders-1",
           "text": "First to 10 victory points wins (14 on the long side of the track)",
-          "ref": "Winning"
+          "ref": "Winning (p.12)"
         }
       ]
     },

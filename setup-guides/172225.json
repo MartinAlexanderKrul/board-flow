@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "gameId": 172225,
   "gameName": "Exploding Kittens",
-  "version": 1,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
+      "Exploding Kittens rules, Original Edition",
       "Exploding Kittens rules (via RulesPal)"
     ]
   },
@@ -21,14 +22,42 @@
       "steps": [
         {
           "id": "setup-1",
-          "text": "Take all Exploding Kittens and Defuse cards out of the deck",
-          "ref": "Setup"
+          "text": "Take all Exploding Kittens (4) and Defuse cards (6) out of the deck",
+          "ref": "Setup (p.1)"
+        },
+        {
+          "id": "deal-4",
+          "text": "Shuffle the rest and deal {n} cards facedown to each player",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "Setup (p.1)",
+          "condition": {
+            "modules": [
+              "original"
+            ]
+          }
+        },
+        {
+          "id": "defuse-o",
+          "text": "Deal 1 Defuse to each player for a hand of 5; put the extra Defuse cards back in the deck",
+          "ref": "Setup (p.1)",
+          "condition": {
+            "modules": [
+              "original"
+            ]
+          }
         },
         {
           "id": "setup-2",
           "text": "Deal 1 Defuse to each player; put the extra Defuses back in the deck",
           "note": "2-3 players: put back only 2 and remove the rest",
-          "ref": "Setup"
+          "ref": "Setup",
+          "condition": {
+            "modules": [
+              "updated"
+            ]
+          }
         },
         {
           "id": "setup-3",
@@ -36,7 +65,12 @@
           "amounts": {
             "n": 7
           },
-          "ref": "Setup"
+          "ref": "Setup",
+          "condition": {
+            "modules": [
+              "updated"
+            ]
+          }
         },
         {
           "id": "setup-4",
@@ -51,7 +85,7 @@
               }
             }
           },
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         }
       ]
     },
@@ -63,9 +97,22 @@
         {
           "id": "start-1",
           "text": "Pick a player to go first",
-          "ref": "Setup"
+          "ref": "Setup (p.1)"
         }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "original",
+      "name": "Original Edition",
+      "group": "Edition",
+      "defaultEnabled": true
+    },
+    {
+      "id": "updated",
+      "name": "Updated rules (7-card hands)",
+      "group": "Edition"
     }
   ]
 }
