@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "gameId": 185343,
+  "gameName": "Anachrony",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Anachrony rulebook (Mindclash Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "main-board",
+      "title": "Main board",
+      "steps": [
+        {
+          "id": "main-board-1",
+          "text": "Main board side: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "two Hexagonal slots per spot",
+                "3": "two Hexagonal slots per spot",
+                "4": "full side"
+              }
+            }
+          },
+          "note": "Tougher 2-player variant: a Hex Unavailable tile on the right World Council space",
+          "ref": "General Setup"
+        },
+        {
+          "id": "main-board-2",
+          "text": "2 Research dice on their spots; Evacuation Action tile A side up",
+          "ref": "General Setup"
+        },
+        {
+          "id": "main-board-3",
+          "text": "Shuffle the 11 Recruit pool and 11 Mine pool cards into two facedown decks",
+          "ref": "General Setup"
+        },
+        {
+          "id": "main-board-4",
+          "text": "Buildings in 4 shuffled faceup stacks: Power Plants, Factories, Life Supports, Labs",
+          "ref": "General Setup"
+        },
+        {
+          "id": "main-board-5",
+          "text": "Anomalies faceup; Paradox die and tokens beside them",
+          "ref": "General Setup"
+        },
+        {
+          "id": "main-board-6",
+          "text": "Resources top right, Water top left; Workers, Energy Cores, Breakthroughs and VP tokens within reach",
+          "ref": "General Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each picks a Path: Player board (everyone on the same side), 6 Exosuits, 9 Warp tiles, 8 Path markers, Morale and Time Travel markers",
+          "note": "First game: symmetric A side",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Path board with a random side up",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Starting Resources, Water, Energy Cores and Workers as the Path board shows; set the Morale and Time Travel markers",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "Pick one of your Path's two Leaders",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-5",
+          "text": "Whoever last had a deja vu is First Player; clockwise from them players get {s} Water",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "0/1",
+                "3": "0/1/1",
+                "4": "0/1/1/2"
+              }
+            }
+          },
+          "ref": "Player Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Era 1: Preparation phase - the Paradox phase is skipped in the first Era",
+          "ref": "Game overview"
+        }
+      ]
+    }
+  ]
+}

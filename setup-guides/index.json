@@ -2,12 +2,44 @@
   "schemaVersion": 1,
   "guides": [
     {
+      "gameId": 93,
+      "gameName": "El Grande",
+      "gameIds": [93],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "93.json"
+    },
+    {
       "gameId": 320,
       "gameName": "Scrabble",
       "gameIds": [320],
       "version": 1,
       "schemaVersion": 1,
       "path": "320.json"
+    },
+    {
+      "gameId": 521,
+      "gameName": "Crokinole",
+      "gameIds": [521],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "521.json"
+    },
+    {
+      "gameId": 2651,
+      "gameName": "Power Grid",
+      "gameIds": [2651],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "2651.json"
+    },
+    {
+      "gameId": 3076,
+      "gameName": "Puerto Rico",
+      "gameIds": [3076],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "3076.json"
     },
     {
       "gameId": 3955,
@@ -40,6 +72,30 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "27627.json"
+    },
+    {
+      "gameId": 28143,
+      "gameName": "Race for the Galaxy",
+      "gameIds": [28143],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "28143.json"
+    },
+    {
+      "gameId": 28720,
+      "gameName": "Brass: Lancashire",
+      "gameIds": [28720],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "28720.json"
+    },
+    {
+      "gameId": 35677,
+      "gameName": "Le Havre",
+      "gameIds": [35677],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "35677.json"
     },
     {
       "gameId": 38713,
@@ -90,12 +146,28 @@
       "path": "77423.json"
     },
     {
+      "gameId": 84876,
+      "gameName": "The Castles of Burgundy",
+      "gameIds": [84876],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "84876.json"
+    },
+    {
       "gameId": 96848,
       "gameName": "Mage Knight Board Game",
       "gameIds": [96848],
       "version": 1,
       "schemaVersion": 1,
       "path": "96848.json"
+    },
+    {
+      "gameId": 102794,
+      "gameName": "Caverna: The Cave Farmers",
+      "gameIds": [102794],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "102794.json"
     },
     {
       "gameId": 115746,
@@ -106,12 +178,44 @@
       "path": "115746.json"
     },
     {
+      "gameId": 120677,
+      "gameName": "Terra Mystica",
+      "gameIds": [120677],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "120677.json"
+    },
+    {
       "gameId": 124668,
       "gameName": "The Dwarves",
       "gameIds": [124668],
       "version": 1,
       "schemaVersion": 1,
       "path": "124668.json"
+    },
+    {
+      "gameId": 124742,
+      "gameName": "Android: Netrunner",
+      "gameIds": [124742],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "124742.json"
+    },
+    {
+      "gameId": 125153,
+      "gameName": "The Gallerist",
+      "gameIds": [125153],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "125153.json"
+    },
+    {
+      "gameId": 126163,
+      "gameName": "Tzolk'in: The Mayan Calendar",
+      "gameIds": [126163],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "126163.json"
     },
     {
       "gameId": 133473,
@@ -130,12 +234,52 @@
       "path": "136063.json"
     },
     {
+      "gameId": 157354,
+      "gameName": "Five Tribes",
+      "gameIds": [157354],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "157354.json"
+    },
+    {
+      "gameId": 161936,
+      "gameName": "Pandemic Legacy: Season 1",
+      "gameIds": [161936],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "161936.json"
+    },
+    {
       "gameId": 162886,
       "gameName": "Spirit Island",
       "gameIds": [162886, 193065, 262722, 356510, 365137],
       "version": 1,
       "schemaVersion": 1,
       "path": "162886.json"
+    },
+    {
+      "gameId": 164153,
+      "gameName": "Star Wars: Imperial Assault",
+      "gameIds": [164153],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "164153.json"
+    },
+    {
+      "gameId": 167355,
+      "gameName": "Nemesis",
+      "gameIds": [167355],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "167355.json"
+    },
+    {
+      "gameId": 167791,
+      "gameName": "Terraforming Mars",
+      "gameIds": [167791],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "167791.json"
     },
     {
       "gameId": 169786,
@@ -178,6 +322,30 @@
       "path": "174430.json"
     },
     {
+      "gameId": 175914,
+      "gameName": "Food Chain Magnate",
+      "gameIds": [175914],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "175914.json"
+    },
+    {
+      "gameId": 177736,
+      "gameName": "A Feast for Odin",
+      "gameIds": [177736],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "177736.json"
+    },
+    {
+      "gameId": 182028,
+      "gameName": "Through the Ages: A New Story of Civilization",
+      "gameIds": [182028],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "182028.json"
+    },
+    {
       "gameId": 182094,
       "gameName": "BANG! The Duel",
       "gameIds": [182094, 288429],
@@ -186,12 +354,36 @@
       "path": "182094.json"
     },
     {
+      "gameId": 182874,
+      "gameName": "Grand Austria Hotel",
+      "gameIds": [182874],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "182874.json"
+    },
+    {
+      "gameId": 183394,
+      "gameName": "Viticulture Essential Edition",
+      "gameIds": [183394],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "183394.json"
+    },
+    {
       "gameId": 184921,
       "gameName": "Bunny Kingdom",
       "gameIds": [184921, 264396, 373425],
       "version": 3,
       "schemaVersion": 1,
       "path": "184921.json"
+    },
+    {
+      "gameId": 185343,
+      "gameName": "Anachrony",
+      "gameIds": [185343],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "185343.json"
     },
     {
       "gameId": 191189,
@@ -218,6 +410,14 @@
       "path": "192135.json"
     },
     {
+      "gameId": 193738,
+      "gameName": "Great Western Trail",
+      "gameIds": [193738],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "193738.json"
+    },
+    {
       "gameId": 198773,
       "gameName": "Codenames: Pictures",
       "gameIds": [198773],
@@ -240,6 +440,14 @@
       "version": 3,
       "schemaVersion": 1,
       "path": "199792.json"
+    },
+    {
+      "gameId": 200680,
+      "gameName": "Agricola (Revised Edition)",
+      "gameIds": [200680],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "200680.json"
     },
     {
       "gameId": 201808,
@@ -266,12 +474,36 @@
       "path": "205896.json"
     },
     {
+      "gameId": 216132,
+      "gameName": "Clans of Caledonia",
+      "gameIds": [216132],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "216132.json"
+    },
+    {
       "gameId": 216849,
       "gameName": "Dominion (Second Edition) Big Box",
       "gameIds": [51811, 66098, 66690, 90850, 125403, 137166, 171915, 216849, 257673, 298055],
       "version": 5,
       "schemaVersion": 1,
       "path": "216849.json"
+    },
+    {
+      "gameId": 220308,
+      "gameName": "Gaia Project",
+      "gameIds": [220308],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "220308.json"
+    },
+    {
+      "gameId": 221107,
+      "gameName": "Pandemic Legacy: Season 2",
+      "gameIds": [221107],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "221107.json"
     },
     {
       "gameId": 224037,
@@ -282,12 +514,36 @@
       "path": "224037.json"
     },
     {
+      "gameId": 224517,
+      "gameName": "Brass: Birmingham",
+      "gameIds": [224517],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "224517.json"
+    },
+    {
+      "gameId": 230802,
+      "gameName": "Azul",
+      "gameIds": [230802],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "230802.json"
+    },
+    {
       "gameId": 230914,
       "gameName": "Carcassonne Big Box 6",
       "gameIds": [2591, 2993, 5405, 15158, 21385, 31784, 33458, 66646, 104634, 118614, 118615, 118616, 118617, 118618, 118619, 120686, 153773, 217006, 230914],
       "version": 3,
       "schemaVersion": 1,
       "path": "230914.json"
+    },
+    {
+      "gameId": 233078,
+      "gameName": "Twilight Imperium: Fourth Edition",
+      "gameIds": [233078],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "233078.json"
     },
     {
       "gameId": 233371,
@@ -306,6 +562,14 @@
       "path": "237182.json"
     },
     {
+      "gameId": 240980,
+      "gameName": "Blood on the Clocktower",
+      "gameIds": [240980],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "240980.json"
+    },
+    {
       "gameId": 241477,
       "gameName": "Karak",
       "gameIds": [241477, 291436],
@@ -314,12 +578,28 @@
       "path": "241477.json"
     },
     {
+      "gameId": 244521,
+      "gameName": "Quacks",
+      "gameIds": [244521],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "244521.json"
+    },
+    {
       "gameId": 244992,
       "gameName": "The Mind",
       "gameIds": [244992],
       "version": 1,
       "schemaVersion": 1,
       "path": "244992.json"
+    },
+    {
+      "gameId": 247763,
+      "gameName": "Underwater Cities",
+      "gameIds": [247763],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "247763.json"
     },
     {
       "gameId": 249763,
@@ -338,12 +618,28 @@
       "path": "249821.json"
     },
     {
+      "gameId": 251247,
+      "gameName": "Barrage",
+      "gameIds": [251247],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "251247.json"
+    },
+    {
       "gameId": 251661,
       "gameName": "Oathsworn: Into the Deepwood",
       "gameIds": [251661],
       "version": 1,
       "schemaVersion": 1,
       "path": "251661.json"
+    },
+    {
+      "gameId": 253344,
+      "gameName": "Cthulhu: Death May Die",
+      "gameIds": [253344],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "253344.json"
     },
     {
       "gameId": 254192,
@@ -378,12 +674,28 @@
       "path": "256382.json"
     },
     {
+      "gameId": 256960,
+      "gameName": "Pax Pamir: Second Edition",
+      "gameIds": [256960],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "256960.json"
+    },
+    {
       "gameId": 266192,
       "gameName": "Wingspan",
       "gameIds": [266192, 290448, 300580, 366161, 461932],
       "version": 2,
       "schemaVersion": 1,
       "path": "266192.json"
+    },
+    {
+      "gameId": 266810,
+      "gameName": "Paladins of the West Kingdom",
+      "gameIds": [266810],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "266810.json"
     },
     {
       "gameId": 270239,
@@ -418,12 +730,36 @@
       "path": "271324.json"
     },
     {
+      "gameId": 277659,
+      "gameName": "Final Girl",
+      "gameIds": [277659],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "277659.json"
+    },
+    {
       "gameId": 283211,
       "gameName": "Harry Potter: Death Eaters Rising",
       "gameIds": [283211],
       "version": 1,
       "schemaVersion": 1,
       "path": "283211.json"
+    },
+    {
+      "gameId": 284083,
+      "gameName": "The Crew: The Quest for Planet Nine",
+      "gameIds": [284083],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "284083.json"
+    },
+    {
+      "gameId": 284378,
+      "gameName": "Kanban EV",
+      "gameIds": [284378],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "284378.json"
     },
     {
       "gameId": 284778,
@@ -530,6 +866,14 @@
       "path": "312484.json"
     },
     {
+      "gameId": 314040,
+      "gameName": "Pandemic Legacy: Season 0",
+      "gameIds": [314040],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "314040.json"
+    },
+    {
       "gameId": 316554,
       "gameName": "Dune: Imperium",
       "gameIds": [316554, 342031, 367466, 426129],
@@ -538,12 +882,36 @@
       "path": "316554.json"
     },
     {
+      "gameId": 321608,
+      "gameName": "Hegemony: Lead Your Class to Victory",
+      "gameIds": [321608],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "321608.json"
+    },
+    {
+      "gameId": 322289,
+      "gameName": "Darwin's Journey",
+      "gameIds": [322289],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "322289.json"
+    },
+    {
       "gameId": 322708,
       "gameName": "Descent: Legends of the Dark",
       "gameIds": [322708],
       "version": 1,
       "schemaVersion": 1,
       "path": "322708.json"
+    },
+    {
+      "gameId": 324856,
+      "gameName": "The Crew: Mission Deep Sea",
+      "gameIds": [324856],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "324856.json"
     },
     {
       "gameId": 326934,
@@ -578,6 +946,14 @@
       "path": "331106.json"
     },
     {
+      "gameId": 332772,
+      "gameName": "Revive",
+      "gameIds": [332772],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "332772.json"
+    },
+    {
       "gameId": 336755,
       "gameName": "King of Tokyo: Monster Box",
       "gameIds": [207292, 233076, 250532, 336755, 364182],
@@ -592,6 +968,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "338960.json"
+    },
+    {
+      "gameId": 341169,
+      "gameName": "Great Western Trail: Second Edition",
+      "gameIds": [341169],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "341169.json"
     },
     {
       "gameId": 342942,
@@ -658,6 +1042,14 @@
       "path": "365717.json"
     },
     {
+      "gameId": 366013,
+      "gameName": "Heat: Pedal to the Metal",
+      "gameIds": [366013],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "366013.json"
+    },
+    {
       "gameId": 366161,
       "gameName": "Wingspan Asia",
       "gameIds": [366161],
@@ -690,6 +1082,22 @@
       "path": "367966.json"
     },
     {
+      "gameId": 371942,
+      "gameName": "The White Castle",
+      "gameIds": [371942],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "371942.json"
+    },
+    {
+      "gameId": 373106,
+      "gameName": "Sky Team",
+      "gameIds": [373106],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "373106.json"
+    },
+    {
       "gameId": 378851,
       "gameName": "The Mind: Soulmates",
       "gameIds": [378851],
@@ -698,12 +1106,28 @@
       "path": "378851.json"
     },
     {
+      "gameId": 380607,
+      "gameName": "Great Western Trail: New Zealand",
+      "gameIds": [380607],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "380607.json"
+    },
+    {
       "gameId": 380619,
       "gameName": "Cyclades: Legendary Edition",
       "gameIds": [380619],
       "version": 1,
       "schemaVersion": 1,
       "path": "380619.json"
+    },
+    {
+      "gameId": 383179,
+      "gameName": "Age of Innovation",
+      "gameIds": [383179],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "383179.json"
     },
     {
       "gameId": 385761,
@@ -720,6 +1144,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "387763.json"
+    },
+    {
+      "gameId": 390092,
+      "gameName": "Ticket to Ride Legacy: Legends of the West",
+      "gameIds": [390092],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "390092.json"
     },
     {
       "gameId": 393530,
@@ -792,6 +1224,30 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "410201.json"
+    },
+    {
+      "gameId": 413246,
+      "gameName": "Bomb Busters",
+      "gameIds": [413246],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "413246.json"
+    },
+    {
+      "gameId": 414317,
+      "gameName": "Harmonies",
+      "gameIds": [414317],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "414317.json"
+    },
+    {
+      "gameId": 418059,
+      "gameName": "SETI: Search for Extraterrestrial Intelligence",
+      "gameIds": [418059],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "418059.json"
     },
     {
       "gameId": 421006,

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "gameId": 371942,
+  "gameName": "The White Castle",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The White Castle rulebook (Devir, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "castle",
+      "title": "Castle",
+      "steps": [
+        {
+          "id": "castle-1",
+          "text": "Shuffle the Steward and Diplomat decks separately; 1 faceup card in each space of its level",
+          "note": "2 players: first remove the cards marked with a diamond. Redo if every card shows the same dark-background action",
+          "ref": "Castle Setup"
+        },
+        {
+          "id": "castle-2",
+          "text": "1 random Daimyo card on the last level; box the rest",
+          "ref": "Castle Setup"
+        },
+        {
+          "id": "castle-3",
+          "text": "Die tiles: one of each color on the 3 diamond spaces, then fill the rooms in numerical order - at least 2 dice colors per room; Well tiles go dice side down",
+          "ref": "Castle Setup"
+        },
+        {
+          "id": "castle-4",
+          "text": "Round marker on the first space; coins, Daimyo Seals and +40/+80 tiles in a reserve",
+          "ref": "Castle Setup"
+        },
+        {
+          "id": "castle-5",
+          "text": "{n} dice of each color; roll each color and line them on its Bridge, lowest on the left by the lantern",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 5
+              }
+            }
+          },
+          "ref": "Bridges"
+        },
+        {
+          "id": "castle-6",
+          "text": "1 random Plant Garden and 1 random Stone Garden card below each Bridge",
+          "ref": "Gardens"
+        },
+        {
+          "id": "castle-7",
+          "text": "4 random Yard tiles on their spaces, indicated side up",
+          "ref": "Training Yards"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Domain board with 5 Courtiers, 5 Gardeners and 5 Warriors; 3 Resource cubes on 0; Fan token by the Clan Points track",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Stack the Influence markers in random order on the Heron; Heron tokens on the Turn Order track in that order (top goes first)",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Reveal Starting Resource cards equal to players + 1, a random Starting Action card under each",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "In reverse turn order each picks a pair: Action card onto the Domain board, gain the resources, Resource card into the Lantern Area",
+          "ref": "Player Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "In turn order, take a die from a Bridge and place it on an action",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

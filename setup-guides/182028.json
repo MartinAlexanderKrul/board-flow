@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "gameId": 182028,
+  "gameName": "Through the Ages: A New Story of Civilization",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Through the Ages rulebook (Czech Games Edition, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "decks",
+      "title": "Decks",
+      "steps": [
+        {
+          "id": "decks-1",
+          "text": "Game boards in the center",
+          "ref": "Game Boards"
+        },
+        {
+          "id": "decks-2",
+          "text": "3 players: remove the three 4-player cards from each of civil decks I, II and III",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "Deck Setup"
+        },
+        {
+          "id": "decks-3",
+          "text": "2 players: remove the nine 3+/4 cards from each of civil decks I-III and all pact cards from military decks I-III",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Deck Setup"
+        },
+        {
+          "id": "decks-4",
+          "text": "Shuffle the Age A military deck; {n} cards facedown as the current events deck; box the rest unseen",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 5,
+                "4": 6
+              }
+            }
+          },
+          "ref": "Preparing the Event Deck"
+        },
+        {
+          "id": "decks-5",
+          "text": "Shuffle the Age A civil deck; deal 13 faceup to the card row; rest on the light half of the current age board",
+          "ref": "Preparing the Card Row"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Player board: a blue token on each of the 16 blue bank squares",
+          "ref": "Player Components"
+        },
+        {
+          "id": "players-2",
+          "text": "Yellow tokens on the 18 yellow bank squares, the 6 squares of your starting technologies and the worker pool",
+          "ref": "Player Components"
+        },
+        {
+          "id": "players-3",
+          "text": "4 white and 2 red tokens next to your Despotism card",
+          "ref": "Player Components"
+        },
+        {
+          "id": "players-4",
+          "text": "Rating markers: science 1, culture 0, strength 1, happiness 0; points counters on 0",
+          "ref": "Player Components"
+        },
+        {
+          "id": "players-5",
+          "text": "Tactics standard in the common tactics area",
+          "ref": "Player Components"
+        },
+        {
+          "id": "players-6",
+          "text": "Choose a starting player (fixed for the game)",
+          "ref": "Starting Player"
+        },
+        {
+          "id": "players-7",
+          "text": "First-turn civil actions: white tokens on Despotism - 1 for the starting player, then 2, 3, 4 clockwise",
+          "ref": "Initial Actions"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "No military actions on the first turn",
+          "ref": "Initial Actions"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The starting player takes the first turn; play is clockwise",
+          "ref": "Gameplay"
+        }
+      ]
+    }
+  ]
+}

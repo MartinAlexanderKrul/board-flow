@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "gameId": 35677,
+  "gameName": "Le Havre",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Le Havre rules (Lookout Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "boards",
+      "title": "Boards",
+      "steps": [
+        {
+          "id": "boards-1",
+          "text": "3 game boards side by side: Treasury left, Building Proposals center, Ship spaces right",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-2",
+          "text": "Full game lasts {n} rounds",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 7,
+                "2": 14,
+                "3": 18,
+                "4": 20,
+                "5": 20
+              }
+            }
+          },
+          "note": "Shortened version: 4/8/12/12/15 rounds, with different starting goods and no Special buildings",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-3",
+          "text": "Shuffle the 7 Supply tiles facedown onto the round spaces",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-4",
+          "text": "Goods, food and Franc tokens on their Supply spaces, standard side up",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-5",
+          "text": "Starting offers: 2 Francs, 2 fish, 2 wood and 1 clay on their Offer spaces",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-6",
+          "text": "Shuffle the Special buildings; 6 facedown on their space, box the rest",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a Person disc, a Ship marker and a Game turn overview card",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Ship markers beside the first board, near the first Supply tile",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Each player starts with {f} Francs and {c} coal",
+          "amounts": {
+            "f": 5,
+            "c": 1
+          },
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player who lives closest to water takes the Starting player tile; play is clockwise",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

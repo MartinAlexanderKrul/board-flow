@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "gameId": 521,
+  "gameName": "Crokinole",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Crokinole rules (via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Board in the middle; each player sits at their own quadrant",
+          "ref": "Equipment"
+        },
+        {
+          "id": "setup-2",
+          "text": "2 players: each takes 12 disks",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Game Play"
+        },
+        {
+          "id": "setup-3",
+          "text": "4 players: partners sit across from each other, 6 disks each",
+          "condition": {
+            "players": [
+              4
+            ]
+          },
+          "ref": "Game Play"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "One Cheek Rule: stay seated with at least one cheek on the chair; chairs don't move during a round",
+          "ref": "Rules"
+        },
+        {
+          "id": "reminders-2",
+          "text": "With no opposing disk on the board, your disk must land in the 20 hole or end inside or touching the 15 circle",
+          "ref": "Rules"
+        },
+        {
+          "id": "reminders-3",
+          "text": "The first player switches every round",
+          "ref": "Game Play"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The first player shoots one disk; take turns until all disks are shot",
+          "ref": "Game Play"
+        }
+      ]
+    }
+  ]
+}

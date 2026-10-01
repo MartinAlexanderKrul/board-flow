@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "gameId": 414317,
+  "gameName": "Harmonies",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Harmonies rulebook (Libellud, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Central board with the 2-4 Players side up",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "All tokens in the Pouch next to the Central board",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Fill each of the 5 Central board spaces with 3 random tokens",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Shuffle the Animal cards; 5 faceup next to the board, the rest as a draw pile; Animal cubes within reach",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "Each player takes a Personal board (everyone on the same side) and the matching Reminder card",
+          "note": "First games: Side A; leave the Nature's Spirit cards in the box",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-6",
+          "text": "Whoever last saw a magnificent landscape is first; point the Central board's arrow at them",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "From the first player clockwise, take your turn's actions in any order",
+          "ref": "Gameplay"
+        }
+      ]
+    }
+  ]
+}

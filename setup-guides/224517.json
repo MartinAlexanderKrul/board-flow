@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "gameId": 224517,
+  "gameName": "Brass: Birmingham",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Brass: Birmingham rulebook (Roxley, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Board on its day or night side",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "Remove cards and Merchant tiles marked for more players than you have",
+          "condition": {
+            "maxPlayers": 3
+          },
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "Wild Location and Wild Industry cards faceup on 2 Card Draw Areas; shuffle the rest facedown on the third as the Draw Deck",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Shuffle the Merchant tiles; 1 faceup on each Merchant space marked for your player count",
+          "note": "2 players: none in Warrington or Nottingham; 3 players: none in Nottingham",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "1 beer barrel on each barrel space beside a non-blank Merchant tile",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-6",
+          "text": "Coal Market: a black cube on every space except one of the 1-pound spaces",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-7",
+          "text": "Iron Market: an orange cube on every space except both 1-pound spaces",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-8",
+          "text": "Remaining cubes and barrels as the General Supply; money as the Bank",
+          "ref": "Board Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player takes a Player Mat and {n} pounds",
+          "amounts": {
+            "n": 17
+          },
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Choose a Character tile; matching Link tiles in your area",
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Stack your Industry tiles on their mat slots, black-top side facedown",
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "VP marker on 0 and Income marker on 10 of the Progress Track",
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-5",
+          "text": "Draw {n} cards as your hand, plus 1 more facedown as your Discard Pile",
+          "amounts": {
+            "n": 8
+          },
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-6",
+          "text": "Shuffle all Character tiles and place them in random order on the Turn Order Track",
+          "ref": "Player Area Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "First round of the Canal Era: follow the Turn Order Track",
+          "ref": "Playing the Game"
+        }
+      ]
+    }
+  ]
+}

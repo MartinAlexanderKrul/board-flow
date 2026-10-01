@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "gameId": 247763,
+  "gameName": "Underwater Cities",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Underwater Cities rulebook (Delicious Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Main board: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "1": "2-player side",
+                "2": "2-player side",
+                "3": "3-4 player side",
+                "4": "3-4 player side"
+              }
+            }
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "Cities, tunnels, buildings and resources in a common supply",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "Shuffle the Era I cards thoroughly onto the board; set the Era II and III decks aside",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Era marker on the start of the era track; a score marker per player on 0",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "Special cards: shuffle the 1-2 credit deck onto the board with its top card faceup; deal 6 of the 3-credit cards faceup, box the rest",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-6",
+          "text": "Action-cloning tile: {a}; symbiotic cities: {n}",
+          "amounts": {
+            "a": {
+              "byPlayers": {
+                "1": "left in the box",
+                "2": "left in the box",
+                "3": "left in the box",
+                "4": "in play"
+              }
+            },
+            "n": {
+              "byPlayers": {
+                "1": 7,
+                "2": 7,
+                "3": 10,
+                "4": 13
+              }
+            }
+          },
+          "ref": "Setup for 2 or 3 players"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player sets up their player board, action tiles and starting resources as the rulebook shows",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Each player starts their turn with 3 cards",
+          "ref": "A Turn"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Era I has 4 rounds, Eras II and III have 3; each connected city consumes 1 kelp at Production",
+          "ref": "An Era"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Take turns in play-order track order: play a card and take an action slot",
+          "ref": "A Turn"
+        }
+      ]
+    }
+  ]
+}

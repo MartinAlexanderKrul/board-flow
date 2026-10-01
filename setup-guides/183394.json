@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "gameId": 183394,
+  "gameName": "Viticulture Essential Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Viticulture rulebook (Stonemaier Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Each player: rooster above the wake-up chart, cork on the start of the victory point track, wine bottle on the middle of the Residual Payment Tracker",
+          "ref": "Game Board Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "Shuffle the 4 small card decks (green, yellow, purple, blue) onto the board",
+          "ref": "Vineyard Mat"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a vineyard mat with the 3 field cards (5, 6 and 7 lira) side by side, field side up",
+          "ref": "Vineyard Mat"
+        },
+        {
+          "id": "players-2",
+          "text": "Draw a random rooster: that player is first and takes the first player token",
+          "ref": "First Player"
+        },
+        {
+          "id": "players-3",
+          "text": "Shuffle the mama and papa cards; deal one of each faceup to each player",
+          "note": "Variant: draw 2 of each and choose 1",
+          "ref": "Mamas and Papas"
+        },
+        {
+          "id": "players-4",
+          "text": "Mama: 2 regular workers and the cards she shows as your opening hand",
+          "ref": "Mamas and Papas"
+        },
+        {
+          "id": "players-5",
+          "text": "Papa: 1 grande worker and his lira; in clockwise order choose his structure or the extra lira",
+          "ref": "Mamas and Papas"
+        },
+        {
+          "id": "players-6",
+          "text": "Discard the mama and papa cards",
+          "ref": "Mamas and Papas"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "You can't drop below -5 victory points",
+          "ref": "Game Board Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Spring: from the first player, each places their rooster on the wake-up chart",
+          "ref": "Seasons"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "gameId": 164153,
+  "gameName": "Star Wars: Imperial Assault",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Star Wars: Imperial Assault Learn to Play (Fantasy Flight Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "campaign-setup",
+      "title": "Campaign setup",
+      "steps": [
+        {
+          "id": "campaign-setup-1",
+          "text": "Choose the Imperial player (the most experienced); everyone else plays Rebel heroes for the whole campaign",
+          "ref": "Campaign Setup 1"
+        },
+        {
+          "id": "campaign-setup-2",
+          "text": "Each Rebel picks a Hero sheet, figure and Class deck; basic Item cards (no XP cost) faceup",
+          "note": "A single Rebel player controls 2 heroes",
+          "ref": "Campaign Setup 2"
+        },
+        {
+          "id": "campaign-setup-3",
+          "text": "Imperial player picks an Imperial Class deck and lays out its basic Class card",
+          "ref": "Campaign Setup 3"
+        },
+        {
+          "id": "campaign-setup-4",
+          "text": "Agenda deck: the Imperial player picks 6 Agenda sets and shuffles those 18 cards",
+          "ref": "Campaign Setup 4"
+        },
+        {
+          "id": "campaign-setup-5",
+          "text": "Side Mission deck: each hero's red card, 4 green cards of the heroes' choice and 4 random gray cards, unseen",
+          "ref": "Campaign Setup 5"
+        },
+        {
+          "id": "campaign-setup-6",
+          "text": "2 heroes: each gets a Legendary Reward card",
+          "condition": {
+            "maxPlayers": 3
+          },
+          "ref": "Less Than Four Heroes?"
+        },
+        {
+          "id": "campaign-setup-7",
+          "text": "3 heroes: each gets a Heroic Reward card",
+          "condition": {
+            "players": [
+              4
+            ]
+          },
+          "ref": "Less Than Four Heroes?"
+        }
+      ]
+    },
+    {
+      "id": "each-mission",
+      "title": "Each mission",
+      "steps": [
+        {
+          "id": "each-mission-1",
+          "text": "Dice, Condition and Supply decks, damage, strain and condition tokens within reach",
+          "ref": "Tutorial Setup"
+        },
+        {
+          "id": "each-mission-2",
+          "text": "Each hero takes an activation token, ready side up",
+          "ref": "Tutorial Setup"
+        },
+        {
+          "id": "each-mission-3",
+          "text": "Build the map and deploy figures as the mission shows",
+          "ref": "Mission Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "A hero with 2 activation tokens can't take a second activation until every hero has had a first",
+          "ref": "Less Than Four Heroes?"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Start with the introductory mission",
+          "ref": "Campaign Setup"
+        }
+      ]
+    }
+  ]
+}

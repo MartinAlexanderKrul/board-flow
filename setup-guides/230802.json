@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "gameId": 230802,
+  "gameName": "Azul",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Azul rulebook (Plan B Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Each player takes a player board, colored-wall side up (everyone the same side)",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Scoring marker on 0 of your score track",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "{n} Factory displays in a circle",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 5,
+                "3": 7,
+                "4": 9
+              }
+            }
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "All 100 tiles in the bag",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "Whoever most recently visited Portugal takes the starting player marker and fills each Factory display with 4 random tiles",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "setup-6",
+          "text": "Box the unused boards, markers and Factory displays",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "First to take from the center each round also takes the starting player marker onto their floor line",
+          "ref": "Factory offer"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The starting player puts the marker in the center and takes the first turn; play is clockwise",
+          "ref": "Factory offer"
+        }
+      ]
+    }
+  ]
+}

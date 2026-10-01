@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "gameId": 253344,
+  "gameName": "Cthulhu: Death May Die",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Cthulhu: Death May Die rules summary (CMON, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "story",
+      "title": "Story",
+      "steps": [
+        {
+          "id": "story-1",
+          "text": "Story Board, tokens and dice on the table",
+          "ref": "Setup"
+        },
+        {
+          "id": "story-2",
+          "text": "Choose an Elder One: figure on the start of the Summoning track; its 8 Mythos cards and its Stage cards in order, faceup",
+          "ref": "Setup"
+        },
+        {
+          "id": "story-3",
+          "text": "Choose an episode: its 8 Mythos cards, 15 Discovery cards, Episode card and tokens",
+          "ref": "Setup"
+        },
+        {
+          "id": "story-4",
+          "text": "Shuffle all 16 Mythos cards together facedown; episode Discovery deck facedown",
+          "ref": "Setup"
+        },
+        {
+          "id": "story-5",
+          "text": "Take the enemy figures on the reference cards and build the map per the Episode card",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "investigators",
+      "title": "Investigators",
+      "steps": [
+        {
+          "id": "investigators-1",
+          "text": "Each player: an investigator board and figure",
+          "ref": "Setup"
+        },
+        {
+          "id": "investigators-2",
+          "text": "6 markers: 3 on the first level of each skill, 3 on the leftmost space of the wound, stress and sanity tracks",
+          "ref": "Setup"
+        },
+        {
+          "id": "investigators-3",
+          "text": "Deal each player 1 insanity card faceup",
+          "ref": "Setup"
+        },
+        {
+          "id": "investigators-4",
+          "text": "Solo: control 2 investigators, alternating turns",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Random starting player",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

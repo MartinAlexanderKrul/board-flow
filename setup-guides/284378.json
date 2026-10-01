@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "gameId": 284378,
+  "gameName": "Kanban EV",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Kanban EV rules overview (Eagle-Gryphon Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "factory",
+      "title": "Factory",
+      "steps": [
+        {
+          "id": "factory-1",
+          "text": "Board and the Sandra reference tile, red-stripe side",
+          "ref": "Setup"
+        },
+        {
+          "id": "factory-2",
+          "text": "Recycling seeded with 3 random part types; supplies of parts, vouchers and books",
+          "ref": "Setup"
+        },
+        {
+          "id": "factory-3",
+          "text": "Two Factory Goals in each of three departments, Generic Speech tokens on them",
+          "ref": "Setup"
+        },
+        {
+          "id": "factory-4",
+          "text": "R&D: Car Part Value markers, Pace Car, Test track overlay for your player count",
+          "ref": "Setup"
+        },
+        {
+          "id": "factory-5",
+          "text": "Design: random tiles in the display, three stacks of 9",
+          "ref": "Setup"
+        },
+        {
+          "id": "factory-6",
+          "text": "Assembly: cars on each model's line",
+          "ref": "Setup"
+        },
+        {
+          "id": "factory-7",
+          "text": "Logistics: Demand tiles, Kanban deck, initial warehouse parts",
+          "ref": "Setup"
+        },
+        {
+          "id": "factory-8",
+          "text": "Administration: 4 Performance Goals faceup, a random Final Goal, Week marker, Sandra at her desk",
+          "ref": "Setup"
+        },
+        {
+          "id": "factory-9",
+          "text": "Shuffle Award tiles into each department",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a board, discs, worker, certification and banked-shift markers, locks and speech tokens",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "New Employee Orientation: in turn, place certification markers on the leftmost track section - their order sets first-round turn order",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Each player takes 1 car part and 1 design",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "First round in the turn order set by the orientation",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

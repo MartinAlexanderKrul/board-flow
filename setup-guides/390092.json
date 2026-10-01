@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "gameId": 390092,
+  "gameName": "Ticket to Ride Legacy: Legends of the West",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Ticket to Ride Legacy: Legends of the West rulebook (Days of Wonder, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "each-game",
+      "title": "Each game",
+      "steps": [
+        {
+          "id": "each-game-1",
+          "text": "Assemble the board from its current pieces (5 at the start of the campaign)",
+          "ref": "Setting up each game"
+        },
+        {
+          "id": "each-game-2",
+          "text": "Each player empties their company box's office (not the vault)",
+          "ref": "Setting up each game"
+        },
+        {
+          "id": "each-game-3",
+          "text": "Each player takes {n} dollars in coins",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "Setting up each game"
+        },
+        {
+          "id": "each-game-4",
+          "text": "Shuffle {n} newspapers into the train deck; the rest go to the store room",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 6,
+                "3": 4,
+                "4": 3,
+                "5": 3
+              }
+            }
+          },
+          "ref": "Setting up each game"
+        },
+        {
+          "id": "each-game-5",
+          "text": "Deal 4 train cards each; turn 5 faceup next to the deck",
+          "note": "Reshuffle and replace any newspaper dealt or shown; redraw all 5 if 3 are locomotives",
+          "ref": "Setting up each game"
+        },
+        {
+          "id": "each-game-6",
+          "text": "Deal 4 tickets each; keep at least 2, return the rest to the bottom of the ticket deck",
+          "ref": "Setting up each game"
+        },
+        {
+          "id": "each-game-7",
+          "text": "Read the story deck (both sides of each card) until it tells you to stop",
+          "ref": "Setting up each game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The player with the caboose card goes first; play is clockwise",
+          "ref": "Playing"
+        }
+      ]
+    }
+  ]
+}

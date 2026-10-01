@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "gameId": 256960,
+  "gameName": "Pax Pamir: Second Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Pax Pamir Second Edition rules (Wehrlegig Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "deck-market",
+      "title": "Deck & market",
+      "steps": [
+        {
+          "id": "deck-market-1",
+          "text": "Favored suit marker next to the political suit",
+          "ref": "Setup"
+        },
+        {
+          "id": "deck-market-2",
+          "text": "Shuffle the court cards into 6 facedown piles of {n} cards",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 7,
+                "2": 7,
+                "3": 8,
+                "4": 9,
+                "5": 10
+              }
+            }
+          },
+          "note": "5 + 1 per player; solo counts Wakhan",
+          "ref": "Setup"
+        },
+        {
+          "id": "deck-market-3",
+          "text": "One Dominance Check in each of the 4 rightmost piles",
+          "ref": "Setup"
+        },
+        {
+          "id": "deck-market-4",
+          "text": "Shuffle the other event cards: 2 into the second pile from the left, 1 into each of the 4 piles to its right",
+          "ref": "Setup"
+        },
+        {
+          "id": "deck-market-5",
+          "text": "Shuffle each pile separately, then stack them with the Dominance Check piles at the bottom - don't shuffle the deck",
+          "ref": "Setup"
+        },
+        {
+          "id": "deck-market-6",
+          "text": "Market: 12 faceup cards in 2 rows of 6, filling column by column from the left, top row first",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: 11 cylinders, a loyalty dial, a player board and {n} rupees",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "One cylinder on 0 of the victory point track, the rest on your board",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Coins and coalition blocks near the play area",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "From a random player clockwise, each sets their loyalty dial",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-5",
+          "text": "Solo: shuffle the 24 AI cards; Wakhan uses a spare set of cylinders and no loyalty dial",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Wakhan"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The last player to choose loyalty takes the first turn",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

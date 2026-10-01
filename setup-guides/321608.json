@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "gameId": 321608,
+  "gameName": "Hegemony: Lead Your Class to Victory",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Hegemony rules summary (Hegemonic Project Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "main-board",
+      "title": "Main board",
+      "steps": [
+        {
+          "id": "main-board-1",
+          "text": "4 starting Capitalist Companies (Supermarket, Shopping Mall, College, Clinic) with L2 Wage markers",
+          "ref": "Setup"
+        },
+        {
+          "id": "main-board-2",
+          "text": "3 starting Public Companies in the first Public Sector row with L2 Wage markers; a facedown card of each type in row two, the other 3 facedown in row three",
+          "ref": "Setup"
+        },
+        {
+          "id": "main-board-3",
+          "text": "2 starting Middle Class Companies (Convenience Store, Doctor's Office) with L2 Wage markers",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "main-board-4",
+          "text": "Shuffle the Business Deal, Export and Immigration decks; Export marker on the middle Import space",
+          "ref": "Setup"
+        },
+        {
+          "id": "main-board-5",
+          "text": "Policy markers: Policies 1-5 in mixed starting positions, 6-7 as set",
+          "ref": "Setup"
+        },
+        {
+          "id": "main-board-6",
+          "text": "120 in the State Treasury; Public Services Health/Education/Influence: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "5 / 5 / 3",
+                "3": "6 / 6 / 4",
+                "4": "6 / 6 / 4"
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "main-board-7",
+          "text": "Round marker on 1, Tax Multiplier on 5, scoring markers on 0",
+          "ref": "Setup"
+        },
+        {
+          "id": "main-board-8",
+          "text": "Voting cubes in 3 piles by color; 8 of each color in the bag (all 3 colors even with 2 players)",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "classes",
+      "title": "Classes",
+      "steps": [
+        {
+          "id": "classes-1",
+          "text": "Working Class: Population 10, Prosperity 0, 30 money, 1 Influence, 3 red Bill markers; draw 7 Action cards; 2 Cooperative Farm cards aside; place starting Workers",
+          "ref": "Working Class Setup"
+        },
+        {
+          "id": "classes-2",
+          "text": "Capitalist Class: 120 in Revenue; 1 Food, 2 Luxury, 2 Education, 1 Influence in Storage (Food price 12, others 8); Free Trade Zone; 3 blue Bill markers; draw 7 Action cards; reveal 4 Companies as your Market",
+          "ref": "Capitalist Class Setup"
+        },
+        {
+          "id": "classes-3",
+          "text": "Middle Class: Population 10, Prosperity 0, 40 money, 1 Influence; 1 Food and 1 Health (Food price 12, others 8); 3 yellow Bill markers; draw 7 Action cards; reveal 3 Companies; place starting Workers",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Middle Class Setup"
+        },
+        {
+          "id": "classes-4",
+          "text": "State: a marker on the second space of each Legitimacy track; 1 Influence; 3 gray Bill markers; draw 7 Action cards; 2 Event cards faceup; top Political Agenda card; Health Welfare tile",
+          "condition": {
+            "players": [
+              4
+            ]
+          },
+          "ref": "State Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "The Preparation Phase is skipped in round 1",
+          "ref": "Preparation Phase"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Round 1 starts with the Action Phase",
+          "ref": "Preparation Phase"
+        }
+      ]
+    }
+  ]
+}

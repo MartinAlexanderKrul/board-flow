@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "gameId": 220308,
+  "gameName": "Gaia Project",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Gaia Project rulebook (Z-Man / Feuerland, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "boards",
+      "title": "Boards",
+      "steps": [
+        {
+          "id": "boards-1",
+          "text": "Choose a first player; they take the first player marker",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "boards-2",
+          "text": "Game board: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "sector tiles 01-07 as shown, 05-07 outlined side up",
+                "2": "sector tiles 01-07 as shown, 05-07 outlined side up",
+                "3": "all 10 sector tiles as shown, 05-07 solid side up",
+                "4": "all 10 sector tiles as shown, 05-07 solid side up"
+              }
+            }
+          },
+          "ref": "Game Board"
+        },
+        {
+          "id": "boards-3",
+          "text": "Research board beside it: the 9 green-marked standard tech tiles randomly on the tech spaces, the rest stacked on their matching tiles",
+          "ref": "Research Board"
+        },
+        {
+          "id": "boards-4",
+          "text": "One random advanced tech tile between levels 4 and 5 of each research area; box the rest",
+          "ref": "Research Board"
+        },
+        {
+          "id": "boards-5",
+          "text": "Set aside the Gleens' federation token; a random federation token on level 5 of Terraforming; stack the rest in 6 piles, green side up",
+          "ref": "Research Board"
+        },
+        {
+          "id": "boards-6",
+          "text": "Scoring board: a random round scoring tile on each numbered space and a random final scoring tile on each space by the ranking tracks",
+          "ref": "Scoring Board"
+        },
+        {
+          "id": "boards-7",
+          "text": "{n} random round boosters beside the board",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 5,
+                "2": 5,
+                "3": 6,
+                "4": 7
+              }
+            }
+          },
+          "note": "Players + 3; solo counts the Automa",
+          "ref": "Round Boosters"
+        },
+        {
+          "id": "boards-8",
+          "text": "Action tokens, Gaia Planet tokens, Lost Planet, power tokens, Q.I.C. and record tokens as the supply",
+          "ref": "Round Boosters"
+        }
+      ]
+    },
+    {
+      "id": "factions",
+      "title": "Factions",
+      "steps": [
+        {
+          "id": "factions-1",
+          "text": "First game factions: {f}",
+          "amounts": {
+            "f": {
+              "byPlayers": {
+                "1": "Hadsch Hallas vs Taklons (Automa)",
+                "2": "Hadsch Hallas, Xenos",
+                "3": "Terrans, Taklons, Geodens",
+                "4": "Terrans, Hadsch Hallas, Xenos, Taklons"
+              }
+            }
+          },
+          "note": "Later games: choose any faction board in turn order",
+          "ref": "The First Game"
+        },
+        {
+          "id": "factions-2",
+          "text": "Set up your faction board with its structures, resources and research tokens; take any level-1 one-time bonuses",
+          "ref": "Choosing a Faction"
+        },
+        {
+          "id": "factions-3",
+          "text": "A player token on 10 VP; one satellite on each 0 space of the scoring board",
+          "ref": "Choosing a Faction"
+        },
+        {
+          "id": "factions-4",
+          "text": "Place your first mines (first game: as the rulebook diagram shows), taking them left to right",
+          "ref": "Placing Your First Structures"
+        },
+        {
+          "id": "factions-5",
+          "text": "From the last player counterclockwise, each chooses a round booster",
+          "ref": "Choosing Your First Round Booster"
+        },
+        {
+          "id": "factions-6",
+          "text": "Neutral player: two satellites of an unused color on the ranking tracks at the numbers on the final scoring tiles",
+          "condition": {
+            "maxPlayers": 2
+          },
+          "ref": "Neutral Player"
+        },
+        {
+          "id": "factions-7",
+          "text": "Solo: set up the Automa per its rulebook",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Round 1, Phase I: Income",
+          "ref": "Phase I: Income"
+        }
+      ]
+    }
+  ]
+}

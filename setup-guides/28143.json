@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "gameId": 28143,
+  "gameName": "Race for the Galaxy",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Race for the Galaxy rules (Rio Grande Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "{n} VP in 1 and 5 chips nearby; 10 VP chips set aside for the final round",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 24,
+                "3": 36,
+                "4": 48
+              }
+            }
+          },
+          "note": "12 VP per player",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Each player takes a set of 7 action cards",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Shuffle the 5 start worlds; deal 1 faceup to each player",
+          "note": "First game: start worlds 1-2, 1-3 or 1-4 by player count",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Shuffle the unused start worlds into the game cards; deal 6 each, discard 2 facedown",
+          "note": "First game: use the 4 numbered preset cards matching your start world instead",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "Alpha Centauri in play: put a card from the supply facedown on it as its windfall good",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Everyone secretly picks an action card and reveals together",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

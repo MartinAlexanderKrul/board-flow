@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "gameId": 266810,
+  "gameName": "Paladins of the West Kingdom",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Paladins of the West Kingdom rules (Garphill Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "main-board",
+      "title": "Main board",
+      "steps": [
+        {
+          "id": "main-board-1",
+          "text": "Join the 2 Main Board parts",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "main-board-2",
+          "text": "Townsfolk draw pile on the left; 5 faceup above the top left",
+          "ref": "Setup 2"
+        },
+        {
+          "id": "main-board-3",
+          "text": "Wall Cards shuffled facedown above the center",
+          "ref": "Setup 3"
+        },
+        {
+          "id": "main-board-4",
+          "text": "Tax supply above the board: 5-8 Silver depending on player count (see the rulebook)",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "main-board-5",
+          "text": "Debt Cards Unpaid side up above the top right; Suspicion Cards shuffled facedown to their right",
+          "ref": "Setup 5-6"
+        },
+        {
+          "id": "main-board-6",
+          "text": "Outsider draw pile on the right; 6 faceup below the bottom right",
+          "ref": "Setup 7"
+        },
+        {
+          "id": "main-board-7",
+          "text": "3 random King's Order Cards facedown on the left end, 5 random King's Favour Cards facedown to their right; box the rest unseen",
+          "ref": "Setup 8"
+        },
+        {
+          "id": "main-board-8",
+          "text": "Tavern Cards shuffled facedown below the bottom left; Silver, Provisions and Workers in a supply",
+          "ref": "Setup 9-10"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: Player Board, 8 Workshops, 7 Monks, 7 Outposts, 7 Jars, 3 Attribute Markers on zero",
+          "ref": "Setup 11"
+        },
+        {
+          "id": "players-2",
+          "text": "{s} Silver and {p} Provision each",
+          "amounts": {
+            "s": 3,
+            "p": 1
+          },
+          "ref": "Setup 11"
+        },
+        {
+          "id": "players-3",
+          "text": "Shuffle your 12 Paladin Cards into a facedown draw pile",
+          "ref": "Setup 12"
+        },
+        {
+          "id": "players-4",
+          "text": "Random Start Player; in reverse turn order each recruits 1 visible Townsfolk for free, then refill the row",
+          "ref": "Setup 13-14"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "When the last Silver leaves the Tax supply an Inquisition occurs: whoever has the most Suspicion gains a Debt",
+          "ref": "The Inquisition"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Round 1: each player draws Paladins and takes Workers, starting with the Start Player",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

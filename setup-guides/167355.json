@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "gameId": 167355,
+  "gameName": "Nemesis",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Nemesis rules summary (Awaken Realms, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "ship",
+      "title": "Ship",
+      "steps": [
+        {
+          "id": "ship-1",
+          "text": "Room tiles \"1\" and \"2\" facedown at random on their matching slots, a facedown Exploration token on each",
+          "ref": "Setup"
+        },
+        {
+          "id": "ship-2",
+          "text": "Facedown Coordinates cards; Destination marker on B; Escape Pod tokens locked side",
+          "ref": "Setup"
+        },
+        {
+          "id": "ship-3",
+          "text": "Two shuffled facedown Engine tokens on each Engine slot",
+          "ref": "Setup"
+        },
+        {
+          "id": "ship-4",
+          "text": "Intruder bag: the starting Intruder tokens plus 1 Adult per player",
+          "ref": "Setup"
+        },
+        {
+          "id": "ship-5",
+          "text": "Intruder board with 5 Egg tokens and 3 random facedown Weakness cards",
+          "ref": "Setup"
+        },
+        {
+          "id": "ship-6",
+          "text": "Shuffle the decks: Items (3 colors), Event, Intruder Attack, Contamination, Serious Wound, Craft Item",
+          "ref": "Setup"
+        },
+        {
+          "id": "ship-7",
+          "text": "Time marker on the green space of the Time Track",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "crew",
+      "title": "Crew",
+      "steps": [
+        {
+          "id": "crew-1",
+          "text": "Each player: a Help card (sets draft order) and an Inventory holder",
+          "ref": "Setup"
+        },
+        {
+          "id": "crew-2",
+          "text": "Deal 1 Corporate and 1 Personal Objective to each player, kept secret",
+          "ref": "Setup"
+        },
+        {
+          "id": "crew-3",
+          "text": "Draft Characters: Character board, miniature in the Hibernatorium, shuffled Action deck, starting Weapon with Ammo, 2 Quest Items",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "The first player token passes left each round, but not on the first turn",
+          "ref": "Round"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "From the first player clockwise, each performs 2 Actions or passes",
+          "ref": "Player Rounds"
+        }
+      ]
+    }
+  ]
+}

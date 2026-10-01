@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "gameId": 3076,
+  "gameName": "Puerto Rico",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Puerto Rico rules (alea / Ravensburger, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Game board in the middle; basic buildings on their spaces; doubloons sorted on the bank",
+          "ref": "Preparation"
+        },
+        {
+          "id": "board-2",
+          "text": "2 players: one of each beige building and two of each production building",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "2-player Preparation"
+        },
+        {
+          "id": "board-3",
+          "text": "2 players: remove 3 of each plantation type and 3 quarries; reveal 3 plantations next to the quarries",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "2-player Preparation"
+        },
+        {
+          "id": "board-4",
+          "text": "2 players: 65 VP, 40 colonists plus 2 on the colonist ship, the 4- and 6-space cargo ships, 2 fewer of each good",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "2-player Preparation"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a player board and {n} doubloons, kept visible on the windrose",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 2,
+                "4": 3,
+                "5": 4
+              }
+            }
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "players-2",
+          "text": "Choose a starting player: governor placard and an indigo plantation",
+          "ref": "Preparation"
+        },
+        {
+          "id": "players-3",
+          "text": "Other players' plantation, clockwise: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "corn",
+                "3": "indigo, corn",
+                "4": "indigo, corn, corn",
+                "5": "indigo, indigo, corn, corn"
+              }
+            }
+          },
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "After each round put 1 doubloon on every role placard nobody took; the governor passes left",
+          "ref": "Playing the game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The governor picks a role placard; everyone takes its action clockwise",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "gameId": 413246,
+  "gameName": "Bomb Busters",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Bomb Busters rulebook (Pegasus Spiele, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "mission",
+      "title": "Mission",
+      "steps": [
+        {
+          "id": "mission-1",
+          "text": "Pick a Mission card (play them in order)",
+          "ref": "Setup"
+        },
+        {
+          "id": "mission-2",
+          "text": "Captain: random for the first mission, then passes left; Captain card in front of them, everyone else picks a character card",
+          "ref": "Setup"
+        },
+        {
+          "id": "mission-3",
+          "text": "Captain reads the Mission card aloud and leaves it flipped at the bottom left of the board",
+          "ref": "Setup"
+        },
+        {
+          "id": "mission-4",
+          "text": "Tile stands: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "2 each",
+                "3": "Captain 2, others 1",
+                "4": "1 each",
+                "5": "1 each"
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "mission-5",
+          "text": "Take all 48 blue wires (not in training missions 1-3) plus the number of random red and yellow wires the Mission card shows",
+          "ref": "Setup"
+        },
+        {
+          "id": "mission-6",
+          "text": "Mark the drawn red and yellow values on the board with their markers, blank side up",
+          "ref": "Setup"
+        },
+        {
+          "id": "mission-7",
+          "text": "Shuffle all wires facedown and deal them as evenly as possible among all tile stands",
+          "ref": "Setup"
+        },
+        {
+          "id": "mission-8",
+          "text": "Sort your wires in ascending order left to right, facing you",
+          "note": "With 2 stands, deal and sort each separately",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "From the Captain clockwise: Dual Cut, Solo Cut or Reveal Your Red Wires",
+          "ref": "The Game"
+        }
+      ]
+    }
+  ]
+}

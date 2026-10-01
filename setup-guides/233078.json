@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "gameId": 233078,
+  "gameName": "Twilight Imperium: Fourth Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Twilight Imperium Fourth Edition rules (Fantasy Flight Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "factions",
+      "title": "Factions",
+      "steps": [
+        {
+          "id": "factions-1",
+          "text": "Randomly give one player the speaker token",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "factions-2",
+          "text": "Each player picks a faction sheet",
+          "ref": "Setup 2"
+        },
+        {
+          "id": "factions-3",
+          "text": "Faction components: home system tile, 17 control tokens, 16 command tokens, faction promissory note, 2 faction technologies, faction tokens",
+          "ref": "Setup 3"
+        },
+        {
+          "id": "factions-4",
+          "text": "Choose a color: its 59 units, command sheet, 25 technology cards and 4 promissory notes; merge with your faction's cards",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "factions-5",
+          "text": "Take the planet cards of your home system, faceup",
+          "ref": "Setup 5"
+        }
+      ]
+    },
+    {
+      "id": "galaxy",
+      "title": "Galaxy",
+      "steps": [
+        {
+          "id": "galaxy-1",
+          "text": "Mecatol Rex in the center; deal system tiles for your player count",
+          "ref": "Setup 6"
+        },
+        {
+          "id": "galaxy-2",
+          "text": "From the speaker, take turns placing tiles to build three rings, then attach home systems",
+          "note": "Anomalies and matching wormholes are not placed adjacent unless there is no other option",
+          "ref": "Setup 6"
+        },
+        {
+          "id": "galaxy-3",
+          "text": "Custodians token on Mecatol Rex",
+          "ref": "Setup 7"
+        }
+      ]
+    },
+    {
+      "id": "decks-supply",
+      "title": "Decks & supply",
+      "steps": [
+        {
+          "id": "decks-supply-1",
+          "text": "Shuffle the action, agenda, stage I, stage II and secret objective decks separately",
+          "ref": "Setup 8"
+        },
+        {
+          "id": "decks-supply-2",
+          "text": "Supply of trade goods, fighter and infantry tokens",
+          "ref": "Setup 9"
+        },
+        {
+          "id": "decks-supply-3",
+          "text": "All 8 strategy cards faceup near the speaker",
+          "ref": "Setup 10"
+        },
+        {
+          "id": "decks-supply-4",
+          "text": "Each player: starting technologies and units from the back of the faction sheet, units in the home system",
+          "ref": "Setup 11"
+        },
+        {
+          "id": "decks-supply-5",
+          "text": "Command tokens: 3 in the tactic pool, 3 in the fleet pool, 2 in the strategy pool",
+          "ref": "Setup 11"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "First to 10 victory points wins (14 on the long side of the track)",
+          "ref": "Winning"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Strategy phase: from the speaker, each player picks a strategy card",
+          "ref": "Game Round"
+        }
+      ]
+    }
+  ]
+}

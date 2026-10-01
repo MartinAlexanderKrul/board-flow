@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "gameId": 126163,
+  "gameName": "Tzolk'in: The Mayan Calendar",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Tzolk'in rulebook (Czech Games Edition, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Wood, stone, gold, crystal skulls and unused workers in the bank; corn in the middle of the Tzolk'in gear",
+          "ref": "Bank"
+        },
+        {
+          "id": "board-2",
+          "text": "Jungle: {n} Corn Harvest Tiles on each group of fields; a Wood Harvest Tile on top of each in the groups for Palenque actions 3, 4 and 5",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "Jungle"
+        },
+        {
+          "id": "board-3",
+          "text": "Turn the Tzolk'in gear so the arrowhead points at a blue-green end-of-age Food Day tooth",
+          "ref": "Calendar"
+        },
+        {
+          "id": "board-4",
+          "text": "Shuffle Age 1 buildings, Age 2 buildings and monuments separately",
+          "ref": "Buildings & Monuments"
+        },
+        {
+          "id": "board-5",
+          "text": "Deal {n} monuments faceup; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 5,
+                "4": 6
+              }
+            }
+          },
+          "ref": "Buildings & Monuments"
+        },
+        {
+          "id": "board-6",
+          "text": "Deal 6 Age 1 buildings faceup; both building stacks facedown by the board",
+          "ref": "Buildings & Monuments"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a player board (lighter side up), 3 workers, 7 markers and a scoring counter on 0",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Markers: 1 on the white step of each of the 3 temples, 1 on the leftmost space of each of the 4 technology tracks",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Starting Player Marker to whoever most recently sacrificed something",
+          "ref": "Starting Player"
+        },
+        {
+          "id": "players-4",
+          "text": "Deal each player 4 Starting Wealth Tiles; keep 2, then all reveal and take what they show",
+          "ref": "Starting Wealth Tiles"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "The Starting Player Marker doesn't rotate - take it with a worker on the Starting Player Space",
+          "ref": "Starting Player"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The starting player places or picks up workers, then clockwise",
+          "ref": "Starting Player"
+        }
+      ]
+    }
+  ]
+}

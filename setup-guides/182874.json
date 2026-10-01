@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "gameId": 182874,
+  "gameName": "Grand Austria Hotel",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Grand Austria Hotel rules (Lookout / Mayfair, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "boards",
+      "title": "Boards",
+      "steps": [
+        {
+          "id": "boards-1",
+          "text": "Game board and action board side by side; dustbin, VP markers, dishes and drinks nearby",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-2",
+          "text": "Shuffle the Guest cards; 5 faceup on the Guest spaces",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-3",
+          "text": "Shuffle the Staff cards facedown",
+          "note": "First play: use the recommended sets",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-4",
+          "text": "One Politics card and one Emperor tile from each of A, B and C, faceup",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-5",
+          "text": "Room tiles sorted by color",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-6",
+          "text": "{n} dice on the first Action space; Turn Order tiles for your player count",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 10,
+                "3": 12,
+                "4": 14
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-7",
+          "text": "Round marker on 1",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: Overview card, Hotel board (all on the same side; first play: front) and 6 disks",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Disks on Emperor track 0, Victory Point track 0 and Money track {n}",
+          "amounts": {
+            "n": 10
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "A coffee, wine, cake and strudel in your Kitchen; draw 6 Staff cards",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "Random start player takes Turn Order tile 1, the next 2, and so on",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-5",
+          "text": "From the last player, counterclockwise: each takes a faceup guest into their Cafe for free (slide and refill)",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-6",
+          "text": "Each player prepares up to 3 rooms, starting bottom left, paying the printed cost",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The start player rolls all dice and sorts them onto the Action spaces",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "gameId": 240980,
+  "gameName": "Blood on the Clocktower",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Blood on the Clocktower rules (The Pandemonium Institute, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 5,
+    "max": 15
+  },
+  "sections": [
+    {
+      "id": "storyteller-setup",
+      "title": "Storyteller setup",
+      "steps": [
+        {
+          "id": "storyteller-setup-1",
+          "text": "Chairs in a rough circle with one gap for the Storyteller; keep the center clear",
+          "ref": "Running the Game - Setup"
+        },
+        {
+          "id": "storyteller-setup-2",
+          "text": "Stand the Grimoire where no player can see inside; info, night and shroud tokens in it",
+          "ref": "Running the Game - Setup"
+        },
+        {
+          "id": "storyteller-setup-3",
+          "text": "Choose an edition and put its box in the Grimoire",
+          "note": "Start with Trouble Brewing (5+ players); other editions need 7+",
+          "ref": "Running the Game - Setup"
+        },
+        {
+          "id": "storyteller-setup-4",
+          "text": "Town Square in the center: a life token per player, a pile of vote tokens, the Traveler sheet tucked under it",
+          "ref": "Running the Game - Setup"
+        },
+        {
+          "id": "storyteller-setup-5",
+          "text": "Read the rules sheet to new players and show the hand signals",
+          "ref": "Running the Game - Setup"
+        },
+        {
+          "id": "storyteller-setup-6",
+          "text": "Secretly pick Townsfolk, Outsiders, Minions and the Demon in the numbers the setup sheet gives for your player count",
+          "note": "First game: no Travelers",
+          "ref": "Running the Game - Setup"
+        },
+        {
+          "id": "storyteller-setup-7",
+          "text": "For each chosen token with an orange leaf, change the line-up as its text in square brackets says",
+          "ref": "Running the Game - Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "First night, 7+ players: show the Minions the Demon, then show the Demon the Minions and 3 good characters not in play",
+          "condition": {
+            "minPlayers": 7
+          },
+          "ref": "Running the Game - The Night"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Night sheet on its First Night side; tell all players to close their eyes",
+          "ref": "Running the Game - The Night"
+        }
+      ]
+    }
+  ]
+}

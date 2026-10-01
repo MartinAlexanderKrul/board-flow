@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "gameId": 284083,
+  "gameName": "The Crew: The Quest for Planet Nine",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Crew: The Quest for Planet Nine rulebook (KOSMOS, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "mission-preparation",
+      "title": "Mission preparation",
+      "steps": [
+        {
+          "id": "mission-preparation-1",
+          "text": "Shuffle the 40 large cards and deal them all out facedown, evenly",
+          "note": "3 players: one gets an extra card, which stays unplayed after the last trick",
+          "ref": "Mission Preparation"
+        },
+        {
+          "id": "mission-preparation-2",
+          "text": "Each player: a radio communication token green side up and a reminder card",
+          "ref": "Mission Preparation"
+        },
+        {
+          "id": "mission-preparation-3",
+          "text": "Distress signal token facedown",
+          "ref": "Mission Preparation"
+        },
+        {
+          "id": "mission-preparation-4",
+          "text": "Shuffle the 36 small task cards facedown",
+          "ref": "Mission Preparation"
+        },
+        {
+          "id": "mission-preparation-5",
+          "text": "Reveal the tasks the mission calls for in the middle",
+          "ref": "Mission Preparation"
+        },
+        {
+          "id": "mission-preparation-6",
+          "text": "Whoever holds the rocket 4 announces it and is the captain",
+          "ref": "Mission Preparation"
+        },
+        {
+          "id": "mission-preparation-7",
+          "text": "From the captain clockwise, pick task cards until all are taken",
+          "ref": "Mission Preparation"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The captain opens the first trick",
+          "ref": "Mission Preparation"
+        }
+      ]
+    }
+  ]
+}

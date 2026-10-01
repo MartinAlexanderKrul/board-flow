@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "gameId": 102794,
+  "gameName": "Caverna: The Cave Farmers",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Caverna rules (Lookout Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 7
+  },
+  "sections": [
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a Home board, 5 Dwarfs and 3 Stables; 2 Dwarfs in the Entry-level dwelling; one of each Overview card",
+          "ref": "Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Random Starting player; Food clockwise from them: 1, 1, 2, then 3 for everyone else",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "boards",
+      "title": "Boards",
+      "steps": [
+        {
+          "id": "boards-1",
+          "text": "Basic boards for rounds 1-3 and 4-12 side by side; the third basic board on its {s} side to the left",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "1-3 player",
+                "3": "1-3 player",
+                "4": "4-7 player",
+                "5": "4-7 player",
+                "6": "4-7 player",
+                "7": "4-7 player"
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-2",
+          "text": "Additional boards: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "none",
+                "3": "the smaller board",
+                "4": "none",
+                "5": "the larger board, 5 side",
+                "6": "the larger board, 6-7 side",
+                "7": "the larger board (6-7 side) and the smaller board"
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-3",
+          "text": "Shuffle the 7 Harvest markers facedown onto round spaces 6-12; Harvest events card beside the boards",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-4",
+          "text": "Remove one green-leaf Harvest marker; shuffle the other 6 onto round spaces 6-12, leaving space 9 empty",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-5",
+          "text": "Supply boards (Introductory or Full side) with the Furnishing tiles; spare Dwelling tiles in reserve",
+          "note": "6-7 players: use the Full game side",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-6",
+          "text": "Action space cards facedown, stacked: stage 4 at the bottom, then stage 3, stage 2, the round 4 card (Wish for children), stage 1 on top",
+          "note": "2 players: remove the Exploration card with the Level 4 expedition and cover round space 9 with a Dwarf card",
+          "ref": "Setup"
+        },
+        {
+          "id": "boards-7",
+          "text": "Landscape tiles sorted by type; building materials, animals and Weapon strength markers in piles",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Round 1: reveal the top Action space card; the Starting player places the first Dwarf",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

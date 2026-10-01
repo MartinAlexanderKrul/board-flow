@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "gameId": 84876,
+  "gameName": "The Castles of Burgundy",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Castles of Burgundy rulebook (alea / Ravensburger, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Game board in the middle: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "2-3 player side",
+                "3": "2-3 player side",
+                "4": "4-player side"
+              }
+            }
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "24 silver coins, 26 worker chips and the white die next to the board",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "Hex tiles sorted by back color in facedown piles",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Shuffle the 42 goods tiles: 5 facedown stacks of 5 on phase spaces A-E; the other 17 aside",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "The 12 bonus tiles on their spaces (big on top of small)",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a player board (all the same number, 1 or 2) and an overview board",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Your castle on the dark green 6 in the center of your board",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "{n} random goods tiles from the 17, faceup on your storage (stack same colors); box the rest",
+          "amounts": {
+            "n": 3
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "2 dice of your color, 1 silver coin on your board, a 100/200 victory point tile",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-5",
+          "text": "One playing piece on 0 of the victory point track",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-6",
+          "text": "Roll for starting player; workers by turn order: 1, 2, 3, 4",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "players-7",
+          "text": "Second playing pieces stacked on space 1 of the bridge, starting player on top; they take the white die",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Phase A: lay out its goods and hex tiles, then everyone rolls",
+          "ref": "Gameplay"
+        }
+      ]
+    }
+  ]
+}

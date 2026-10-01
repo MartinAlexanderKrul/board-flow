@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "gameId": 216132,
+  "gameName": "Clans of Caledonia",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Clans of Caledonia rulebook (Karma Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "map-boards",
+      "title": "Map & boards",
+      "steps": [
+        {
+          "id": "map-boards-1",
+          "text": "Build the map from the 4 modules, each on a random side, letters A-D clockwise with their rocks meeting in the middle",
+          "ref": "Map Modules"
+        },
+        {
+          "id": "map-boards-2",
+          "text": "4 random Port bonus tiles, one next to the factory at each corner on the space for your player count",
+          "ref": "Port Bonus Tiles"
+        },
+        {
+          "id": "map-boards-3",
+          "text": "Market board on the side for your player count; Price markers on the circled starting prices; goods in piles below",
+          "ref": "Market Board"
+        },
+        {
+          "id": "map-boards-4",
+          "text": "Export board on the side for your player count; 5 random Scoring tiles faceup in its slots",
+          "ref": "Export Board"
+        },
+        {
+          "id": "map-boards-5",
+          "text": "Shuffle the Export contracts; 1 faceup on each box",
+          "note": "Solo and 3 players: one box stays empty",
+          "ref": "Export Board"
+        },
+        {
+          "id": "map-boards-6",
+          "text": "Glory tokens and Import tokens beside the board",
+          "ref": "Export Board"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Player board with 4 each of Sheep, Cows, Cheese Dairies, Bakeries, Fields and Distilleries",
+          "ref": "Player Starting Items"
+        },
+        {
+          "id": "players-2",
+          "text": "8 Workers: 4 on the forest spots (Woodcutters), 4 on the mountain spots (Miners); take 4 Port markers",
+          "ref": "Player Starting Items"
+        },
+        {
+          "id": "players-3",
+          "text": "5 Merchants on the Merchant track, the other 2 below your board",
+          "ref": "Player Starting Items"
+        },
+        {
+          "id": "players-4",
+          "text": "Shipping token on the leftmost space; 2 Technology tiles arrow side up below the Workers",
+          "ref": "Player Starting Items"
+        },
+        {
+          "id": "players-5",
+          "text": "An Export box tile on the side for your player count",
+          "ref": "Player Starting Items"
+        },
+        {
+          "id": "players-6",
+          "text": "Random starting player; Turn order tokens clockwise on the Turn order track",
+          "ref": "Turn Order"
+        },
+        {
+          "id": "players-7",
+          "text": "Draw Clan tiles equal to players + 1, a random Starting tile beside each; in reverse turn order each picks a pair and takes its goods and money",
+          "ref": "Clans"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "In turn order each places 1 Worker, then in reverse order a second - paying the land cost plus 6 for a Woodcutter or 10 for a Miner",
+          "ref": "Placing the First Workers"
+        }
+      ]
+    }
+  ]
+}

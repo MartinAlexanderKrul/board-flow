@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "gameId": 193738,
+  "gameName": "Great Western Trail",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Great Western Trail rulebook, first edition (eggertspiele, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Game board in the middle",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "Shuffle the station master tiles; one faceup on each of the 5 station master spaces",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "7 neutral building tiles on the neutral spaces: by matching letter A-G for a first game, random afterwards",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Job market token on the top dashed space of the job market",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "Worker, teepee and hazard tiles facedown, sorted by the number on their backs (1, 2, 3) into three shuffled piles next to Kansas City",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-6",
+          "text": "Reveal tiles with a 1 one by one onto the board until 7 are placed",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-7",
+          "text": "Reveal tiles with a 2 into the job market: start under your player-count sign in the top row, fill rightwards and continue on the next row, up to the space left of the job market token",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player takes a player board and their private building tiles, displayed in ascending order above it",
+          "note": "First games: all on the a-side. Later: one player randomizes sides and everyone copies",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-2",
+          "text": "14 discs covering every colored disc space of your board (the 2 gray spaces stay empty)",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Engine on the red starting building of the railroad track; certificate marker on the top space of your certificate track",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-4",
+          "text": "Your 14 star-marked cattle cards shuffled as your draw stack left of your board",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-5",
+          "text": "Shuffle the 4 starting objective cards; deal 1 faceup to each player; box the rest",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-6",
+          "text": "Draw 4 cards; starting capital by turn order: 6, 7, 8, 9 dollars",
+          "ref": "Player setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Hand limit starts at 4 cards",
+          "ref": "Herd deck"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "First turn: place your cattleman on any neutral building tile and go straight to phase B",
+          "ref": "Phase A"
+        }
+      ]
+    }
+  ]
+}

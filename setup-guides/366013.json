@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "gameId": 366013,
+  "gameName": "Heat: Pedal to the Metal",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Heat: Pedal to the Metal rulebook (Days of Wonder, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "track",
+      "title": "Track",
+      "steps": [
+        {
+          "id": "track-1",
+          "text": "Game board in the middle",
+          "note": "First game: USA track; consider racing just 1 lap",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "track-2",
+          "text": "Check the board for how many Heat and Stress cards each car gets (typically 6 Heat and 3 Stress)",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "track-3",
+          "text": "Remaining Stress cards faceup near the board as a reserve",
+          "ref": "Setting up the game"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a car, player mat, Gear pawn, 12 Basic cards and 3 Starting Upgrade cards in their color",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "players-2",
+          "text": "Shuffle your Basic, Starting Upgrade and Stress cards as your draw deck on the mat's left spot",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "players-3",
+          "text": "Heat cards faceup on the Engine spot; Gear pawn in first gear",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "players-4",
+          "text": "Place the cars on the starting grid at random, filling spots in ascending order - this is the first round's player order",
+          "ref": "Setting up the game"
+        },
+        {
+          "id": "players-5",
+          "text": "Draw {n} cards",
+          "amounts": {
+            "n": 7
+          },
+          "ref": "Setting up the game"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Experienced drivers can remove 1-2 Heat from their car to even things out",
+          "ref": "Setting up the game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Everyone secretly shifts gear and chooses cards for round 1",
+          "ref": "Race"
+        }
+      ]
+    }
+  ]
+}

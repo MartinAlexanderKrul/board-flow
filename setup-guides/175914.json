@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "gameId": 175914,
+  "gameName": "Food Chain Magnate",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Food Chain Magnate rules overview (Splotter Spellen, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Lay out the employee and milestone cards, removing some employee types by player count",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-2",
+          "text": "Build a map of randomly drawn, randomly rotated tiles (size by player count)",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-3",
+          "text": "Each player: a CEO card, 3 restaurants and 3 bank reserve cards",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-4",
+          "text": "Bank: {n} dollars; players start with no money",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 100,
+                "3": 150,
+                "4": 200,
+                "5": 250
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-5",
+          "text": "Random turn order; from last to first, each player places one starting restaurant (entrance on a road, not sharing a tile entrance)",
+          "ref": "Setup"
+        },
+        {
+          "id": "setup-6",
+          "text": "Each player secretly chooses one bank reserve card",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Round 1: restructure your company",
+          "ref": "Round"
+        }
+      ]
+    }
+  ]
+}

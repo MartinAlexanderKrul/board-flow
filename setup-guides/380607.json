@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "gameId": 380607,
+  "gameName": "Great Western Trail: New Zealand",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Great Western Trail: New Zealand rulebook (eggertspiele, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Game board with the sea routes board above it",
+          "ref": "Game board setup"
+        },
+        {
+          "id": "board-2",
+          "text": "5 random harbourmaster tiles faceup on the sea routes board; box the other 3",
+          "ref": "Game board setup"
+        },
+        {
+          "id": "board-3",
+          "text": "8 neutral building tiles on the neutral spaces",
+          "note": "First game: each on its matching letter A-H",
+          "ref": "Game board setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Bonus tiles market token on the top dashed round space",
+          "ref": "Game board setup"
+        },
+        {
+          "id": "board-5",
+          "text": "Worker, hazard and bonus tiles into the A and B bags by their backs (the Wellington supply)",
+          "ref": "Game board setup"
+        },
+        {
+          "id": "board-6",
+          "text": "One A worker of each type on the top row of the job market",
+          "ref": "Game board setup"
+        },
+        {
+          "id": "board-7",
+          "text": "Draw {n} A tiles: hazards to the lowest empty space of their section, workers to the top empty space of their column; redraw if no room",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 12,
+                "3": 13,
+                "4": 14
+              }
+            }
+          },
+          "ref": "Game board setup"
+        },
+        {
+          "id": "board-8",
+          "text": "Draw B bonus tiles into the market from the space under your player count sign up to the market token",
+          "ref": "Game board setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Player board; player count tile and fee tile (-1/-2 side) in the Phase A box",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-2",
+          "text": "10 private building tiles above your board in ascending craftsmen order",
+          "note": "First games: a-sides",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-3",
+          "text": "16 discs and 10 storehouses covering your board's spaces; ship on a starting water space; certificate marker on 0; gold marker on 1; runholder beside your board",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-4",
+          "text": "Shuffle your 14 sheep cards as your draw stack",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-5",
+          "text": "In turn order: 7/8/9/10 pounds and 4/5/6/7 cards, plus 1 exchange token each",
+          "ref": "Player setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "On your first turn: discard down to 4 cards, put a white-cornered disc on 0 of the pathfinder track, place your runholder on any neutral building and continue with phase B",
+          "ref": "Player setup"
+        }
+      ]
+    }
+  ]
+}

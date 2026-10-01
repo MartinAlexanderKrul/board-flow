@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "gameId": 2651,
+  "gameName": "Power Grid",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Power Grid rules (2F-Spiele / Rio Grande, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Choose a map side (first game: Germany) and a connected playing zone of {n} areas",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 5
+              }
+            }
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "board-2",
+          "text": "Fill the resource market: coal on spaces 1-8, oil 3-8, garbage 6-8, uranium 14-16",
+          "ref": "Preparation"
+        },
+        {
+          "id": "board-3",
+          "text": "Other resource tokens and the money by the board; the resource refill card for your player count beside the market",
+          "ref": "Preparation"
+        },
+        {
+          "id": "board-4",
+          "text": "Shuffle the plug-backed power plants (03-15); draw 8 faceup: the 4 smallest in the top row (current market), the other 4 below (future market), each row ascending",
+          "ref": "Preparation"
+        },
+        {
+          "id": "board-5",
+          "text": "Set 1 more plug-backed power plant aside facedown",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: 22 houses, {n} Elektro and a payment summary card",
+          "amounts": {
+            "n": 50
+          },
+          "ref": "Preparation"
+        },
+        {
+          "id": "players-2",
+          "text": "One house on 0 of the scoring track; one house each drawn at random onto the player order track",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Whenever a plant is added, re-sort the market so the 4 cheapest are the current market",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Auction power plants in player order; each player may buy at most 1 per round",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

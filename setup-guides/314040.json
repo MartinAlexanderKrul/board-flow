@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "gameId": 314040,
+  "gameName": "Pandemic Legacy: Season 0",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Pandemic Legacy: Season 0 rulebook (Z-Man Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "each-game",
+      "title": "Each game",
+      "steps": [
+        {
+          "id": "each-game-1",
+          "text": "Draw and read Legacy deck cards aloud until one says PAUSE or STOP; prepare the month's objectives",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "each-game-2",
+          "text": "A safehouse in each city with a permanent safehouse (Washington at first); Threat Level marker on the leftmost space",
+          "ref": "Setup 2"
+        },
+        {
+          "id": "each-game-3",
+          "text": "Shuffle the Threat cards: flip 3 and put 3 agents in each city, 3 more with 2 agents, 3 more with 1 agent",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "each-game-4",
+          "text": "Add Event cards equal to your funding level (5 at the start) to the City cards and shuffle",
+          "ref": "Setup 7"
+        },
+        {
+          "id": "each-game-5",
+          "text": "Deal {n} cards each, hands faceup",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 4,
+                "3": 3,
+                "4": 2
+              }
+            }
+          },
+          "ref": "Setup 7"
+        },
+        {
+          "id": "each-game-6",
+          "text": "Split the rest into 5 piles, 1 Escalation card shuffled into each; stack them left to right, smaller piles at the bottom",
+          "ref": "Setup 8-9"
+        },
+        {
+          "id": "each-game-7",
+          "text": "Each player picks a character: pawn, Reference card and passport, then an alias",
+          "ref": "Setup 10"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Apply any rule stickers already placed in the setup steps",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "All pawns start in Washington; pick a pawn at random to take the first turn",
+          "ref": "Setup 11"
+        }
+      ]
+    }
+  ]
+}

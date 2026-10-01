@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "gameId": 200680,
+  "gameName": "Agricola (Revised Edition)",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Agricola Revised Edition rulebook (Lookout Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: 5 people, 4 stables, 15 fences and a farmyard board; one person in each of the 2 wood rooms",
+          "ref": "Your Personal Display"
+        },
+        {
+          "id": "players-2",
+          "text": "Random starting player: they get 2 food, everyone else 3",
+          "ref": "Game Board with Action Spaces"
+        },
+        {
+          "id": "players-3",
+          "text": "Deal each player 7 minor improvements",
+          "ref": "Minor Improvements"
+        },
+        {
+          "id": "players-4",
+          "text": "Remove occupations not used at your player count ([3+], [4]); deal each player 7",
+          "ref": "Occupations"
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Game board plus the extension for your player count, correct side up",
+          "ref": "Game Board with Action Spaces"
+        },
+        {
+          "id": "board-2",
+          "text": "Clay/stone room tiles by the board; wood room tiles in two halves, one rooms up, one fields up",
+          "ref": "Room and Field Tiles"
+        },
+        {
+          "id": "board-3",
+          "text": "Major improvements on the supply board",
+          "ref": "Major Improvements"
+        },
+        {
+          "id": "board-4",
+          "text": "Shuffle the 14 action space cards, sort by back into 6 stacks, stack with stage 1 on top",
+          "ref": "Action Space Cards"
+        },
+        {
+          "id": "board-5",
+          "text": "Animals, building resources, crops and food as the general supply; begging markers to the side",
+          "ref": "Action Space Cards"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Each round starts by revealing the top action space card",
+          "ref": "Preparation Phase"
+        }
+      ]
+    }
+  ]
+}

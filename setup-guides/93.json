@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "gameId": 93,
+  "gameName": "El Grande",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "El Grande rules (Hans im Gluck / Rio Grande, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "setup-1",
+          "text": "Castillo on its space; mobile scoreboards beside the board",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-2",
+          "text": "Shuffle the 9 region cards; turn up the top one and place the King there",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-3",
+          "text": "Each player draws a region card: that is their home region, where their Grande goes",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-4",
+          "text": "Each player takes 10 Caballeros: 2 by their Grande, 1 on the first space of the success track, 7 in their court",
+          "note": "The rest are the provinces",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-5",
+          "text": "Each player: a secret disk and their 13 power cards",
+          "ref": "Preparation"
+        },
+        {
+          "id": "setup-6",
+          "text": "Action cards sorted by back into stacks 1-5 (the 5 stack is just the King card); shuffle each facedown",
+          "ref": "Preparation"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Players choose who plays the first power card; the highest power card then takes the first turn",
+          "ref": "Playing the game"
+        }
+      ]
+    }
+  ]
+}

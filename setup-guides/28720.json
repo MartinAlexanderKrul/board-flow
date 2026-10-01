@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "gameId": 28720,
+  "gameName": "Brass: Lancashire",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Brass: Lancashire rulebook (Roxley, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Board on the Full Map side (used for all player counts)",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "Remove cards and Distant Cotton Market tiles that don't show your player count, and the 2 read-manual cards",
+          "note": "2 players: no blue or teal Location cards; 3 players: no teal",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "Shuffle the cards facedown as the Draw Deck",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Deck tile (Stephenson's Rocket side up) near the bottom of the Draw Deck with {n} cards beneath it",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "Shuffle the Distant Cotton Market tiles facedown on the Tile Draw Area; marker on the top space of its track",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-6",
+          "text": "A black cube on every Coal Market space and an orange cube on every Iron Market space",
+          "ref": "Board Setup"
+        },
+        {
+          "id": "board-7",
+          "text": "Remaining cubes as the General Supply; money as the Bank",
+          "ref": "Board Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player takes a Player Mat and {n} pounds",
+          "amounts": {
+            "n": 30
+          },
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Choose a Character tile; matching Link tiles in your area",
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Stack your Industry tiles on their mat slots, black-top side facedown",
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "VP marker on 0 and Income marker on 10 of the Progress Track",
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-5",
+          "text": "Draw {n} cards as your hand; leave room for a discard pile",
+          "amounts": {
+            "n": 8
+          },
+          "ref": "Player Area Setup"
+        },
+        {
+          "id": "players-6",
+          "text": "Shuffle all Character tiles onto the Turn Order Track in random order",
+          "ref": "Player Area Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Canal Era, round 1: follow the Turn Order Track",
+          "ref": "Playing the Game"
+        }
+      ]
+    }
+  ]
+}

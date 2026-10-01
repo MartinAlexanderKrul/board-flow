@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "gameId": 332772,
+  "gameName": "Revive",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Revive rulebook (Aporta Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "5 starting area tiles shuffled faceup on the middle spaces; the other 25 area tiles shuffled facedown on the rest",
+          "ref": "General Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "4 of the 5 large location tiles, random side up, on the corner spaces; box the fifth",
+          "ref": "General Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "Citizen cards shuffled facedown; 5 faceup",
+          "ref": "General Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Machine tokens in 3 piles by color; 3 from each faceup",
+          "ref": "General Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "Slot modules shuffled facedown; 5 faceup",
+          "ref": "General Setup"
+        },
+        {
+          "id": "board-6",
+          "text": "Crate tokens shuffled in a facedown stack",
+          "ref": "General Setup"
+        },
+        {
+          "id": "board-7",
+          "text": "Leave the campaign deck unshuffled and unseen; falcon and red punch boards stay in the box",
+          "ref": "General Components"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Player board and a random tribe board, sun side up, to its left",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Grey, green and yellow machine track markers on space 1; 1 energy in your storage; switch token slid up",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-3",
+          "text": "A set of 6 starting citizen cards with the same letter: shuffle, 3 facedown to the right (resting area), 3 faceup below your tribe board",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-4",
+          "text": "5 small and 3 large buildings and 7 population figures on your tribe board",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-5",
+          "text": "Pawns: one on 0 of the point track, one on the lowest hibernation space",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-6",
+          "text": "20 progress markers: 15 on the machine track reward spaces, 5 along the bottom of your tribe board",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-7",
+          "text": "4 resource markers on the bottom of the resource tracks",
+          "ref": "Player Setup"
+        },
+        {
+          "id": "players-8",
+          "text": "Starting resources in turn order: 1st crystal; 2nd crystal + gear; 3rd crystal + gear + book; 4th one of all four",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Starting Resources"
+        },
+        {
+          "id": "players-9",
+          "text": "Solo: start with 1 crystal; 1 action cube on the first space of the progress track",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Starting Resources"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Pick a starting player at random",
+          "ref": "Player Setup"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "gameId": 373106,
+  "gameName": "Sky Team",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Sky Team rulebook (Scorpion Masque, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "control-panel",
+      "title": "Control Panel",
+      "steps": [
+        {
+          "id": "control-panel-1",
+          "text": "Control Panel between the players, ideally sitting side by side",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "control-panel-2",
+          "text": "Airplane Axis arrow on the black triangle; all Switches covering the green lights",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "control-panel-3",
+          "text": "Speed Gauge: blue Aerodynamics marker between 4 and 5, orange between 8 and 9",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "control-panel-4",
+          "text": "Brake marker left of the 2 on the Brake track",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "control-panel-5",
+          "text": "Blue side is the Pilot with 4 blue dice; orange side is the Co-Pilot with 4 orange dice",
+          "ref": "Setup before each game"
+        }
+      ]
+    },
+    {
+      "id": "tracks",
+      "title": "Tracks",
+      "steps": [
+        {
+          "id": "tracks-1",
+          "text": "Altitude Track (green/yellow side) slid in until 6000 shows",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "tracks-2",
+          "text": "Approach Track (YUL Montreal-Trudeau for the basic game) slid in until the cloud icon shows",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "tracks-3",
+          "text": "A Reroll token on each Reroll icon of the Altitude Track",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "tracks-4",
+          "text": "Airplane tokens on each Approach Track space, one per Traffic icon",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "tracks-5",
+          "text": "Coffee tokens in a reserve next to the board",
+          "ref": "Setup before each game"
+        },
+        {
+          "id": "tracks-6",
+          "text": "Each player takes a screen",
+          "ref": "Setup before each game"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Advanced modules stay in the box for the basic game",
+          "ref": "Setup before each game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Round 1: discuss strategy, then roll your dice behind your screens in silence",
+          "ref": "Round"
+        }
+      ]
+    }
+  ]
+}

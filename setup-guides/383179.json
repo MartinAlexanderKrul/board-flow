@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "gameId": 383179,
+  "gameName": "Age of Innovation",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Age of Innovation rulebook (Feuerland / Capstone, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Game board with the side for your player count up",
+          "note": "3 players: the 3-5 side for first games, the 1-3 side for a challenge; 2 players have extra steps in The 2-Player Game",
+          "ref": "General Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "6 random Round Score tiles faceup on the spaces from 6 down to 1; box the rest",
+          "note": "The Palace/University tile can't sit on rounds 5-6; no Discipline may have all 3 of its tiles on rounds 1-5",
+          "ref": "General Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "1 random Final Round Score tile on top of the round 6 tile, covering its Science Bonus",
+          "note": "Redraw if it shows the same building as the round 6 tile",
+          "ref": "General Setup"
+        }
+      ]
+    },
+    {
+      "id": "factions",
+      "title": "Factions",
+      "steps": [
+        {
+          "id": "factions-1",
+          "text": "Lay out the 7 Planning Display cards; a random Round Bonus tile and a random Faction tile by each",
+          "ref": "Faction and Planning Display Distribution"
+        },
+        {
+          "id": "factions-2",
+          "text": "The other 3 Round Bonus tiles by the board with 1 Coin on each",
+          "ref": "Faction and Planning Display Distribution"
+        },
+        {
+          "id": "factions-3",
+          "text": "Random Start player; from the player on their right, counterclockwise, each picks a set and takes the matching Planning display",
+          "ref": "Faction and Planning Display Distribution"
+        },
+        {
+          "id": "factions-4",
+          "text": "Box the unchosen cards, displays and tiles",
+          "ref": "Faction and Planning Display Distribution"
+        }
+      ]
+    },
+    {
+      "id": "your-display",
+      "title": "Your display",
+      "steps": [
+        {
+          "id": "your-display-1",
+          "text": "All buildings on their spaces; Palace Placeholder tile next to your Palace",
+          "ref": "Personal Setup"
+        },
+        {
+          "id": "your-display-2",
+          "text": "Track markers on the bottom of the Sailing and Terraforming tracks",
+          "ref": "Personal Setup"
+        },
+        {
+          "id": "your-display-3",
+          "text": "{n} Power tokens split between Bowls I and II as printed",
+          "amounts": {
+            "n": 12
+          },
+          "ref": "Personal Setup"
+        },
+        {
+          "id": "your-display-4",
+          "text": "7 Scholars and 3 Bridges nearby as your supply",
+          "ref": "Personal Setup"
+        },
+        {
+          "id": "your-display-5",
+          "text": "Starting resources from the top-right corners of your Faction tile and Planning display",
+          "ref": "Personal Setup"
+        },
+        {
+          "id": "your-display-6",
+          "text": "A Status marker on 0 of each Discipline track, then advance 1 per Discipline icon on your tile and display",
+          "ref": "Personal Setup"
+        },
+        {
+          "id": "your-display-7",
+          "text": "Last Status marker on 20 of the Score track",
+          "ref": "Personal Setup"
+        },
+        {
+          "id": "your-display-8",
+          "text": "Turn Order markers down the left column, Start player on top, then clockwise",
+          "ref": "Personal Setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "In turn order each places 1 Workshop on their own terrain, then in reverse order a second",
+          "ref": "Placement of Your First Workshops"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "gameId": 418059,
+  "gameName": "SETI: Search for Extraterrestrial Intelligence",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "SETI rulebook (Czech Games Edition, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Assemble the main board from the planetary, solar system and tech boards",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-2",
+          "text": "Shuffle the 5 alien species boards facedown; 2 random ones in the slots on the planetary board; box the rest unseen",
+          "note": "Alien cards and components stay in the box until discovered",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-3",
+          "text": "Solar system: the 3 discs and 4 sector boards in a random configuration forming 8 clear sectors",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-4",
+          "text": "Shuffle the main deck; deal {n} cards faceup as the card row",
+          "amounts": {
+            "n": 3
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "board-5",
+          "text": "Credit and energy tokens near the board",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-6",
+          "text": "Fill each nearby star's data slot with data tokens; the rest nearby",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-7",
+          "text": "The 4 gold scoring tiles beside the board, random side up",
+          "ref": "Setup"
+        },
+        {
+          "id": "board-8",
+          "text": "Neutral milestone markers above the 20- and 30-point spaces: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "2 above each",
+                "2": "2 above each",
+                "3": "1 above each",
+                "4": "none - milestones are ignored"
+              }
+            }
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "board-9",
+          "text": "For each of the 12 techs: shuffle its 4 tiles onto its space, technology side down, with a 2-point tile on top",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player takes the pieces of a color; whoever last saw a UFO starts",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-2",
+          "text": "Starting scores by turn order: 1, 2, 3, 4",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-3",
+          "text": "Starting income card: 4 publicity, 4 credits, 3 energy and 5 cards",
+          "ref": "Player setup"
+        },
+        {
+          "id": "players-4",
+          "text": "Turn one of your 5 cards into income (tuck it under the income card)",
+          "ref": "Player setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "5 rounds; tucked income pays its bonus at once and again each round from round 2",
+          "ref": "Player setup"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The starting player takes the first turn; play is clockwise",
+          "ref": "Gameplay"
+        }
+      ]
+    }
+  ]
+}
