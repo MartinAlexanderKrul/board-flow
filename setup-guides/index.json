@@ -178,6 +178,14 @@
       "path": "14996.json"
     },
     {
+      "gameId": 15987,
+      "gameName": "Arkham Horror",
+      "gameIds": [15987],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "15987.json"
+    },
+    {
       "gameId": 27451,
       "gameName": "Activity 2",
       "gameIds": [27451],

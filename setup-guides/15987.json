@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "gameId": 15987,
+  "gameName": "Arkham Horror",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Arkham Horror rulebook, 2005 edition (Fantasy Flight Games)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 8
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Board in the center; tokens and dice around it; terror track marker on 0",
+          "ref": "p.5 step 1"
+        },
+        {
+          "id": "board-2",
+          "text": "1 Clue token on each location with a red diamond (the 11 unstable locations)",
+          "ref": "p.5 step 2"
+        },
+        {
+          "id": "board-3",
+          "text": "Mythos side of the board: 9 Location decks, Gate deck, Mythos deck, Gate markers, Clue tokens, Activity, Closed and Explored markers",
+          "ref": "p.4"
+        },
+        {
+          "id": "board-4",
+          "text": "Investigator side: Ally, Common Item, Unique Item, Spell and Skill decks, Special card decks, Sanity, Stamina and money banks",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "investigators",
+      "title": "Investigators",
+      "steps": [
+        {
+          "id": "investigators-1",
+          "text": "Pick a first player at random: they take the first player marker",
+          "ref": "p.5 step 3"
+        },
+        {
+          "id": "investigators-2",
+          "text": "First player shuffles the 16 investigator sheets and deals 1 to each player (or choose, clockwise)",
+          "ref": "p.5 step 4"
+        },
+        {
+          "id": "investigators-3",
+          "text": "Reveal 1 random Ancient One sheet and resolve any start-of-game ability",
+          "note": "You may choose instead: Yig is shorter, Cthulhu is harder",
+          "ref": "p.5 step 5"
+        },
+        {
+          "id": "investigators-4",
+          "text": "Starting from the first player, hand out each investigator's Fixed Possessions",
+          "ref": "p.5 step 7"
+        },
+        {
+          "id": "investigators-5",
+          "text": "Shuffle the Common Item, Unique Item, Spell and Skill decks",
+          "ref": "p.5 step 8"
+        },
+        {
+          "id": "investigators-6",
+          "text": "Each player draws their Random Possessions",
+          "ref": "p.5 step 9"
+        },
+        {
+          "id": "investigators-7",
+          "text": "Sanity and Stamina tokens equal to your investigator's values; 3 skill sliders, one on any stop of each skill track",
+          "ref": "p.5 step 10"
+        }
+      ]
+    },
+    {
+      "id": "final-steps",
+      "title": "Final steps",
+      "steps": [
+        {
+          "id": "final-steps-1",
+          "text": "All monster markers into an opaque monster cup",
+          "ref": "p.5 step 11"
+        },
+        {
+          "id": "final-steps-2",
+          "text": "Shuffle the Gate and Mythos decks; shuffle the 16 Gate markers facedown",
+          "ref": "p.5 step 12"
+        },
+        {
+          "id": "final-steps-3",
+          "text": "Investigator markers on their Home locations; box the unused sheets",
+          "ref": "p.5 step 13"
+        },
+        {
+          "id": "final-steps-4",
+          "text": "First player draws and resolves a Mythos card; redraw if it is a Rumor",
+          "ref": "p.5 step 14"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "Put a doom token on the Ancient One's doom track after the first gate opens",
+          "ref": "p.5 step 14"
+        },
+        {
+          "id": "reminders-2",
+          "text": "The first player marker passes left at the end of every turn",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "After the Mythos card is resolved, the first turn begins with the Upkeep phase",
+          "ref": "p.5"
+        }
+      ]
+    }
+  ]
+}
