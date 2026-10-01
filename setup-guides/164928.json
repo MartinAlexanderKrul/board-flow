@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "gameId": 164928,
+  "gameName": "Orléans",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Orléans rulebook (dlp games)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a Followers Bag, {n} coins, 7 markers, a Player Board, a Merchant Token and 10 Trading Stations",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "p.12 step 1"
+        },
+        {
+          "id": "players-2",
+          "text": "Your 4 starting Followers (Farmer, Boatman, Craftsman, Trader) on the Market Spaces of your board",
+          "ref": "p.13"
+        },
+        {
+          "id": "players-3",
+          "text": "1 marker on the first space of each Character Track and the Development Track",
+          "ref": "p.12 step 5"
+        },
+        {
+          "id": "players-4",
+          "text": "Merchant Token in Orléans",
+          "ref": "p.13 step 11"
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Game board and Beneficial Deeds board on the table; Technology Tiles stacked on their space",
+          "ref": "p.12 steps 2-3"
+        },
+        {
+          "id": "board-2",
+          "text": "Hour Glass Tiles: set the Pilgrimage tile aside, shuffle the rest facedown onto their space, Pilgrimage on top",
+          "ref": "p.12 step 4"
+        },
+        {
+          "id": "board-3",
+          "text": "Neutral Character Tiles sorted by profession onto their buildings",
+          "ref": "p.12 step 6"
+        },
+        {
+          "id": "board-4",
+          "text": "3 players: remove 2 each of the neutral Farmer, Boatman, Craftsman and Trader and 3 each of the Knight, Scholar and Monk",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "p.13 step 12a"
+        },
+        {
+          "id": "board-5",
+          "text": "2 players: remove 4 each of the neutral Farmer, Boatman, Craftsman and Trader and 6 each of the Knight, Scholar and Monk",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.13 step 12b"
+        },
+        {
+          "id": "board-6",
+          "text": "13 Citizen Tiles on the marked spaces of both boards; the last one on the table",
+          "ref": "p.12 step 8"
+        },
+        {
+          "id": "board-7",
+          "text": "Place Tiles sorted by Roman numeral into two stacks",
+          "ref": "p.13 step 9"
+        },
+        {
+          "id": "board-8",
+          "text": "Remove 6 random Goods Tiles",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "p.13 step 12a"
+        },
+        {
+          "id": "board-9",
+          "text": "Remove 12 random Goods Tiles",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.13 step 12b"
+        },
+        {
+          "id": "board-10",
+          "text": "Shuffle the Goods Tiles and place 1 faceup on each Road and Waterway space; sort the rest onto the Goods Market",
+          "note": "3 players: leave spaces marked 4 empty. 2 players: leave spaces marked 3 or 4 empty",
+          "ref": "p.13 step 10"
+        },
+        {
+          "id": "board-11",
+          "text": "Coins on the table close at hand",
+          "ref": "p.12 step 7"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The youngest player takes the Start Player Token and turns over the first Hour Glass Tile (always Pilgrimage)",
+          "ref": "p.4"
+        }
+      ]
+    }
+  ]
+}

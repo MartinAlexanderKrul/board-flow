@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "gameId": 246900,
+  "gameName": "Eclipse: Second Dawn for the Galaxy",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Eclipse: Second Dawn for the Galaxy rulebook (Lautapelit.fi)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "galaxy",
+      "title": "Galaxy",
+      "steps": [
+        {
+          "id": "galaxy-1",
+          "text": "Draw Tech Tiles from the bag until {n} regular ones are out; slot them by type and cost, Rare tiles on the bottom row (not counted)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 12,
+                "3": 14,
+                "4": 16,
+                "5": 18,
+                "6": 20
+              }
+            }
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "galaxy-2",
+          "text": "Reputation Tiles shuffled in their bag; Discovery Tiles shuffled facedown",
+          "ref": "p.5"
+        },
+        {
+          "id": "galaxy-3",
+          "text": "One Blueprint Tile each for Ancients, Guardians and the GCDS; Ship Part Tiles sorted in the Upgrade Tray",
+          "note": "Tiles with two notches are advanced",
+          "ref": "p.5"
+        },
+        {
+          "id": "galaxy-4",
+          "text": "Galactic Center in the middle with a facedown Discovery Tile and the GCDS miniature on top",
+          "ref": "p.5"
+        },
+        {
+          "id": "galaxy-5",
+          "text": "Shuffle Inner, Middle and Outer Sectors into facedown stacks; the Outer stack holds {n} Sectors",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 5,
+                "3": 8,
+                "4": 14,
+                "5": 16,
+                "6": 18
+              }
+            }
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "galaxy-6",
+          "text": "Fill empty Starting Zones with random Guardian Sectors, each with a facedown Discovery Tile and a Guardian miniature",
+          "condition": {
+            "maxPlayers": 5
+          },
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Start Player Tile to whoever has spent the least time on Terra",
+          "ref": "p.5"
+        },
+        {
+          "id": "players-2",
+          "text": "From the player to the Start Player's right, counterclockwise: pick a Species Board and tray; Starting Sector in the nearest Starting Zone, arrow toward the center",
+          "ref": "p.5"
+        },
+        {
+          "id": "players-3",
+          "text": "Colony Ships as your Species Board shows; Summary Tile; Influence Discs on the Influence Track (3 extra stay in the tray)",
+          "ref": "p.5"
+        },
+        {
+          "id": "players-4",
+          "text": "Population Cubes on squares 3-28 of the three Population Tracks; Storage Markers at your starting values",
+          "ref": "p.5"
+        },
+        {
+          "id": "players-5",
+          "text": "Starting Sector: 1 Interceptor, a Population Cube on each square without a star, 1 Influence Disc from the left of your track",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The Start Player takes the first action; play continues clockwise",
+          "ref": "p.5"
+        }
+      ]
+    }
+  ]
+}

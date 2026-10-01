@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "gameId": 124361,
+  "gameName": "Concordia",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Concordia rules and Game Setup sheet (PD-Verlag)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Choose the map: Imperium (3-5 players) or Italia (2-4 players)",
+          "ref": "Rules p.1"
+        },
+        {
+          "id": "board-2",
+          "text": "Shuffle the 30 city tokens and place them letter side up on cities with the matching letter, then flip them",
+          "note": "The D tokens are not used on Italia",
+          "ref": "Setup 1"
+        },
+        {
+          "id": "board-3",
+          "text": "Each province gets the bonus marker of its most valuable good (cloth, then wine, tools, food, bricks)",
+          "ref": "Setup 2"
+        },
+        {
+          "id": "board-4",
+          "text": "Sale cards: sort by Roman numeral, remove numerals higher than your player count, shuffle each and stack with I on top",
+          "ref": "Setup 3"
+        },
+        {
+          "id": "board-5",
+          "text": "Top 7 cards faceup in the display; the stack and the Concordia card by the board",
+          "ref": "Setup 3"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "1 land and 1 sea colonist in Roma; scoring marker on 0",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "players-2",
+          "text": "Storehouse: 2 land and 2 sea colonists, 2 food, 1 cloth, 1 wine, 1 brick, 1 tool",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "players-3",
+          "text": "Take your 15 houses and 7 starting cards",
+          "ref": "Setup 4"
+        },
+        {
+          "id": "players-4",
+          "text": "Random start player gets 5 sestertii, the second 6, and so on; the last player takes the Praefectus Magnus",
+          "ref": "Setup 4"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "On your turn play 1 card from your hand and carry out its action",
+          "ref": "Setup sheet"
+        }
+      ]
+    }
+  ]
+}

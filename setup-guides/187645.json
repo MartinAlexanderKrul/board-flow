@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "gameId": 187645,
+  "gameName": "Star Wars: Rebellion",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Star Wars: Rebellion Learn to Play (Fantasy Flight Games)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "factions",
+      "title": "Factions",
+      "steps": [
+        {
+          "id": "factions-1",
+          "text": "Decide who plays the Imperials and who the Rebels; each takes their miniatures, leaders, loyalty markers, faction sheet, mission cards and action cards",
+          "ref": "p.4 step 1"
+        },
+        {
+          "id": "factions-2",
+          "text": "Each player puts the 4 leaders without a recruit icon in their leader pool; the others wait near the board",
+          "ref": "p.4 step 2"
+        }
+      ]
+    },
+    {
+      "id": "board-decks",
+      "title": "Board & decks",
+      "steps": [
+        {
+          "id": "board-decks-1",
+          "text": "Join the two board halves; time marker on space 1, reputation marker on space 14",
+          "ref": "p.4 step 3"
+        },
+        {
+          "id": "board-decks-2",
+          "text": "Objective deck: shuffle piles I, II and III separately and stack them III at the bottom, I on top; the Rebel player draws 1 in secret",
+          "ref": "p.4 step 4"
+        },
+        {
+          "id": "board-decks-3",
+          "text": "Action decks: each player shuffles their action cards that have a recruit icon",
+          "note": "First game: the action cards without a recruit icon go back in the box",
+          "ref": "p.4 step 5"
+        },
+        {
+          "id": "board-decks-4",
+          "text": "Shuffle the space and ground tactic decks separately; markers and dice nearby",
+          "ref": "p.5 step 6"
+        },
+        {
+          "id": "board-decks-5",
+          "text": "Missions: set your 4 starting missions aside; Imperial projects shuffled onto the Project space; shuffle the rest as your mission deck",
+          "ref": "p.5 step 7"
+        },
+        {
+          "id": "board-decks-6",
+          "text": "Place starting units and loyalty as the first-game diagram shows",
+          "note": "First game: remove Corellia, Mandalore, Saleucami, Sullust and Mustafar from the probe deck. Later games: Advanced Setup, p.18",
+          "ref": "p.16"
+        },
+        {
+          "id": "board-decks-7",
+          "text": "Rebel player secretly picks a probe card for a system with no Imperial units and slides it under the Rebel base Location space; shuffle the probe deck",
+          "note": "First game: not adjacent to any Imperial units",
+          "ref": "p.5 step 9"
+        },
+        {
+          "id": "board-decks-8",
+          "text": "Starting hand: your 4 starting missions plus 2 cards from your mission deck",
+          "ref": "p.5 step 10"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Both hands are secret; start the first game round",
+          "ref": "p.5"
+        }
+      ]
+    }
+  ]
+}

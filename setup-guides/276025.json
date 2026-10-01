@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "gameId": 276025,
+  "gameName": "Maracaibo",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Maracaibo rulebook, 3rd edition (Game's Up / Capstone)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board-1",
+          "text": "Combat tokens shuffled into two facedown piles",
+          "ref": "p.2 step 2"
+        },
+        {
+          "id": "board-2",
+          "text": "Quest tiles shuffled faceup; 3 on the explorer track spaces",
+          "ref": "p.2 step 3"
+        },
+        {
+          "id": "board-3",
+          "text": "2 players: cover Maracaibo with the Maracaibo city tile",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.2 step 4"
+        },
+        {
+          "id": "board-4",
+          "text": "City tiles for your player count: the two marked ones plus 2 random; shuffle and place on Puerto Plata, Santo Domingo, Port Royal and Cartagena",
+          "ref": "p.2 step 4"
+        },
+        {
+          "id": "board-5",
+          "text": "Shuffle A and B project cards separately; deal 8 A-cards each; shuffle 40 B-cards with the remaining A-cards as the deck; reveal 4",
+          "ref": "p.2 step 5"
+        },
+        {
+          "id": "board-6",
+          "text": "Doubloons, synergy tokens and victory point tokens as a supply",
+          "ref": "p.2 step 6"
+        },
+        {
+          "id": "board-7",
+          "text": "4 prestige buildings along the top: 1 faceup on I, 3 facedown on II-IV; box the rest unseen",
+          "ref": "p.2 step 7"
+        },
+        {
+          "id": "board-8",
+          "text": "Ownership markers beside the influence track: 1 on the leftmost space, 2 on the others",
+          "ref": "p.2 step 8"
+        },
+        {
+          "id": "board-9",
+          "text": "2 players: a red ownership marker on San Juan, white on St. Kitts, blue on Martinique",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.2 step 8"
+        },
+        {
+          "id": "board-10",
+          "text": "No campaign: put story card 75 on its space and follow it",
+          "note": "Campaign: follow the Campaign setup on p.3 instead",
+          "ref": "p.3 step 14"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Ship board with 2 discs on each marked circle (24 discs)",
+          "ref": "p.3 steps 9-10"
+        },
+        {
+          "id": "players-2",
+          "text": "VP marker on 0, ship on Havana, explorer on the explorer start, an influence marker on 0 of each nation",
+          "ref": "p.3 step 11"
+        },
+        {
+          "id": "players-3",
+          "text": "Markers: combat track 1, doubloon income 8, victory point income 0",
+          "ref": "p.3 step 11"
+        },
+        {
+          "id": "players-4",
+          "text": "2 figures, 2 career cards and an overview card",
+          "ref": "p.3 step 12"
+        },
+        {
+          "id": "players-5",
+          "text": "Start player is whoever was last on a ship; doubloons in turn order: 8, 9, 10, 11",
+          "ref": "p.3 step 13"
+        },
+        {
+          "id": "players-6",
+          "text": "From your 8 project cards keep 4, put 1 on a planning space and discard 3",
+          "ref": "p.3 step 15"
+        },
+        {
+          "id": "players-7",
+          "text": "Keep 1 career card and put 3 figures from the supply on it",
+          "ref": "p.3 step 16"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "The start player moves their ship first; play is clockwise",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}

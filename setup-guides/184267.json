@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "gameId": 184267,
+  "gameName": "On Mars",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "On Mars rulebook (Eagle-Gryphon Games)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "orbit-side",
+      "title": "Orbit side",
+      "steps": [
+        {
+          "id": "orbit-side-1",
+          "text": "Shuffle the Discovery tiles facedown; 2 faceup on the Exploration space",
+          "ref": "p.4 step 1"
+        },
+        {
+          "id": "orbit-side-2",
+          "text": "Warehouse: {n} each of Crystals, Batteries, Water, Plants and Oxygen",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 3
+              }
+            }
+          },
+          "ref": "p.4 step 2"
+        },
+        {
+          "id": "orbit-side-3",
+          "text": "Set the Shelter Tech tiles aside; split the rest into two sets by back, shuffle one set faceup onto the Tech Grid",
+          "ref": "p.4 step 3"
+        },
+        {
+          "id": "orbit-side-4",
+          "text": "Shuffle the 8 remaining Tech tiles into two facedown stacks by the Tech Grid",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "p.4 step 3"
+        },
+        {
+          "id": "orbit-side-5",
+          "text": "2 players: use only 1 set of Tech tiles; remove the second set",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.4 step 3"
+        },
+        {
+          "id": "orbit-side-6",
+          "text": "Blueprints: shuffle Level 1 and Level 3 separately, Level 1 on top; 6 faceup in a display",
+          "ref": "p.4 step 4"
+        }
+      ]
+    },
+    {
+      "id": "colony-side",
+      "title": "Colony side",
+      "steps": [
+        {
+          "id": "colony-side-1",
+          "text": "Scientist display: Geologist, R&D Engineer, Hydrologist, Biochemist, Geochemist, Systems Engineer left to right, each with its marker",
+          "ref": "p.4 step 5"
+        },
+        {
+          "id": "colony-side-2",
+          "text": "Earth Contract cards facedown on the Scientist display",
+          "ref": "p.4 step 6"
+        },
+        {
+          "id": "colony-side-3",
+          "text": "Starting Mine (S back) in the center; the other starting Buildings at random on the marked hexes, notch toward the bottom",
+          "ref": "p.5 steps 7-8"
+        },
+        {
+          "id": "colony-side-4",
+          "text": "Building display: Buildings in shuffled stacks by type, building side down",
+          "ref": "p.5 step 9"
+        },
+        {
+          "id": "colony-side-5",
+          "text": "Research tiles by type on their map hexes",
+          "ref": "p.5 step 10"
+        },
+        {
+          "id": "colony-side-6",
+          "text": "Missions: 2 Short + 1 Long (short game) or 1 Short + 2 Long (long game), each with its marker and a tracker cube on the space for your player count",
+          "note": "First game: First Colonists variant, p.24",
+          "ref": "p.5 steps 11-12"
+        },
+        {
+          "id": "colony-side-7",
+          "text": "Remaining Missions marker on 3; Crystals and Resources as a supply",
+          "ref": "p.5 steps 13-14"
+        },
+        {
+          "id": "colony-side-8",
+          "text": "Colony level marker on the left of the second row; LSS Track markers on the bottom row; 4 random LSS Reward tiles faceup",
+          "ref": "p.5 steps 15-17"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Player board; OP marker on 0; 1 of each of the 5 Resources in Storage; 1 Crystal in the Depot",
+          "ref": "p.6 steps 1-5"
+        },
+        {
+          "id": "players-2",
+          "text": "Shelter Tech tile on the middle space of the 2nd Laboratory column; 5 Ships on the top 5 Depot spaces",
+          "ref": "p.6 steps 6-7"
+        },
+        {
+          "id": "players-3",
+          "text": "5 Shelters: 4 on your board, 1 on your starting hex for the player count, with 1 of your 4 Bots on it",
+          "ref": "p.6 steps 8-9"
+        },
+        {
+          "id": "players-4",
+          "text": "8 Advanced Building markers and a Rover beside your board; 3 Colonists in the Living Quarters, 9 beside the board",
+          "ref": "p.6 steps 10-12"
+        },
+        {
+          "id": "players-5",
+          "text": "5 Progress cubes, one below each Resource; deal 3 secret Private Goal cards each",
+          "ref": "p.6 steps 13-14"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Whoever has seen The Martian most is first; clockwise each puts their Player marker on a Turn Order space and may take its benefit",
+          "ref": "p.7"
+        },
+        {
+          "id": "start-2",
+          "text": "The player on the highest Turn Order space places the Shuttle on a red Travel space, Colony or Orbit side",
+          "ref": "p.7"
+        }
+      ]
+    }
+  ]
+}

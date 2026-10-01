@@ -90,6 +90,14 @@
       "path": "28720.json"
     },
     {
+      "gameId": 31260,
+      "gameName": "Agricola",
+      "gameIds": [31260],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "31260.json"
+    },
+    {
       "gameId": 35677,
       "gameName": "Le Havre",
       "gameIds": [35677],
@@ -186,6 +194,14 @@
       "path": "120677.json"
     },
     {
+      "gameId": 124361,
+      "gameName": "Concordia",
+      "gameIds": [124361],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "124361.json"
+    },
+    {
       "gameId": 124668,
       "gameName": "The Dwarves",
       "gameIds": [124668],
@@ -264,6 +280,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "164153.json"
+    },
+    {
+      "gameId": 164928,
+      "gameName": "Orléans",
+      "gameIds": [164928],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "164928.json"
     },
     {
       "gameId": 167355,
@@ -370,6 +394,14 @@
       "path": "183394.json"
     },
     {
+      "gameId": 184267,
+      "gameName": "On Mars",
+      "gameIds": [184267],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "184267.json"
+    },
+    {
       "gameId": 184921,
       "gameName": "Bunny Kingdom",
       "gameIds": [184921, 264396, 373425],
@@ -384,6 +416,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "185343.json"
+    },
+    {
+      "gameId": 187645,
+      "gameName": "Star Wars: Rebellion",
+      "gameIds": [187645],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "187645.json"
     },
     {
       "gameId": 191189,
@@ -594,6 +634,14 @@
       "path": "244992.json"
     },
     {
+      "gameId": 246900,
+      "gameName": "Eclipse: Second Dawn for the Galaxy",
+      "gameIds": [246900],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "246900.json"
+    },
+    {
       "gameId": 247763,
       "gameName": "Underwater Cities",
       "gameIds": [247763],
@@ -728,6 +776,14 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "271324.json"
+    },
+    {
+      "gameId": 276025,
+      "gameName": "Maracaibo",
+      "gameIds": [276025],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "276025.json"
     },
     {
       "gameId": 277659,

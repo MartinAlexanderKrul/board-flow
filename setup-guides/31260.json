@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "gameId": 31260,
+  "gameName": "Agricola",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Agricola rulebook (Lookout Games / Z-Man Games, 2007 edition)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "players-1",
+          "text": "Each player: a farmyard with a Wooden hut tile on both building spaces and a Family member in each",
+          "ref": "p.2"
+        },
+        {
+          "id": "players-2",
+          "text": "Remove Occupations not used at your player count; deal each player 7 Occupations",
+          "note": "First games: Family game on p.8, without Occupations or Minor Improvements",
+          "ref": "p.2 C"
+        },
+        {
+          "id": "players-3",
+          "text": "Deal each player 7 Minor Improvements",
+          "ref": "p.3 D"
+        },
+        {
+          "id": "players-4",
+          "text": "Each player takes a Summary card",
+          "ref": "p.3 G"
+        },
+        {
+          "id": "players-5",
+          "text": "Choose a starting player: Starting player marker and 2 Food; everyone else 3 Food",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "boards",
+      "title": "Boards",
+      "steps": [
+        {
+          "id": "boards-1",
+          "text": "3 game boards side by side; other pieces sorted beside the play area",
+          "ref": "p.2"
+        },
+        {
+          "id": "boards-2",
+          "text": "Round cards: shuffle each Stage, stack Stage 6 at the bottom up to Stage 1 on top",
+          "ref": "p.2 A"
+        },
+        {
+          "id": "boards-3",
+          "text": "Green Action cards for your player count faceup left of the first board: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "2": "none",
+                "3": "4 cards",
+                "4": "6 cards",
+                "5": "6 cards"
+              }
+            }
+          },
+          "ref": "p.2 B"
+        },
+        {
+          "id": "boards-4",
+          "text": "10 Major Improvements faceup on their board; Begging cards beside the play area",
+          "ref": "p.3 E-F"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "reminders-1",
+          "text": "The Starting player marker only moves when someone takes the Starting player action",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-1",
+          "text": "Round 1: turn over the top Round card",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}
