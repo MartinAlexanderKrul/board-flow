@@ -113,7 +113,7 @@ Primary files:
 
 A box -> table -> first turn cheat sheet for games you already know. It is not a rulebook.
 
-- open it from the `Quick Setup` tab on the Log Play screen (same search; `All guides` lists every
+- open it from the `Quick Guides` tab on the Log Play screen (same search; `All guides` lists every
   guide, `My games` lists owned games and marks those without a guide "not available yet"), or
   from the `Setup` button in the game detail
   dialog (Collection and Journal). Opening an

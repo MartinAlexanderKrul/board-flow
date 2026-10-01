@@ -36,7 +36,7 @@ Source: `ui/search/NewPlayScreen.kt`
 
 Main surfaces:
 
-- `ScreenTabRow` with `Log Play` and `Quick Setup` (hidden during quick-scan correction mode)
+- `ScreenTabRow` with `Log Play` and `Quick Guides` (hidden during quick-scan correction mode)
 - `SessionContinueBanner`
 - `GameSearchField` with quick-scan action (Log Play tab only)
 - loading shimmer list
@@ -51,7 +51,7 @@ Important behavior:
 
 - results for this screen are owned-only
 - wishlist games are excluded from the main log-play result flow
-- the `Quick Setup` tab reuses the same search field and has an `All guides` / `My games` toggle:
+- the `Quick Guides` tab reuses the same search field and has an `All guides` / `My games` toggle:
   - `All guides` (default) lists every known guide, including games you don't own
   - `My games` lists the owned Log Play results, with an `Available now` chip strip of games that
     have guides. Rows without a guide are dimmed on a translucent background, read "Setup guide

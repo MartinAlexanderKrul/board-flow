@@ -319,7 +319,7 @@ fun NewPlayScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
                         )
                         Text(
-                            if (setupTab) "Quick Setup" else "Log a Play",
+                            if (setupTab) "Quick Guides" else "Log a Play",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -983,7 +983,7 @@ private fun GameRow(
 
 private enum class NewPlayTab(val label: String) {
     LOG_PLAY("Log Play"),
-    QUICK_SETUP("Quick Setup")
+    QUICK_SETUP("Quick Guides")
 }
 
 /** Games that already have a guide, so they are not buried in a long alphabetical list. */
