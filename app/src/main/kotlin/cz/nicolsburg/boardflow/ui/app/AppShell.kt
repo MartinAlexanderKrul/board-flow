@@ -296,7 +296,7 @@ fun BoardFlowApp(
         currentRoute == AppRoutes.SYNC -> "Sync to Sheets"
         currentRoute == AppRoutes.SETTINGS -> activeTabLabel ?: "Settings"
         currentRoute == AppRoutes.CHALLENGES -> "Challenges"
-        isQuickSetup -> "Quick Setup"
+        isQuickSetup -> "Quick Guides"
         isScan || isReview -> selectedGameName
         else -> ""
     }
