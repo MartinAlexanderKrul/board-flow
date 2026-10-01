@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "gameId": 271055,
+  "gameName": "Dwellings of Eldervale",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Dwellings of Eldervale Rules of Play (2024)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "modules": [
+    {
+      "id": "oracle",
+      "name": "The Oracle"
+    },
+    {
+      "id": "dragons-den",
+      "name": "Dragon's Den"
+    },
+    {
+      "id": "bifrost",
+      "name": "Bifrost Bridge"
+    },
+    {
+      "id": "mercenaries",
+      "name": "Mercenaries"
+    }
+  ],
+  "sections": [
+    {
+      "id": "factions",
+      "title": "Factions",
+      "steps": [
+        {
+          "id": "score-board",
+          "text": "Score Board at one end of the table",
+          "ref": "p.4"
+        },
+        {
+          "id": "factions",
+          "text": "Each player picks a faction tray (or deal Starter cards); choose a board side as your Ready Area",
+          "ref": "p.4"
+        },
+        {
+          "id": "first",
+          "text": "Everyone rolls 6 dice; highest is Starting Player, then clockwise",
+          "ref": "p.4"
+        },
+        {
+          "id": "score-markers",
+          "text": "Scoring markers on the Victory Point track at 1, 2, 3, 4, 5 in turn order",
+          "ref": "p.4"
+        },
+        {
+          "id": "elements",
+          "text": "Elements this game: the players' elements plus 2 more",
+          "note": "Each element: 3 Realms, 1 Monster, 1 Orb",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "dungeon",
+      "title": "Dungeon trays",
+      "steps": [
+        {
+          "id": "adventure",
+          "text": "For each element: Doorway card faceup on its Adventure deck, then shuffle the rest below it",
+          "ref": "p.4"
+        },
+        {
+          "id": "treasure",
+          "text": "Check each Treasure stack has 3 tokens of its element",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "eldervale",
+      "title": "Build Eldervale",
+      "steps": [
+        {
+          "id": "ruins",
+          "text": "Set aside the 5 main Ruins{n}",
+          "amounts": {
+            "n": {
+              "default": "",
+              "byPlayers": {
+                "4": " and the second Dungeon",
+                "5": " and the second Dungeon"
+              }
+            }
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "oracle",
+          "text": "Oracle: swap it in for an Elemental tile (2-3 players) or the second Dungeon (4-5 players)",
+          "condition": {
+            "modules": [
+              "oracle"
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "stack",
+          "text": "Shuffle the Elemental Realms into the Realm Stack",
+          "ref": "p.5"
+        },
+        {
+          "id": "draw",
+          "text": "Draw {n} Elemental Realms (max 1 Lair; extra Lairs go to the bottom of the stack)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "5",
+                "3": "7",
+                "4": "8",
+                "5": "8"
+              }
+            }
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "build",
+          "text": "Shuffle them with the Ruins and arrange faceup in the layout for your player count, same orientation",
+          "ref": "p.5"
+        },
+        {
+          "id": "reshuffle",
+          "text": "Reshuffle the Realm Stack facedown in the Discard Tray",
+          "ref": "p.5"
+        },
+        {
+          "id": "dragon",
+          "text": "Dragon's Den: add it to the top half of the Realm Stack",
+          "condition": {
+            "modules": [
+              "dragons-den"
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "bifrost",
+          "text": "Bifrost Bridge: mix it into the top half of the Realm Stack",
+          "condition": {
+            "modules": [
+              "bifrost"
+            ]
+          },
+          "ref": "p.5"
+        },
+        {
+          "id": "realms",
+          "text": "Treasure stacks (top faceup) on the Realm treasure spaces; Monster on each Lair",
+          "ref": "p.6"
+        },
+        {
+          "id": "orbs",
+          "text": "An Orb on top of each element track in use; 1 Orb on each of the 2 Glory Track spaces",
+          "ref": "p.6"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "trays",
+          "text": "2 Resource Trays with resources split evenly; Discard Tray in the middle",
+          "ref": "p.6"
+        },
+        {
+          "id": "magic",
+          "text": "Shuffle the Magic cards into the Resource Tray; each player draws 5",
+          "ref": "p.6"
+        },
+        {
+          "id": "workers",
+          "text": "3 Workers in your Ready Area; Dragon, Wizard, Warrior, 3 Workers, 6 Dwellings, 1 each of Gem/Potion/Scroll/Tool/Sword and 6 dice in your tray",
+          "ref": "p.6"
+        },
+        {
+          "id": "starter",
+          "text": "Your Element Starter card next to your tray as your first Tableau card",
+          "ref": "p.6"
+        },
+        {
+          "id": "markers",
+          "text": "1 scoring marker on your element's first Power space; 1 kept for the Glory Track; 3 beside the Power tracks",
+          "ref": "p.6"
+        },
+        {
+          "id": "mercenaries",
+          "text": "Mercenary cards and figures within reach",
+          "condition": {
+            "modules": [
+              "mercenaries"
+            ]
+          },
+          "ref": "p.6"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "turn",
+          "text": "Starting Player begins; play continues clockwise",
+          "ref": "p.4"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "gameId": 191710,
+  "gameName": "Catan: Big Box",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Catan Game Rules & Almanac (base game)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "beginner",
+      "name": "Beginner map",
+      "group": "Board",
+      "defaultEnabled": true
+    },
+    {
+      "id": "variable",
+      "name": "Variable map",
+      "group": "Board"
+    }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "frame",
+          "text": "Assemble the sea frame",
+          "ref": "p.2"
+        },
+        {
+          "id": "beginner-map",
+          "text": "Lay the 19 terrain hexes and number tokens as in Illustration A",
+          "condition": {
+            "modules": [
+              "beginner"
+            ]
+          },
+          "ref": "p.3"
+        },
+        {
+          "id": "variable-map",
+          "text": "Shuffle the terrain hexes facedown and place them randomly; 9 harbor pieces on the frame harbors; number tokens by letter in a spiral",
+          "condition": {
+            "modules": [
+              "variable"
+            ]
+          },
+          "ref": "p.12"
+        },
+        {
+          "id": "robber",
+          "text": "Robber on the desert",
+          "ref": "p.12"
+        },
+        {
+          "id": "cards",
+          "text": "Resource cards in 5 faceup stacks; development cards shuffled facedown; Longest Road, Largest Army and dice beside the board",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "pieces",
+          "text": "Each player: 5 settlements, 4 cities, 15 roads and a building costs card",
+          "ref": "p.3"
+        },
+        {
+          "id": "start-pieces",
+          "text": "Place your 2 settlements and 2 roads on the starting map",
+          "condition": {
+            "modules": [
+              "beginner"
+            ]
+          },
+          "ref": "p.3"
+        },
+        {
+          "id": "start-resources",
+          "text": "Take the resources around your settlement marked with a white star",
+          "condition": {
+            "modules": [
+              "beginner"
+            ]
+          },
+          "ref": "p.3"
+        },
+        {
+          "id": "round-one",
+          "text": "Highest roll starts; clockwise, each places 1 settlement and road",
+          "condition": {
+            "modules": [
+              "variable"
+            ]
+          },
+          "ref": "p.12"
+        },
+        {
+          "id": "round-two",
+          "text": "Counterclockwise from the last player: second settlement and road; take 1 resource per adjacent hex",
+          "condition": {
+            "modules": [
+              "variable"
+            ]
+          },
+          "ref": "p.12"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "distance",
+          "text": "Distance Rule: no settlement next to another",
+          "ref": "p.7"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "roll",
+          "text": "The starting player rolls both dice for production"
+        }
+      ]
+    }
+  ]
+}

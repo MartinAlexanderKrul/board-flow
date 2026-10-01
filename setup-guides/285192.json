@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "gameId": 285192,
+  "gameName": "Destinies",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Destinies rulebook (EN)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 3
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "scenario",
+          "text": "In the app, choose the scenario; read its introduction aloud",
+          "note": "First game: The Nature of the Beast (stand-alone)",
+          "ref": "p.4"
+        },
+        {
+          "id": "characters",
+          "text": "Each player picks a character shown in the app (random if you can't agree)",
+          "ref": "p.4"
+        },
+        {
+          "id": "pieces",
+          "text": "Each player: Player Board, 2 Main Dice, 3 Effort Dice, 1 Coin, Destiny Card and miniature",
+          "ref": "p.4"
+        },
+        {
+          "id": "board",
+          "text": "Main Dice and the Coin in your supply area; Effort Dice off the board (exhausted)",
+          "ref": "p.4"
+        },
+        {
+          "id": "skills",
+          "text": "Skill tokens on the skill tracks at the values the app gives",
+          "ref": "p.4"
+        },
+        {
+          "id": "destiny",
+          "text": "Read your Destiny Card secretly; place it on your board, illustration up",
+          "ref": "p.4"
+        },
+        {
+          "id": "world",
+          "text": "Follow the app: Map Tiles, Points of Interest tokens and minis on the explored tile, all character minis on the starting tile",
+          "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "goal",
+          "text": "First to fulfill their Destiny wins",
+          "ref": "p.5"
+        }
+      ]
+    }
+  ]
+}

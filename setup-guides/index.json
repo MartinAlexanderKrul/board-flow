@@ -42,6 +42,14 @@
       "path": "68448.json"
     },
     {
+      "gameId": 133473,
+      "gameName": "Sushi Go!",
+      "gameIds": [133473],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "133473.json"
+    },
+    {
       "gameId": 162886,
       "gameName": "Spirit Island",
       "gameIds": [162886, 193065, 262722, 356510, 365137],
@@ -104,6 +112,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "191189.json"
+    },
+    {
+      "gameId": 191710,
+      "gameName": "Catan: Big Box",
+      "gameIds": [191710],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "191710.json"
     },
     {
       "gameId": 192135,
@@ -210,12 +226,28 @@
       "path": "266192.json"
     },
     {
+      "gameId": 271055,
+      "gameName": "Dwellings of Eldervale",
+      "gameIds": [271055],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "271055.json"
+    },
+    {
       "gameId": 271324,
       "gameName": "It's a Wonderful World",
       "gameIds": [271324, 298851],
       "version": 2,
       "schemaVersion": 1,
       "path": "271324.json"
+    },
+    {
+      "gameId": 285192,
+      "gameName": "Destinies",
+      "gameIds": [285192],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "285192.json"
     },
     {
       "gameId": 285265,

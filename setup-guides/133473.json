@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "gameId": 133473,
+  "gameName": "Sushi Go!",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Sushi Go! rules booklet"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "deck",
+          "text": "Shuffle all sushi cards facedown in the middle",
+          "ref": "p.3"
+        },
+        {
+          "id": "score",
+          "text": "Each player: 1 train card and 1 tray card for scoring",
+          "ref": "p.3"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "puddings",
+          "text": "Pudding cards stay out until the end of round 3",
+          "ref": "p.11"
+        },
+        {
+          "id": "rounds",
+          "text": "3 rounds; pass hands left each turn",
+          "ref": "p.4"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "deal",
+          "text": "Deal {n} cards to each player; everyone picks 1 and reveals at once",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 10,
+                "3": 9,
+                "4": 8,
+                "5": 7
+              }
+            }
+          },
+          "ref": "p.4"
+        }
+      ]
+    }
+  ]
+}
