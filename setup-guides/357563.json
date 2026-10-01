@@ -2,13 +2,14 @@
   "schemaVersion": 1,
   "gameId": 357563,
   "gameName": "Akropolis",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "Akropolis rulebook",
-      "Akropolis Athena rulebook (Gigamic)"
+      "Akropolis Athena rulebook (Gigamic)",
+      "Akropolis Pantheon rules (Czech edition)"
     ]
   },
   "players": {
@@ -123,6 +124,42 @@
       ]
     },
     {
+      "id": "pantheon",
+      "title": "Pantheon",
+      "condition": {
+        "modules": [
+          "pantheon"
+        ]
+      },
+      "steps": [
+        {
+          "id": "scenario",
+          "text": "Choose a scenario tile together: Corinth, Sparta or Athens (rising difficulty)",
+          "ref": "Pantheon: Setup 1"
+        },
+        {
+          "id": "start-boards",
+          "text": "Each architect gets 1 random starting board",
+          "ref": "Pantheon: Setup 2"
+        },
+        {
+          "id": "capital",
+          "text": "Remaining starting boards faceup in the middle form the Capital (join several any way you agree, never stacked)",
+          "ref": "Pantheon: Setup 3"
+        },
+        {
+          "id": "challenges",
+          "text": "Shuffle the 20 architectural challenge tiles facedown, flip 3; a matching divine altar token beside each faceup one",
+          "ref": "Pantheon: Setup 4"
+        },
+        {
+          "id": "altars",
+          "text": "Other divine altar tokens in the supply",
+          "ref": "Pantheon: Setup 5"
+        }
+      ]
+    },
+    {
       "id": "reminders",
       "title": "Easy to forget",
       "kind": "REMINDERS",
@@ -157,6 +194,12 @@
       "id": "athena",
       "name": "Athena",
       "bggId": 422822
+    },
+    {
+      "id": "pantheon",
+      "name": "Pantheon (co-op)",
+      "bggId": 461828,
+      "note": "Cooperative; plays 1-4."
     }
   ]
 }

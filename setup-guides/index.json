@@ -12,8 +12,8 @@
     {
       "gameId": 3955,
       "gameName": "BANG!",
-      "gameIds": [3955, 8269, 20237, 401241],
-      "version": 2,
+      "gameIds": [3955, 8269, 9653, 20237, 66508, 107794, 130046, 349886, 401241],
+      "version": 3,
       "schemaVersion": 1,
       "path": "3955.json"
     },
@@ -164,8 +164,8 @@
     {
       "gameId": 173346,
       "gameName": "7 Wonders Duel",
-      "gameIds": [173346, 202976],
-      "version": 1,
+      "gameIds": [173346, 202976, 309116],
+      "version": 2,
       "schemaVersion": 1,
       "path": "173346.json"
     },
@@ -180,8 +180,8 @@
     {
       "gameId": 182094,
       "gameName": "BANG! The Duel",
-      "gameIds": [182094],
-      "version": 1,
+      "gameIds": [182094, 288429],
+      "version": 2,
       "schemaVersion": 1,
       "path": "182094.json"
     },
@@ -308,8 +308,8 @@
     {
       "gameId": 241477,
       "gameName": "Karak",
-      "gameIds": [241477],
-      "version": 1,
+      "gameIds": [241477, 291436],
+      "version": 2,
       "schemaVersion": 1,
       "path": "241477.json"
     },
@@ -628,8 +628,8 @@
     {
       "gameId": 357563,
       "gameName": "Akropolis",
-      "gameIds": [357563, 422822],
-      "version": 2,
+      "gameIds": [357563, 422822, 461828],
+      "version": 3,
       "schemaVersion": 1,
       "path": "357563.json"
     },
@@ -780,8 +780,8 @@
     {
       "gameId": 409878,
       "gameName": "Škoda kouzla, které padne vedle",
-      "gameIds": [409878],
-      "version": 1,
+      "gameIds": [409878, 430464],
+      "version": 2,
       "schemaVersion": 1,
       "path": "409878.json"
     },

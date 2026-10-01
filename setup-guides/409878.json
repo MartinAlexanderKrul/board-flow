@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 409878,
   "gameName": "Škoda kouzla, které padne vedle",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -33,7 +33,8 @@
       "players": {
         "min": 3,
         "max": 3
-      }
+      },
+      "bggId": 430464
     },
     {
       "id": "elimination",

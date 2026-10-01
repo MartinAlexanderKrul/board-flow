@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 3955,
   "gameName": "BANG!",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -10,7 +10,12 @@
       "BANG! rulebook (dV Giochi, via RulesPal)",
       "High Noon rules",
       "A Fistful of Cards rules",
-      "BANG! Legends rules"
+      "BANG! Legends rules",
+      "Dodge City rules",
+      "Gold Rush rules",
+      "The Valley of Shadows rules",
+      "Wild West Show rules",
+      "The Great Train Robbery rules"
     ]
   },
   "players": {
@@ -38,6 +43,33 @@
       "name": "BANG! Legends",
       "bggId": 401241,
       "note": "Legendary characters replace the base characters."
+    },
+    {
+      "id": "dodge",
+      "name": "Dodge City",
+      "bggId": 9653,
+      "extendsMaxPlayers": 8,
+      "note": "Enables 8 players; also has a 3-player variant."
+    },
+    {
+      "id": "gold-rush",
+      "name": "Gold Rush",
+      "bggId": 107794
+    },
+    {
+      "id": "valley",
+      "name": "The Valley of Shadows",
+      "bggId": 130046
+    },
+    {
+      "id": "wws",
+      "name": "Wild West Show",
+      "bggId": 66508
+    },
+    {
+      "id": "train",
+      "name": "The Great Train Robbery",
+      "bggId": 349886
     }
   ],
   "sections": [
@@ -45,6 +77,46 @@
       "id": "roles",
       "title": "Roles & characters",
       "steps": [
+        {
+          "id": "x-characters",
+          "text": "Dodge City: shuffle its 15 characters in with the originals",
+          "condition": {
+            "modules": [
+              "dodge"
+            ]
+          },
+          "ref": "Dodge City rules"
+        },
+        {
+          "id": "valley-characters",
+          "text": "Valley of Shadows: shuffle its 8 characters in with the originals",
+          "condition": {
+            "modules": [
+              "valley"
+            ]
+          },
+          "ref": "Valley of Shadows rules"
+        },
+        {
+          "id": "wws-characters",
+          "text": "Wild West Show: add its 8 characters to the others",
+          "condition": {
+            "modules": [
+              "wws"
+            ]
+          },
+          "ref": "Wild West Show rules"
+        },
+        {
+          "id": "train-characters",
+          "text": "Great Train Robbery: shuffle its 8 characters in with the originals",
+          "condition": {
+            "modules": [
+              "train"
+            ]
+          },
+          "ref": "Great Train Robbery rules"
+        },
         {
           "id": "boards",
           "text": "Each player takes a playing board",
@@ -59,11 +131,12 @@
                 "4": "1 Sheriff, 1 Renegade, 2 Outlaws",
                 "5": "1 Sheriff, 1 Renegade, 2 Outlaws, 1 Deputy",
                 "6": "1 Sheriff, 1 Renegade, 3 Outlaws, 1 Deputy",
-                "7": "1 Sheriff, 1 Renegade, 3 Outlaws, 2 Deputies"
+                "7": "1 Sheriff, 1 Renegade, 3 Outlaws, 2 Deputies",
+                "8": "all 8 Dodge City roles (each of the 2 Renegades plays alone)"
               }
             }
           },
-          "ref": "Preparation"
+          "ref": "Preparation, Dodge City rules"
         },
         {
           "id": "deal-roles",
@@ -116,6 +189,36 @@
       "id": "cards",
       "title": "Cards",
       "steps": [
+        {
+          "id": "dodge-cards",
+          "text": "Shuffle the 40 Dodge City cards into the playing cards",
+          "condition": {
+            "modules": [
+              "dodge"
+            ]
+          },
+          "ref": "Dodge City rules"
+        },
+        {
+          "id": "valley-cards",
+          "text": "Shuffle the 16 Valley of Shadows cards into the playing cards",
+          "condition": {
+            "modules": [
+              "valley"
+            ]
+          },
+          "ref": "Valley of Shadows rules"
+        },
+        {
+          "id": "train-cards",
+          "text": "Shuffle the 16 Great Train Robbery cards into the playing cards",
+          "condition": {
+            "modules": [
+              "train"
+            ]
+          },
+          "ref": "Great Train Robbery rules"
+        },
         {
           "id": "simple",
           "text": "Remove all cards with the book symbol",
@@ -183,6 +286,58 @@
             ]
           },
           "ref": "A Fistful of Cards rules"
+        },
+        {
+          "id": "nuggets",
+          "text": "Gold Rush: gold nuggets in a heap in the middle; equipment deck with its first 3 cards faceup in a row; nobody starts with equipment or nuggets",
+          "condition": {
+            "modules": [
+              "gold-rush"
+            ]
+          },
+          "ref": "Gold Rush rules"
+        },
+        {
+          "id": "wws-pile",
+          "text": "Wild West Show: set aside the Wild West Show card, shuffle the other 9 facedown, put it at the bottom; pile in the middle of the table",
+          "condition": {
+            "modules": [
+              "wws"
+            ]
+          },
+          "ref": "Wild West Show rules"
+        },
+        {
+          "id": "train-setup",
+          "text": "Great Train Robbery: shuffle the Railcar deck facedown; shuffle the 13 Station tiles facedown beside it",
+          "condition": {
+            "modules": [
+              "train"
+            ]
+          },
+          "ref": "Great Train Robbery p.1"
+        },
+        {
+          "id": "train-line",
+          "text": "Turn over {n} Station tiles in a line, left to right; Locomotive (random side) below the leftmost Station, then 3 random Railcars to its left",
+          "amounts": {
+            "n": {
+              "default": "one Station tile per player",
+              "byPlayers": {
+                "4": 4,
+                "5": 5,
+                "6": 6,
+                "7": 7,
+                "8": 8
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "train"
+            ]
+          },
+          "ref": "Great Train Robbery p.1"
         }
       ]
     },
@@ -223,6 +378,36 @@
             ]
           },
           "ref": "A Fistful of Cards rules"
+        },
+        {
+          "id": "green",
+          "text": "Dodge City: green-bordered cards are played in front of you and can't be used the turn they're played",
+          "condition": {
+            "modules": [
+              "dodge"
+            ]
+          },
+          "ref": "Dodge City rules"
+        },
+        {
+          "id": "wws-reveal",
+          "text": "Wild West Show: whoever plays Stagecoach or Wells Fargo takes the pile and reveals its top card, replacing the previous one",
+          "condition": {
+            "modules": [
+              "wws"
+            ]
+          },
+          "ref": "Wild West Show rules"
+        },
+        {
+          "id": "three-players",
+          "text": "Dodge City 3-player variant: Deputy, Outlaw and Renegade dealt faceup - Deputy kills Renegade, Renegade kills Outlaw, Outlaw kills Deputy",
+          "condition": {
+            "modules": [
+              "dodge"
+            ]
+          },
+          "ref": "Dodge City rules"
         }
       ]
     },

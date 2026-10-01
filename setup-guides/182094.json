@@ -2,32 +2,136 @@
   "schemaVersion": 1,
   "gameId": 182094,
   "gameName": "BANG! The Duel",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["BANG! The Duel rulebook (dV Giochi, via RulesPal)"]
+    "sources": [
+      "BANG! The Duel rulebook (dV Giochi, via RulesPal)",
+      "BANG! The Duel: Renegades rules"
+    ]
   },
-  "players": { "min": 2, "max": 2 },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
   "sections": [
     {
       "id": "characters",
       "title": "Characters",
       "steps": [
-        { "id": "sides", "text": "One player is the Law, the other the Outlaws; keep the summary cards handy", "ref": "Setup" },
-        { "id": "draw-chars", "text": "Shuffle your 12 Characters facedown, draw {n} at random, box the rest", "amounts": { "n": 4 }, "note": "Draw more for a longer game", "ref": "Setup" },
-        { "id": "reserve", "text": "Look at them, shuffle facedown into your reserve pile", "ref": "Setup" },
-        { "id": "active", "text": "Draw 2 from the reserve; choose your Active Character secretly, then both reveal and place the AC token", "ref": "Setup" },
-        { "id": "rearguard", "text": "Reveal the other as your Rearguard Character next to the AC", "ref": "Setup" },
-        { "id": "bullets", "text": "Matching bullet tokens on each character; leftover bullets in the middle", "ref": "Setup" }
+        {
+          "id": "sides-law",
+          "text": "One player is the Law, the other the Renegades (all the expansion's cards and characters)",
+          "condition": {
+            "modules": [
+              "third-law"
+            ]
+          },
+          "ref": "Renegades: The Third Group"
+        },
+        {
+          "id": "sides-outlaw",
+          "text": "One player is the Outlaws, the other the Renegades (all the expansion's cards and characters)",
+          "condition": {
+            "modules": [
+              "third-outlaw"
+            ]
+          },
+          "ref": "Renegades: The Third Group"
+        },
+        {
+          "id": "reinforce",
+          "text": "Shuffle Renegade-Law cards and characters into the Law's, Renegade-Outlaw ones into the Outlaws'",
+          "condition": {
+            "modules": [
+              "reinforcements"
+            ]
+          },
+          "ref": "Renegades: Reinforcements"
+        },
+        {
+          "id": "sides",
+          "text": "One player is the Law, the other the Outlaws; keep the summary cards handy",
+          "ref": "Setup",
+          "condition": {
+            "notModules": [
+              "third-law",
+              "third-outlaw"
+            ]
+          }
+        },
+        {
+          "id": "draw-chars",
+          "text": "Shuffle your 12 Characters facedown, draw {n} at random, box the rest",
+          "amounts": {
+            "n": 4
+          },
+          "note": "Draw more for a longer game",
+          "ref": "Setup"
+        },
+        {
+          "id": "reserve",
+          "text": "Look at them, shuffle facedown into your reserve pile",
+          "ref": "Setup"
+        },
+        {
+          "id": "active",
+          "text": "Draw 2 from the reserve; choose your Active Character secretly, then both reveal and place the AC token",
+          "ref": "Setup"
+        },
+        {
+          "id": "rearguard",
+          "text": "Reveal the other as your Rearguard Character next to the AC",
+          "ref": "Setup"
+        },
+        {
+          "id": "bullets",
+          "text": "Matching bullet tokens on each character; leftover bullets in the middle",
+          "ref": "Setup"
+        }
       ]
     },
     {
       "id": "cards",
       "title": "Cards",
       "steps": [
-        { "id": "deck", "text": "Shuffle your 40-card deck facedown in front of you", "ref": "Setup" },
-        { "id": "hands", "text": "Starting hands: the Law draws 4, the Outlaws draw 5", "ref": "Setup" }
+        {
+          "id": "deck",
+          "text": "Shuffle your 40-card deck facedown in front of you",
+          "ref": "Setup"
+        },
+        {
+          "id": "hands",
+          "text": "Starting hands: the Law draws 4, the Outlaws draw 5",
+          "ref": "Setup",
+          "condition": {
+            "notModules": [
+              "third-law",
+              "third-outlaw"
+            ]
+          }
+        },
+        {
+          "id": "hands-law",
+          "text": "Starting hands: the Law 4 cards, the Renegades 5",
+          "condition": {
+            "modules": [
+              "third-law"
+            ]
+          },
+          "ref": "Renegades: The Third Group"
+        },
+        {
+          "id": "hands-outlaw",
+          "text": "Starting hands: the Outlaws 5 cards, the Renegades 4",
+          "condition": {
+            "modules": [
+              "third-outlaw"
+            ]
+          },
+          "ref": "Renegades: The Third Group"
+        }
       ]
     },
     {
@@ -35,7 +139,11 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "discard", "text": "Both players share one discard pile", "ref": "Object of the Game" }
+        {
+          "id": "discard",
+          "text": "Both players share one discard pile",
+          "ref": "Object of the Game"
+        }
       ]
     },
     {
@@ -43,8 +151,63 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "The Law begins: draw 2 cards", "ref": "Playing the Game" }
+        {
+          "id": "first",
+          "text": "The Law begins: draw 2 cards",
+          "ref": "Playing the Game",
+          "condition": {
+            "notModules": [
+              "third-law",
+              "third-outlaw"
+            ]
+          }
+        },
+        {
+          "id": "first-law",
+          "text": "The Law plays first",
+          "condition": {
+            "modules": [
+              "third-law"
+            ]
+          },
+          "ref": "Renegades: The Third Group"
+        },
+        {
+          "id": "first-outlaw",
+          "text": "The Outlaws play first",
+          "condition": {
+            "modules": [
+              "third-outlaw"
+            ]
+          },
+          "ref": "Renegades: The Third Group"
+        }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "base",
+      "name": "Law vs Outlaws",
+      "group": "Mode",
+      "defaultEnabled": true
+    },
+    {
+      "id": "third-law",
+      "name": "Renegades vs the Law",
+      "group": "Mode",
+      "bggId": 288429
+    },
+    {
+      "id": "third-outlaw",
+      "name": "Renegades vs the Outlaws",
+      "group": "Mode"
+    },
+    {
+      "id": "reinforcements",
+      "name": "Reinforcements",
+      "group": "Mode",
+      "note": "Renegade cards and characters split between Law and Outlaws."
     }
   ]
 }

@@ -2,30 +2,73 @@
   "schemaVersion": 1,
   "gameId": 241477,
   "gameName": "Karak",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Karak rulebook (Albi, via RulesPal)"]
+    "sources": [
+      "Karak rulebook (Albi, via RulesPal)",
+      "Karak: Regent rules (Albi)"
+    ]
   },
-  "players": { "min": 2, "max": 5 },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
   "sections": [
     {
       "id": "dungeon",
       "title": "Dungeon",
       "steps": [
-        { "id": "start-tile", "text": "Starting dungeon tile in the middle of the table", "ref": "Setup" },
-        { "id": "tiles", "text": "Shuffle the other tiles facedown within everyone's reach", "ref": "Setup" },
-        { "id": "bag", "text": "Monster and treasure tokens in the bag", "ref": "Components, Exploring" }
+        {
+          "id": "start-tile",
+          "text": "Starting dungeon tile in the middle of the table",
+          "ref": "Setup"
+        },
+        {
+          "id": "tiles",
+          "text": "Shuffle the other tiles facedown within everyone's reach",
+          "ref": "Setup"
+        },
+        {
+          "id": "bag",
+          "text": "Monster and treasure tokens in the bag",
+          "ref": "Components, Exploring"
+        },
+        {
+          "id": "regent",
+          "text": "Add the Regent tiles (arenas, cursed chambers, rooms), monster tokens and heroes to the base components",
+          "condition": {
+            "modules": [
+              "regent"
+            ]
+          },
+          "ref": "Regent rules"
+        }
       ]
     },
     {
       "id": "heroes",
       "title": "Heroes",
       "steps": [
-        { "id": "sheet", "text": "Each player takes an inventory sheet with {n} HP tokens on it", "amounts": { "n": 5 }, "ref": "Setup" },
-        { "id": "hero", "text": "Each player picks a hero card (chosen or random) onto their sheet", "ref": "Setup" },
-        { "id": "figures", "text": "Hero figures in their stands (stand color matches the card) on the starting tile", "ref": "Setup" }
+        {
+          "id": "sheet",
+          "text": "Each player takes an inventory sheet with {n} HP tokens on it",
+          "amounts": {
+            "n": 5
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "hero",
+          "text": "Each player picks a hero card (chosen or random) onto their sheet",
+          "ref": "Setup"
+        },
+        {
+          "id": "figures",
+          "text": "Hero figures in their stands (stand color matches the card) on the starting tile",
+          "ref": "Setup"
+        }
       ]
     },
     {
@@ -33,7 +76,21 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "end", "text": "Game ends when someone defeats the dragon and loots its treasure; most treasure wins", "ref": "Goal of the Game" }
+        {
+          "id": "end",
+          "text": "Game ends when someone defeats the dragon and loots its treasure; most treasure wins",
+          "ref": "Goal of the Game"
+        },
+        {
+          "id": "lord",
+          "text": "Lord of Karak version: he enters play once 5 of his chambers are discovered, controlled by the player with the weakest hero",
+          "condition": {
+            "modules": [
+              "regent"
+            ]
+          },
+          "ref": "Regent rules"
+        }
       ]
     },
     {
@@ -41,8 +98,20 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "Roll the dice to determine the starting player", "ref": "Setup" }
+        {
+          "id": "first",
+          "text": "Roll the dice to determine the starting player",
+          "ref": "Setup"
+        }
       ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "regent",
+      "name": "Regent",
+      "bggId": 291436,
+      "note": "4 heroes, new monsters, items and rooms, and the Lord of Karak game version."
     }
   ]
 }
