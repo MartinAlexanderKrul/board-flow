@@ -1453,8 +1453,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _bggEditError = MutableStateFlow<String?>(null)
     val bggEditError: StateFlow<String?> = _bggEditError.asStateFlow()
     fun clearBggEditError() { _bggEditError.value = null }
-    val historyPlays: StateFlow<List<LoggedPlay>> = combine(_playHistory, _bggPlays) { local, remote ->
-        mergeHistorySources(local, remote)
+    // Local plays whose BGG post is running in the background. They are shown as posted, the
+    // expected outcome, and drop back into the unposted outbox only if the post fails.
+    private val _expectedPostedPlayIds = MutableStateFlow<Set<String>>(emptySet())
+
+    val historyPlays: StateFlow<List<LoggedPlay>> = combine(_playHistory, _bggPlays, _expectedPostedPlayIds) { local, remote, expected ->
+        val shown = if (expected.isEmpty()) local else local.map { if (it.id in expected) it.copy(postedToBgg = true) else it }
+        mergeHistorySources(shown, remote)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private data class StatsInputs(
@@ -1736,6 +1741,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         onMemoryUpdated: (SessionMemory) -> Unit = {}
     ) {
         viewModelScope.launch {
+            @Suppress("NAME_SHADOWING")
+            val play = currentPlayFor(play)
             val plan = container.chronicleService.plan(play, memory, play.memory)
             reconcileChronicleGeneration(play.id, if (plan.needsGeneration) plan.sourceKey else null)
             val plannedMemory = plan.memory
@@ -1934,19 +1941,29 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _pendingImportedSession = MutableStateFlow<List<LoggedPlay>?>(null)
     val pendingImportedSession: StateFlow<List<LoggedPlay>?> = _pendingImportedSession.asStateFlow()
 
+    /**
+     * Saves the play locally and reports success straight away. When BGG is reachable the play is
+     * then posted in the background (see [postPlaysInBackground]) and shown as posted meanwhile;
+     * if that post fails it simply stays in the unposted outbox in History.
+     */
     fun postPlay(date: LocalDate, durationMinutes: Int, location: String, comments: String, quantity: Int = 1, incomplete: Boolean = false, nowInStats: Boolean = true, onSuccess: (LoggedPlay, List<ChallengeProgress>) -> Unit, onError: (String) -> Unit) {
         val game = selectedGame ?: run { onError("No game selected"); return }
-        val normalizedPlayers = normalizePlayersForPosting(_editablePlayers.value)
-        if (!isOnline()) {
-            val playersSnapshot = normalizedPlayers
-            playersSnapshot.forEach { recordPlayerName(it.name) }
-            viewModelScope.launch {
-                val playedAt = System.currentTimeMillis()
-                val session = resolveSessionForNewPlay(date, location, playedAt)
-                val mainPlay = LoggedPlay(
+        val playersSnapshot = normalizePlayersForPosting(_editablePlayers.value)
+        val creds = if (isOnline()) {
+            prefs.getCredentials() ?: run { onError("BGG credentials not set"); return }
+        } else {
+            null
+        }
+        playersSnapshot.forEach { recordPlayerName(it.name) }
+        viewModelScope.launch {
+            val playedAt = System.currentTimeMillis()
+            val session = resolveSessionForNewPlay(date, location, playedAt)
+            val extras = _additionalGames.value; _additionalGames.value = emptyList()
+            val plays = (listOf(game) + extras).map { loggedGame ->
+                LoggedPlay(
                     id = UUID.randomUUID().toString(),
-                    gameId = game.id,
-                    gameName = game.name,
+                    gameId = loggedGame.id,
+                    gameName = loggedGame.name,
                     date = date.toString(),
                     playedAt = playedAt,
                     sessionId = session.id,
@@ -1959,133 +1976,82 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     incomplete = incomplete,
                     nowInStats = nowInStats
                 )
-                container.canonicalCollectionStore.saveLoggedPlay(mainPlay)
-                val extras = _additionalGames.value; _additionalGames.value = emptyList()
-                extras.forEach { extra ->
-                    container.canonicalCollectionStore.saveLoggedPlay(
-                        LoggedPlay(
-                            id = UUID.randomUUID().toString(),
-                            gameId = extra.id,
-                            gameName = extra.name,
-                            date = date.toString(),
-                            playedAt = playedAt,
-                            sessionId = session.id,
-                            players = playersSnapshot,
-                            durationMinutes = durationMinutes,
-                            location = location,
-                            postedToBgg = false,
-                            comments = comments,
-                            quantity = quantity,
-                            incomplete = incomplete,
-                            nowInStats = nowInStats
-                        )
-                    )
-                }
-                saveSession(session.id, session.startedAt, game, playersSnapshot, location, playedAt, session.title)
-                prefs.addRecentGame(game)
-                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
-                val challengeProgressAfter = getChallengeProgressList()
-                savePlayerHintsFromCurrentPlay()
-                stampPlayerLastPlayed(playersSnapshot, playedAt)
-                cancelBackgroundRetry()
-                _logPlayHasUnsavedChanges.value = false
-                stopPlayTimer()
-                onSuccess(mainPlay, challengeProgressAfter)
             }
-            return
+            plays.forEach { container.canonicalCollectionStore.saveLoggedPlay(it) }
+            val mainPlay = plays.first()
+            if (creds != null) _expectedPostedPlayIds.value = _expectedPostedPlayIds.value + plays.map { it.id }
+            saveSession(session.id, session.startedAt, game, playersSnapshot, location, playedAt, session.title)
+            prefs.addRecentGame(game)
+            _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            val challengeProgressAfter = getChallengeProgressList()
+            savePlayerHintsFromCurrentPlay()
+            stampPlayerLastPlayed(playersSnapshot, playedAt)
+            cancelBackgroundRetry()
+            _logPlayHasUnsavedChanges.value = false
+            stopPlayTimer()
+            onSuccess(if (creds != null) mainPlay.copy(postedToBgg = true) else mainPlay, challengeProgressAfter)
+            if (creds != null) postPlaysInBackground(plays.map { it.id }, creds)
         }
-        val creds = prefs.getCredentials() ?: run { onError("BGG credentials not set"); return }
+    }
+
+    // Play posts run one at a time, so a "post all" started during a background post waits and
+    // then no longer sees the plays that post has just promoted.
+    private val playPostMutex = kotlinx.coroutines.sync.Mutex()
+
+    // Local play id -> the BGG id it was promoted to, for callers still holding the local copy.
+    private val promotedPlayIds = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    /**
+     * Posts locally saved plays to BGG without holding the UI. The ids must already be in
+     * [_expectedPostedPlayIds]; they leave it when the attempt ends, at which point a play that
+     * could not be posted shows up as unposted again.
+     */
+    private fun postPlaysInBackground(playIds: List<String>, creds: BggCredentials) {
         viewModelScope.launch {
-            _postLoading.value = true
-            container.bggRepository.login(creds).onFailure { _postLoading.value = false; onError(it.message ?: "Login failed"); return@launch }
-            val playerBggUsernames = buildBggUsernameMap(normalizedPlayers)
-            container.bggRepository.logPlay(gameId = game.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments, quantity = quantity, incomplete = incomplete, nowInStats = nowInStats)
-                .onSuccess { savedPlayId ->
-                    val playedAt = System.currentTimeMillis()
-                    val session = resolveSessionForNewPlay(date, location, playedAt)
-                    normalizedPlayers.forEach { recordPlayerName(it.name) }
-                    val postedPlays = mutableListOf<LoggedPlay>()
-                    val locallySavedExtras = mutableListOf<LoggedPlay>()
-                    val mainPlay = LoggedPlay(
-                        id = savedPlayId ?: UUID.randomUUID().toString(),
-                        gameId = game.id,
-                        gameName = game.name,
-                        date = date.toString(),
-                        playedAt = playedAt,
-                        sessionId = session.id,
-                        players = normalizedPlayers,
-                        durationMinutes = durationMinutes,
-                        location = location,
-                        postedToBgg = true,
-                        comments = comments,
-                        quantity = quantity,
-                        incomplete = incomplete,
-                        nowInStats = nowInStats
-                    )
-                    container.canonicalCollectionStore.saveLoggedPlay(mainPlay)
-                    postedPlays += mainPlay
-                    val extras = _additionalGames.value
-                    extras.forEach { extra ->
-                        container.bggRepository.logPlay(gameId = extra.id, date = date, players = normalizedPlayers, playerBggUsernames = playerBggUsernames, durationMinutes = durationMinutes, location = location, comments = comments, quantity = quantity, incomplete = incomplete, nowInStats = nowInStats)
-                            .onSuccess { extraPlayId ->
-                                val extraPlay = LoggedPlay(
-                                    id = extraPlayId ?: UUID.randomUUID().toString(),
-                                    gameId = extra.id,
-                                    gameName = extra.name,
-                                    date = date.toString(),
-                                    playedAt = playedAt,
-                                    sessionId = session.id,
-                                    players = normalizedPlayers,
-                                    durationMinutes = durationMinutes,
-                                    location = location,
-                                    postedToBgg = true,
-                                    comments = comments,
-                                    quantity = quantity,
-                                    incomplete = incomplete,
-                                    nowInStats = nowInStats
-                                )
-                                container.canonicalCollectionStore.saveLoggedPlay(extraPlay)
-                                postedPlays += extraPlay
-                            }
-                            .onFailure {
-                                val localExtraPlay = LoggedPlay(
-                                    id = UUID.randomUUID().toString(),
-                                    gameId = extra.id,
-                                    gameName = extra.name,
-                                    date = date.toString(),
-                                    playedAt = playedAt,
-                                    sessionId = session.id,
-                                    players = normalizedPlayers,
-                                    durationMinutes = durationMinutes,
-                                    location = location,
-                                    postedToBgg = false,
-                                    comments = comments,
-                                    quantity = quantity,
-                                    incomplete = incomplete,
-                                    nowInStats = nowInStats
-                                )
-                                container.canonicalCollectionStore.saveLoggedPlay(localExtraPlay)
-                                locallySavedExtras += localExtraPlay
-                            }
-                    }
-                    _additionalGames.value = emptyList()
-                    saveSession(session.id, session.startedAt, game, normalizedPlayers, location, playedAt, session.title)
-                    prefs.addRecentGame(game)
-                    _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
-                    val challengeProgressAfter = getChallengeProgressList()
-                    addOptimisticBggPlays(postedPlays)
-                    if (locallySavedExtras.isNotEmpty()) {
-                        _postResult.value = "Logged main play. Saved ${locallySavedExtras.size} extra game(s) locally for later BGG sync."
-                    }
-                    savePlayerHintsFromCurrentPlay()
-                    stampPlayerLastPlayed(normalizedPlayers, playedAt)
-                    cancelBackgroundRetry()
-                    _logPlayHasUnsavedChanges.value = false
-                    _postLoading.value = false
-                    stopPlayTimer()
-                    onSuccess(mainPlay, challengeProgressAfter)
-                }.onFailure { _postLoading.value = false; onError(it.message ?: "Failed to log play") }
+            var failed = 0
+            playPostMutex.lock()
+            try {
+                val loggedIn = container.bggRepository.login(creds).isSuccess
+                playIds.forEach { playId -> if (!loggedIn || !postLocalPlay(playId)) failed++ }
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            } finally {
+                playPostMutex.unlock()
+                _expectedPostedPlayIds.value = _expectedPostedPlayIds.value - playIds.toSet()
+            }
+            if (failed > 0) {
+                _postResult.value = "Saved locally. $failed play(s) could not be posted to BGG - post them from History."
+            }
         }
+    }
+
+    /** Posts one unposted local play. Needs a prior login and [playPostMutex]; false if BGG refused it. */
+    private suspend fun postLocalPlay(playId: String): Boolean {
+        val store = container.canonicalCollectionStore
+        val play = store.getLoggedPlays().firstOrNull { it.id == playId } ?: return true
+        if (play.postedToBgg) return true
+        val players = normalizePlayersForPosting(play.players)
+        val savedPlayId = container.bggRepository.logPlay(gameId = play.gameId, date = LocalDate.parse(play.date), players = players, playerBggUsernames = buildBggUsernameMap(players), durationMinutes = play.durationMinutes, location = play.location, comments = play.comments, quantity = play.quantity, incomplete = play.incomplete, nowInStats = play.nowInStats)
+            .getOrElse { return false }
+        // Moods or a quote may have been added while the post was in flight, so promote the
+        // play as it is now and carry its memory over to the BGG id.
+        val fresh = store.getLoggedPlays().firstOrNull { it.id == playId } ?: play
+        promoteLoggedPlayToPosted(fresh, savedPlayId, players)
+        val postedId = savedPlayId ?: playId
+        if (postedId != playId) {
+            fresh.memory?.let { store.savePlayMemory(postedId, it) }
+            promotedPlayIds[playId] = postedId
+        }
+        val posted = fresh.copy(id = postedId, players = players, postedToBgg = true)
+        addOptimisticBggPlays(listOf(posted))
+        if (fresh.comments != play.comments) syncMoodToBgg(posted, fresh.comments)
+        return true
+    }
+
+    /** The stored version of a local play, following its id if a background post has promoted it. */
+    private suspend fun currentPlayFor(play: LoggedPlay): LoggedPlay {
+        if (!play.id.isLikelyLocalUuid()) return play
+        val id = promotedPlayIds[play.id] ?: play.id
+        return container.canonicalCollectionStore.getLoggedPlays().firstOrNull { it.id == id } ?: play
     }
 
     private suspend fun resolveSessionForNewPlay(date: LocalDate, location: String, playedAt: Long): PlaySession {
@@ -2309,56 +2275,21 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun postSinglePlay(playId: String) {
         if (!isOnline()) return
         val creds = prefs.getCredentials() ?: return
-        viewModelScope.launch {
-            val play = container.canonicalCollectionStore.getLoggedPlays().firstOrNull { it.id == playId } ?: run {
-                _postingPlayId.value = null
-                return@launch
-            }
-            _postingPlayId.value = playId
-            container.bggRepository.login(creds).onFailure { _postingPlayId.value = null; return@launch }
-            val normalizedPlayers = normalizePlayersForPosting(play.players)
-            container.bggRepository.logPlay(gameId = play.gameId, date = LocalDate.parse(play.date), players = normalizedPlayers, playerBggUsernames = buildBggUsernameMap(normalizedPlayers), durationMinutes = play.durationMinutes, location = play.location, comments = play.comments, quantity = play.quantity, incomplete = play.incomplete, nowInStats = play.nowInStats)
-                .onSuccess { savedPlayId ->
-                    promoteLoggedPlayToPosted(play, savedPlayId, normalizedPlayers)
-                    addOptimisticBggPlays(
-                        listOf(
-                            play.copy(
-                                id = savedPlayId ?: play.id,
-                                players = normalizedPlayers,
-                                postedToBgg = true
-                            )
-                        )
-                    )
-                }
-            _postingPlayId.value = null; _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
-        }
+        _expectedPostedPlayIds.value = _expectedPostedPlayIds.value + playId
+        postPlaysInBackground(listOf(playId), creds)
     }
 
     fun syncUnpostedPlays() {
         if (!isOnline()) return
         val creds = prefs.getCredentials() ?: return
         viewModelScope.launch {
-            _syncingUnpostedPlays.value = true
-            val unposted = container.canonicalCollectionStore.getLoggedPlays().filter { !it.postedToBgg }
-            try {
-                if (unposted.isEmpty()) return@launch
-                Log.i(TAG_AUTO_SWITCH, "Syncing ${unposted.size} unposted play(s) to BGG")
-                container.bggRepository.login(creds).onFailure { return@launch }
-                val postedPlays = mutableListOf<LoggedPlay>()
-                for (play in unposted) {
-                    val normalizedPlayers = normalizePlayersForPosting(play.players)
-                    container.bggRepository.logPlay(gameId = play.gameId, date = LocalDate.parse(play.date), players = normalizedPlayers, playerBggUsernames = buildBggUsernameMap(normalizedPlayers), durationMinutes = play.durationMinutes, location = play.location, comments = play.comments, quantity = play.quantity, incomplete = play.incomplete, nowInStats = play.nowInStats)
-                        .onSuccess { savedPlayId ->
-                            promoteLoggedPlayToPosted(play, savedPlayId, normalizedPlayers)
-                            postedPlays += play.copy(id = savedPlayId ?: play.id, players = normalizedPlayers, postedToBgg = true)
-                        }
-                }
-                Log.i(TAG_AUTO_SWITCH, "Sync complete: ${postedPlays.size}/${unposted.size} play(s) posted to BGG")
-                addOptimisticBggPlays(postedPlays)
-                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
-            } finally {
-                _syncingUnpostedPlays.value = false
-            }
+            val unposted = container.canonicalCollectionStore.getLoggedPlays()
+                .filter { !it.postedToBgg && it.id !in _expectedPostedPlayIds.value }
+                .map { it.id }
+            if (unposted.isEmpty()) return@launch
+            Log.i(TAG_AUTO_SWITCH, "Syncing ${unposted.size} unposted play(s) to BGG")
+            _expectedPostedPlayIds.value = _expectedPostedPlayIds.value + unposted
+            postPlaysInBackground(unposted, creds)
         }
     }
 

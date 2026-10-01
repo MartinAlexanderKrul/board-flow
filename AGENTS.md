@@ -236,7 +236,10 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 
 ### Log Play -> Local / BGG
 
-- if online with credentials, the app can post to BGG
+- every BGG write is optimistic: the app stores and shows the expected result at once and talks to BGG in the background (log play, edit, delete, rating, collection status, sleeve marker)
+- `AppViewModel.postPlay` always saves the play locally first and reports success; when online with credentials, `postPlaysInBackground` then posts it and promotes it to the BGG id. Ids being posted sit in `_expectedPostedPlayIds`, which makes `historyPlays` show them as posted; a failed post drops them back into the unposted outbox
+- a background post changes the play id from the local UUID to the BGG id, so `promotedPlayIds` / `currentPlayFor` let `savePlayMemory` follow a play object the UI captured before the post landed, and `postLocalPlay` carries memory and late comment changes over
+- play posts are serialized by `playPostMutex` (History's per-play and bulk post use the same path) so a play is never posted twice
 - if offline or posting is unavailable, the play can still be saved locally
 - extra related games may post separately; failures there can leave local follow-up plays
 - local unposted plays are intentionally user-controlled from History rather than silently auto-posted on startup
