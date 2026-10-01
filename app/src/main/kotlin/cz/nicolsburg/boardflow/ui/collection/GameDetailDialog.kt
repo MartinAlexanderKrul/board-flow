@@ -7,10 +7,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Box
@@ -185,7 +183,7 @@ fun GameDetailsDialog(
     val compactChips = headerChips.size > 2 || LocalConfiguration.current.screenWidthDp < 380
     var showRatingPicker by remember { mutableStateOf(false) }
     var showCollectionEditor by remember { mutableStateOf(false) }
-    val infoSections = remember(overviewStats, ratingStats, game, personalRating, collectionStatus) {
+    val infoSections = remember(overviewStats, ratingStats, game, personalRating, collectionStatus, canEditSleeveTracking) {
         buildList {
             if (overviewStats.isNotEmpty()) {
                 add(InfoSection("Overview", overviewStats.map { stat ->
@@ -213,15 +211,28 @@ fun GameDetailsDialog(
                 add(InfoSection("Ratings", baseRatingStats + yourRatingStat, setOf("Rank")))
             }
             if (gameObjectId != null) {
-                add(InfoSection("Collection", listOf(SectionStat(
-                    label = "BGG status",
-                    value = collectionStatusSummary(collectionStatus, game, gameObjectId),
-                    icon = Icons.Default.LibraryAddCheck,
-                    onClick = {
-                        showCollectionEditor = true
-                        onLoadCollectionStatus()
-                    }
-                ))))
+                val sleeveTracking = sheetSleeveStatus(game)
+                add(InfoSection("Collection", listOfNotNull(
+                    SectionStat(
+                        label = "BGG status",
+                        value = collectionStatusSummary(collectionStatus, game, gameObjectId),
+                        icon = Icons.Default.LibraryAddCheck,
+                        onClick = {
+                            showCollectionEditor = true
+                            onLoadCollectionStatus()
+                        }
+                    ),
+                    SectionStat(
+                        label = "Sleeves",
+                        value = sleeveTrackingLabel(sleeveTracking),
+                        icon = Icons.Default.Style,
+                        onClick = if (canEditSleeveTracking) {
+                            { onOpenSleeveTrackingActions(game) }
+                        } else {
+                            null
+                        }
+                    ).takeIf { canEditSleeveTracking || sleeveTracking != SleeveTrackingState.UNKNOWN }
+                )))
             }
         }
     }
@@ -329,8 +340,6 @@ fun GameDetailsDialog(
                         SleevesBlock(
                             game = game,
                             preferredManufacturer = preferredManufacturer,
-                            canEditSleeveTracking = canEditSleeveTracking,
-                            onOpenSleeveTrackingActions = onOpenSleeveTrackingActions,
                             onNavigateToSleeve = onNavigateToSleeve
                         )
                     }
@@ -420,6 +429,8 @@ private fun collectionStatusSummary(state: CollectionStatusUiState, game: GameIt
     val current = state.takeIf { it.gameId != null && it.gameId == gameId }
     return when {
         current?.loading == true -> "Loading..."
+        // A background save that BGG rejected: the previous status is back, tapping retries.
+        current?.loaded == true && current.error != null -> "Not saved - tap to retry"
         current?.loaded == true -> statusSummary(current.inCollection, current.status)
         game.hasSyncedCollectionStatus -> game.syncedCollectionEntry()
             .let { entry -> statusSummary(entry != null, entry?.status ?: BggCollectionStatus()) }
@@ -537,16 +548,6 @@ private fun CollectionStatusEditorDialog(
     var confirmRemove by remember { mutableStateOf(false) }
     val busy = state.loading || state.saving
     val editable = state.loaded && !state.saving
-    // Close once a write finishes cleanly; a failure keeps the editor open so the error is visible.
-    var sawSaving by remember { mutableStateOf(false) }
-    LaunchedEffect(state.saving) {
-        if (state.saving) {
-            sawSaving = true
-        } else if (sawSaving) {
-            sawSaving = false
-            if (state.error == null) onDismiss()
-        }
-    }
     val flags: List<Triple<String, Boolean, (Boolean) -> BggCollectionStatus>> = listOf(
         Triple("Own", draft.own) { v -> draft.copy(own = v) },
         Triple("Prev. Owned", draft.previouslyOwned) { v -> draft.copy(previouslyOwned = v) },
@@ -647,7 +648,8 @@ private fun CollectionStatusEditorDialog(
                         ) { Text("Remove") }
                     }
                     BoardFlowPrimaryButton(
-                        onClick = { onSave(draft) },
+                        // The write runs in the background; the row behind shows the new status at once.
+                        onClick = { onSave(draft); onDismiss() },
                         enabled = !busy,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -674,7 +676,7 @@ private fun CollectionStatusEditorDialog(
             message = "$gameName will be removed from your BGG collection along with all of its status flags.",
             confirmLabel = "Remove",
             kind = BoardFlowConfirmationKind.DESTRUCTIVE,
-            onConfirm = { confirmRemove = false; onRemove() },
+            onConfirm = { confirmRemove = false; onRemove(); onDismiss() },
             onDismiss = { confirmRemove = false }
         )
     }
@@ -1113,17 +1115,13 @@ private fun InfoGroupBlock(sections: List<InfoSection>) {
 
 // Sleeves block
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SleevesBlock(
     game: GameItem,
     preferredManufacturer: SleeveManufacturer = SleeveManufacturer.AUTO,
-    canEditSleeveTracking: Boolean = false,
-    onOpenSleeveTrackingActions: (GameItem) -> Unit = {},
     onNavigateToSleeve: (String) -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val trackingStatus = sheetSleeveStatus(game)
 
     Surface(
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.025f),
@@ -1132,10 +1130,7 @@ private fun SleevesBlock(
         tonalElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = { expanded = !expanded },
-                onLongClick = { onOpenSleeveTrackingActions(game) }
-            )
+            .clickable { expanded = !expanded }
     ) {
         Column {
             Row(
@@ -1209,8 +1204,6 @@ private fun SleevesBlock(
                         SleevesSection(
                             game = game,
                             preferredManufacturer = preferredManufacturer,
-                            trackingStatus = trackingStatus,
-                            canEditSleeveTracking = canEditSleeveTracking,
                             onNavigateToSleeve = onNavigateToSleeve
                         )
                     }
@@ -1552,8 +1545,6 @@ private fun DetailCell(
 private fun SleevesSection(
     game: GameItem,
     preferredManufacturer: SleeveManufacturer = SleeveManufacturer.AUTO,
-    trackingStatus: SleeveTrackingState = SleeveTrackingState.UNKNOWN,
-    canEditSleeveTracking: Boolean = false,
     onNavigateToSleeve: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -1573,13 +1564,6 @@ private fun SleevesSection(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
-                if (canEditSleeveTracking) {
-                    Text(
-                        text = "Long press to update the sleeve tracking state.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f)
-                    )
-                }
             }
 
         game.sleeveStatus == GameItem.SleeveStatus.ERROR ->
@@ -1589,13 +1573,6 @@ private fun SleevesSection(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
                 )
-                if (canEditSleeveTracking) {
-                    Text(
-                        text = "Long press to update the sleeve tracking state.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f)
-                    )
-                }
             }
 
         grouped.isEmpty() -> Unit

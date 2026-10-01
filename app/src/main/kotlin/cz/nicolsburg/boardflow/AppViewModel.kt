@@ -2607,72 +2607,96 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    // Collection writes run one at a time: a save that follows another has to see the collid the
+    // first one resolved, or BGG would create a duplicate entry.
+    private val collectionWriteMutex = kotlinx.coroutines.sync.Mutex()
+    private val resolvedCollectionIds = mutableMapOf<Int, String>()
+
     /**
-     * Saves the status flags. The entry's collid has to be sent or BGG creates a duplicate instead
-     * of updating, and a freshly created entry comes back without one, so it is resolved on both
-     * sides of the write.
+     * Saves the status flags. The new status is shown and stored on the snapshot straight away and
+     * BGG is written in the background; a failed write puts the previous status back and flags it.
+     *
+     * The entry's collid has to be sent or BGG creates a duplicate instead of updating, and a
+     * freshly created entry comes back without one, so it is resolved on both sides of the write.
      */
     fun saveCollectionStatus(gameId: Int, status: BggCollectionStatus) {
         val creds = collectionCredentials(gameId) ?: return
-        val before = _collectionStatus.value.takeIf { it.gameId == gameId } ?: CollectionStatusUiState(gameId = gameId)
-        _collectionStatus.value = before.copy(saving = true, error = null)
+        val before = (_collectionStatus.value.takeIf { it.gameId == gameId } ?: CollectionStatusUiState(gameId = gameId))
+            .copy(saving = false, error = null)
+        _collectionStatus.value = before.copy(loaded = true, inCollection = true, status = status)
+        _collectionStatusUpdates.tryEmit(
+            CollectionStatusUpdate(gameId, BggCollectionEntry(before.collectionId, status), userEdit = true)
+        )
         viewModelScope.launch {
             val repo = container.bggRepository
-            repo.login(creds)
-                .mapCatching {
-                    val existingId = before.collectionId
-                        ?: repo.getCollectionEntry(creds.username, gameId).getOrThrow()?.collectionId
-                    repo.setCollectionStatus(gameId, status, existingId).getOrThrow()
-                    existingId ?: repo.getCollectionEntry(creds.username, gameId).getOrThrow()?.collectionId
-                }
-                .onSuccess { savedId ->
-                    _collectionStatus.value = before.copy(
-                        gameId = gameId,
-                        saving = false,
-                        loaded = true,
-                        inCollection = true,
-                        collectionId = savedId,
-                        status = status
-                    )
-                    _collectionStatusUpdates.tryEmit(CollectionStatusUpdate(gameId, BggCollectionEntry(savedId, status), userEdit = true))
-                }
-                .onFailure { error ->
-                    _collectionStatus.value = before.copy(
-                        saving = false,
-                        error = error.message ?: "Could not save collection status"
-                    )
-                }
+            collectionWriteMutex.lock()
+            try {
+                repo.login(creds)
+                    .mapCatching {
+                        val existingId = resolvedCollectionIds[gameId] ?: before.collectionId
+                            ?: repo.getCollectionEntry(creds.username, gameId).getOrThrow()?.collectionId
+                        repo.setCollectionStatus(gameId, status, existingId).getOrThrow()
+                        existingId ?: repo.getCollectionEntry(creds.username, gameId).getOrThrow()?.collectionId
+                    }
+                    .onSuccess { savedId ->
+                        if (savedId != null) resolvedCollectionIds[gameId] = savedId
+                        val current = _collectionStatus.value
+                        if (current.gameId == gameId) _collectionStatus.value = current.copy(collectionId = savedId)
+                        _collectionStatusUpdates.tryEmit(CollectionStatusUpdate(gameId, BggCollectionEntry(savedId, status), userEdit = true))
+                    }
+                    .onFailure { error ->
+                        revertCollectionStatus(gameId, before, error.message ?: "Could not save collection status")
+                    }
+            } finally {
+                collectionWriteMutex.unlock()
+            }
         }
     }
 
     /**
-     * Removes the game from the collection. Clearing every flag only zeroes the entry and leaves it
-     * in place, so removal is its own call and needs the collid.
+     * Removes the game from the collection, optimistically like [saveCollectionStatus]. Clearing
+     * every flag only zeroes the entry and leaves it in place, so removal is its own call and
+     * needs the collid.
      */
     fun removeFromCollection(gameId: Int) {
         val creds = collectionCredentials(gameId) ?: return
-        val before = _collectionStatus.value.takeIf { it.gameId == gameId } ?: CollectionStatusUiState(gameId = gameId)
-        val collectionId = before.collectionId
-        if (collectionId.isNullOrBlank()) {
+        val before = (_collectionStatus.value.takeIf { it.gameId == gameId } ?: CollectionStatusUiState(gameId = gameId))
+            .copy(saving = false, error = null)
+        if (!before.inCollection) {
             _collectionStatus.value = before.copy(error = "This game is not in your BGG collection.")
             return
         }
-        _collectionStatus.value = before.copy(saving = true, error = null)
+        _collectionStatus.value = CollectionStatusUiState(gameId = gameId, loaded = true, inCollection = false)
+        _collectionStatusUpdates.tryEmit(CollectionStatusUpdate(gameId, null, userEdit = true))
         viewModelScope.launch {
             val repo = container.bggRepository
-            repo.login(creds)
-                .mapCatching { repo.deleteCollectionEntry(gameId, collectionId).getOrThrow() }
-                .onSuccess {
-                    _collectionStatus.value = CollectionStatusUiState(gameId = gameId, loaded = true, inCollection = false)
-                    _collectionStatusUpdates.tryEmit(CollectionStatusUpdate(gameId, null, userEdit = true))
-                }
-                .onFailure { error ->
-                    _collectionStatus.value = before.copy(
-                        saving = false,
-                        error = error.message ?: "Could not remove the game from your collection"
-                    )
-                }
+            collectionWriteMutex.lock()
+            try {
+                repo.login(creds)
+                    .mapCatching {
+                        // A save still in flight when Remove was tapped may only now have resolved the id.
+                        val collectionId = resolvedCollectionIds[gameId] ?: before.collectionId
+                            ?: throw Exception("This game is not in your BGG collection.")
+                        repo.deleteCollectionEntry(gameId, collectionId).getOrThrow()
+                    }
+                    .onSuccess { resolvedCollectionIds.remove(gameId) }
+                    .onFailure { error ->
+                        revertCollectionStatus(gameId, before, error.message ?: "Could not remove the game from your collection")
+                    }
+            } finally {
+                collectionWriteMutex.unlock()
+            }
         }
+    }
+
+    /** Puts back the status shown before a background collection write that then failed. */
+    private fun revertCollectionStatus(gameId: Int, before: CollectionStatusUiState, message: String) {
+        val collectionId = resolvedCollectionIds[gameId] ?: before.collectionId
+        if (_collectionStatus.value.gameId == gameId) {
+            _collectionStatus.value = before.copy(collectionId = collectionId, error = message)
+        }
+        val previousEntry = if (before.inCollection) BggCollectionEntry(collectionId, before.status) else null
+        _collectionStatusUpdates.tryEmit(CollectionStatusUpdate(gameId, previousEntry, userEdit = true))
     }
 
     /** Credentials for the collection endpoints, reporting the missing-setup case into the state. */

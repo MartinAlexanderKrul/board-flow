@@ -203,8 +203,6 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 collectionStore.saveSleeveTracking(game.objectId, status)
                 val updatedGame = game.withSpreadsheetValue("sleeved", status.sheetValue)
                 patchCollectionGame(updatedGame)
-                maybeMirrorSleeveTrackingToSheet(game.objectId, status, game.name)
-                maybeMirrorSleeveTrackingToBgg(updatedGame, status)
                 withContext(Dispatchers.Main.immediate) {
                     onSuccess?.invoke(updatedGame)
                 }
@@ -213,6 +211,17 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 withContext(Dispatchers.Main.immediate) {
                     onError?.invoke(e.message ?: "Could not update sleeve status")
                 }
+                return@launch
+            }
+            // The status is saved and showing; the sheet and BGG copies follow in the background
+            // and report into the sync log rather than holding the UI.
+            try {
+                maybeMirrorSleeveTrackingToSheet(game.objectId, status, game.name)
+                maybeMirrorSleeveTrackingToBgg(game.objectId, status)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                entry("Sleeves", e.message ?: "Could not back up sleeve status", LogEntry.Type.ERROR)
             }
         }
     }
@@ -613,15 +622,23 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
      * Backs the sleeve status up into the game's BGG private comment. Games without a BGG
      * collection entry are skipped, and a failure here never fails the local save.
      */
-    private suspend fun maybeMirrorSleeveTrackingToBgg(game: GameItem, status: SleeveTrackingState) {
+    private suspend fun maybeMirrorSleeveTrackingToBgg(objectId: String, status: SleeveTrackingState) {
         val credentials = securePrefs.getCredentials() ?: return
-        val gameId = game.objectId.toIntOrNull() ?: return
+        val gameId = objectId.toIntOrNull() ?: return
+        val game = currentOrCachedCollection().firstOrNull { it.objectId == objectId } ?: return
         if (game.hasSyncedCollectionStatus && game.syncedCollectionEntry() == null) return
         try {
             bggRepository.login(credentials).getOrThrow()
             val written = bggRepository.saveSleeveMarker(gameId, status).getOrThrow()
             if (written) {
-                patchCollectionGame(game.withSyncedSleeveMarker(status))
+                // Patch the game as it is now: another edit may have landed while BGG was written.
+                collectionMutex.withLock {
+                    val updatedGames = readCanonicalSnapshotLocked().map { existing ->
+                        if (existing.objectId == objectId) existing.withSyncedSleeveMarker(status) else existing
+                    }
+                    writeCanonicalSnapshotLocked(updatedGames)
+                    _collectionGames.value = updatedGames
+                }
                 entry("BGG", "Backed up sleeve status for ${game.name}", LogEntry.Type.UPDATED)
             }
         } catch (e: CancellationException) {
