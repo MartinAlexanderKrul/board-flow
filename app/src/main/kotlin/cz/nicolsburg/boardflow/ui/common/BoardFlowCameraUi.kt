@@ -141,7 +141,8 @@ fun BoardFlowCameraSecondaryAction(
         onClick = onClick,
         modifier = modifier.height(48.dp),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.White.copy(alpha = 0.10f),
+            // On the live camera: dark fill for contrast. The shutter is the only amber control.
+            containerColor = Color.Black.copy(alpha = 0.5f),
             contentColor = Color.White
         )
     ) {

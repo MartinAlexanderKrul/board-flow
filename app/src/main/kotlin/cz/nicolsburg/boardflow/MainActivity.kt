@@ -65,8 +65,7 @@ class MainActivity : ComponentActivity() {
         scheduleWorkers()
 
         setContent {
-            val appTheme by appViewModel.appTheme.collectAsState()
-            BggCombinedTheme(appTheme = appTheme) {
+            BggCombinedTheme {
                 BoardFlowApp(
                     appViewModel = appViewModel,
                     syncViewModel = syncViewModel,

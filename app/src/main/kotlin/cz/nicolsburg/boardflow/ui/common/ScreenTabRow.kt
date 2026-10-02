@@ -7,7 +7,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import cz.nicolsburg.boardflow.ui.theme.Dimens
 
 @Composable
 fun ScreenTabRow(
@@ -18,14 +18,19 @@ fun ScreenTabRow(
 ) {
     TabRow(
         selectedTabIndex = selectedIndex,
-        modifier = modifier
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.primary
     ) {
         tabs.forEachIndexed { index, label ->
             Tab(
                 selected = selectedIndex == index,
                 onClick = { onTabSelected(index) },
-                modifier = Modifier.height(40.dp),
-                text = { Text(label, style = MaterialTheme.typography.labelMedium) }
+                modifier = Modifier.height(Dimens.MinTouchTarget),
+                // Only the selected tab is amber, so the row shows where you are.
+                selectedContentColor = MaterialTheme.colorScheme.primary,
+                unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = { Text(label, style = MaterialTheme.typography.labelLarge) }
             )
         }
     }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.BggCombined" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:colorBackground">#131314</item>
-        <item name="android:windowBackground">#131314</item>
-        <item name="android:statusBarColor">#131314</item>
-        <item name="android:navigationBarColor">#131314</item>
+    <style name="Theme.BggCombined" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorBackground">#0E0E0F</item>
+        <item name="android:windowBackground">#0E0E0F</item>
+        <item name="android:statusBarColor">#0E0E0F</item>
+        <item name="android:navigationBarColor">#0E0E0F</item>
     </style>
 </resources>
