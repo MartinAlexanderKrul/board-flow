@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.data
 
+import androidx.room.ColumnInfo
 import android.content.Context
 import androidx.room.Dao
 import androidx.room.Database
@@ -382,7 +383,7 @@ class CanonicalCollectionStore private constructor(
                         CanonicalCollectionDatabase::class.java,
                         "boardflow_collection.db"
                     )
-                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                         .build()
                 ).also { INSTANCE = it }
             }
@@ -608,7 +609,7 @@ private interface CanonicalCollectionDao {
         SetupGuideEntity::class,
         SetupGuideCatalogEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(CanonicalCollectionConverters::class)
@@ -845,6 +846,12 @@ private data class SetupGuideCatalogEntity(
             schemaVersion = entry.schemaVersion,
             path = entry.path
         )
+    }
+}
+
+private val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `players` ADD COLUMN `color` TEXT NOT NULL DEFAULT ''")
     }
 }
 
@@ -1349,7 +1356,8 @@ private data class PlayerEntity(
     val aliases: List<String>,
     val bggUsername: String,
     val lastPlayedAt: Long?,
-    val isHidden: Boolean
+    val isHidden: Boolean,
+    @ColumnInfo(defaultValue = "") val color: String = ""
 ) {
     fun toModel(): Player = Player(
         id = id,
@@ -1357,7 +1365,8 @@ private data class PlayerEntity(
         aliases = aliases,
         bggUsername = bggUsername,
         lastPlayedAt = lastPlayedAt,
-        isHidden = isHidden
+        isHidden = isHidden,
+        color = color
     )
 
     companion object {
@@ -1367,7 +1376,8 @@ private data class PlayerEntity(
             aliases = p.aliases,
             bggUsername = p.bggUsername,
             lastPlayedAt = p.lastPlayedAt,
-            isHidden = p.isHidden
+            isHidden = p.isHidden,
+            color = p.color
         )
     }
 }

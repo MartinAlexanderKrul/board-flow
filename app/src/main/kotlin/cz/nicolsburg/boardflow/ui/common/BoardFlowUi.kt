@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.common
 
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.luminance
@@ -960,6 +961,32 @@ fun playerInitials(name: String): String {
     }
 }
 
+/** The colours a player can pick as their own. */
+val PlayerColorChoices: List<Pair<String, String>> = listOf(
+    "Red" to "#E53935", "Pink" to "#E91E63", "Purple" to "#8E24AA", "Violet" to "#7C4DFF",
+    "Blue" to "#1E88E5", "Cyan" to "#00ACC1", "Teal" to "#00897B", "Green" to "#43A047",
+    "Lime" to "#7CB342", "Yellow" to "#FDD835", "Orange" to "#FB8C00", "Brown" to "#6D4C41",
+    "Grey" to "#757575", "White" to "#F5F5F5"
+)
+
+fun parsePlayerColor(hex: String): Color? =
+    hex.trim().takeIf { it.isNotBlank() }?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
+
+/**
+ * Chosen avatar colours by lower-case player name and alias, provided by AppShell from the roster,
+ * so every [PlayerAvatar] picks them up without each screen passing them along.
+ */
+val LocalPlayerColors = compositionLocalOf<Map<String, Color>> { emptyMap() }
+
+fun playerColorMap(players: List<cz.nicolsburg.boardflow.model.Player>): Map<String, Color> = buildMap {
+    players.forEach { player ->
+        val color = parsePlayerColor(player.color) ?: return@forEach
+        (player.aliases + player.displayName).forEach { name ->
+            name.trim().lowercase().takeIf { it.isNotBlank() }?.let { put(it, color) }
+        }
+    }
+}
+
 fun playerInitialColor(name: String): Color {
     val palette = listOf(
         Color(0xFF7C4DFF), Color(0xFF448AFF), Color(0xFF00ACC1),
@@ -992,7 +1019,7 @@ fun BoardFlowCloseGlyph(
 fun PlayerAvatar(name: String, size: Dp = 46.dp, modifier: Modifier = Modifier, color: Color? = null) {
     val initials = if (size.value <= 32f) name.trim().take(1).uppercase()
                    else playerInitials(name)
-    val fill = color ?: playerInitialColor(name)
+    val fill = color ?: LocalPlayerColors.current[name.trim().lowercase()] ?: playerInitialColor(name)
     Surface(
         modifier = modifier.size(size),
         shape = CircleShape,

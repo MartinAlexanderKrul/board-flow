@@ -481,7 +481,9 @@ data class Player(
     val aliases: List<String>,
     val bggUsername: String = "",
     val lastPlayedAt: Long? = null,
-    val isHidden: Boolean = false
+    val isHidden: Boolean = false,
+    /** Default avatar colour as "#RRGGBB"; blank means the automatic colour picked from the name. */
+    val color: String = ""
 )
 
 data class GameRelations(

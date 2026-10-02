@@ -1,5 +1,18 @@
 ﻿package cz.nicolsburg.boardflow.ui.players
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import cz.nicolsburg.boardflow.ui.common.playerInitialColor
+import cz.nicolsburg.boardflow.ui.common.parsePlayerColor
+import cz.nicolsburg.boardflow.ui.common.PlayerColorChoices
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.BorderStroke
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
@@ -166,6 +179,7 @@ fun PlayersScreen(viewModel: AppViewModel) {
                 onAddAlias = { viewModel.addPlayerAlias(livePlayer.id, it) },
                 onRemoveAlias = { viewModel.removePlayerAlias(livePlayer.id, it) },
                 onToggleHidden = { viewModel.updatePlayerHidden(livePlayer.id, it) },
+                onUpdateColor = { viewModel.updatePlayerColor(livePlayer.id, it) },
                 onDelete = { viewModel.deletePlayer(livePlayer.id); editingPlayer = null }
             )
         } else {
@@ -285,13 +299,13 @@ internal fun PlayerListItem(player: Player, stats: PlayerStats, onTap: () -> Uni
 
 /** Avatar, name and a line of context: the header of every player dialog. */
 @Composable
-private fun PlayerDialogHeader(name: String, supporting: String) {
+private fun PlayerDialogHeader(name: String, supporting: String, color: Color? = null) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        PlayerAvatar(name.ifBlank { "?" }, size = 56.dp)
+        PlayerAvatar(name.ifBlank { "?" }, size = 56.dp, color = color)
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
             if (supporting.isNotBlank()) {
@@ -315,8 +329,10 @@ internal fun EditPlayerDialog(
     onAddAlias: (String) -> Unit,
     onRemoveAlias: (String) -> Unit,
     onToggleHidden: (Boolean) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onUpdateColor: (String) -> Unit = {}
 ) {
+    var color        by remember { mutableStateOf(player.color) }
     var displayName  by remember { mutableStateOf(player.displayName) }
     var bggUsername  by remember { mutableStateOf(player.bggUsername) }
     var isHidden     by remember { mutableStateOf(player.isHidden) }
@@ -327,6 +343,7 @@ internal fun EditPlayerDialog(
     LaunchedEffect(player.displayName) { displayName = player.displayName }
     LaunchedEffect(player.bggUsername) { bggUsername = player.bggUsername }
     LaunchedEffect(player.isHidden)    { isHidden    = player.isHidden }
+    LaunchedEffect(player.color)       { color       = player.color }
 
     if (showDeleteConfirm) {
         BoardFlowConfirmationDialog(
@@ -344,6 +361,7 @@ internal fun EditPlayerDialog(
     val identityChanged = (displayName.isNotBlank() && displayName != player.displayName)
             || bggUsername.trim() != player.bggUsername
             || isHidden != player.isHidden
+            || color != player.color
             || localAliases != player.aliases
     val canAdd = newAlias.isNotBlank() && newAlias.trim() !in localAliases
     val doAdd = { if (canAdd) { localAliases = localAliases + newAlias.trim(); newAlias = "" } }
@@ -355,7 +373,14 @@ internal fun EditPlayerDialog(
                 contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
-                item { PlayerDialogHeader(player.displayName, "Edit player") }
+                item {
+                    // The header avatar previews the colour before it is saved.
+                    PlayerDialogHeader(
+                        player.displayName,
+                        "Edit player",
+                        color = parsePlayerColor(color) ?: playerInitialColor(player.displayName)
+                    )
+                }
 
                 item {
                     BoardFlowFormGroup(raised = true) {
@@ -379,6 +404,35 @@ internal fun EditPlayerDialog(
                         BoardFlowFormDivider()
                         BoardFlowFormRow(label = "Hide from stats", icon = Icons.Default.VisibilityOff, labelWidth = null) {
                             Switch(checked = isHidden, onCheckedChange = { isHidden = it })
+                        }
+                    }
+                }
+
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        BoardFlowSectionTitle(
+                            title = "Colour",
+                            supporting = "Used for this player's circle across the app"
+                        )
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            ColorSwatch(
+                                fill = playerInitialColor(player.displayName),
+                                label = "Automatic",
+                                selected = color.isBlank(),
+                                automatic = true,
+                                onClick = { color = "" }
+                            )
+                            PlayerColorChoices.forEach { (label, hex) ->
+                                ColorSwatch(
+                                    fill = parsePlayerColor(hex) ?: Color.Gray,
+                                    label = label,
+                                    selected = color.equals(hex, ignoreCase = true),
+                                    onClick = { color = hex }
+                                )
+                            }
                         }
                     }
                 }
@@ -452,6 +506,7 @@ internal fun EditPlayerDialog(
                         if (displayName.isNotBlank() && displayName != player.displayName) onRenameDisplayName(displayName)
                         if (bggUsername.trim() != player.bggUsername) onUpdateBggUsername(bggUsername)
                         if (isHidden != player.isHidden) onToggleHidden(isHidden)
+                        if (color != player.color) onUpdateColor(color)
                         val toAdd = localAliases - player.aliases.toSet()
                         val toRemove = player.aliases - localAliases.toSet()
                         toAdd.forEach { onAddAlias(it) }
@@ -938,6 +993,49 @@ internal fun AddPlayerDialog(
             ) {
                 BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
                 BoardFlowButton(onClick = { onAdd(newName) }, enabled = newName.isNotBlank()) { Text("Add player") }
+            }
+        }
+    }
+}
+
+/** One choice in the colour picker: a 40dp circle, ringed and ticked when selected. */
+@Composable
+private fun ColorSwatch(
+    fill: Color,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    automatic: Boolean = false
+) {
+    val mark = if (fill.luminance() > 0.55f) Color(0xFF1C1C1E) else Color.White
+    Box(
+        modifier = Modifier
+            .size(Dimens.MinTouchTarget)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .semantics {
+                contentDescription = label
+                role = Role.RadioButton
+                this.selected = selected
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = CircleShape,
+            color = fill,
+            border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface) else null
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                when {
+                    selected -> Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        tint = mark,
+                        modifier = Modifier.size(Dimens.Icon)
+                    )
+                    automatic -> Text("A", color = mark, style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }

@@ -91,6 +91,7 @@ object BackupSerializer {
                     put("bggUsername", p.bggUsername)
                     put("aliases", JSONArray().also { a -> p.aliases.forEach { a.put(it) } })
                     if (p.isHidden) put("isHidden", true)
+                    if (p.color.isNotBlank()) put("color", p.color)
                 })
             }
         })
@@ -208,7 +209,8 @@ object BackupSerializer {
                     displayName = obj.getString("displayName"),
                     aliases = (0 until aliasArr.length()).map { aliasArr.getString(it) },
                     bggUsername = obj.optString("bggUsername", ""),
-                    isHidden = obj.optBoolean("isHidden", false)
+                    isHidden = obj.optBoolean("isHidden", false),
+                    color = obj.optString("color", "")
                 )
             }
         } ?: emptyList()

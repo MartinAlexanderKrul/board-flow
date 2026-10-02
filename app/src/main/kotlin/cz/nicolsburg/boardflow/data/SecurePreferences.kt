@@ -282,6 +282,7 @@ class SecurePreferences(context: Context) {
                 put("bggUsername", p.bggUsername)
                 p.lastPlayedAt?.let { put("lastPlayedAt", it) }
                 if (p.isHidden) put("isHidden", true)
+                if (p.color.isNotBlank()) put("color", p.color)
             })
         }
         prefs.edit().putString(KEY_PLAYERS, json.toString()).apply()
@@ -300,7 +301,8 @@ class SecurePreferences(context: Context) {
                     aliases = (0 until aliasArr.length()).map { aliasArr.getString(it) },
                     bggUsername = obj.optString("bggUsername", ""),
                     lastPlayedAt = obj.optLong("lastPlayedAt", 0L).takeIf { it > 0L },
-                    isHidden = obj.optBoolean("isHidden", false)
+                    isHidden = obj.optBoolean("isHidden", false),
+                    color = obj.optString("color", "")
                 )
             }
         } catch (e: Exception) { emptyList() }

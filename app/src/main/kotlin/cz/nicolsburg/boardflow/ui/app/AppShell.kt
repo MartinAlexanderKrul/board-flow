@@ -1,5 +1,7 @@
 ﻿package cz.nicolsburg.boardflow.ui.app
 
+import cz.nicolsburg.boardflow.ui.common.playerColorMap
+import cz.nicolsburg.boardflow.ui.common.LocalPlayerColors
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
@@ -401,7 +403,11 @@ fun BoardFlowApp(
         }
     }
 
-    CompositionLocalProvider(LocalBoardFlowMessenger provides messenger) {
+    val playerColors = remember(players) { playerColorMap(players) }
+    CompositionLocalProvider(
+        LocalBoardFlowMessenger provides messenger,
+        LocalPlayerColors provides playerColors
+    ) {
     Box(Modifier.fillMaxSize()) {
     Scaffold(
         snackbarHost = { BoardFlowSnackbarHost(snackbarHostState) },

@@ -967,6 +967,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _players.value = list.toList(); persistPlayers(_players.value)
     }
 
+    /** [color] is "#RRGGBB", or blank to go back to the automatic colour. */
+    fun updatePlayerColor(id: String, color: String) {
+        val list = _players.value.toMutableList(); val idx = list.indexOfFirst { it.id == id }
+        if (idx >= 0) list[idx] = list[idx].copy(color = color.trim())
+        _players.value = list.toList(); persistPlayers(_players.value)
+    }
+
     fun updatePlayerHidden(id: String, isHidden: Boolean) {
         val list = _players.value.toMutableList(); val idx = list.indexOfFirst { it.id == id }
         if (idx >= 0) list[idx] = list[idx].copy(isHidden = isHidden)

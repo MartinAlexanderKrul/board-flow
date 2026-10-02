@@ -831,6 +831,7 @@ fun HistoryScreen(
                 onAddAlias = { viewModel.addPlayerAlias(livePlayer.id, it) },
                 onRemoveAlias = { viewModel.removePlayerAlias(livePlayer.id, it) },
                 onToggleHidden = { viewModel.updatePlayerHidden(livePlayer.id, it) },
+                onUpdateColor = { viewModel.updatePlayerColor(livePlayer.id, it) },
                 onDelete = { viewModel.deletePlayer(livePlayer.id); editingPlayer = null }
             )
         } else {
