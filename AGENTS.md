@@ -24,7 +24,7 @@ BoardFlow currently supports all of the following:
 - per-game sleeve exclusion (toggle individual games out of sleeve display)
 - configurable sleeve manufacturer priority (Appearance settings)
 - game detail drill-ins with history and player links
-- expansion / sibling title detection and display in log flow; `RelatedGamesBanner` shows the first 6 related games by default with a "Show all (N)" / "Show less" toggle and `animateContentSize` smooth expand; 2–5 related titles are shown without a toggle
+- expansion / sibling title detection and display in log flow; `RelatedGamesBanner` is a single scrolling row of chips under the play details
 - record moment detection after logging (first win, new high score, win streak)
 - session memory: per-play mood chips (multi-select, preset + custom) and quote capture from `PlayDetailsDialog`
 - chronicle generation: AI-generated single atmospheric sentence per session using Gemini, with deterministic offline fallback; stored in `play_memories` Room table; persists independently of BGG sync; togglable via Settings > AI
@@ -105,7 +105,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - expansion / sibling title detection (`GameRelations`); `findRelatedGames` uses `isExpansionOf()` helper supporting both separator-based (`"Root: Sub"`) and space-prefix-based (`"Root Sub"`) expansion names; detects when the selected game is itself a space-separated expansion and treats its prefix as the base
   - cross-tab navigation requests (`pendingHistoryNavigation`)
   - import/export and backup restore
-  - app theme and sleeve manufacturer preference state (`appTheme`, `sleevePreferredManufacturer`)
+  - sleeve manufacturer preference state (`sleevePreferredManufacturer`)
 - `SyncViewModel.kt`
   - Google auth state
   - spreadsheet connection state
@@ -171,7 +171,7 @@ It stores:
 
 - BGG credentials (username, password)
 - Gemini key, model endpoint, available models cache
-- app theme (`app_theme`, enum name string)
+- app theme (`app_theme`; legacy, no longer read by the UI, still written to backups)
 - sleeve priority manufacturer (`sleeve_preferred_manufacturer`, `SleeveManufacturer` enum name)
 - player roster (legacy; still written for backup compatibility; Room is authoritative at runtime)
 - recent games (last 50)
@@ -216,7 +216,7 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - search is debounced (800ms after typing stops); local collection is checked first; if no local match, BGG is called with `exact=1` first, then `exact=0` as a fallback if exact returns nothing
 - `isBggSearchActive` in `AppViewModel` prevents `loadCollection`, `updateFromCollection`, and `loadRecentGames` from overwriting `_searchResults` while a BGG search result set is displayed; the guard clears when the user selects a game or clears the query
 - lists longer than 20 items show a draggable fast-scroll bar on the right edge (`NewPlayScreen.FastScrollBar`): amber pill thumb, animated opacity (idle 20% / scrolling 65% / dragging 80%), floating letter bubble that leads the thumb position, and haptic feedback (`HapticFeedbackType.TextHandleMove`) per letter section change
-- selected games move into `LogPlayScreen`
+- selecting a game opens `LogPlayScreen` directly (form first); scanning is the `Scan scores` button on the form, which returns to the same form with the typed details intact (`AppViewModel.prepareScanFromLogPlay`, `AppShell.scanOpenedFromForm`)
 - session context may prefill players/location
 - AI extraction may prefill players/scores
 - `ScanScreen` runs `ScanImageQualityAnalyzer` before sending an image to Gemini; poor scans show a non-blocking "This scan may be hard to read." warning with a reason and "Use anyway" / "Retake" actions
@@ -316,7 +316,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - manages BGG credentials
 - manages Google sheet connection access points
 - manages Gemini configuration (key, model endpoint, model discovery)
-- manages theme (Light, Dark)
+- there is no theme setting: the app has one dark amber theme (`ui/theme/`: `Theme.kt` colours and `BoardFlowColors`, `Type.kt`, `Shape.kt`, `Spacing.kt`); use those tokens instead of raw sizes, radii and colours
 - manages sleeve manufacturer priority (`SleeveManufacturer`; persisted in `SecurePreferences`, exposed via `AppViewModel.sleevePreferredManufacturer`; used in `GameDetailDialog` via `SleeveEntry.preferredFor()`)
 - manages import/export (backup includes recognition templates since format v3)
 - can clear cached collection
@@ -510,6 +510,29 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - per-game exclusions are stored in `SecurePreferences` as a `Set<String>` of game objectIds; managed via `SyncViewModel.toggleSleeveGameExclusion` / `excludeAllSleeveGames` / `includeAllSleeveGames`
 
 ## UI Conventions
+
+- build screens from the shared kit in `ui/common/BoardFlowKit.kt` (`BoardFlowCard`, `BoardFlowSectionTitle`, `GameListRow`, `GameCover`, `BoardFlowFormGroup` / `BoardFlowFormRow` / `BoardFlowInlineField`, `BoardFlowTextField`, `BoardFlowInfoPill`, `BoardFlowEmptyState`, `BoardFlowErrorBanner`) and the buttons, sheets and dialogs in `BoardFlowUi.kt`; do not style private surfaces, fields or rows per screen
+- forms are grouped rows on a tonal surface (icon, label, value), not one outlined box per field; surfaces separate by tone, not by borders
+- buttons are pills that hug their label (never `fillMaxWidth`), all in `BoardFlowUi.kt`:
+  - primary (`BoardFlowButton`): solid amber, 40dp. The main action of a screen or dialog, and every button in Settings
+  - secondary (`BoardFlowSecondaryButton`): solid amber too, one size smaller (32dp, `labelMedium`) - "Scan", "New player", "Save highlights"
+  - cancel: red text (`BoardFlowInlineAction(destructive = true)`), left of the save button; pass `large = true` when that button is a primary one
+  - destructive (`BoardFlowDestructiveButton`): outlined red, primary size. The action in `BoardFlowConfirmationDialog` is a small solid red pill with the way out as plain white text
+  - two controls that sit next to each other have the same height and label size
+  - a main Edit action is an amber pen icon next to the red delete icon on the left of the action row, with the primary pill alone on the right; a minor edit is amber "Edit" text
+- amber (`colorScheme.primary`) is for emphasis, not for everything tappable: titles (game names), key numbers, the buttons above, text actions and the selected state. Chevrons, expanders, share and overflow icons, row icons and values are grey or white. Do not enlarge type or controls beyond the Material defaults: the original density is part of the look
+- on game art or the camera, pills are `Color.Black` at 50% with white labels; the one amber control on the camera is the shutter
+- the winner row is a translucent amber fill with no outline; session and chronicle cards are translucent grey (`Color.White` at 10%) with no outline
+- every tappable element is at least 48dp (`Dimens.MinTouchTarget`); dates shown to the user read `Oct 1, 2026`
+- confirm quiet actions with `LocalBoardFlowMessenger.current.show(...)` (snackbar hosted by `AppShell`)
+- the top bar shows the screen title, with a back arrow on pushed screens (scan, log play, quick setup, QR import); the bottom bar is a Material `NavigationBar`
+- every screen uses the kit. Two treatments, by purpose:
+  - forms and editors (Log Play, edit play, create challenge, player edit, sleeve inventory, account dialogs): a headline, grouped rows, and red Cancel text plus the save pill at the bottom right
+  - display screens (Challenges, Stats, game detail, Sleeves, Quick Setup): keep the content the screen always showed, on plain tonal cards with no outline and no colour tint; on one card only the key number, a status badge and real actions carry colour, secondary toggles ("Show 2 counted games") are white
+- status colours come from `BoardFlowColors` (`Success` done, `Warning` paused, `colorScheme.error` missed); do not composite amber over a surface, it turns brown
+- an editable value in a read-only grid keeps its white value and gets a grey chevron (`DetailCell` in `GameDetailDialog`)
+- text input outside a form group is `BoardFlowTextField` (tonal fill, label inside); inside a form group it is `BoardFlowInlineField`
+- labels are sentence case ("Refresh collection", not "Refresh Collection")
 
 - preserve the current screen hierarchy and tab layout
 - prefer extracting small reusable helpers when a screen starts carrying duplicated framework glue
