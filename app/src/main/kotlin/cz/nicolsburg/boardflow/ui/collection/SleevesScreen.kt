@@ -1,5 +1,17 @@
 package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.foundation.layout.heightIn
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import androidx.compose.animation.AnimatedVisibility
 import android.content.Intent
 import android.net.Uri
@@ -420,7 +432,7 @@ private fun SleeveSummaryHeader(
     onShare: () -> Unit
 ) {
     SectionCard(
-        accented = true,
+        accented = false,
         modifier = Modifier
             .combinedClickable(
                 onClick = onToggleExpand,
@@ -465,7 +477,6 @@ private fun SleeveSummaryHeader(
                     Text(
                         "$includedCount ${if (includedCount == 1) "game" else "games"} to sleeve",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     val subtitle = buildList {
@@ -475,7 +486,7 @@ private fun SleeveSummaryHeader(
                             if (sizesCount > 0) add("$sizesCount ${if (sizesCount == 1) "size" else "sizes"} needed")
                             if (includedCount < totalCount) add("${totalCount - includedCount} excluded")
                         }
-                    }.joinToString("  ·  ")
+                    }.joinToString(" · ")
                     if (subtitle.isNotBlank()) {
                         Text(
                             subtitle,
@@ -504,21 +515,18 @@ private fun SleeveSummaryHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                IconButton(
-                    onClick = onShare,
-                    modifier = Modifier.size(32.dp)
-                ) {
+                BoardFlowIconButton(onClick = onShare) {
                     Icon(
                         Icons.Default.Share,
                         contentDescription = "Export sleeve data",
-                        modifier = Modifier.size(15.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f)
+                        modifier = Modifier.size(Dimens.Icon),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Icon(
                     if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = if (expanded) "Collapse" else "Expand game list",
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(Dimens.IconLarge),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -553,8 +561,7 @@ private fun SleeveSizeGroupCard(
             ) {
                 Text(
                     group.displayName,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = if (group.isUnknown) {
@@ -566,13 +573,13 @@ private fun SleeveSizeGroupCard(
                 group.sleeveEntry?.let {
                     Text(
                         it.recommendedSize,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Text(
                     "${group.games.size} ${if (group.games.size == 1) "game" else "games"}",
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -604,8 +611,8 @@ private fun SleeveSizeGroupCard(
                 }
                 Icon(
                     if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    modifier = Modifier.size(Dimens.IconLarge),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -661,42 +668,50 @@ private fun SleeveSizeGroupCard(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clip(BoardFlowShape.Control)
                             .clickable { onEditInventory() }
-                            .padding(top = 4.dp),
+                            .heightIn(min = Dimens.MinTouchTarget),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                             Text(
-                                "Owned",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f)
+                                "Sleeves you own",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 when {
-                                    ownedCount == 0 -> "tap to track"
+                                    ownedCount == 0 -> "Not tracked yet"
                                     deficit > 0 -> "need $deficit more"
                                     deficit == 0 -> "exactly enough"
                                     else -> "${-deficit} extra"
                                 },
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = when {
-                                    ownedCount == 0 -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f)
+                                    ownedCount == 0 -> MaterialTheme.colorScheme.onSurfaceVariant
                                     deficit > 0 -> MaterialTheme.colorScheme.error
                                     else -> MaterialTheme.colorScheme.tertiary
                                 }
                             )
                         }
-                        Text(
-                            if (ownedCount == 0) "—" else "$ownedCount",
-                            style = MaterialTheme.typography.titleMedium.withTabularNumbers(),
-                            fontWeight = FontWeight.SemiBold,
-                            color = when {
-                                ownedCount == 0 -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.20f)
-                                deficit > 0 -> MaterialTheme.colorScheme.error
-                                else -> MaterialTheme.colorScheme.tertiary
-                            }
-                        )
+                        // Amber: tapping opens the inventory editor.
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                if (ownedCount == 0) "Add" else "$ownedCount",
+                                style = MaterialTheme.typography.labelLarge.withTabularNumbers(),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(Dimens.Icon),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
 
@@ -798,42 +813,45 @@ private fun SleeveInventorySheetContent(
         ) {
             Text(
                 genericName,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
             val subtitle = buildList {
                 if (recommendedSize != null) add(recommendedSize)
                 if (neededCount > 0) add("need $neededCount")
-            }.joinToString("  ·  ")
+            }.joinToString(" · ")
             if (subtitle.isNotBlank()) {
                 Text(
                     subtitle,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
-        OutlinedTextField(
-            value = inputText,
-            onValueChange = { new ->
-                val digits = new.filter { it.isDigit() }.trimStart('0')
-                inputText = when {
-                    digits.isEmpty() && new.isNotEmpty() -> "0"
-                    else -> digits
-                }
-            },
-            label = { Text("Owned sleeves") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        BoardFlowFormGroup(raised = true) {
+            BoardFlowFormRow(label = "You own", icon = BoardFlowIcons.Sleeves) {
+                BoardFlowInlineField(
+                    value = inputText,
+                    onValueChange = { new ->
+                        val digits = new.filter { it.isDigit() }.trimStart('0')
+                        inputText = when {
+                            digits.isEmpty() && new.isNotEmpty() -> "0"
+                            else -> digits
+                        }
+                    },
+                    placeholder = "0",
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 "Adjust by pack",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.60f),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -860,15 +878,15 @@ private fun SleeveInventorySheetContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (currentCount > 0) {
-                TextButton(onClick = { showClearConfirm = true }) {
-                    Text("Clear", color = MaterialTheme.colorScheme.error)
+                BoardFlowInlineAction(onClick = { showClearConfirm = true }, destructive = true, large = true) {
+                    Text("Clear")
                 }
             } else {
                 Box(modifier = Modifier.size(1.dp))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
-                TextButton(onClick = { onSetCount(parsedCount) }) { Text("Save") }
+                BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
+                BoardFlowButton(onClick = { onSetCount(parsedCount) }) { Text("Save") }
             }
         }
     }
@@ -877,16 +895,15 @@ private fun SleeveInventorySheetContent(
 @Composable
 private fun PackAdjustChip(label: String, onClick: () -> Unit) {
     Surface(
-        modifier = Modifier.clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+        modifier = Modifier.clip(BoardFlowShape.Pill).clickable(onClick = onClick),
+        shape = BoardFlowShape.Pill,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Text(
             label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+            style = MaterialTheme.typography.labelLarge.withTabularNumbers(),
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp)
         )
     }
 }

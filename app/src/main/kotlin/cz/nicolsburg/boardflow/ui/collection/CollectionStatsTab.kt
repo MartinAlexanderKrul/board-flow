@@ -1,5 +1,11 @@
 package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.GameCover
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -79,9 +85,9 @@ private fun computeStats(games: List<GameItem>): CollectionStats {
 
     val playDepth = listOf(
         "Unplayed" to owned.count { (it.numPlays ?: 0) == 0 },
-        "Tried  (1-4)" to owned.count { (it.numPlays ?: 0) in 1..4 },
-        "Familiar  (5-14)" to owned.count { (it.numPlays ?: 0) in 5..14 },
-        "Deep  (15+)" to owned.count { (it.numPlays ?: 0) >= 15 },
+        "Tried (1-4)" to owned.count { (it.numPlays ?: 0) in 1..4 },
+        "Familiar (5-14)" to owned.count { (it.numPlays ?: 0) in 5..14 },
+        "Deep (15+)" to owned.count { (it.numPlays ?: 0) >= 15 },
     ).filter { it.second > 0 }
 
     val weightOrder = listOf("Light", "Casual", "Medium-Light", "Medium", "Medium-Heavy", "Heavy", "Expert")
@@ -144,11 +150,12 @@ fun CollectionStatsTab(
     }
 
     if (stats.totalOwned == 0) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize().padding(Spacing.xxl), contentAlignment = Alignment.Center) {
             Text(
-                "No owned games loaded",
+                "No owned games yet. Refresh your collection on the Sync tab.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
         return
@@ -156,7 +163,7 @@ fun CollectionStatsTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        contentPadding = PaddingValues(Spacing.lg),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item { OverviewCard(stats) }
@@ -195,12 +202,12 @@ private fun OverviewCard(stats: CollectionStats) {
             BigStat(
                 value = stats.totalOwned.toString(),
                 label = "Owned",
-                icon = { Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary) },
+                icon = { Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             )
             BigStat(
                 value = stats.wishlistCount.toString(),
                 label = "Wishlist",
-                icon = { Icon(Icons.Default.Bookmark, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary) },
+                icon = { Icon(Icons.Default.Bookmark, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             )
             BigStat(
                 value = stats.unplayedCount.toString(),
@@ -218,7 +225,7 @@ private fun OverviewCard(stats: CollectionStats) {
                     InlineStat(
                         icon = Icons.Default.Star,
                         label = "Avg rating  ${formatDecimal(rating)}",
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 if (stats.totalBggPlays > 0) {
@@ -263,7 +270,7 @@ private fun ComplexityCard(stats: CollectionStats) {
                 count = count,
                 total = stats.totalOwned,
                 fraction = if (max > 0) count.toFloat() / max else 0f,
-                barColor = MaterialTheme.colorScheme.tertiary,
+                barColor = MaterialTheme.colorScheme.primary,
             )
         }
     }
@@ -283,7 +290,7 @@ private fun SleeveCard(stats: CollectionStats) {
         }
         val trackedTotal = stats.sleeved + stats.toSleeve + stats.notTracked
         if (trackedTotal > 0 && stats.sleeved > 0) {
-            val pct = (stats.sleeved * 100 / trackedTotal)
+            val pct = kotlin.math.round(stats.sleeved * 100f / trackedTotal).toInt()
             Text(
                 "$pct% of collection sleeved",
                 style = MaterialTheme.typography.labelSmall,
@@ -297,94 +304,56 @@ private fun SleeveCard(stats: CollectionStats) {
 private fun TopPlayedCard(stats: CollectionStats) {
     SectionCard {
         CardTitle("Most Played")
-        stats.topPlayed.forEachIndexed { i, game ->
-            if (i > 0) HorizontalDivider(
-                modifier = Modifier.padding(vertical = 4.dp),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-            )
+        stats.topPlayed.forEach { game ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             ) {
-                Text(
-                    "${i + 1}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.width(16.dp),
-                )
+                GameCover(name = game.name, thumbnailUrl = game.thumbnailUrl, size = 40.dp)
                 Text(
                     game.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
                 Text(
-                    "${game.numPlays}x",
-                    style = MaterialTheme.typography.labelMedium.withTabularNumbers(),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold,
+                    "${game.numPlays} ${if (game.numPlays == 1) "play" else "plays"}",
+                    style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun UnplayedShelfCard(
     stats: CollectionStats,
     onMarkGame: (GameItem) -> Unit,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    var menuGame by remember { mutableStateOf<GameItem?>(null) }
-
-    menuGame?.let { game ->
-        BoardFlowModalBottomSheet(
-            onDismissRequest = { menuGame = null },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    game.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                )
-                BoardFlowInlineAction(
-                    onClick = {
-                        menuGame = null
-                        onMarkGame(game)
-                    },
-                    icon = Icons.Default.PlayArrow,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Mark as played")
-                }
-            }
-        }
-    }
 
     SectionCard {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { expanded = !expanded },
+                .clip(BoardFlowShape.Control)
+                .clickable { expanded = !expanded }
+                .heightIn(min = Dimens.MinTouchTarget),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                CardTitle("Unplayed Shelf")
+                Text(
+                    "Unplayed Shelf",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
                 Text(
                     "${stats.neverPlayedGames.size} game${if (stats.neverPlayedGames.size == 1) "" else "s"} never played",
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -395,22 +364,26 @@ private fun UnplayedShelfCard(
             )
         }
         AnimatedVisibility(visible = expanded) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                Spacer(Modifier.height(4.dp))
+            Column {
                 stats.neverPlayedGames.forEach { game ->
-                    Text(
-                        game.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .combinedClickable(
-                                onClick = {},
-                                onLongClick = { menuGame = game },
-                            )
-                            .padding(vertical = 2.dp),
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.MinTouchTarget),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                    ) {
+                        GameCover(name = game.name, thumbnailUrl = game.thumbnailUrl, size = 32.dp)
+                        Text(
+                            game.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        BoardFlowInlineAction(onClick = { onMarkGame(game) }) {
+                            Text("Mark played")
+                        }
+                    }
                 }
             }
         }
@@ -423,8 +396,8 @@ private fun UnplayedShelfCard(
 private fun CardTitle(text: String) {
     Text(
         text,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurface,
     )
 }
 
@@ -470,7 +443,7 @@ private fun StatBarRow(
     fraction: Float,
     barColor: androidx.compose.ui.graphics.Color,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -478,12 +451,12 @@ private fun StatBarRow(
         ) {
             Text(
                 label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                "$count  ·  ${if (total > 0) count * 100 / total else 0}%",
-                style = MaterialTheme.typography.labelSmall.withTabularNumbers(),
+                "$count · ${if (total > 0) kotlin.math.round(count * 100f / total).toInt() else 0}%",
+                style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -491,15 +464,15 @@ private fun StatBarRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .clip(BoardFlowShape.Pill)
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(fraction.coerceIn(0f, 1f))
                     .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(barColor.copy(alpha = 0.75f)),
+                    .clip(BoardFlowShape.Pill)
+                    .background(barColor),
             )
         }
     }
