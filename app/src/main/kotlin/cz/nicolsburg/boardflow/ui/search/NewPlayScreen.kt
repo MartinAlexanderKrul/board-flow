@@ -110,7 +110,8 @@ fun NewPlayScreen(
     var query by remember { mutableStateOf("") }
     var selectedTab by rememberSaveable { mutableStateOf(NewPlayTab.LOG_PLAY) }
     // Quick Setup tab: every guide, or only the games on my shelf (with unavailable ones dimmed).
-    var showAllGuides by rememberSaveable { mutableStateOf(true) }
+    // Quick Guides opens on the user's own games; All guides is one tap away.
+    var showAllGuides by rememberSaveable { mutableStateOf(false) }
     val correctionMode by viewModel.quickScanCorrectionMode.collectAsState()
     // Correcting a scanned game is a Log Play flow; never show it on the Quick Setup tab.
     val setupTab = selectedTab == NewPlayTab.QUICK_SETUP && !correctionMode
@@ -230,14 +231,14 @@ fun NewPlayScreen(
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     BoardFlowFilterChip(
-                        selected = showAllGuides,
-                        onClick = { showAllGuides = true },
-                        label = { Text("All guides") }
-                    )
-                    BoardFlowFilterChip(
                         selected = !showAllGuides,
                         onClick = { showAllGuides = false },
                         label = { Text("My games") }
+                    )
+                    BoardFlowFilterChip(
+                        selected = showAllGuides,
+                        onClick = { showAllGuides = true },
+                        label = { Text("All guides") }
                     )
                 }
             }

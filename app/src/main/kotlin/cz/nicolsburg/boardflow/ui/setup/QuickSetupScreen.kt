@@ -147,15 +147,13 @@ private fun QuickSetupContent(
             .filter { (_, members) -> members.any { SetupGuideResolver.isModuleAvailable(it, state.resolved.playerCount) } }
     }
     val ungroupedModules = remember(guide) { guide.modules.filter { it.group == null } }
-    // Items before the sections: header, players, one per group, and content when shown.
-    val leadingItems = 2 + moduleGroups.size + if (ungroupedModules.isNotEmpty()) 1 else 0
 
-    // Once everything is ticked, bring the "Start playing" card into view.
+    // Once everything is ticked the checklist and the pickers fold away, leaving the reminders
+    // and "Start playing". "Show steps" brings them back without unticking anything.
+    var showSteps by rememberSaveable { mutableStateOf(false) }
+    val collapsed = state.isComplete && !showSteps
     LaunchedEffect(state.isComplete) {
-        if (state.isComplete) {
-            val startIndex = sections.indexOfFirst { it.kind == GuideSectionKind.START }
-            if (startIndex >= 0) listState.animateScrollToItem(leadingItems + startIndex)
-        }
+        if (state.isComplete) listState.animateScrollToItem(0) else showSteps = false
     }
 
     Scaffold(
@@ -203,7 +201,25 @@ private fun QuickSetupContent(
             item(key = "header") {
                 SetupHeader(state = state, thumbnailUrl = thumbnailUrl, onReset = { showResetConfirm = true })
             }
-            item(key = "players") {
+            if (state.isComplete) {
+                item(key = "done") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "All ${state.totalSteps} setup steps done",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        BoardFlowInlineAction(onClick = { showSteps = !showSteps }) {
+                            Text(if (showSteps) "Hide steps" else "Show steps")
+                        }
+                    }
+                }
+            }
+            if (!collapsed) item(key = "players") {
                 SectionCard {
                     SectionLabel("Players")
                     FlowRow(
@@ -227,7 +243,7 @@ private fun QuickSetupContent(
                     }
                 }
             }
-            moduleGroups.forEach { (group, members) ->
+            if (!collapsed) moduleGroups.forEach { (group, members) ->
                 item(key = "group-$group") {
                     SectionCard {
                         SectionLabel(group)
@@ -235,7 +251,7 @@ private fun QuickSetupContent(
                     }
                 }
             }
-            if (ungroupedModules.isNotEmpty()) {
+            if (!collapsed && ungroupedModules.isNotEmpty()) {
                 item(key = "content") {
                     SectionCard {
                         SectionLabel("Content")
@@ -243,7 +259,7 @@ private fun QuickSetupContent(
                     }
                 }
             }
-            sections.forEach { section ->
+            sections.filter { !collapsed || it.kind != GuideSectionKind.SETUP }.forEach { section ->
                 item(key = "section-${section.id}") {
                     when (section.kind) {
                         GuideSectionKind.SETUP -> ChecklistSection(section, state.checkedStepIds, onToggleStep)
