@@ -2,6 +2,9 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
+import androidx.compose.material.icons.filled.Close
 import android.Manifest
 import android.content.Context
 import android.graphics.BitmapFactory
@@ -259,20 +262,18 @@ fun QrPlayImportScreen(
                                 status = decodeError ?: "Scanning automatically",
                                 secondaryActions = {
                                     Row(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         BoardFlowCameraSecondaryAction(
                                             icon = Icons.Default.Photo,
                                             label = "From image",
-                                            onClick = { galleryLauncher.launch("image/*") },
-                                            modifier = Modifier.weight(1f)
+                                            onClick = { galleryLauncher.launch("image/*") }
                                         )
                                         BoardFlowCameraSecondaryAction(
-                                            icon = Icons.Default.QrCodeScanner,
+                                            icon = Icons.Default.Close,
                                             label = "Cancel",
-                                            onClick = onCancel,
-                                            modifier = Modifier.weight(1f)
+                                            onClick = onCancel
                                         )
                                     }
                                 }
@@ -415,16 +416,17 @@ private fun QrSessionImportReview(
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    BoardFlowInlineAction(onClick = onCancel, destructive = true, large = true) { Text("Cancel") }
                     BoardFlowButton(
-                        onClick = onSave,
-                        modifier = Modifier.fillMaxWidth()
+                        onClick = onSave
                     ) {
-                        Text("Save $totalPlays play${if (totalPlays != 1) "s" else ""} to local history")
+                        Text("Save $totalPlays play${if (totalPlays != 1) "s" else ""}")
                     }
-                    BoardFlowSecondaryButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-                        Text("Cancel")
-                    }
+
                 }
             }
         }
@@ -654,7 +656,11 @@ private fun QrPlayImportReview(
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    BoardFlowInlineAction(onClick = onCancel, destructive = true, large = true) { Text("Cancel") }
                     BoardFlowButton(
                         onClick = {
                             val normalizedDate = date.toFlexibleLocalDateOrNull()?.toString() ?: date
@@ -670,14 +676,11 @@ private fun QrPlayImportReview(
                                     players = editPlayers
                                 )
                             )
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                        }
                     ) {
-                        Text("Save to local history")
+                        Text("Save play")
                     }
-                    BoardFlowSecondaryButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-                        Text("Cancel")
-                    }
+
                 }
             }
         }
@@ -697,7 +700,7 @@ private fun ImportField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
-    androidx.compose.material3.OutlinedTextField(
+    BoardFlowTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier,
@@ -707,8 +710,7 @@ private fun ImportField(
         minLines = minLines,
         maxLines = maxLines,
         keyboardOptions = keyboardOptions,
-        trailingIcon = trailingIcon,
-        shape = RoundedCornerShape(14.dp)
+        trailingIcon = trailingIcon
     )
 }
 

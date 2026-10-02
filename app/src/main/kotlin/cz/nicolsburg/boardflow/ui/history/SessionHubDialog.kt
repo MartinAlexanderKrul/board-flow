@@ -2,6 +2,27 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.common.GameCover
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInfoPill
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import cz.nicolsburg.boardflow.ui.common.BoardFlowStatTile
+import cz.nicolsburg.boardflow.ui.common.BoardFlowMoodChip
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.PlayerAvatar
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
+import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -69,264 +90,236 @@ fun SessionHubDialog(
     onRenameSession: ((sessionId: String, title: String) -> Unit)? = null,
     onOpenPlay: ((LoggedPlay) -> Unit)? = null,
     onPlayAgain: ((SessionHub) -> Unit)? = null,
-    onShareQr: ((SessionHub) -> Unit)? = null
+    onShareQr: ((SessionHub) -> Unit)? = null,
+    thumbnailFor: (Int) -> String? = { null },
+    showChronicle: Boolean = true
 ) {
     var isEditingTitle by remember(session.sessionId) { mutableStateOf(false) }
     var draftTitle by remember(session.sessionId, session.title) { mutableStateOf(session.title.orEmpty()) }
     LaunchedEffect(session.title) {
         if (!isEditingTitle) draftTitle = session.title.orEmpty()
     }
-    AnimatedDialog(onDismissRequest = onDismiss) {
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (isEditingTitle && session.sessionId != null && onRenameSession != null) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
-                                value = draftTitle,
-                                onValueChange = { draftTitle = it.take(48) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                label = { Text("Session title") },
-                                placeholder = { Text(buildSessionTitle(session)) },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f),
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent
-                                )
-                            )
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                TextButton(onClick = {
-                                    isEditingTitle = false
-                                    draftTitle = session.title.orEmpty()
-                                }) {
-                                    Text("Cancel")
-                                }
-                                BoardFlowTonalButton(onClick = {
-                                    onRenameSession(session.sessionId, draftTitle)
-                                    isEditingTitle = false
-                                }) {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
-                                    )
-                                    Spacer(Modifier.width(5.dp))
-                                    Text("Save title", style = MaterialTheme.typography.labelLarge)
-                                }
-                            }
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+    val canRename = session.sessionId != null && onRenameSession != null
+
+    val chronicleLines = if (showChronicle) {
+        session.plays.mapNotNull { it.memory?.chronicleLine?.trim()?.takeIf { line -> line.isNotBlank() } }.distinct()
+    } else {
+        emptyList()
+    }
+
+    AnimatedDialog(
+        onDismissRequest = onDismiss,
+        backdrop = {
+            GameBackdrop(imageUrl = thumbnailFor(session.anchorPlay.gameId), height = 180.dp, baseBlur = 6.dp)
+        }
+    ) {
+        Column {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
                                 buildSessionTitle(session),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.weight(1f)
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                            Row {
-                                if (onShareQr != null) {
-                                    IconButton(onClick = { onShareQr(session) }) {
-                                        Icon(
-                                            Icons.Default.Share,
-                                            contentDescription = "Share session",
-                                            modifier = Modifier.size(15.dp),
-                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                                        )
-                                    }
+                            Text(
+                                buildSessionSubtitle(session),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (onShareQr != null) {
+                            BoardFlowIconButton(onClick = { onShareQr(session) }) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = "Share session",
+                                    modifier = Modifier.size(Dimens.Icon),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        if (canRename && !isEditingTitle) {
+                            BoardFlowIconButton(onClick = { isEditingTitle = true }) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Rename session",
+                                    modifier = Modifier.size(Dimens.Icon),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (isEditingTitle && canRename) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                            SessionGroup {
+                                BoardFlowFormRow(label = "Title") {
+                                    BoardFlowInlineField(
+                                        value = draftTitle,
+                                        onValueChange = { draftTitle = it.take(48) },
+                                        placeholder = buildSessionTitle(session),
+                                        modifier = Modifier.weight(1f)
+                                    )
                                 }
-                                if (session.sessionId != null && onRenameSession != null) {
-                                    IconButton(onClick = { isEditingTitle = true }) {
-                                        Icon(
-                                            Icons.Default.Edit,
-                                            contentDescription = "Edit",
-                                            modifier = Modifier.size(15.dp),
-                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                                        )
-                                    }
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                BoardFlowInlineAction(destructive = true, onClick = {
+                                    isEditingTitle = false
+                                    draftTitle = session.title.orEmpty()
+                                }) { Text("Cancel") }
+                                BoardFlowSecondaryButton(onClick = {
+                                    val id = session.sessionId
+                                    if (id != null) onRenameSession?.invoke(id, draftTitle)
+                                    isEditingTitle = false
+                                }) {
+                                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                                    Spacer(Modifier.width(Spacing.sm))
+                                    Text("Save title")
                                 }
                             }
                         }
                     }
-                    Text(
-                        buildSessionSubtitle(session),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-            }
 
-            item {
-                SessionHubSummaryCard(session = session)
-            }
+                item { SessionHubSummaryCard(session = session) }
 
-            if (session.moods.isNotEmpty() || session.quotes.isNotEmpty()) {
+                if (chronicleLines.isNotEmpty() || session.moods.isNotEmpty() || session.quotes.isNotEmpty()) {
+                    item { SessionHubMemoryCard(session = session, chronicleLines = chronicleLines) }
+                }
+
                 item {
-                    SessionHubMemoryCard(session = session)
-                }
-            }
-
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "Plays this session",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    session.plays.forEach { play ->
-                        SessionHubPlayCard(
-                            play = play,
-                            players = players,
-                            onClick = onOpenPlay?.let { callback -> { callback(play) } }
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(Modifier.height(4.dp))
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    onPlayAgain?.let { callback ->
-                        BoardFlowTonalButton(
-                            onClick = { callback(session) },
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.EmojiEvents,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.92f)
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        BoardFlowSectionTitle(title = "Plays this session")
+                        session.plays.forEach { play ->
+                            SessionHubPlayCard(
+                                play = play,
+                                players = players,
+                                thumbnailUrl = thumbnailFor(play.gameId),
+                                onClick = onOpenPlay?.let { callback -> { callback(play) } }
                             )
-                            Spacer(Modifier.width(5.dp))
-                            Text("Play this session again", style = MaterialTheme.typography.labelLarge)
                         }
                     }
+                }
+            }
+
+            onPlayAgain?.let { callback ->
+                HorizontalDivider(thickness = Dimens.Hairline, color = MaterialTheme.colorScheme.outlineVariant)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    BoardFlowButton(onClick = { callback(session) }) { Text("Play session again") }
                 }
             }
         }
+    }
+}
+
+/** A raised group inside the dialog: one tone lighter than the dialog surface. */
+@Composable
+private fun SessionGroup(
+    onClick: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    if (onClick != null) {
+        Surface(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+            shape = BoardFlowShape.Card,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) { Column(content = content) }
+    } else {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = BoardFlowShape.Card,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) { Column(content = content) }
     }
 }
 
 @Composable
 private fun SessionHubSummaryCard(session: SessionHub) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = BoardFlowSurfaceTokens.ContentCardShape,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SummaryChip(Icons.Default.CalendarMonth, formatSessionDate(session.date))
-                SummaryChip(Icons.Default.Group, "${session.uniquePlayerNames.size} players")
-                SummaryChip(Icons.Default.EmojiEvents, "${session.totalLoggedPlays} logged")
-                if (session.totalDurationMinutes > 0) {
-                    SummaryChip(Icons.Default.Schedule, "${session.totalDurationMinutes} min")
-                }
-                if (session.location.isNotBlank()) {
-                    SummaryChip(Icons.Default.LocationOn, session.location)
-                }
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SummaryRow("Games played", session.totalLoggedPlays.toString())
-                if (session.winners.isNotEmpty()) {
-                    SummaryRow(
-                        "Standouts",
-                        session.winners.take(3).joinToString("  •  ") {
-                            if (it.wins == 1) it.playerName else "${it.playerName} (${it.wins})"
-                        }
-                    )
-                }
-            }
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        BoardFlowInfoPill(
+            Icons.Default.EmojiEvents,
+            if (session.totalLoggedPlays == 1) "1 game" else "${session.totalLoggedPlays} games",
+            onArt = true
+        )
+        BoardFlowInfoPill(Icons.Default.Group, "${session.uniquePlayerNames.size}", onArt = true)
+        if (session.totalDurationMinutes > 0) {
+            BoardFlowInfoPill(Icons.Default.Schedule, "${session.totalDurationMinutes} min", onArt = true)
+        }
+        if (session.location.isNotBlank()) {
+            BoardFlowInfoPill(
+                Icons.Default.LocationOn,
+                session.location.trim(),
+                onArt = true,
+                modifier = Modifier.weight(1f, fill = false)
+            )
         }
     }
 }
 
+/** The story of the night: chronicle line, moods and quotes on an amber-tinted card. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SessionHubMemoryCard(session: SessionHub) {
+private fun SessionHubMemoryCard(session: SessionHub, chronicleLines: List<String>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = BoardFlowSurfaceTokens.ContentCardShape,
-        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.20f),
-        border = BorderStroke(0.5.dp, Color(0xFFF0A500).copy(alpha = 0.20f))
+        shape = BoardFlowShape.Card,
+        // Translucent grey, as on the play details session card.
+        color = Color.White.copy(alpha = 0.10f)
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+        Row(
+            modifier = Modifier.padding(Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.AutoStories,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = Color(0xFFF0A500)
-                )
-                Text(
-                    "Session Highlights",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.82f)
-                )
-            }
-            if (session.moods.isNotEmpty()) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    session.moods.forEach { mood ->
-                        Surface(
-                            shape = MaterialTheme.shapes.small,
-                            color = MaterialTheme.colorScheme.tertiaryContainer
-                        ) {
-                            Text(
-                                mood,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                            )
-                        }
+            Icon(
+                Icons.Default.AutoStories,
+                contentDescription = null,
+                modifier = Modifier.padding(top = 2.dp).size(Dimens.Icon),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                chronicleLines.take(3).forEach { line ->
+                    Text(
+                        line,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    )
+                }
+                if (session.moods.isNotEmpty()) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
+                        session.moods.forEach { mood -> BoardFlowMoodChip(label = mood) }
                     }
                 }
-            }
-            session.quotes.take(2).forEach { quote ->
-                Text(
-                    "— $quote",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                )
+                session.quotes.take(2).forEach { quote ->
+                    Text(
+                        "\u201C$quote\u201D",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
@@ -336,136 +329,89 @@ private fun SessionHubMemoryCard(session: SessionHub) {
 private fun SessionHubPlayCard(
     play: LoggedPlay,
     players: List<Player>,
+    thumbnailUrl: String? = null,
     onClick: (() -> Unit)?
 ) {
-    val modifier = if (onClick != null) {
-        Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    } else {
-        Modifier.fillMaxWidth()
-    }
-
-    Surface(
-        modifier = modifier,
-        shape = BoardFlowSurfaceTokens.Shape,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
-    ) {
+    SessionGroup(onClick = onClick) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    play.gameName,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
-                )
-                if (play.quantity > 1) {
+                GameCover(name = play.gameName, thumbnailUrl = thumbnailUrl, size = 44.dp)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        "×${play.quantity}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier
-                            .padding(start = 8.dp)
+                        play.gameName,
+                        style = MaterialTheme.typography.titleMedium,
+                        // Amber only when the play can be opened from here.
+                        color = if (onClick != null) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface
+                    )
+                    val meta = listOfNotNull(
+                        "${play.durationMinutes} min".takeIf { play.durationMinutes > 0 },
+                        "Played ${play.quantity} times".takeIf { play.quantity > 1 }
+                    ).joinToString(" · ")
+                    if (meta.isNotBlank()) {
+                        Text(
+                            meta,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                if (onClick != null) {
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                SummaryChip(Icons.Default.Group, "${play.players.size} players")
-                if (play.durationMinutes > 0) {
-                    SummaryChip(Icons.Default.Schedule, "${play.durationMinutes} min")
-                }
-                play.location.trim().takeIf { it.isNotBlank() }?.let {
-                    SummaryChip(Icons.Default.LocationOn, it)
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                play.players.forEach { player ->
-                    val displayName = resolveSessionDisplayName(player.name, players)
-                    val score = player.score.trim().takeIf { it.isNotBlank() && it != "0" }
-                    val playerColor = if (player.isWinner) MaterialTheme.colorScheme.primary
-                                      else MaterialTheme.colorScheme.onSurfaceVariant
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (player.isWinner) {
-                            Icon(
-                                Icons.Default.EmojiEvents,
-                                contentDescription = "Winner",
-                                tint = playerColor,
-                                modifier = Modifier.size(12.dp)
-                            )
-                        }
+            play.players.forEach { player ->
+                val displayName = resolveSessionDisplayName(player.name, players)
+                val score = player.score.trim().takeIf { it.isNotBlank() && it != "0" }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    PlayerAvatar(
+                        displayName,
+                        size = 24.dp,
+                        color = player.color.takeIf { it.isNotBlank() }?.let(::resolvedPlayerColor)
+                    )
+                    Text(
+                        displayName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (player.isWinner) {
+                        Icon(
+                            Icons.Default.EmojiEvents,
+                            contentDescription = "Winner",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(Dimens.IconSmall)
+                        )
+                    }
+                    if (score != null) {
                         Text(
-                            if (score != null) "$displayName  $score" else displayName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = playerColor
+                            score,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (player.isWinner) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SummaryChip(icon: ImageVector, label: String) {
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(13.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-            )
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun SummaryRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(88.dp)
-        )
-        Text(
-            value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
     }
 }
 
@@ -479,7 +425,7 @@ private fun buildSessionSubtitle(session: SessionHub): String {
     val parts = mutableListOf<String>()
     parts += formatSessionDate(session.date)
     if (session.location.isNotBlank()) parts += session.location
-    return parts.joinToString(" • ")
+    return parts.joinToString(" · ")
 }
 
 private fun formatSessionDate(raw: String): String =

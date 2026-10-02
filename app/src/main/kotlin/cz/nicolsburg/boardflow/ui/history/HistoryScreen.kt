@@ -2,6 +2,32 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import androidx.compose.material3.Button
+import androidx.compose.ui.graphics.compositeOver
+import cz.nicolsburg.boardflow.ui.common.BoardFlowErrorBanner
+import cz.nicolsburg.boardflow.ui.common.formatChipDate
+import androidx.compose.material.icons.filled.HourglassBottom
+import androidx.compose.material.icons.filled.Repeat
+import cz.nicolsburg.boardflow.ui.common.BoardFlowMoodChip
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInfoPill
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.foundation.layout.ColumnScope
+import cz.nicolsburg.boardflow.ui.common.PlayerAvatar
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.heightIn
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.formatDisplayDate
+import cz.nicolsburg.boardflow.ui.common.GameCover
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCard
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.ChevronRight
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -611,6 +637,10 @@ fun HistoryScreen(
         SessionHubDialog(
             session = historyPlays.deriveSessionHub(anchor, sessionHubTitle),
             players = players,
+            thumbnailFor = { id ->
+                collection.firstOrNull { it.id == id }?.thumbnailUrl ?: historyThumbnailCache[id]
+            },
+            showChronicle = chronicleEnabled,
             onDismiss = { sessionHubAnchor = null },
             onRenameSession = { sessionId, title ->
                 viewModel.renameSession(
@@ -725,6 +755,8 @@ fun HistoryScreen(
             play = play,
             rosterPlayers = players,
             isLoading = editPlayLoading,
+            thumbnailUrl = collection.firstOrNull { it.id == play.gameId }?.thumbnailUrl
+                ?: historyThumbnailCache[play.gameId],
             onDismiss = { editingPlay = null; editError = null },
             onSave = { date, durationMinutes, location, comments, players ->
                 editError = null
@@ -810,11 +842,16 @@ fun HistoryScreen(
         contentWindowInsets = WindowInsets(0),
         floatingActionButton = {
             when (activeTab) {
-                HistoryTab.PLAYERS -> FloatingActionButton(onClick = { showAddPlayerDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add player")
+                // Labelled, so it is clear what the button adds.
+                HistoryTab.PLAYERS -> BoardFlowButton(onClick = { showAddPlayerDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                    Spacer(Modifier.width(Spacing.sm))
+                    Text("New player")
                 }
-                HistoryTab.CHALLENGES -> FloatingActionButton(onClick = { showCreateChallengeDialog = true }) {
-                    Icon(Icons.Default.EmojiEvents, contentDescription = "New challenge")
+                HistoryTab.CHALLENGES -> BoardFlowButton(onClick = { showCreateChallengeDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                    Spacer(Modifier.width(Spacing.sm))
+                    Text("New challenge")
                 }
                 else -> {}
             }
@@ -1015,6 +1052,9 @@ fun HistoryScreen(
                         onOpenPlay = { selectedPlay = it },
                         onRefresh = ::triggerBggPlaysRefresh,
                         collectionIds = collectionIds,
+                        thumbnailFor = { id ->
+                            collection.firstOrNull { it.id == id }?.thumbnailUrl ?: historyThumbnailCache[id]
+                        },
                         listState = playsListState,
                         hasActiveFilters = hasActiveFilters,
                         onResetFilters = {
@@ -1039,6 +1079,9 @@ fun HistoryScreen(
                     stats = playStats,
                     statsTimeRange = statsTimeRange,
                     onTimeRangeChange = viewModel::setStatsTimeRange,
+                    thumbnailFor = { id ->
+                        collection.firstOrNull { it.id == id }?.thumbnailUrl ?: historyThumbnailCache[id]
+                    },
                     listState = statsListState,
                     modifier = Modifier.fillMaxSize(),
                     players = players,
@@ -1154,6 +1197,7 @@ private fun PlaysContent(
     onOpenPlay: (LoggedPlay) -> Unit,
     onRefresh: () -> Unit,
     collectionIds: Set<Int> = emptySet(),
+    thumbnailFor: (Int) -> String? = { null },
     listState: LazyListState = rememberLazyListState(),
     hasActiveFilters: Boolean = false,
     onResetFilters: () -> Unit = {},
@@ -1316,6 +1360,7 @@ private fun PlaysContent(
                     PlayHistoryCard(
                         play = play,
                         players = players,
+                        thumbnailUrl = thumbnailFor(play.gameId),
                         isInCollection = play.gameId in collectionIds,
                         onClick = { onOpenPlay(play) },
                         modifier = Modifier.animateItem()
@@ -1337,108 +1382,78 @@ private fun PendingPlaysCard(
 ) {
     if (plays.isEmpty()) return
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = BoardFlowSurfaceTokens.ContentCardShape,
-        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f))
+    // The one thing on this screen that needs attention: plays that have not reached BGG.
+    BoardFlowCard(
+        modifier = modifier,
+        emphasized = true,
+        contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.sm, top = Spacing.md, bottom = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        "Unposted plays",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        if (plays.size == 1) {
-                            "1 play is saved locally and ready to post to BGG."
-                        } else {
-                            "${plays.size} plays are saved locally and ready to post to BGG."
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-                    )
-                }
-                BoardFlowTonalButton(
-                    onClick = onPostAll,
-                    enabled = !syncingUnpostedPlays && postingPlayId == null
-                ) {
-                    if (syncingUnpostedPlays) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(14.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Post all")
-                    }
-                }
-            }
-
-            plays.take(3).forEach { play ->
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Text(
-                                play.gameName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                "${play.date} • ${play.players.size} players",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        BoardFlowTonalButton(
-                            onClick = { onPostPlay(play.id) },
-                            enabled = !syncingUnpostedPlays && postingPlayId == null
-                        ) {
-                            if (postingPlayId == play.id) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(14.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text("Post")
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (plays.size > 3) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    "+${plays.size - 3} more waiting in local history",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                    if (plays.size == 1) "1 play not on BGG yet" else "${plays.size} plays not on BGG yet",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    "Saved on this device. Post when you are ready.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            BoardFlowButton(onClick = onPostAll, enabled = !syncingUnpostedPlays && postingPlayId == null) {
+                if (syncingUnpostedPlays) {
+                    CircularProgressIndicator(modifier = Modifier.size(Dimens.Icon), strokeWidth = 2.dp)
+                } else {
+                    Text("Post all")
+                }
+            }
+        }
+
+        plays.take(3).forEach { play ->
+            Row(
+                modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.MinTouchTarget),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        play.gameName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        "${formatDisplayDate(play.date)} · ${play.players.size} players",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                BoardFlowInlineAction(
+                    onClick = { onPostPlay(play.id) },
+                    enabled = !syncingUnpostedPlays && postingPlayId == null
+                ) {
+                    if (postingPlayId == play.id) {
+                        CircularProgressIndicator(modifier = Modifier.size(Dimens.IconSmall), strokeWidth = 2.dp)
+                    } else {
+                        Text("Post")
+                    }
+                }
+            }
+        }
+
+        if (plays.size > 3) {
+            Text(
+                "+${plays.size - 3} more",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -1448,109 +1463,61 @@ private fun PendingPlaysCard(
 private fun PlayHistoryCard(
     play: LoggedPlay,
     players: List<Player>,
+    thumbnailUrl: String? = null,
     isInCollection: Boolean = true,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "cardScale")
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .scale(scale)
-            .clip(BoardFlowSurfaceTokens.Shape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = LocalIndication.current,
-                onClick = onClick,
-            ),
-        shape = BoardFlowSurfaceTokens.Shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = BoardFlowShape.Card,
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    play.date,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                GameCover(name = play.gameName, thumbnailUrl = thumbnailUrl, size = 52.dp)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        play.gameName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        listOfNotNull(
+                            formatDisplayDate(play.date),
+                            "${play.durationMinutes} min".takeIf { play.durationMinutes > 0 },
+                            play.location.trim().takeIf { it.isNotBlank() }
+                        ).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    if (play.durationMinutes > 0) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(3.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.Schedule,
-                                contentDescription = null,
-                                modifier = Modifier.size(11.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
-                            Text(
-                                "${play.durationMinutes} min",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
-                        }
-                    }
-                    if (play.location.isNotBlank()) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(3.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.LocationOn,
-                                contentDescription = null,
-                                modifier = Modifier.size(11.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
-                            Text(
-                                play.location,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
-                        }
-                    }
+                    if (play.quantity > 1) PlayBadge("×${play.quantity}")
+                    if (play.incomplete) PlayBadge("Unfinished")
+                    if (!isInCollection) PlayBadge("Not owned")
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    play.gameName,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
-                )
-                if (!isInCollection) {
-                    PlayBadge("not in your collection", MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                if (play.quantity > 1) {
-                    PlayBadge("×${play.quantity}", MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer)
-                }
-                if (play.incomplete) {
-                    PlayBadge("partial", MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer)
-                }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                play.players.forEach { player ->
-                    HistoryListPlayerRow(player, resolveDisplayName(player.name, players))
+            if (play.players.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    play.players.forEach { player ->
+                        HistoryListPlayerRow(player, resolveDisplayName(player.name, players))
+                    }
                 }
             }
         }
@@ -1589,19 +1556,20 @@ private fun ShimmerPlayCard() {
     }
 }
 
+/** A small fact about a play. Neutral on purpose: it is information, not a warning or a button. */
 @Composable
-private fun PlayBadge(label: String, containerColor: Color, contentColor: Color) {
-    Surface(color = containerColor, shape = RoundedCornerShape(4.dp)) {
+private fun PlayBadge(label: String) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = BoardFlowShape.Pill) {
         Text(
             label,
-            style = MaterialTheme.typography.labelSmall,
-            color = contentColor,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 2.dp)
         )
     }
 }
 
-private fun resolvedPlayerColor(colorName: String): Color? {
+internal fun resolvedPlayerColor(colorName: String): Color? {
     val knownColors = mapOf(
         "red" to Color(0xFFE53935), "blue" to Color(0xFF1E88E5), "green" to Color(0xFF43A047),
         "yellow" to Color(0xFFFDD835), "orange" to Color(0xFFFB8C00), "purple" to Color(0xFF8E24AA),
@@ -1611,15 +1579,6 @@ private fun resolvedPlayerColor(colorName: String): Color? {
     )
     return knownColors[colorName.lowercase().trim()]
         ?: runCatching { Color(android.graphics.Color.parseColor(colorName)) }.getOrNull()
-}
-
-@Composable
-private fun PlayerColorDot(color: Color, size: Int = 9) {
-    Box(
-        modifier = Modifier
-            .size(size.dp)
-            .background(color, CircleShape)
-    )
 }
 
 @Composable
@@ -1659,6 +1618,9 @@ private fun HistoryListPlayerRow(player: PlayerResult, displayName: String) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // The colour the player used in this play replaces the default avatar colour.
+            PlayerAvatar(displayName, size = 24.dp, color = inlineColor)
+            Spacer(Modifier.width(Spacing.xs))
             Text(
                 displayName,
                 style = MaterialTheme.typography.bodyMedium,
@@ -1670,11 +1632,10 @@ private fun HistoryListPlayerRow(player: PlayerResult, displayName: String) {
                 Icon(
                     Icons.Default.Star,
                     contentDescription = "First play",
-                    tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.72f),
-                    modifier = Modifier.size(11.dp)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(Dimens.IconSmall)
                 )
             }
-            inlineColor?.let { PlayerColorDot(color = it) }
         }
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -1684,15 +1645,16 @@ private fun HistoryListPlayerRow(player: PlayerResult, displayName: String) {
                 Icon(
                     Icons.Default.EmojiEvents,
                     contentDescription = "Winner",
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(16.dp)
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(Dimens.IconSmall)
                 )
             }
             if (showScore) {
                 Text(
                     scoreText,
                     style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
-                    color = if (player.isWinner) MaterialTheme.colorScheme.tertiary
+                    fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (player.isWinner) MaterialTheme.colorScheme.primary
                     else if (scoreText == "—") MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.End
@@ -1718,90 +1680,97 @@ private fun PlayDetailsPlayerRow(
     val showScore = !(player.isWinner && scoreText == "—")
     val inlineColor = player.color.takeIf { it.isNotBlank() }?.let(::resolvedPlayerColor)
 
-    val tertiary = MaterialTheme.colorScheme.tertiary
-
+    val gold = MaterialTheme.colorScheme.primary
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
-        color = if (player.isWinner) tertiary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(BoardFlowShape.Card)
+            .then(if (matchedPlayer != null) Modifier.clickable { onPlayerTap(matchedPlayer) } else Modifier),
+        shape = BoardFlowShape.Card,
+        // The winner gets a translucent amber fill, no outline.
+        color = if (player.isWinner) gold.copy(alpha = 0.16f).compositeOver(MaterialTheme.colorScheme.surfaceContainerHigh)
+                else MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 52.dp)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+    ) {
         Text(
             rank.toOrdinal(),
-            style = MaterialTheme.typography.labelSmall,
-            color = if (player.isWinner) tertiary.copy(alpha = 0.75f)
-                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
-            modifier = Modifier.width(26.dp),
-            textAlign = TextAlign.Center
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(28.dp)
         )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
-        ) {
+        PlayerAvatar(displayName, size = 28.dp, color = inlineColor)
+        Column(modifier = Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 Text(
                     displayName,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    modifier = if (matchedPlayer != null) {
-                        Modifier.clickable { onPlayerTap(matchedPlayer) }
-                    } else Modifier
+                    overflow = TextOverflow.Ellipsis
                 )
-                if (player.isNew) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = "First play",
-                        tint = tertiary.copy(alpha = 0.72f),
-                        modifier = Modifier.size(10.dp)
-                    )
-                }
-                inlineColor?.let { PlayerColorDot(color = it, size = 8) }
             }
             metaText?.let {
                 Text(
                     it,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.58f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
             }
         }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (player.isWinner) {
-                Icon(
-                    Icons.Default.EmojiEvents,
-                    contentDescription = "Winner",
-                    tint = tertiary,
-                    modifier = Modifier.size(15.dp)
-                )
-            }
-            if (showScore) {
-                Text(
-                    scoreText,
-                    style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
-                    fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (player.isWinner) tertiary
-                            else if (scoreText == "—") MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.End
-                )
-            }
+        if (player.isWinner) {
+            Icon(
+                Icons.Default.EmojiEvents,
+                contentDescription = "Winner",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(Dimens.Icon)
+            )
+        }
+        if (showScore) {
+            Text(
+                scoreText,
+                style = MaterialTheme.typography.titleMedium.withTabularNumbers(),
+                color = if (player.isWinner) MaterialTheme.colorScheme.primary
+                        else if (scoreText == "—") MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.End
+            )
         }
     }
+    }
+}
+
+/** A raised group inside a dialog: one tone lighter than the dialog surface. */
+@Composable
+private fun DialogGroup(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    if (onClick != null) {
+        Surface(
+            onClick = onClick,
+            modifier = modifier.fillMaxWidth(),
+            shape = BoardFlowShape.Card,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) { Column(content = content) }
+    } else {
+        Surface(
+            modifier = modifier.fillMaxWidth(),
+            shape = BoardFlowShape.Card,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) { Column(content = content) }
     }
 }
 
@@ -1839,116 +1808,86 @@ private fun PlayDetailsDialog(
     }
 
     val sessionHub = remember(play, historyPlays) { historyPlays.deriveSessionHub(play) }
+    val canOpenGame = game != null && onViewGame != null
+    val openGame: () -> Unit = { if (game != null && onViewGame != null) onViewGame(game) }
     AnimatedDialog(
         onDismissRequest = onDismiss,
         backdrop = {
-            GameBackdrop(
-                imageUrl = thumbnailUrl,
-                height = 200.dp,
-                titleFadeAlpha = 0.26f,
-                contentFadeAlpha = 0.78f,
-                baseBlur = 1.5.dp
-            )
+            GameBackdrop(imageUrl = thumbnailUrl, height = 200.dp, baseBlur = 1.5.dp)
         }
     ) {
-        LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        Column {
+            LazyColumn(
+                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
                 item {
-                    val hasThumb = !thumbnailUrl.isNullOrBlank()
+                    val titleShadow = androidx.compose.ui.graphics.Shadow(
+                        color = Color.Black.copy(alpha = 0.7f), blurRadius = 16f
+                    )
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 10.dp, bottom = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.Top
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (hasThumb) {
-                            AsyncImage(
-                                model = thumbnailUrl,
-                                contentDescription = play.gameName,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(84.dp)
-                                    .clip(MaterialTheme.shapes.medium)
-                                    .then(if (game != null && onViewGame != null) Modifier.clickable { onViewGame(game) } else Modifier)
+                        GameCover(
+                            name = play.gameName,
+                            thumbnailUrl = thumbnailUrl,
+                            size = 72.dp,
+                            modifier = if (canOpenGame) Modifier.clickable(onClick = openGame) else Modifier
+                        )
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .then(if (canOpenGame) Modifier.clickable(onClick = openGame) else Modifier),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                play.gameName,
+                                style = MaterialTheme.typography.headlineSmall.copy(shadow = titleShadow),
+                                // Opens the game when it is in the collection.
+                                color = if (canOpenGame) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurface,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text(
-                                    play.gameName,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (hasThumb) Color.White.copy(alpha = 0.95f)
-                                            else MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.weight(1f).padding(end = 8.dp)
-                                        .then(if (game != null && onViewGame != null) Modifier.clickable { onViewGame(game) } else Modifier)
+                        if (isDeleting) {
+                            CircularProgressIndicator(modifier = Modifier.size(Dimens.IconLarge), strokeWidth = 2.dp)
+                        } else {
+                            BoardFlowIconButton(onClick = onShareQr) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = "Share play",
+                                    modifier = Modifier.size(Dimens.Icon),
+                                    tint = Color.White
                                 )
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    IconButton(
-                                        onClick = onShareQr,
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Share,
-                                            contentDescription = "Share play",
-                                            modifier = Modifier.size(18.dp),
-                                            tint = if (hasThumb) Color.White.copy(alpha = 0.88f)
-                                            else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    if (isDeleting) {
-                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                                    }
-                                }
                             }
-                            Text(
-                                remember(play.date) {
-                                    runCatching {
-                                        LocalDate.parse(play.date)
-                                            .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
-                                    }.getOrDefault(play.date)
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (hasThumb) Color.White.copy(alpha = 0.65f)
-                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    }
+                }
+
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        BoardFlowInfoPill(Icons.Default.CalendarMonth, formatChipDate(play.date), onArt = true)
+                        BoardFlowInfoPill(Icons.Default.Group, "${play.players.size}", onArt = true)
+                        if (play.durationMinutes > 0) {
+                            BoardFlowInfoPill(Icons.Default.Schedule, "${play.durationMinutes} min", onArt = true)
+                        }
+                        if (play.quantity > 1) {
+                            BoardFlowInfoPill(Icons.Default.Repeat, "×${play.quantity}", onArt = true)
+                        }
+                        if (play.incomplete) {
+                            BoardFlowInfoPill(Icons.Default.HourglassBottom, "Unfinished", onArt = true)
+                        }
+                        if (play.location.isNotBlank()) {
+                            BoardFlowInfoPill(
+                                Icons.Default.LocationOn,
+                                play.location.trim(),
+                                onArt = true,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                val chipBg = if (hasThumb) Color.Black.copy(alpha = 0.45f)
-                                             else MaterialTheme.colorScheme.surfaceVariant
-                                val chipFg = if (hasThumb) Color.White.copy(alpha = 0.90f)
-                                             else MaterialTheme.colorScheme.onSurfaceVariant
-                                @Composable fun Chip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {
-                                    Surface(shape = CircleShape, color = chipBg) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                        ) {
-                                            Icon(icon, contentDescription = null, modifier = Modifier.size(12.dp), tint = chipFg)
-                                            Text(label, style = MaterialTheme.typography.labelSmall, color = chipFg)
-                                        }
-                                    }
-                                }
-                                Chip(Icons.Default.Group, "${play.players.size}")
-                                if (play.durationMinutes > 0) Chip(Icons.Default.Schedule, "${play.durationMinutes} min")
-                                if (play.location.isNotBlank()) Chip(Icons.Default.LocationOn, play.location)
-                            }
                         }
                     }
                 }
@@ -1963,66 +1902,17 @@ private fun PlayDetailsDialog(
                     )
                 }
 
-                item {
-                    val visibleComments = remember(play.comments) {
-                        play.comments.trimMemorySuffix().takeIf { it.isNotBlank() }
-                    }
-                    val detailRows = buildList {
-                        if (play.quantity > 1) add("Played" to "${play.quantity} times")
-                        if (play.incomplete) add("Status" to "Incomplete play")
-                        if (visibleComments != null) add("Comment" to visibleComments)
-                    }
-                    if (detailRows.isNotEmpty()) {
-                        DetailSection(rows = detailRows)
-                    }
+                val visibleComments = play.comments.trimMemorySuffix().takeIf { it.isNotBlank() }
+                val detailRows = buildList {
+                    if (visibleComments != null) add("Notes" to visibleComments)
+                }
+                if (detailRows.isNotEmpty()) {
+                    item { DetailSection(rows = detailRows) }
                 }
 
                 item {
-                    Column {
-                        // Premium gradient Players header
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                Modifier
-                                    .weight(1f)
-                                    .height(1.dp)
-                                    .background(
-                                        Brush.horizontalGradient(
-                                            listOf(Color.Transparent, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
-                                        )
-                                    )
-                            )
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Group,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(11.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f)
-                                )
-                                Text(
-                                    "Players",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                                )
-                            }
-                            Box(
-                                Modifier
-                                    .weight(1f)
-                                    .height(1.dp)
-                                    .background(
-                                        Brush.horizontalGradient(
-                                            listOf(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f), Color.Transparent)
-                                        )
-                                    )
-                            )
-                        }
-                        Spacer(Modifier.height(6.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        BoardFlowSectionTitle(title = "Players")
                         val sortedPlayers = remember(play.players) {
                             play.players.sortedWith(
                                 compareByDescending<PlayerResult> {
@@ -2030,7 +1920,7 @@ private fun PlayDetailsDialog(
                                 }.thenByDescending { it.isWinner }
                             )
                         }
-                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             sortedPlayers.forEachIndexed { index, player ->
                                 val displayName = resolveDisplayName(player.name, players)
                                 val matchedPlayer = players.firstOrNull { p ->
@@ -2059,18 +1949,18 @@ private fun PlayDetailsDialog(
                         onSaveMemory = onSaveMemory
                     )
                 }
-
-                item {
-                    Spacer(Modifier.height(20.dp))
-                    PlayDetailsActionsRow(
-                        onPlayAgain = onPlayAgain,
-                        onEdit = onEdit,
-                        onDeletePlay = onDeletePlay,
-                        enabled = !isDeleting
-                    )
-                }
             }
+
+            // Actions stay put while the details scroll.
+            HorizontalDivider(thickness = Dimens.Hairline, color = MaterialTheme.colorScheme.outlineVariant)
+            PlayDetailsActionsRow(
+                onPlayAgain = onPlayAgain,
+                onEdit = onEdit,
+                onDeletePlay = onDeletePlay,
+                enabled = !isDeleting
+            )
         }
+    }
 
     viewingPlayer?.let { vp ->
         val livePlayer = players.find { it.id == vp.id }
@@ -2112,28 +2002,6 @@ private fun PlayDetailsDialog(
 }
 
 @Composable
-private fun PlayerRowDivider() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 1.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(Modifier.weight(1f).height(0.5.dp).background(Color.White.copy(alpha = 0.18f)))
-        Row(
-            modifier = Modifier.padding(horizontal = 7.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            repeat(3) {
-                Box(Modifier.size(2.5.dp).background(Color.White.copy(alpha = 0.28f), CircleShape))
-            }
-        }
-        Box(Modifier.weight(1f).height(0.5.dp).background(Color.White.copy(alpha = 0.18f)))
-    }
-}
-
-@Composable
 private fun PlayDetailsActionsRow(
     onPlayAgain: () -> Unit,
     onEdit: () -> Unit,
@@ -2141,57 +2009,29 @@ private fun PlayDetailsActionsRow(
     enabled: Boolean
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = Spacing.sm, end = Spacing.lg, top = Spacing.md, bottom = Spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        BoardFlowTonalButton(
-            onClick = onEdit,
-            enabled = enabled,
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-        ) {
-            Icon(
-                Icons.Default.Edit,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
-            )
-            Spacer(Modifier.width(5.dp))
-            Text("Edit", style = MaterialTheme.typography.labelLarge)
-        }
-
-        BoardFlowTonalButton(
-            onClick = onPlayAgain,
-            enabled = enabled,
-            contentPadding = PaddingValues(horizontal = 11.dp, vertical = 0.dp)
-        ) {
-            Icon(
-                Icons.Default.EmojiEvents,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.92f)
-            )
-            Spacer(Modifier.width(5.dp))
-            Text("Play again", style = MaterialTheme.typography.labelLarge)
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        IconButton(
+        BoardFlowIconButton(
             onClick = onDeletePlay,
             enabled = enabled,
-            modifier = Modifier
-                .size(40.dp)
-                .padding(end = 2.dp)
+            colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
         ) {
+            Icon(BoardFlowIcons.Delete, contentDescription = "Delete play", modifier = Modifier.size(Dimens.Icon))
+        }
+        BoardFlowIconButton(onClick = onEdit, enabled = enabled) {
             Icon(
-                BoardFlowIcons.Delete,
-                contentDescription = "Delete play",
-                modifier = Modifier.size(18.dp),
-                tint = if (enabled) MaterialTheme.colorScheme.error.copy(alpha = 0.92f)
-                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
+                Icons.Default.Edit,
+                contentDescription = "Edit play",
+                modifier = Modifier.size(Dimens.Icon),
+                tint = MaterialTheme.colorScheme.primary
             )
         }
+        Spacer(modifier = Modifier.weight(1f))
+        BoardFlowButton(onClick = onPlayAgain, enabled = enabled) { Text("Play again") }
     }
 }
 
@@ -2205,55 +2045,74 @@ private fun SharePlayQrDialog(
     val qrPng = remember(payload) { runCatching { QrGenerator.generatePng(payload, gameName = "", margin = 2) }.getOrNull() }
     val qrBitmap = remember(qrPng) { qrPng?.let { BitmapFactory.decodeByteArray(it, 0, it.size) } }
 
+    ShareQrDialog(
+        title = "Share this play",
+        description = "Another BoardFlow user can scan this code to add the play to their journal.",
+        qrBitmap = qrBitmap,
+        label = play.gameName,
+        detail = formatDisplayDate(play.date),
+        onShare = qrPng?.let { png -> { shareQrImage(context, play.gameName, png) } },
+        onDismiss = onDismiss
+    )
+}
+
+@Composable
+private fun ShareQrDialog(
+    title: String,
+    description: String,
+    qrBitmap: android.graphics.Bitmap?,
+    label: String,
+    detail: String,
+    onShare: (() -> Unit)?,
+    onDismiss: () -> Unit
+) {
     AnimatedDialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            Text("Share play QR", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-            Text(
-                "Another BoardFlow user can scan this to import the play into local history.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (qrBitmap != null) {
-                Image(
-                    bitmap = qrBitmap.asImageBitmap(),
-                    contentDescription = "QR code for shared play",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                )
-            } else {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
                 Text(
-                    "Could not generate QR code.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
+                    description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Text(play.gameName, style = MaterialTheme.typography.titleSmall)
-            Text(play.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (qrBitmap != null) {
+                // White card so the code scans reliably on a dark screen.
+                Surface(
+                    shape = BoardFlowShape.Card,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.CenterHorizontally).size(260.dp)
+                ) {
+                    Image(
+                        bitmap = qrBitmap.asImageBitmap(),
+                        contentDescription = "QR code",
+                        modifier = Modifier.padding(Spacing.sm).fillMaxSize()
+                    )
+                }
+            } else {
+                BoardFlowErrorBanner(message = "The QR code could not be created. Try again.")
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End)
             ) {
-                BoardFlowSecondaryButton(
-                    onClick = { qrPng?.let { shareQrImage(context, play.gameName, it) } },
-                    enabled = qrPng != null,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
+                BoardFlowSecondaryButton(onClick = onDismiss) { Text("Close") }
+                BoardFlowSecondaryButton(onClick = { onShare?.invoke() }, enabled = onShare != null) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                    Spacer(Modifier.width(Spacing.sm))
                     Text("Share image")
-                }
-                BoardFlowButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Done")
                 }
             }
         }
@@ -2275,62 +2134,18 @@ private fun ShareSessionQrDialog(
         title ?: gameList
     }
     val subtitle = remember(session) {
-        "${session.totalLoggedPlays} play${if (session.totalLoggedPlays != 1) "s" else ""}  •  ${session.date}"
+        "${session.totalLoggedPlays} play${if (session.totalLoggedPlays != 1) "s" else ""} · ${formatDisplayDate(session.date)}"
     }
 
-    AnimatedDialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("Share session QR", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-            Text(
-                "Another BoardFlow user can scan this to import all plays from this session.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (qrBitmap != null) {
-                Image(
-                    bitmap = qrBitmap.asImageBitmap(),
-                    contentDescription = "QR code for shared session",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                )
-            } else {
-                Text(
-                    "Could not generate QR code.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            Text(label, style = MaterialTheme.typography.titleSmall)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                BoardFlowSecondaryButton(
-                    onClick = { qrPng?.let { shareQrImage(context, "Session ${session.date}", it) } },
-                    enabled = qrPng != null,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Share image")
-                }
-                BoardFlowButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Done")
-                }
-            }
-        }
-    }
+    ShareQrDialog(
+        title = "Share this session",
+        description = "Another BoardFlow user can scan this code to add every play from the session.",
+        qrBitmap = qrBitmap,
+        label = label,
+        detail = subtitle,
+        onShare = qrPng?.let { png -> { shareQrImage(context, "Session ${session.date}", png) } },
+        onDismiss = onDismiss
+    )
 }
 
 @Composable
@@ -2339,6 +2154,7 @@ private fun EditPlayDialog(
     rosterPlayers: List<Player>,
     isLoading: Boolean,
     onDismiss: () -> Unit,
+    thumbnailUrl: String? = null,
     onSave: (date: String, durationMinutes: Int, location: String, comments: String, players: List<PlayerResult>) -> Unit
 ) {
     var date by rememberSaveable(play.id) { mutableStateOf(play.date) }
@@ -2349,7 +2165,6 @@ private fun EditPlayDialog(
     var collapsedPlayers by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { true }) }
     var playerRowKeys by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { java.util.UUID.randomUUID().toString() }) }
     var showDatePicker by rememberSaveable(play.id) { mutableStateOf(false) }
-    var showAdvanced by rememberSaveable(play.id) { mutableStateOf(comments.isNotBlank()) }
     var nameFieldFocusIndex by remember { mutableStateOf(-1) }
 
     if (showDatePicker) {
@@ -2372,231 +2187,179 @@ private fun EditPlayDialog(
         ) { DatePicker(state = datePickerState) }
     }
 
-    AnimatedDialog(onDismissRequest = onDismiss) {
-        LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Surface(
-                    shape = BoardFlowSurfaceTokens.ContentCardShape,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+    val addPlayer = {
+        val nextIndex = editPlayers.size
+        editPlayers = editPlayers + PlayerResult("", "0", false)
+        collapsedPlayers = collapsedPlayers + false
+        playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
+        nameFieldFocusIndex = nextIndex
+    }
+
+    AnimatedDialog(
+        onDismissRequest = onDismiss,
+        backdrop = {
+            GameBackdrop(imageUrl = thumbnailUrl, height = 180.dp, baseBlur = 1.5.dp)
+        }
+    ) {
+        Column {
+            LazyColumn(
+                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                item {
+                    val titleShadow = androidx.compose.ui.graphics.Shadow(
+                        color = Color.Black.copy(alpha = 0.7f), blurRadius = 16f
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
+                        verticalAlignment = Alignment.Bottom,
+                        modifier = Modifier.padding(bottom = Spacing.sm)
                     ) {
-                        Text("Edit Play", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(play.gameName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1.3f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                EditFieldLabel("Date")
-                                EditCompactTextField(
-                                    value = date,
-                                    onValueChange = { date = it },
-                                    label = "Date",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    trailingIcon = {
-                                        IconButton(onClick = { showDatePicker = true }) {
-                                            Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date", modifier = Modifier.size(18.dp))
-                                        }
-                                    }
-                                )
-                            }
-                            Column(
-                                modifier = Modifier.weight(0.7f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                EditFieldLabel("Duration (min)")
-                                EditCompactTextField(
-                                    value = duration,
-                                    onValueChange = { duration = it.filter { c -> c.isDigit() } },
-                                    label = "Duration",
-                                    keyboardType = KeyboardType.Number,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            EditFieldLabel("Location")
-                            EditCompactTextField(
-                                value = location,
-                                onValueChange = { location = it },
-                                label = "Location",
-                                modifier = Modifier.fillMaxWidth()
+                        GameCover(name = play.gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                "Edit play",
+                                style = MaterialTheme.typography.labelLarge.copy(shadow = titleShadow),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                            )
+                            Text(
+                                play.gameName,
+                                style = MaterialTheme.typography.headlineSmall.copy(shadow = titleShadow),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-                        TextButton(
-                            onClick = { showAdvanced = !showAdvanced },
-                            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    }
+                }
+
+                item {
+                    // One step lighter than the dialog so the group reads as a surface.
+                    Surface(shape = BoardFlowShape.Card, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                        Column {
+                            BoardFlowFormRow(
+                                label = "Date",
+                                icon = Icons.Default.CalendarMonth,
+                                onClick = { showDatePicker = true }
                             ) {
-                                Text(if (showAdvanced) "Hide options" else "More options")
+                                Text(
+                                    formatDisplayDate(date),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f)
+                                )
                                 Icon(
-                                    imageVector = if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                    Icons.Default.ChevronRight,
+                                    contentDescription = "Pick date",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                        }
-
-                        AnimatedVisibility(
-                            visible = showAdvanced,
-                            enter = expandVertically() + fadeIn(tween(150)),
-                            exit  = shrinkVertically() + fadeOut(tween(150))
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                EditFieldLabel("Notes")
-                                EditCompactTextField(
+                            BoardFlowFormDivider()
+                            BoardFlowFormRow(label = "Duration", icon = Icons.Default.Schedule) {
+                                BoardFlowInlineField(
+                                    value = duration,
+                                    onValueChange = { duration = it.filter { c -> c.isDigit() } },
+                                    placeholder = "Minutes",
+                                    keyboardType = KeyboardType.Number,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (duration.isNotBlank()) {
+                                    Text(
+                                        "min",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            BoardFlowFormDivider()
+                            BoardFlowFormRow(label = "Location", icon = Icons.Default.LocationOn) {
+                                BoardFlowInlineField(
+                                    value = location,
+                                    onValueChange = { location = it },
+                                    placeholder = "Where did you play?",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            BoardFlowFormDivider()
+                            BoardFlowFormRow(label = "Notes", icon = Icons.Default.Notes) {
+                                BoardFlowInlineField(
                                     value = comments,
                                     onValueChange = { comments = it },
-                                    label = "Notes",
+                                    placeholder = "Anything worth remembering",
                                     singleLine = false,
-                                    minLines = 3,
                                     maxLines = 4,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.weight(1f).padding(vertical = Spacing.md)
                                 )
                             }
                         }
                     }
                 }
-            }
 
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(Icons.Default.Group, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                        Text(
-                            if (editPlayers.isNotEmpty()) "Players (${editPlayers.size})" else "Players",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    BoardFlowIconButton(
-                        onClick = {
-                            val nextIndex = editPlayers.size
-                            editPlayers = editPlayers + PlayerResult("", "0", false)
-                            collapsedPlayers = collapsedPlayers + false
-                            playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
-                            nameFieldFocusIndex = nextIndex
-                        }
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add player", modifier = Modifier.size(20.dp))
-                    }
+                item {
+                    BoardFlowSectionTitle(
+                        title = "Players",
+                        supporting = "Tap the trophy to mark the winner"
+                    )
                 }
-            }
 
-            itemsIndexed(
-                items = editPlayers,
-                key = { index, _ -> playerRowKeys.getOrElse(index) { "${play.id}-$index" } }
-            ) { index, player ->
-                PlayerResultEditorCard(
-                    player = player,
-                    rosterPlayers = rosterPlayers,
-                    onUpdate = { updated ->
-                        editPlayers = editPlayers.toMutableList().also { it[index] = updated }
-                    },
-                    onRemove = {
-                        editPlayers = editPlayers.toMutableList().also { it.removeAt(index) }
-                        collapsedPlayers = collapsedPlayers.toMutableList().also { it.removeAt(index) }
-                        playerRowKeys = playerRowKeys.toMutableList().also { it.removeAt(index) }
-                    },
-                    collapsed = collapsedPlayers.getOrElse(index) { false },
-                    onToggleCollapsed = {
-                        collapsedPlayers = collapsedPlayers.toMutableList().also { it[index] = !it[index] }
-                    },
-                    requestNameFocus = index == nameFieldFocusIndex,
-                    onNameFocusDone = { nameFieldFocusIndex = -1 }
-                )
-            }
-
-            item {
-                val addPlayer = {
-                    val nextIndex = editPlayers.size
-                    editPlayers = editPlayers + PlayerResult("", "0", false)
-                    collapsedPlayers = collapsedPlayers + false
-                    playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
-                    nameFieldFocusIndex = nextIndex
+                itemsIndexed(
+                    items = editPlayers,
+                    key = { index, _ -> playerRowKeys.getOrElse(index) { "${play.id}-$index" } }
+                ) { index, player ->
+                    PlayerResultEditorCard(
+                        player = player,
+                        rosterPlayers = rosterPlayers,
+                        onUpdate = { updated ->
+                            editPlayers = editPlayers.toMutableList().also { it[index] = updated }
+                        },
+                        onRemove = {
+                            editPlayers = editPlayers.toMutableList().also { it.removeAt(index) }
+                            collapsedPlayers = collapsedPlayers.toMutableList().also { it.removeAt(index) }
+                            playerRowKeys = playerRowKeys.toMutableList().also { it.removeAt(index) }
+                        },
+                        collapsed = collapsedPlayers.getOrElse(index) { false },
+                        onToggleCollapsed = {
+                            collapsedPlayers = collapsedPlayers.toMutableList().also { it[index] = !it[index] }
+                        },
+                        requestNameFocus = index == nameFieldFocusIndex,
+                        onNameFocusDone = { nameFieldFocusIndex = -1 },
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    )
                 }
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(BoardFlowSurfaceTokens.ContentCardShape)
-                        .clickable(onClick = addPlayer),
-                    shape = BoardFlowSurfaceTokens.ContentCardShape,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.10f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.10f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 15.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(15.dp),
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "Add player",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
-                        )
+
+                item {
+                    BoardFlowSecondaryButton(onClick = addPlayer) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                        Spacer(Modifier.width(Spacing.sm))
+                        Text("New player")
                     }
                 }
             }
 
-            item {
+            // Actions stay put while the form scrolls.
+            HorizontalDivider(thickness = Dimens.Hairline, color = MaterialTheme.colorScheme.outlineVariant)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BoardFlowInlineAction(onClick = onDismiss, enabled = !isLoading, destructive = true, large = true) { Text("Cancel") }
                 BoardFlowButton(
                     onClick = {
-                        onSave(
-                            date,
-                            duration.toIntOrNull() ?: 0,
-                            location,
-                            comments,
-                            editPlayers.toList()
-                        )
+                        onSave(date, duration.toIntOrNull() ?: 0, location, comments, editPlayers.toList())
                     },
-                    enabled = !isLoading,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
+                    enabled = !isLoading
                 ) {
                     if (isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                        CircularProgressIndicator(modifier = Modifier.size(Dimens.Icon), strokeWidth = 2.dp)
                     } else {
-                        Text("Save")
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
                     }
+                    Spacer(Modifier.width(Spacing.sm))
+                    Text("Save")
                 }
             }
         }
@@ -2616,58 +2379,6 @@ private fun shareQrImage(context: Context, gameName: String, pngBytes: ByteArray
     context.startActivity(Intent.createChooser(intent, "Share BoardFlow play"))
 }
 
-
-@Composable
-private fun EditFieldLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
-    )
-}
-
-@Composable
-private fun EditCompactTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    modifier: Modifier = Modifier,
-    readOnly: Boolean = false,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    singleLine: Boolean = true,
-    minLines: Int = 1,
-    maxLines: Int = 1,
-    trailingIcon: @Composable (() -> Unit)? = null
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        readOnly = readOnly,
-        singleLine = singleLine,
-        minLines = minLines,
-        maxLines = maxLines,
-        shape = RoundedCornerShape(14.dp),
-        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
-        placeholder = {
-            Text(
-                label,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-            )
-        },
-        trailingIcon = trailingIcon,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
-            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-        ),
-        modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
-    )
-}
 
 private val PlayerResultListSaver = androidx.compose.runtime.saveable.listSaver<List<PlayerResult>, List<Any>>(
     save = { players ->
@@ -2722,52 +2433,25 @@ private fun PlayMemorySection(
     }
 
     val hasMemory = memory?.run {
-        moods.isNotEmpty() || note.isNotBlank() || quote.isNotBlank() || chronicleLine.isNotBlank()
+        // The chronicle line is shown on the session card, so it does not count here;
+        // counting it left an empty box after moods and quote were cleared.
+        moods.isNotEmpty() || note.isNotBlank() || quote.isNotBlank()
     } == true
     var isEditing by remember { mutableStateOf(false) }
     var draftMoods by remember(memory) { mutableStateOf(memory?.moods ?: emptyList()) }
     var draftCustomText by remember { mutableStateOf("") }
     var draftQuote by remember(memory) { mutableStateOf(memory?.quote ?: "") }
 
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                Modifier
-                    .weight(1f)
-                    .height(1.dp)
-                    .background(Brush.horizontalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))))
-            )
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                Icon(
-                    BoardFlowIcons.Bookmark,
-                    contentDescription = null,
-                    modifier = Modifier.size(11.dp),
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                )
-                Text(
-                    "Highlights",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
-                )
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        BoardFlowSectionTitle(title = "Highlights", supporting = "The mood of the table and a line to remember") {
+            if (!isEditing) {
+                BoardFlowInlineAction(onClick = { isEditing = true }) { Text(if (hasMemory) "Edit" else "Add") }
             }
-            Box(
-                Modifier
-                    .weight(1f)
-                    .height(1.dp)
-                    .background(Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f), Color.Transparent)))
-            )
         }
 
         if (!isEditing) {
             if (hasMemory) {
-                MemoryDisplay(memory = memory!!, onEdit = { isEditing = true })
+                memory?.let { MemoryDisplay(memory = it) }
             } else {
                 MemoryEmptyState(onAdd = { isEditing = true })
             }
@@ -2809,85 +2493,45 @@ private fun PlayMemorySection(
 
 @Composable
 private fun MemoryEmptyState(onAdd: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-            .clickable(onClick = onAdd)
-            .padding(vertical = 18.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            Text(
-                "Nothing written yet",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
-            )
-            Text(
-                "Add highlights",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
-            )
-        }
+    DialogGroup(onClick = onAdd) {
+        Text(
+            "Nothing written yet. Tap to add how it felt.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(Spacing.lg)
+        )
     }
 }
 
 @Composable
-private fun MemoryDisplay(
-    memory: cz.nicolsburg.boardflow.model.SessionMemory,
-    onEdit: () -> Unit
-) {
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-    ) {
+private fun MemoryDisplay(memory: cz.nicolsburg.boardflow.model.SessionMemory) {
+    DialogGroup {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                if (memory.moods.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.weight(1f).padding(end = 4.dp)
-                    ) {
-                        memory.moods.forEach { MemoryChip(label = it, highlighted = true) }
-                    }
-                }
-                IconButton(
-                    onClick = onEdit,
-                    modifier = Modifier.size(28.dp)
+            if (memory.moods.isNotEmpty()) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "Edit memory",
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
+                    memory.moods.forEach { BoardFlowMoodChip(label = it) }
                 }
             }
             if (memory.note.isNotBlank()) {
                 Text(
                     memory.note,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.82f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                 )
             }
             if (memory.quote.isNotBlank()) {
                 Text(
-                    "— ${memory.quote}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                    "\u201C${memory.quote}\u201D",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                 )
             }
         }
@@ -2919,132 +2563,57 @@ private fun SessionHubPreviewCard(
         ?: if (isChroniclePending) "Composing the session chronicle..." else null
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.14f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = BoardFlowShape.Card,
+        // Translucent grey, so the game art shows through without an amber tint.
+        color = Color.White.copy(alpha = 0.10f)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 64.dp)
+                .padding(start = Spacing.md, end = Spacing.md, top = Spacing.md, bottom = Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            Surface(
+                shape = BoardFlowShape.Pill,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                modifier = Modifier.size(40.dp)
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
-                ) {
-                    Text(
-                        title,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(top = 2.dp)
-                        .size(14.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-                )
-            }
-
-            highlightLine?.let { line ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Default.AutoStories,
                         contentDescription = null,
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .size(13.dp),
-                        tint = Color(0xFFF0A500).copy(alpha = 0.72f)
-                    )
-                    Text(
-                        line.let { if (chronicle == null && !isChroniclePending) "“$it”" else it },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isChroniclePending) 0.56f else 0.78f),
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        modifier = Modifier.size(Dimens.Icon),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                highlightLine?.let { line ->
+                    Text(
+                        if (chronicle == null && !isChroniclePending) "\u201C$line\u201D" else line,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        modifier = Modifier.padding(top = Spacing.xs)
+                    )
+                }
+            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-    }
-}
-
-@Composable
-private fun MemoryChip(label: String, highlighted: Boolean) {
-    val bg = if (highlighted) MaterialTheme.colorScheme.tertiaryContainer
-             else MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-    val fg = if (highlighted) MaterialTheme.colorScheme.onTertiaryContainer
-             else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-    Surface(shape = CircleShape, color = bg) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = fg,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-        )
-    }
-}
-
-@Composable
-private fun MoodExpandChip(label: String, expand: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 4.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(3.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
-        )
-        Icon(
-            imageVector = if (expand) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
-            contentDescription = null,
-            modifier = Modifier.size(14.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
-        )
-    }
-}
-
-@Composable
-private fun MemorySelectableChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val bg = if (selected) MaterialTheme.colorScheme.tertiaryContainer
-             else Color.Transparent
-    val fg = if (selected) MaterialTheme.colorScheme.onTertiaryContainer
-             else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-    val border = if (selected) null
-                 else BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
-    Surface(
-        shape = CircleShape,
-        color = bg,
-        border = border,
-        onClick = onClick
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = fg,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-        )
     }
 }
 
@@ -3061,131 +2630,70 @@ private fun MemoryEditor(
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            val extraDraftMoods = draftMoods.filter { d -> moods.none { it.equals(d, ignoreCase = true) } }
-            val allMoods = moods + extraDraftMoods
-            var moodsExpanded by remember { mutableStateOf(false) }
-            val collapsedLimit = 8
-            val selectedMoods = allMoods.filter { m -> draftMoods.any { it.equals(m, ignoreCase = true) } }
-            val unselectedMoods = allMoods.filter { m -> draftMoods.none { it.equals(m, ignoreCase = true) } }
-            val visibleUnselected = if (moodsExpanded) unselectedMoods
-                                    else unselectedMoods.take((collapsedLimit - selectedMoods.size).coerceAtLeast(0))
-            val hiddenCount = unselectedMoods.size - visibleUnselected.size
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
-                ) {
-                    (selectedMoods + visibleUnselected).forEach { mood ->
-                        MemorySelectableChip(
-                            label = mood,
-                            selected = draftMoods.any { it.equals(mood, ignoreCase = true) },
-                            onClick = { onToggleMood(mood) }
-                        )
-                    }
-                }
-                if (hiddenCount > 0) {
-                    MoodExpandChip(label = "+$hiddenCount more", expand = true, onClick = { moodsExpanded = true })
-                } else if (moodsExpanded && unselectedMoods.size > (collapsedLimit - selectedMoods.size).coerceAtLeast(0)) {
-                    MoodExpandChip(label = "Show less", expand = false, onClick = { moodsExpanded = false })
-                }
-            }
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        val extraDraftMoods = draftMoods.filter { d -> moods.none { it.equals(d, ignoreCase = true) } }
+        val allMoods = moods + extraDraftMoods
+        var moodsExpanded by remember { mutableStateOf(false) }
+        val collapsedLimit = 8
+        val selectedMoods = allMoods.filter { m -> draftMoods.any { it.equals(m, ignoreCase = true) } }
+        val unselectedMoods = allMoods.filter { m -> draftMoods.none { it.equals(m, ignoreCase = true) } }
+        val visibleUnselected = if (moodsExpanded) unselectedMoods
+                                else unselectedMoods.take((collapsedLimit - selectedMoods.size).coerceAtLeast(0))
+        val hiddenCount = unselectedMoods.size - visibleUnselected.size
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                OutlinedTextField(
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            (selectedMoods + visibleUnselected).forEach { mood ->
+                BoardFlowFilterChip(
+                    selected = draftMoods.any { it.equals(mood, ignoreCase = true) },
+                    onClick = { onToggleMood(mood) },
+                    label = { Text(mood) }
+                )
+            }
+        }
+        if (hiddenCount > 0) {
+            BoardFlowInlineAction(onClick = { moodsExpanded = true }) { Text("Show $hiddenCount more") }
+        } else if (moodsExpanded && unselectedMoods.size > (collapsedLimit - selectedMoods.size).coerceAtLeast(0)) {
+            BoardFlowInlineAction(onClick = { moodsExpanded = false }) { Text("Show fewer") }
+        }
+
+        DialogGroup {
+            BoardFlowFormRow(label = "New mood", labelWidth = 96.dp) {
+                BoardFlowInlineField(
                     value = draftCustomText,
-                    onValueChange = { if (it.length <= 40) onCustomTextChange(it) },
-                    placeholder = {
-                        Text(
-                            "Add another mood…",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall,
-                    keyboardActions = KeyboardActions(onDone = { if (draftCustomText.isNotBlank()) onAddCustomMood() }),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    )
+                    onValueChange = { onCustomTextChange(it.take(40)) },
+                    placeholder = "Your own word",
+                    modifier = Modifier.weight(1f)
                 )
-                IconButton(
-                    onClick = onAddCustomMood,
-                    enabled = draftCustomText.isNotBlank()
-                ) {
+                BoardFlowIconButton(onClick = onAddCustomMood, enabled = draftCustomText.isNotBlank()) {
                     Icon(
-                        imageVector = Icons.Default.Add,
+                        Icons.Default.Add,
                         contentDescription = "Add mood",
-                        tint = if (draftCustomText.isNotBlank())
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        tint = if (draftCustomText.isNotBlank()) MaterialTheme.colorScheme.primary
+                               else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-
-            OutlinedTextField(
-                value = draftQuote,
-                onValueChange = { if (it.length <= 100) onQuoteChange(it) },
-                placeholder = {
-                    Text(
-                        "Any memorable quote?",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
+            BoardFlowFormDivider()
+            BoardFlowFormRow(label = "Quote", labelWidth = 96.dp) {
+                BoardFlowInlineField(
+                    value = draftQuote,
+                    onValueChange = { onQuoteChange(it.take(100)) },
+                    placeholder = "Something someone said",
+                    modifier = Modifier.weight(1f)
                 )
-            )
+            }
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onCancel) {
-                    Text(
-                        "Cancel",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-                    )
-                }
-                BoardFlowTonalButton(onClick = onSave) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
-                    )
-                    Spacer(Modifier.width(5.dp))
-                    Text("Save highlights", style = MaterialTheme.typography.labelLarge)
-                }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BoardFlowInlineAction(onClick = onCancel, destructive = true) { Text("Cancel") }
+            BoardFlowSecondaryButton(onClick = onSave) {
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.IconSmall))
+                Spacer(Modifier.width(6.dp))
+                Text("Save highlights")
             }
         }
     }
@@ -3193,22 +2701,15 @@ private fun MemoryEditor(
 
 @Composable
 private fun DetailSection(rows: List<Pair<String, String>>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        rows.forEach { (label, value) ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.width(96.dp)
-                )
+    DialogGroup {
+        rows.forEachIndexed { index, (label, value) ->
+            if (index > 0) BoardFlowFormDivider()
+            BoardFlowFormRow(label = label) {
                 Text(
                     value,
-                    style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
-                    modifier = Modifier.weight(1f)
+                    style = MaterialTheme.typography.bodyLarge.withTabularNumbers(),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f).padding(vertical = Spacing.md)
                 )
             }
         }
@@ -3291,36 +2792,18 @@ private fun HistoryFilterSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.MinTouchTarget),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.FilterAlt,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        "Sort & Filter",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        "Play history",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            Text(
+                "Sort and filter",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             if (hasActiveFilters) {
                 BoardFlowInlineAction(onClick = onReset) { Text("Reset") }
             }
@@ -3434,13 +2917,11 @@ private fun ChallengesEntry(
 ) {
     Surface(
         onClick = onClick,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+        color = MaterialTheme.colorScheme.surface,
+        shape = BoardFlowShape.Card,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -3459,14 +2940,13 @@ private fun ChallengesEntry(
                     Text(
                         "Challenges",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Icon(
-                    Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(14.dp)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             if (progressList.isNotEmpty()) {
@@ -3494,9 +2974,9 @@ private fun ChallengesEntry(
                             }
                             LinearProgressIndicator(
                                 progress = { progress.fraction },
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().height(6.dp).clip(BoardFlowShape.Pill),
                                 color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
                             )
                         }
                     }
