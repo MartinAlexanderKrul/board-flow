@@ -1,5 +1,8 @@
 ﻿package cz.nicolsburg.boardflow.ui.settings
 
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -24,7 +27,6 @@ import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.GridOn
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Visibility
@@ -107,7 +109,6 @@ import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.model.GameRecognitionHint
 import cz.nicolsburg.boardflow.model.SleeveManufacturer
 import cz.nicolsburg.boardflow.model.StatsPlayScope
-import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import java.time.LocalDate
 
 private enum class SettingsSection(val title: String) {
@@ -135,12 +136,10 @@ fun SettingsScreen(
     var modelEndpoint by remember { mutableStateOf(prefs.geminiModelEndpoint) }
     var showPwd by remember { mutableStateOf(false) }
     var showKey by remember { mutableStateOf(false) }
-    var themeExpanded by remember { mutableStateOf(false) }
     var manufacturerExpanded by remember { mutableStateOf(false) }
     var statsScopeExpanded by remember { mutableStateOf(false) }
     var selectedSection by remember { mutableStateOf(SettingsSection.ACCOUNTS) }
 
-    val currentTheme by viewModel.appTheme.collectAsState()
     val currentManufacturer by viewModel.sleevePreferredManufacturer.collectAsState()
     val currentStatsPlayScope by viewModel.statsPlayScope.collectAsState()
     val recommendationsEnabled by viewModel.recommendationsEnabled.collectAsState()
@@ -298,10 +297,11 @@ fun SettingsScreen(
             ) {
                 item { cz.nicolsburg.boardflow.ui.intro.SetupGuideContent() }
                 item {
-                    BoardFlowOutlinedButton(
-                        onClick = { showSetupGuide = false },
-                        modifier = Modifier.fillMaxWidth()
-                    ) { Text("Close") }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        BoardFlowButton(
+                            onClick = { showSetupGuide = false }
+                        ) { Text("Close") }
+                    }
                 }
             }
         }
@@ -431,10 +431,10 @@ fun SettingsScreen(
                             ) {
                                 Text(
                                     googleAccount?.name.orEmpty(),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    style = MaterialTheme.typography.bodyMedium
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
-                                BoardFlowOutlinedButton(onClick = { showGoogleSignOutConfirm = true }) { Text("Sign out") }
+                                BoardFlowButton(onClick = { showGoogleSignOutConfirm = true }) { Text("Sign out") }
                             }
                             HorizontalDivider()
                             // Google Sheets sub-section
@@ -456,8 +456,7 @@ fun SettingsScreen(
                                             spreadsheetTitle.ifBlank { "…${spreadsheetId.takeLast(8)}" }
                                         else "No sheet selected",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = if (spreadsheetId.isNotBlank()) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 BoardFlowInlineAction(onClick = { showSheetModal = true }) {
@@ -468,7 +467,7 @@ fun SettingsScreen(
                                 }
                             }
                         } else {
-                            BoardFlowButton(onClick = onSignIn, modifier = Modifier.fillMaxWidth()) {
+                            BoardFlowButton(onClick = onSignIn) {
                                 Text("Sign in with Google")
                             }
                         }
@@ -481,7 +480,7 @@ fun SettingsScreen(
                         title = "BoardGameGeek",
                         subtitle = "Used for BGG collection refresh and play sync."
                     ) {
-                        OutlinedTextField(
+                        BoardFlowTextField(
                             value = username,
                             onValueChange = {
                                 username = it
@@ -492,7 +491,7 @@ fun SettingsScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        OutlinedTextField(
+                        BoardFlowTextField(
                             value = password,
                             onValueChange = {
                                 password = it
@@ -521,36 +520,8 @@ fun SettingsScreen(
                 item {
                     SectionHeader(
                         title = "Preferences",
-                        subtitle = "Appearance and behaviour of the app."
+                        subtitle = "How BoardFlow behaves."
                     )
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.Palette,
-                        title = "Theme",
-                        subtitle = "Set the visual style for the app."
-                    ) {
-                        BoardFlowPickerField(
-                            label = "Theme",
-                            value = currentTheme.label,
-                            expanded = themeExpanded,
-                            onClick = { themeExpanded = true }
-                        )
-                        if (themeExpanded) {
-                            BoardFlowPickerSheet(
-                                title = "Choose theme",
-                                options = AppTheme.entries,
-                                selectedOption = currentTheme,
-                                optionLabel = { it.label },
-                                onSelect = { theme ->
-                                    viewModel.setAppTheme(theme)
-                                    themeExpanded = false
-                                },
-                                onDismiss = { themeExpanded = false }
-                            )
-                        }
-                    }
                 }
 
                 item {
@@ -696,9 +667,8 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (moodCount > 0) {
-                            BoardFlowOutlinedButton(
-                                onClick = { showCustomMoodsDialog = true },
-                                modifier = Modifier.fillMaxWidth()
+                            BoardFlowButton(
+                                onClick = { showCustomMoodsDialog = true }
                             ) {
                                 Text("Manage moods")
                             }
@@ -728,7 +698,7 @@ fun SettingsScreen(
                         subtitle = "Optional. Used for scoresheet scanning and chronicles."
                     ) {
                         var showApiHelp by remember { mutableStateOf(false) }
-                        OutlinedTextField(
+                        BoardFlowTextField(
                             value = apiKey,
                             onValueChange = {
                                 apiKey = it
@@ -833,7 +803,7 @@ fun SettingsScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    OutlinedTextField(
+                                    BoardFlowTextField(
                                         value = key,
                                         onValueChange = {},
                                         readOnly = true,
@@ -863,7 +833,7 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                OutlinedTextField(
+                                BoardFlowTextField(
                                     value = newExtraKey,
                                     onValueChange = { newExtraKey = it },
                                     singleLine = true,
@@ -929,7 +899,7 @@ fun SettingsScreen(
                                 )
                             }
                         } else {
-                            OutlinedTextField(
+                            BoardFlowTextField(
                                 value = modelEndpoint,
                                 onValueChange = {
                                     modelEndpoint = it
@@ -941,7 +911,7 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        BoardFlowOutlinedButton(
+                        BoardFlowButton(
                             onClick = {
                                 modelListLoading = true
                                 viewModel.checkAvailableModels { models ->
@@ -949,8 +919,7 @@ fun SettingsScreen(
                                     modelListLoading = false
                                 }
                             },
-                            enabled = apiKey.isNotBlank() && !modelListLoading,
-                            modifier = Modifier.fillMaxWidth()
+                            enabled = apiKey.isNotBlank() && !modelListLoading
                         ) {
                             if (modelListLoading) {
                                 CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
@@ -984,17 +953,15 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (templateCount > 0) {
-                            BoardFlowOutlinedButton(
-                                onClick = { showTemplatesDialog = true },
-                                modifier = Modifier.fillMaxWidth()
+                            BoardFlowButton(
+                                onClick = { showTemplatesDialog = true }
                             ) {
                                 Text("View templates")
                             }
                         }
-                        BoardFlowOutlinedButton(
+                        BoardFlowButton(
                             onClick = { showClearTemplatesConfirm = true },
-                            enabled = templateCount > 0,
-                            modifier = Modifier.fillMaxWidth()
+                            enabled = templateCount > 0
                         ) {
                             Text("Clear recognition templates")
                         }
@@ -1027,10 +994,9 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        BoardFlowOutlinedButton(
+                        BoardFlowButton(
                             onClick = { showClearPlayerHintsConfirm = true },
-                            enabled = playerHintCount > 0,
-                            modifier = Modifier.fillMaxWidth()
+                            enabled = playerHintCount > 0
                         ) {
                             Text("Clear player recognition hints")
                         }
@@ -1059,12 +1025,11 @@ fun SettingsScreen(
                         title = "Collection Cache",
                         subtitle = if (hasCollection) "$collectionSize games cached locally" else "No collection cached"
                     ) {
-                        BoardFlowOutlinedButton(
+                        BoardFlowButton(
                             onClick = { showClearCollectionConfirm = true },
-                            enabled = hasCollection,
-                            modifier = Modifier.fillMaxWidth()
+                            enabled = hasCollection
                         ) {
-                            Text("Clear Collection Cache")
+                            Text("Clear collection cache")
                         }
                     }
                 }
@@ -1096,25 +1061,25 @@ fun SettingsScreen(
                                 )
                             }
                         }
-                        BoardFlowOutlinedButton(
-                            onClick = {
-                                importExportStatus = null
-                                exportLauncher.launch("boardflow-backup-${LocalDate.now()}.json")
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text("  Export Data")
-                        }
-                        BoardFlowOutlinedButton(
-                            onClick = {
-                                importExportStatus = null
-                                importLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text("  Import Data")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BoardFlowButton(
+                                onClick = {
+                                    importExportStatus = null
+                                    exportLauncher.launch("boardflow-backup-${LocalDate.now()}.json")
+                                }
+                            ) {
+                                Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Text("  Export data")
+                            }
+                            BoardFlowButton(
+                                onClick = {
+                                    importExportStatus = null
+                                    importLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
+                                }
+                            ) {
+                                Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Text("  Import data")
+                            }
                         }
                         importExportStatus?.let { (success, message) ->
                             Text(
@@ -1360,7 +1325,7 @@ private fun EditTemplateDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedTextField(
+                BoardFlowTextField(
                     value = newCatInput,
                     onValueChange = { newCatInput = it },
                     label = { Text("Add category") },
@@ -1390,7 +1355,7 @@ private fun EditTemplateDialog(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
                 Spacer(Modifier.width(8.dp))
                 BoardFlowButton(
                     onClick = { onSave(hint.copy(normalizedCategories = categories.toList())) }
@@ -1522,7 +1487,10 @@ private fun SettingsCard(
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            HorizontalDivider()
+            HorizontalDivider(
+                thickness = Dimens.Hairline,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            )
             content()
         }
     }
@@ -1532,10 +1500,10 @@ private fun SettingsCard(
 private fun SettingsSectionLabel(text: String) {
     Text(
         text,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 2.dp, bottom = 2.dp)
+            .padding(top = Spacing.sm, start = Spacing.xs)
     )
 }

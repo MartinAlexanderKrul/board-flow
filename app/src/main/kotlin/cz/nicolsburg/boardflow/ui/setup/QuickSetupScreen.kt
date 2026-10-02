@@ -1,5 +1,13 @@
 package cz.nicolsburg.boardflow.ui.setup
 
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.GameCover
+import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -76,7 +84,8 @@ import cz.nicolsburg.boardflow.ui.common.SectionCard
 fun QuickSetupScreen(
     viewModel: QuickSetupViewModel,
     onStartGame: (gameId: Int, gameName: String) -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    thumbnailFor: (gameId: Int) -> String? = { null }
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -101,7 +110,7 @@ fun QuickSetupScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                TextButton(onClick = onClose) { Text("Back") }
+                BoardFlowSecondaryButton(onClick = onClose) { Text("Back") }
             }
         }
         is QuickSetupUiState.Ready -> QuickSetupContent(
@@ -110,7 +119,8 @@ fun QuickSetupScreen(
             onToggleModule = viewModel::toggleModule,
             onToggleStep = viewModel::toggleStep,
             onReset = viewModel::resetChecklist,
-            onStartGame = { onStartGame(s.loaded.guide.gameId, s.loaded.guide.gameName) }
+            onStartGame = { onStartGame(s.loaded.guide.gameId, s.loaded.guide.gameName) },
+            thumbnailUrl = thumbnailFor(s.loaded.guide.gameId)
         )
     }
 }
@@ -123,7 +133,8 @@ private fun QuickSetupContent(
     onToggleModule: (String) -> Unit,
     onToggleStep: (String) -> Unit,
     onReset: () -> Unit,
-    onStartGame: () -> Unit
+    onStartGame: () -> Unit,
+    thumbnailUrl: String? = null
 ) {
     val guide = state.loaded.guide
     val listState = rememberLazyListState()
@@ -151,21 +162,31 @@ private fun QuickSetupContent(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            Surface(color = MaterialTheme.colorScheme.background.copy(alpha = 0.98f)) {
-                BoardFlowButton(
-                    onClick = onStartGame,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
+            Surface(color = MaterialTheme.colorScheme.surface) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .height(52.dp)
+                        .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
-                    Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Start game")
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            if (state.isComplete) "Table is ready" else "${state.doneSteps} of ${state.totalSteps} steps done",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            "Starts the play timer",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    BoardFlowButton(onClick = onStartGame) {
+                        Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                        Spacer(Modifier.width(Spacing.sm))
+                        Text("Start game")
+                    }
                 }
             }
         }
@@ -180,7 +201,7 @@ private fun QuickSetupContent(
             contentPadding = PaddingValues(top = 14.dp, bottom = 14.dp)
         ) {
             item(key = "header") {
-                SetupHeader(state = state, onReset = { showResetConfirm = true })
+                SetupHeader(state = state, thumbnailUrl = thumbnailUrl, onReset = { showResetConfirm = true })
             }
             item(key = "players") {
                 SectionCard {
@@ -234,8 +255,8 @@ private fun QuickSetupContent(
             item(key = "attribution") {
                 Text(
                     text = attribution(state),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
@@ -255,35 +276,45 @@ private fun QuickSetupContent(
 }
 
 @Composable
-private fun SetupHeader(state: QuickSetupUiState.Ready, onReset: () -> Unit) {
+private fun SetupHeader(state: QuickSetupUiState.Ready, thumbnailUrl: String?, onReset: () -> Unit) {
     val progress by animateFloatAsState(
         targetValue = if (state.totalSteps == 0) 0f else state.doneSteps.toFloat() / state.totalSteps,
         label = "setupProgress"
     )
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+            GameCover(name = state.loaded.guide.gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
             Column(Modifier.weight(1f)) {
+                Text(
+                    "Quick setup",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Text(
                     state.loaded.guide.gameName,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     if (state.isComplete) "Table is ready" else "${state.doneSteps} / ${state.totalSteps} steps",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (state.isComplete) MaterialTheme.colorScheme.primary
+                    color = if (state.isComplete) BoardFlowColors.Success
                             else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            TextButton(onClick = onReset, enabled = state.doneSteps > 0) {
-                Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(4.dp))
-                Text("Reset")
+            if (state.doneSteps > 0) {
+                BoardFlowInlineAction(onClick = onReset, icon = Icons.Default.RestartAlt) {
+                    Text("Reset")
+                }
             }
         }
         LinearProgressIndicator(
             progress = { progress },
-            modifier = Modifier.fillMaxWidth().height(4.dp),
+            modifier = Modifier.fillMaxWidth().height(6.dp).clip(BoardFlowShape.Pill),
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
         )
         if (!state.loaded.guide.provenance.reviewed) {
@@ -304,8 +335,8 @@ private fun ChecklistSection(
             Box(Modifier.weight(1f)) { SectionLabel(section.title) }
             Text(
                 "$done/${section.steps.size}",
-                style = MaterialTheme.typography.labelMedium,
-                color = if (done == section.steps.size) MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.labelLarge,
+                color = if (done == section.steps.size) BoardFlowColors.Success
                         else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -344,7 +375,7 @@ private fun ChecklistRow(step: ResolvedStep, checked: Boolean, onToggle: () -> U
 
 @Composable
 private fun ReminderSection(section: ResolvedSection) {
-    SectionCard(accented = true) {
+    SectionCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.Default.Lightbulb,
@@ -371,7 +402,7 @@ private fun ReminderSection(section: ResolvedSection) {
 
 @Composable
 private fun StartSection(section: ResolvedSection) {
-    SectionCard(accented = true) {
+    SectionCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.Default.PlayArrow,
@@ -444,9 +475,8 @@ private fun NoteText(note: String) {
 @Composable
 private fun SectionLabel(title: String) {
     Text(
-        title.uppercase(),
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.SemiBold,
+        title,
+        style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.onSurface
     )
 }
@@ -455,7 +485,7 @@ private fun SectionLabel(title: String) {
 private fun HintText(text: String) {
     Text(
         text,
-        style = MaterialTheme.typography.labelSmall,
+        style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }

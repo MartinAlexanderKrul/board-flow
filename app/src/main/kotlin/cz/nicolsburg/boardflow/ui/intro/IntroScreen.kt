@@ -68,11 +68,10 @@ fun IntroScreen(onDismiss: () -> Unit) {
             item { IntroSetupSteps() }
             item { IntroSettingsOverview() }
             item {
-                BoardFlowButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Got it, let's play!")
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    BoardFlowButton(onClick = onDismiss) {
+                        Text("Got it, let's play")
+                    }
                 }
                 Spacer(Modifier.height(8.dp))
             }
@@ -357,9 +356,8 @@ private fun IntroSettingsOverview() {
 private fun SettingsGroupHeader(title: String) {
     Text(
         title,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.SemiBold,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(top = 4.dp)
     )
 }
