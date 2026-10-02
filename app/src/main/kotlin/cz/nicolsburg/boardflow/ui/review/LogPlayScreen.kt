@@ -1,5 +1,30 @@
 package cz.nicolsburg.boardflow.ui.review
 
+import cz.nicolsburg.boardflow.ui.common.formatDisplayDate
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.graphics.Shadow
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
+import androidx.compose.ui.draw.shadow
+import androidx.compose.material.icons.filled.Check
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.GameCover
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
+import cz.nicolsburg.boardflow.ui.common.BoardFlowErrorBanner
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCard
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -121,6 +146,7 @@ fun LogPlayScreen(
     onNavigateBack: () -> Unit,
     onDiscard: () -> Unit = onNavigateBack,
     onChooseGame: () -> Unit = {},
+    onScan: () -> Unit = {},
     onPickRecommendation: (BggGame) -> Unit = {},
     onEditPlay: (LoggedPlay) -> Unit = {}
 ) {
@@ -267,7 +293,7 @@ fun LogPlayScreen(
     // from the current player by adding another one.
     val collapseCompletePlayers: () -> Unit = {
         collapsedPlayers = players.mapIndexed { i, p ->
-            collapsedPlayers.getOrElse(i) { false } || p.isReadyToCollapse()
+            collapsedPlayers.getOrElse(i) { false } || p.name.isNotBlank()
         }
     }
 
@@ -290,11 +316,11 @@ fun LogPlayScreen(
         viewModel.getRecentPlayers(excludedNames)
     }
     val fabLabel = when {
-        posting               -> "Posting..."
+        posting               -> "Saving..."
         !online && totalGames > 1 -> "Save $totalGames plays locally"
-        !online               -> "Save Play Locally"
-        totalGames > 1        -> "Log $totalGames plays to BGG"
-        else                  -> "Log Play to BGG"
+        !online               -> "Save locally"
+        totalGames > 1        -> "Log $totalGames plays"
+        else                  -> "Log play"
     }
 
     fun submitPlay() {
@@ -355,44 +381,59 @@ fun LogPlayScreen(
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
-                Surface(color = MaterialTheme.colorScheme.background.copy(alpha = 0.98f)) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        if (errorMsg != null) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.errorContainer,
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Text(
-                                    text = errorMsg.orEmpty(),
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                                )
-                            }
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    Column {
+                        HorizontalDivider(thickness = Dimens.Hairline, color = MaterialTheme.colorScheme.outlineVariant)
+                        errorMsg?.let {
+                            BoardFlowErrorBanner(
+                                message = it,
+                                modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md)
+                            )
                         }
-                        BoardFlowButton(
-                            onClick = ::submitPlay,
-                            enabled = !posting && hasGame,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            ),
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp)
+                                .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                         ) {
-                            if (posting) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    when (players.size) {
+                                        0 -> "No players yet"
+                                        1 -> "1 player"
+                                        else -> "${players.size} players"
+                                    },
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
-                            } else {
+                                Text(
+                                    listOfNotNull(
+                                        formatDisplayDate(date),
+                                        location.trim().takeIf { it.isNotBlank() },
+                                        "saved on this device".takeIf { !online }
+                                    ).joinToString(" · "),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            BoardFlowButton(onClick = ::submitPlay, enabled = !posting && hasGame) {
+                                if (posting) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(Dimens.Icon),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(Dimens.Icon)
+                                    )
+                                }
+                                Spacer(Modifier.width(Spacing.sm))
                                 Text(fabLabel)
                             }
                         }
@@ -400,27 +441,32 @@ fun LogPlayScreen(
                 }
             }
         ) { padding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(top = 14.dp, bottom = 14.dp)
-            ) {
-                gameRelations?.let { relations ->
-                    val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
-                    if (relatedGames.isNotEmpty()) {
-                        item {
-                            RelatedGamesBanner(
-                                relations = relations,
-                                additionalGames = additionalGames,
-                                onToggleGame = { viewModel.toggleAdditionalGame(it) }
-                            )
-                        }
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            // Game art behind the top of the form, like the play details in Journal.
+            // It scrolls away with the header so fields never slide over the artwork.
+            val listState = rememberLazyListState()
+            GameBackdrop(
+                imageUrl = viewModel.selectedGame?.thumbnailUrl,
+                height = 220.dp,
+                baseBlur = 1.5.dp,
+                fadeTo = MaterialTheme.colorScheme.background,
+                modifier = Modifier.graphicsLayer {
+                    translationY = if (listState.firstVisibleItemIndex == 0) {
+                        -listState.firstVisibleItemScrollOffset.toFloat()
+                    } else {
+                        -size.height
                     }
                 }
-
+            )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                // The title starts at the top; the art sits behind it and the first rows.
+                contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
+            ) {
                 item {
                     // Only show passive AI hint when no actionable suggestion banner is visible.
                     val detectedGameHint = extractedPlay?.detectedGameTitle
@@ -437,8 +483,8 @@ fun LogPlayScreen(
                     }
                     SessionDetailsCard(
                         onChooseGame = onChooseGame.takeIf { !hasGame },
-                        title = "Log Play",
                         gameName = headerGameName,
+                        thumbnailUrl = viewModel.selectedGame?.thumbnailUrl,
                         detectedGameHint = detectedGameHint,
                         date = date,
                         duration = duration,
@@ -450,7 +496,6 @@ fun LogPlayScreen(
                         nowInStats = nowInStats,
                         locationSuggestions = locationSuggestions,
                         onDateClick = { showDatePicker = true },
-                        onDateChange = { date = it },
                         onDurationChange = { duration = it },
                         onLocationChange = { location = it },
                         onNotesChange = { comments = it },
@@ -460,6 +505,19 @@ fun LogPlayScreen(
                         onIncompleteChange = { incomplete = it },
                         onNowInStatsChange = { nowInStats = it }
                     )
+                }
+
+                gameRelations?.let { relations ->
+                    val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
+                    if (relatedGames.isNotEmpty()) {
+                        item {
+                            RelatedGamesBanner(
+                                relations = relations,
+                                additionalGames = additionalGames,
+                                onToggleGame = { viewModel.toggleAdditionalGame(it) }
+                            )
+                        }
+                    }
                 }
 
                 scanRecognitionResult?.let { result ->
@@ -499,26 +557,11 @@ fun LogPlayScreen(
                 item {
                     PlayersHeader(
                         playerCount = players.size,
-                        hasAiOutput = extractedPlay != null,
+                        // Manual entry has no AI text worth showing.
+                        hasAiOutput = extractedPlay?.modelUsed != null,
                         onToggleAiOutput = { showAiOutput = !showAiOutput },
-                        onAddPlayer = addEditablePlayer
+                        onScan = onScan
                     )
-                }
-
-                if (frequentPlayers.isNotEmpty() || recentPlayers.isNotEmpty()) {
-                    item {
-                        FrequentPlayerChips(
-                            gameName = gameName,
-                            frequentPlayers = frequentPlayers,
-                            recentPlayers = recentPlayers,
-                            onAddPlayer = {
-                                collapseCompletePlayers()
-                                collapsedPlayers = collapsedPlayers + false
-                                playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
-                                viewModel.addPlayerFromRoster(it)
-                            }
-                        )
-                    }
                 }
 
                 val extracted = extractedPlay
@@ -557,9 +600,21 @@ fun LogPlayScreen(
                 }
 
                 item {
-                    AddPlayerRow(onClick = addEditablePlayer)
+                    AddPlayersRow(
+                        frequentPlayers = frequentPlayers,
+                        recentPlayers = recentPlayers,
+                        onAddPlayer = {
+                            collapseCompletePlayers()
+                            // A saved player needs only a score, so it is added as a single line.
+                            collapsedPlayers = collapsedPlayers + true
+                            playerRowKeys = playerRowKeys + java.util.UUID.randomUUID().toString()
+                            viewModel.addPlayerFromRoster(it)
+                        },
+                        onNewPlayer = addEditablePlayer
+                    )
                 }
             }
+            } // end backdrop Box
         }
     }
 
@@ -655,8 +710,8 @@ fun LogPlayScreen(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SessionDetailsCard(
-    title: String,
     gameName: String,
+    thumbnailUrl: String?,
     detectedGameHint: String? = null,
     date: String,
     duration: String,
@@ -668,7 +723,6 @@ private fun SessionDetailsCard(
     nowInStats: Boolean,
     locationSuggestions: List<String> = emptyList(),
     onDateClick: () -> Unit,
-    onDateChange: (String) -> Unit,
     onDurationChange: (String) -> Unit,
     onLocationChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
@@ -679,171 +733,158 @@ private fun SessionDetailsCard(
     onNowInStatsChange: (Boolean) -> Unit,
     onChooseGame: (() -> Unit)? = null
 ) {
-    Surface(
-        shape = BoardFlowSurfaceTokens.ContentCardShape,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+    val titleShadow = Shadow(color = Color.Black.copy(alpha = 0.7f), blurRadius = 16f)
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
+            verticalAlignment = Alignment.Bottom
         ) {
-            CompactGameHeader(
-                title = title,
-                gameName = gameName,
-                detectedGameHint = detectedGameHint,
-                onChooseGame = onChooseGame
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Column(
-                    modifier = Modifier.weight(1.3f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    SessionFieldLabel("Date")
-                    CompactTextField(
-                        value = date,
-                        onValueChange = onDateChange,
-                        label = "Date",
-                        modifier = Modifier.fillMaxWidth(),
-                        trailingIcon = {
-                            BoardFlowIconButton(onClick = onDateClick, modifier = Modifier.size(36.dp)) {
-                                Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date", modifier = Modifier.size(18.dp))
-                            }
-                        }
-                    )
-                }
-                Column(
-                    modifier = Modifier.weight(0.7f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    SessionFieldLabel("Duration (min)")
-                    CompactTextField(
-                        value = duration,
-                        onValueChange = onDurationChange,
-                        label = "Duration",
-                        keyboardType = KeyboardType.Number,
-                        modifier = Modifier.fillMaxWidth()
+            GameCover(name = gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    "New play",
+                    style = MaterialTheme.typography.labelLarge.copy(shadow = titleShadow),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                )
+                Text(
+                    gameName,
+                    style = MaterialTheme.typography.headlineMedium.copy(shadow = titleShadow),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!detectedGameHint.isNullOrBlank()) {
+                    Text(
+                        "AI detected: $detectedGameHint",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                SessionFieldLabel("Location")
-                var locationFocused by remember { mutableStateOf(false) }
-                CompactTextField(
+        }
+        if (onChooseGame != null) {
+            BoardFlowButton(onClick = onChooseGame) { Text("Choose game") }
+        }
+
+        BoardFlowFormGroup {
+            BoardFlowFormRow(label = "Date", icon = Icons.Default.CalendarMonth, onClick = onDateClick) {
+                Text(
+                    formatDisplayDate(date),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = "Pick date",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            BoardFlowFormDivider()
+            BoardFlowFormRow(label = "Duration", icon = Icons.Default.Schedule) {
+                BoardFlowInlineField(
+                    value = duration,
+                    onValueChange = onDurationChange,
+                    placeholder = "Minutes",
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.weight(1f)
+                )
+                if (duration.isNotBlank()) {
+                    Text(
+                        "min",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            BoardFlowFormDivider()
+            var locationFocused by remember { mutableStateOf(false) }
+            BoardFlowFormRow(label = "Location", icon = Icons.Default.Place) {
+                BoardFlowInlineField(
                     value = location,
                     onValueChange = onLocationChange,
-                    label = "Location",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onFocusChanged { locationFocused = it.isFocused }
+                    placeholder = "Where did you play?",
+                    modifier = Modifier.weight(1f).onFocusChanged { locationFocused = it.isFocused }
                 )
-                val visibleSuggestions = remember(locationSuggestions, location, locationFocused) {
-                    if (!locationFocused && location.isBlank()) emptyList()
-                    else locationSuggestions.filter {
-                        it.contains(location.trim(), ignoreCase = true) && !it.equals(location.trim(), ignoreCase = true)
-                    }.take(5)
-                }
-                if (visibleSuggestions.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        visibleSuggestions.forEach { suggestion ->
-                            SuggestionChip(
-                                onClick = { onLocationChange(suggestion) },
-                                label = {
-                                    Text(
-                                        suggestion,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                },
-                                modifier = Modifier.height(28.dp)
-                            )
-                        }
+            }
+            val visibleSuggestions = remember(locationSuggestions, location, locationFocused) {
+                if (!locationFocused) emptyList()
+                else locationSuggestions.filter {
+                    it.contains(location.trim(), ignoreCase = true) && !it.equals(location.trim(), ignoreCase = true)
+                }.take(5)
+            }
+            if (visibleSuggestions.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .horizontalScroll(rememberScrollState())
+                        .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.sm),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                ) {
+                    visibleSuggestions.forEach { suggestion ->
+                        BoardFlowFilterChip(
+                            selected = false,
+                            onClick = { onLocationChange(suggestion) },
+                            label = { Text(suggestion) }
+                        )
                     }
                 }
             }
+        }
 
-            TextButton(
-                onClick = onAdvancedToggle,
-                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+        BoardFlowFormGroup {
+            BoardFlowFormRow(
+                label = "More options",
+                icon = Icons.Default.Tune,
+                labelWidth = null,
+                onClick = onAdvancedToggle
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(if (showAdvanced) "Hide options" else "More options")
-                    Icon(
-                        imageVector = if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                Icon(
+                    imageVector = if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (showAdvanced) "Hide options" else "Show options",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-
             AnimatedVisibility(
                 visible = showAdvanced,
                 enter = expandVertically() + fadeIn(tween(150)),
                 exit = shrinkVertically() + fadeOut(tween(150))
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        SessionFieldLabel("Notes")
-                        CompactTextField(
+                Column {
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Notes") {
+                        BoardFlowInlineField(
                             value = notes,
                             onValueChange = onNotesChange,
-                            label = "Notes",
+                            placeholder = "Anything worth remembering",
                             singleLine = false,
-                            minLines = 3,
                             maxLines = 4,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.weight(1f).padding(vertical = Spacing.md)
                         )
                     }
-                    CompactStepperRow(
-                        label = "Quantity",
-                        value = quantity.toString(),
-                        subtitle = "Log multiple identical plays"
-                    ) {
-                        BoardFlowIconButton(onClick = onQuantityDecrease) {
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Quantity", labelWidth = null) {
+                        BoardFlowIconButton(onClick = onQuantityDecrease, enabled = quantity > 1) {
                             Icon(Icons.Default.Remove, contentDescription = "Decrease")
                         }
                         Text(
                             quantity.toString(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.width(22.dp),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.width(24.dp),
                             textAlign = TextAlign.Center
                         )
                         BoardFlowIconButton(onClick = onQuantityIncrease) {
                             Icon(BoardFlowIcons.Add, contentDescription = "Increase")
                         }
                     }
-                    CompactSwitchRow(
-                        label = "Incomplete play",
-                        subtitle = "Game was not finished",
-                        checked = incomplete,
-                        onCheckedChange = onIncompleteChange
-                    )
-                    CompactSwitchRow(
-                        label = "Count in stats",
-                        subtitle = "Include this play in BGG statistics",
-                        checked = nowInStats,
-                        onCheckedChange = onNowInStatsChange
-                    )
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Incomplete play", labelWidth = null) {
+                        Switch(checked = incomplete, onCheckedChange = onIncompleteChange)
+                    }
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Count in BGG stats", labelWidth = null) {
+                        Switch(checked = nowInStats, onCheckedChange = onNowInStatsChange)
+                    }
                 }
             }
         }
@@ -851,139 +892,24 @@ private fun SessionDetailsCard(
 }
 
 @Composable
-private fun SessionFieldLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
-    )
-}
-
-@Composable
-private fun CompactGameHeader(
-    title: String,
-    gameName: String,
-    detectedGameHint: String? = null,
-    onChooseGame: (() -> Unit)? = null
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                gameName,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            if (!detectedGameHint.isNullOrBlank()) {
-                Text(
-                    "AI detected: $detectedGameHint",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                )
-            }
-        }
-        if (onChooseGame != null) {
-            BoardFlowSecondaryButton(onClick = onChooseGame) { Text("Choose game") }
-        }
-    }
-}
-
-@Composable
-private fun CompactTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    modifier: Modifier = Modifier,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    readOnly: Boolean = false,
-    singleLine: Boolean = true,
-    minLines: Int = 1,
-    maxLines: Int = 1,
-    trailingIcon: @Composable (() -> Unit)? = null
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        readOnly = readOnly,
-        singleLine = singleLine,
-        minLines = minLines,
-        maxLines = maxLines,
-        shape = RoundedCornerShape(14.dp),
-        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
-        placeholder = {
-            Text(
-                label,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-            )
-        },
-        trailingIcon = trailingIcon,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
-            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-        ),
-        modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
-    )
-}
-
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-@Composable
 private fun PlayersHeader(
     playerCount: Int,
     hasAiOutput: Boolean,
     onToggleAiOutput: () -> Unit,
-    onAddPlayer: () -> Unit
+    onScan: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 40.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    BoardFlowSectionTitle(
+        title = "Players",
+        supporting = if (playerCount > 0) "Tap the trophy to mark the winner" else "Add who played, or scan the scoresheet",
+        modifier = Modifier.padding(top = Spacing.sm)
     ) {
-        Row(
-            modifier = Modifier.then(
-                if (hasAiOutput) {
-                    Modifier.combinedClickable(
-                        onClick = {},
-                        onLongClick = onToggleAiOutput
-                    )
-                } else Modifier
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                Icons.Default.People,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
-            )
-            Text(
-                if (playerCount > 0) "Players ($playerCount)" else "Players",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
+        if (hasAiOutput) {
+            BoardFlowInlineAction(onClick = onToggleAiOutput) { Text("AI output") }
         }
-        BoardFlowIconButton(onClick = onAddPlayer) {
-            Icon(Icons.Default.Add, contentDescription = "Add player", modifier = Modifier.size(20.dp))
+        BoardFlowSecondaryButton(onClick = onScan) {
+            Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+            Spacer(Modifier.width(Spacing.sm))
+            Text("Scan")
         }
     }
 }
@@ -1018,37 +944,56 @@ private fun PlayerEditCard(
 private fun cz.nicolsburg.boardflow.model.PlayerResult.isReadyToCollapse(): Boolean =
     name.isNotBlank() && score.isNotBlank()
 
+/** Saved players as one-tap pills, then a pill for someone new. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AddPlayerRow(onClick: () -> Unit) {
+private fun AddPlayersRow(
+    frequentPlayers: List<BggPlayer>,
+    recentPlayers: List<BggPlayer>,
+    onAddPlayer: (BggPlayer) -> Unit,
+    onNewPlayer: () -> Unit
+) {
+    val suggestions = (frequentPlayers + recentPlayers).distinctBy { it.id }
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+    ) {
+        suggestions.forEach { player ->
+            AddPill(label = player.displayName, onClick = { onAddPlayer(player) }) {
+                PlayerAvatar(player.displayName, size = 28.dp)
+            }
+        }
+        // Same button as Scan; centred on the 48dp row of the player pills.
+        BoardFlowSecondaryButton(onClick = onNewPlayer, modifier = Modifier.align(Alignment.CenterVertically)) {
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.IconSmall))
+            Spacer(Modifier.width(6.dp))
+            Text("New player")
+        }
+    }
+}
+
+@Composable
+private fun AddPill(
+    label: String,
+    onClick: () -> Unit,
+    labelColor: Color = MaterialTheme.colorScheme.onSurface,
+    leading: @Composable () -> Unit
+) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(BoardFlowSurfaceTokens.ContentCardShape)
-            .clickable(onClick = onClick),
-        shape = BoardFlowSurfaceTokens.ContentCardShape,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.10f),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.10f)
-        )
+        onClick = onClick,
+        shape = BoardFlowShape.Pill,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 15.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .heightIn(min = 40.dp)
+                .padding(start = 6.dp, end = Spacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = null,
-                modifier = Modifier.size(15.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                "Add player",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
-            )
+            leading()
+            Text(label, style = MaterialTheme.typography.labelLarge, color = labelColor)
         }
     }
 }
@@ -1105,86 +1050,6 @@ private fun AiOutputCard(rawText: String, modelUsed: String? = null) {
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun CompactStepperRow(
-    label: String,
-    value: String,
-    subtitle: String,
-    controls: @Composable RowScope.() -> Unit
-) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(label, style = MaterialTheme.typography.labelMedium)
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                content = controls
-            )
-        }
-    }
-}
-
-@Composable
-private fun CompactSwitchRow(
-    label: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(label, style = MaterialTheme.typography.labelMedium)
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(checked = checked, onCheckedChange = onCheckedChange)
         }
     }
 }
@@ -1582,23 +1447,27 @@ private fun PostSaveCard(
                     Spacer(Modifier.height(24.dp))
 
                     // Primary CTA — most common next action
-                    BoardFlowButton(onClick = onPlayAgain, modifier = Modifier.fillMaxWidth()) {
+                    BoardFlowButton(
+                        onClick = onPlayAgain,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
                         Text("Play again")
                     }
 
                     Spacer(Modifier.height(8.dp))
 
-                    // Secondary CTAs — side-by-side to save height and signal equal priority
+                    // Secondary actions: side by side, equal priority
                     Row(
-                        modifier                = Modifier.fillMaxWidth(),
-                        horizontalArrangement   = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
                     ) {
-                        BoardFlowSecondaryButton(onClick = onEditPlay, modifier = Modifier.weight(1f)) {
-                            Text("Edit this play")
-                        }
-                        BoardFlowSecondaryButton(onClick = onChangeGame, modifier = Modifier.weight(1f)) {
-                            Text("Change game")
-                        }
+                        // The card is already a raised tone, so these sit one step lighter.
+                        val onCard = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                        BoardFlowSecondaryButton(onClick = onEditPlay, colors = onCard) { Text("Edit play") }
+                        BoardFlowSecondaryButton(onClick = onChangeGame, colors = onCard) { Text("Change game") }
                     }
 
                     // Ghost dismiss — de-emphasised so the eye skips it unless intended
@@ -1820,68 +1689,6 @@ private fun FireworksLayer(primaryColor: Color, modifier: Modifier = Modifier) {
 }
 
 // ---------------------------------------------------------------------------
-// Frequent player chips
-// ---------------------------------------------------------------------------
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun FrequentPlayerChips(
-    gameName: String,
-    frequentPlayers: List<BggPlayer>,
-    recentPlayers: List<BggPlayer>,
-    onAddPlayer: (BggPlayer) -> Unit
-) {
-    val recentOnly = recentPlayers.filter { r -> frequentPlayers.none { it.id == r.id } }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        if (frequentPlayers.isNotEmpty()) {
-            Text(
-                if (gameName.isNotBlank()) "Frequent for $gameName" else "Frequent players",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement   = Arrangement.spacedBy(4.dp)
-            ) {
-                frequentPlayers.forEach { player ->
-                    PlayerChip(player = player, onClick = { onAddPlayer(player) })
-                }
-            }
-        }
-        if (recentOnly.isNotEmpty()) {
-            Text(
-                "Recent",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement   = Arrangement.spacedBy(4.dp)
-            ) {
-                recentOnly.forEach { player ->
-                    PlayerChip(player = player, onClick = { onAddPlayer(player) })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PlayerChip(player: BggPlayer, onClick: () -> Unit) {
-    SuggestionChip(
-        onClick = onClick,
-        label   = { Text(player.displayName, style = MaterialTheme.typography.labelMedium) },
-        icon    = { PlayerAvatar(player.displayName, size = 20.dp) }
-    )
-}
-
-// ---------------------------------------------------------------------------
 // Retry result banner — shown when a background re-extraction succeeded
 // ---------------------------------------------------------------------------
 
@@ -1984,12 +1791,8 @@ private fun ScanResultBanner(
                                else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f)
                 )
-                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                    BoardFlowCloseGlyph(
-                        contentDescription = "Dismiss",
-                        modifier = Modifier.size(14.dp),
-                        iconSize = 14.dp
-                    )
+                BoardFlowIconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(Dimens.Icon))
                 }
             }
             when {
@@ -2051,11 +1854,11 @@ private fun GameSuggestionBanner(
                     style = MaterialTheme.typography.labelSmall,
                     color = onSurfaceMuted.copy(alpha = 0.60f)
                 )
-                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                    BoardFlowCloseGlyph(
+                BoardFlowIconButton(onClick = onDismiss) {
+                    Icon(
+                        Icons.Default.Close,
                         contentDescription = "Dismiss suggestion",
-                        modifier = Modifier.size(14.dp),
-                        iconSize = 14.dp
+                        modifier = Modifier.size(Dimens.Icon)
                     )
                 }
             }
@@ -2120,170 +1923,28 @@ private fun RelatedGamesBanner(
     additionalGames: List<BggGame>,
     onToggleGame: (BggGame) -> Unit
 ) {
-    // Saveable so the dismissal survives the banner scrolling out of the list.
-    var dismissed by rememberSaveable { mutableStateOf(false) }
-    if (dismissed) return
-
     val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
-    val label = if (relations.isExpansion) "Expansion - also post for base game?"
-                else "Also post for an expansion?"
-    var expanded by rememberSaveable { mutableStateOf(false) }
     val anySelected = relatedGames.any { game -> additionalGames.any { it.id == game.id } }
 
-    Surface(
-        color  = MaterialTheme.colorScheme.surfaceVariant,
-        shape  = MaterialTheme.shapes.medium,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Text(
+            if (anySelected) "Also logging, with the same players and scores"
+            else if (relations.isExpansion) "Also log the base game"
+            else "Also log an expansion",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(
-                    onClick = { dismissed = true },
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    BoardFlowCloseGlyph(
-                        contentDescription = "Dismiss",
-                        modifier = Modifier.size(16.dp),
-                        iconSize = 16.dp
-                    )
-                }
-            }
-
-            if (expanded) {
-                @OptIn(ExperimentalLayoutApi::class)
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement   = Arrangement.spacedBy(4.dp)
-                ) {
-                    relatedGames.forEach { game ->
-                        val selected = additionalGames.any { it.id == game.id }
-                        FilterChip(
-                            selected = selected,
-                            onClick  = { onToggleGame(game) },
-                            label    = { Text(game.name, style = MaterialTheme.typography.labelMedium) }
-                        )
-                    }
-                }
-                TextButton(
-                    onClick = { expanded = false },
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                    modifier = Modifier.height(24.dp)
-                ) {
-                    Icon(Icons.Default.ExpandLess, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Show less", style = MaterialTheme.typography.labelSmall)
-                }
-            } else {
-                TwoRowGameChips(
-                    games = relatedGames,
-                    additionalGames = additionalGames,
-                    onToggleGame = onToggleGame,
-                    onExpand = { expanded = true }
+            relatedGames.forEach { game ->
+                BoardFlowFilterChip(
+                    selected = additionalGames.any { it.id == game.id },
+                    onClick = { onToggleGame(game) },
+                    label = { Text(game.name) }
                 )
             }
-
-            if (anySelected) {
-                Text(
-                    "Ticked games will be posted automatically with the same players & scores.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TwoRowGameChips(
-    games: List<BggGame>,
-    additionalGames: List<BggGame>,
-    onToggleGame: (BggGame) -> Unit,
-    onExpand: () -> Unit,
-    horizontalSpacing: Dp = 6.dp,
-    verticalSpacing: Dp = 4.dp
-) {
-    SubcomposeLayout(modifier = Modifier.fillMaxWidth()) { constraints ->
-        val hSpacing = horizontalSpacing.roundToPx()
-        val vSpacing = verticalSpacing.roundToPx()
-        val loose = constraints.copy(minWidth = 0, minHeight = 0, maxHeight = Int.MAX_VALUE)
-
-        // Measure all chips
-        val allPlaceables = games.mapIndexed { i, game ->
-            val selected = additionalGames.any { it.id == game.id }
-            subcompose("chip_$i") {
-                FilterChip(
-                    selected = selected,
-                    onClick  = { onToggleGame(game) },
-                    label    = { Text(game.name, style = MaterialTheme.typography.labelMedium) }
-                )
-            }.first().measure(loose)
-        }
-
-        // Simulate flow layout and find the index where row 3 would begin
-        var curX = 0; var curY = 0; var rowH = 0; var row = 1
-        var cutIndex = allPlaceables.size
-        for ((i, p) in allPlaceables.withIndex()) {
-            if (curX > 0 && curX + hSpacing + p.width > constraints.maxWidth) {
-                curY += rowH + vSpacing; curX = 0; rowH = 0; row++
-            }
-            if (row > 2) { cutIndex = i; break }
-            curX += (if (curX == 0) 0 else hSpacing) + p.width
-            rowH = maxOf(rowH, p.height)
-        }
-
-        val hasOverflow = cutIndex < allPlaceables.size
-
-        // Measure "Show all" button only when there is overflow
-        val showAllPlaceable = if (hasOverflow) {
-            subcompose("showAll") {
-                TextButton(
-                    onClick = onExpand,
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                    modifier = Modifier.height(24.dp)
-                ) {
-                    Icon(Icons.Default.ExpandMore, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Show all (${games.size})", style = MaterialTheme.typography.labelSmall)
-                }
-            }.first().measure(loose)
-        } else null
-
-        // Layout rows 1–2 chips
-        curX = 0; curY = 0; rowH = 0
-        val positions = allPlaceables.take(cutIndex).map { p ->
-            if (curX > 0 && curX + hSpacing + p.width > constraints.maxWidth) {
-                curY += rowH + vSpacing; curX = 0; rowH = 0
-            }
-            val pos = curX to curY
-            curX += (if (curX == 0) 0 else hSpacing) + p.width
-            rowH = maxOf(rowH, p.height)
-            pos
-        }
-        val flowHeight = if (allPlaceables.isEmpty()) 0 else curY + rowH
-        val showAllY = flowHeight + (if (showAllPlaceable != null) vSpacing else 0)
-        val totalHeight = (showAllY + (showAllPlaceable?.height ?: 0)).coerceAtLeast(0)
-
-        layout(constraints.maxWidth, totalHeight) {
-            allPlaceables.take(cutIndex).forEachIndexed { i, p ->
-                p.place(positions[i].first, positions[i].second)
-            }
-            showAllPlaceable?.place(0, showAllY)
         }
     }
 }

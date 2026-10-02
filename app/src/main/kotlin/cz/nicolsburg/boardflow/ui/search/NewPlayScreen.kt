@@ -1,5 +1,25 @@
 ﻿package cz.nicolsburg.boardflow.ui.search
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import cz.nicolsburg.boardflow.ui.common.PlayerAvatar
+import cz.nicolsburg.boardflow.ui.common.GameCover
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import androidx.compose.ui.text.style.TextOverflow
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
+import cz.nicolsburg.boardflow.ui.common.GameListRow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
+import cz.nicolsburg.boardflow.ui.common.BoardFlowErrorBanner
+import cz.nicolsburg.boardflow.ui.common.BoardFlowEmptyState
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCard
+import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -110,6 +130,11 @@ fun NewPlayScreen(
         if (recommendationsEnabled && query.isBlank()) viewModel.getLogPlayRecommendations() else emptyList()
     }
     val activeTimer by viewModel.activeTimer.collectAsState()
+    val messenger = LocalBoardFlowMessenger.current
+    // Guides only carry a game id; borrow the cover from the collection when we have it.
+    val thumbnailsById = remember(collectionItems) {
+        collectionItems.mapNotNull { item -> item.objectId.toIntOrNull()?.let { it to item.thumbnailUrl } }.toMap()
+    }
 
     LaunchedEffect(Unit) { viewModel.loadLogPlayGames() }
 
@@ -125,7 +150,11 @@ fun NewPlayScreen(
             ScreenTabRow(
                 tabs = NewPlayTab.entries.map { it.label },
                 selectedIndex = selectedTab.ordinal,
-                onTabSelected = { selectedTab = NewPlayTab.entries[it] }
+                onTabSelected = {
+                    selectedTab = NewPlayTab.entries[it]
+                    // Each tab searches its own list; do not carry the text across.
+                    query = ""
+                }
             )
         }
 
@@ -134,6 +163,7 @@ fun NewPlayScreen(
             sessionContext?.let { ctx ->
                 SessionContinueBanner(
                     context   = ctx,
+                    thumbnailUrl = thumbnailsById[ctx.gameId],
                     onPlayAgain = {
                         viewModel.setupPlayAgain(ctx)
                         onPlayAgain()
@@ -147,29 +177,25 @@ fun NewPlayScreen(
 
         // Change game notice — same slot and size as the session banner
         AnimatedVisibility(visible = changeGameActive && !setupTab) {
-            Surface(
-                shape = BoardFlowSurfaceTokens.ContentCardShape,
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            BoardFlowCard(
+                emphasized = true,
+                contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.md),
+                modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         Icons.Default.SwapHoriz,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+                        modifier = Modifier.size(Dimens.Icon),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        "Changing game — players from the last game will be kept",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "Pick the next game. Players from the last one are kept.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -234,13 +260,11 @@ fun NewPlayScreen(
                         allSetupGuides.filter { query.isBlank() || it.gameName.contains(query.trim(), ignoreCase = true) }
                     }
                     if (matches.isEmpty()) {
-                        Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                            Text(
-                                if (query.isBlank()) "No setup guides yet" else "No setup guide for \"$query\"",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        BoardFlowEmptyState(
+                            icon = Icons.Default.Checklist,
+                            title = if (query.isBlank()) "No setup guides yet" else "No guide for \"$query\"",
+                            message = "Guides are added over time. Check the spelling or try another game."
+                        )
                     } else {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -248,7 +272,12 @@ fun NewPlayScreen(
                         ) {
                             items(matches, key = { it.gameId }) { guide ->
                                 SetupGameRow(
-                                    game = BggGame(id = guide.gameId, name = guide.gameName, yearPublished = null, thumbnailUrl = null),
+                                    game = BggGame(
+                                        id = guide.gameId,
+                                        name = guide.gameName,
+                                        yearPublished = null,
+                                        thumbnailUrl = thumbnailsById[guide.gameId]
+                                    ),
                                     available = true,
                                     onClick = { onOpenQuickSetup(guide.gameId) }
                                 )
@@ -265,72 +294,38 @@ fun NewPlayScreen(
                 }
 
                 error != null -> Column(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(vertical = Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            val message = error.orEmpty()
-                            Text(message, color = MaterialTheme.colorScheme.onErrorContainer)
-                            if (message.contains("private") || message.contains("401")) {
-                                Text(
-                                    "Tip: Make your BGG profile public in account settings, or use search mode.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
-                                )
-                            }
+                    val message = error.orEmpty()
+                    BoardFlowErrorBanner(
+                        message = if (message.contains("private") || message.contains("401")) {
+                            "$message\n\nMake your BGG profile public in its account settings, or search by name."
+                        } else {
+                            message
                         }
-                    }
-                    BoardFlowOutlinedButton(onClick = { viewModel.loadLogPlayGames() }) {
-                        Text("Use recent games instead")
-                    }
-                }
-
-                results.isEmpty() && query.isNotBlank() -> Box(
-                    Modifier.fillMaxWidth().padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "No games found for \"$query\"",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    BoardFlowOutlinedButton(onClick = { viewModel.loadLogPlayGames() }) {
+                        Text("Show recent games")
+                    }
                 }
 
-                results.isEmpty() -> Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.padding(32.dp)
-                    ) {
-                        Icon(
-                            if (setupTab) Icons.Default.Checklist else Icons.AutoMirrored.Filled.NoteAdd,
-                            contentDescription = null,
-                            modifier = Modifier.size(72.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-                        )
-                        Text(
-                            if (setupTab) "Quick Guides" else "Log a Play",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            if (collectionLoaded)
-                                "Search for a game above or pick from your collection below."
-                            else
-                                "Search for a game above, or load your BGG collection in the Sync tab.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                results.isEmpty() && query.isNotBlank() -> BoardFlowEmptyState(
+                    icon = Icons.Default.Search,
+                    title = "No games found for \"$query\"",
+                    message = "Check the spelling, or try a shorter part of the name."
+                )
+
+                results.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    BoardFlowEmptyState(
+                        icon = if (setupTab) Icons.Default.Checklist else Icons.AutoMirrored.Filled.NoteAdd,
+                        title = if (setupTab) "No games to show" else "Log a play",
+                        message = if (collectionLoaded) {
+                            "Search for a game above."
+                        } else {
+                            "Search for a game above, or load your BGG collection in the Sync tab."
+                        }
+                    )
                 }
 
                 else -> {
@@ -374,8 +369,13 @@ fun NewPlayScreen(
                                         onGameSelected(game)
                                     },
                                     onTimerToggle = {
-                                        if (activeTimer?.gameId == game.id) viewModel.stopPlayTimer()
-                                        else viewModel.startPlayTimer(game.id, game.name)
+                                        if (activeTimer?.gameId == game.id) {
+                                            viewModel.stopPlayTimer()
+                                            messenger.show("Timer stopped")
+                                        } else {
+                                            viewModel.startPlayTimer(game.id, game.name)
+                                            messenger.show("Timer started for ${game.name}")
+                                        }
                                     },
                                 )
                             }
@@ -434,134 +434,61 @@ private fun RecommendationsSection(
     onSelect: (BggGame) -> Unit
 ) {
     var expanded by rememberSaveable { mutableStateOf(true) }
-    Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.padding(bottom = 8.dp)
-    ) {
-        Row(
+    Column(modifier = Modifier.padding(bottom = Spacing.sm)) {
+        BoardFlowSectionTitle(
+            title = "Good picks right now",
             modifier = Modifier
-                .fillMaxWidth()
+                .clip(BoardFlowShape.Control)
                 .clickable { expanded = !expanded }
-                .padding(vertical = 2.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    "Good picks right now",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    if (expanded) "Tap to collapse" else "Tap to expand",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
             Icon(
                 if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = null,
+                contentDescription = if (expanded) "Collapse" else "Expand",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         AnimatedVisibility(visible = expanded) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (lanes.isEmpty()) {
-                    Surface(
-                        shape = BoardFlowSurfaceTokens.ContentCardShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                lanes.forEach { lane ->
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        Column {
                             Text(
-                                "No games match your current filters",
+                                lane.title,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                lane.subtitle,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    }
-                } else {
-                    lanes.forEach { lane ->
-                        Surface(
-                            shape = BoardFlowSurfaceTokens.ContentCardShape,
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f))
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 12.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        lane.title,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text(
-                                        lane.subtitle,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                lane.picks.forEach { pick ->
-                                    RecommendationRow(pick = pick, onClick = { onSelect(pick.game) })
-                                }
-                            }
+                        lane.picks.forEach { pick ->
+                            GameListRow(
+                                name = pick.game.name,
+                                thumbnailUrl = pick.game.thumbnailUrl,
+                                supporting = pick.reason,
+                                onClick = { onSelect(pick.game) }
+                            ) { RowChevron() }
                         }
                     }
                 }
+                BoardFlowSectionTitle(title = "All games")
             }
         }
     }
 }
 
-
+/** Marks a row that opens something. Decorative: the whole row is the tap target. */
 @Composable
-private fun RecommendationRow(
-    pick: RecommendationPick,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    pick.game.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    pick.reason,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
-            )
-        }
+private fun RowChevron() {
+    Box(Modifier.size(width = 32.dp, height = Dimens.MinTouchTarget), contentAlignment = Alignment.Center) {
+        Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -842,80 +769,61 @@ private fun FastScrollBar(
 @Composable
 private fun SessionContinueBanner(
     context: SessionContext,
+    thumbnailUrl: String? = null,
     onPlayAgain: () -> Unit,
     onContinueWithAnotherGame: () -> Unit,
     onStartNew: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val playerNames = context.players.take(3).joinToString(", ") { it.name.trim() }
-        .let { if (context.players.size > 3) "$it +${context.players.size - 3}" else it }
     val elapsedMs = System.currentTimeMillis() - context.lastPlayTimestamp
     val elapsedLabel = when {
         elapsedMs < 60_000L    -> "just now"
-        elapsedMs < 3_600_000L -> "${elapsedMs / 60_000}m ago"
-        else                   -> "${elapsedMs / 3_600_000}h ago"
+        elapsedMs < 3_600_000L -> "${elapsedMs / 60_000} min ago"
+        else                   -> "${elapsedMs / 3_600_000} h ago"
     }
-    val subtitle = buildString {
-        append(context.gameName)
-        if (playerNames.isNotBlank()) append(" · $playerNames")
-        append(" · $elapsedLabel")
-    }
+    val names = context.players.map { it.name.trim().substringBefore(' ') }.filter { it.isNotBlank() }
+    val who = names.take(3).joinToString(", ") + if (names.size > 3) " +${names.size - 3}" else ""
 
+    // A quiet shortcut, not the main thing on the screen: one line of context, small actions.
     Surface(
-        shape = BoardFlowSurfaceTokens.ContentCardShape,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+        shape = BoardFlowShape.Control,
+        color = MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        "Continue this session?",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    if (subtitle.isNotBlank()) {
-                        Text(
-                            subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                    BoardFlowCloseGlyph(contentDescription = "Dismiss", modifier = Modifier.size(13.dp), iconSize = 13.dp)
+        Column(modifier = Modifier.padding(start = Spacing.md, bottom = Spacing.xs)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    listOf("Session", context.gameName, who, elapsedLabel).filter { it.isNotBlank() }.joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(Dimens.IconSmall))
                 }
             }
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                BoardFlowTonalButton(
-                    onClick = onPlayAgain,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                ) { Text("Play again", style = MaterialTheme.typography.labelLarge) }
-                BoardFlowTonalButton(
-                    onClick = onContinueWithAnotherGame,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                ) { Text("Another game", style = MaterialTheme.typography.labelLarge) }
-                BoardFlowTonalButton(
-                    onClick = onStartNew,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                ) { Text("Start new", style = MaterialTheme.typography.labelLarge) }
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                SessionAction("Play again", onPlayAgain)
+                SessionAction("Another game", onContinueWithAnotherGame)
+                SessionAction("End session", onStartNew)
             }
         }
+    }
+}
+
+@Composable
+private fun SessionAction(label: String, onClick: () -> Unit) {
+    Surface(onClick = onClick, shape = BoardFlowShape.Pill, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)
+        )
     }
 }
 
@@ -943,32 +851,18 @@ private fun GameRow(
     onClick: () -> Unit,
     onTimerToggle: () -> Unit = {},
 ) {
-    ListItem(
-        headlineContent = {
-            Text(game.name, fontWeight = FontWeight.Medium)
-        },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                BoardFlowIconButton(onClick = onTimerToggle) {
-                    Icon(
-                        if (timerActive) Icons.Default.TimerOff else Icons.Default.Timer,
-                        contentDescription = if (timerActive) "Stop timer" else "Start timer",
-                        tint = if (timerActive) androidx.compose.ui.graphics.Color(0xFFFFB300)
-                               else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-                Icon(
-                    Icons.Default.ChevronRight,
-                    contentDescription = "Log play",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                )
-            }
-        },
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .clickable(onClick = onClick)
-    )
+    GameListRow(name = game.name, thumbnailUrl = game.thumbnailUrl, onClick = onClick) {
+        BoardFlowIconButton(onClick = onTimerToggle) {
+            Icon(
+                if (timerActive) Icons.Default.TimerOff else Icons.Default.Timer,
+                contentDescription = if (timerActive) "Stop timer" else "Start timer",
+                tint = if (timerActive) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(Dimens.Icon),
+            )
+        }
+        RowChevron()
+    }
 }
 
 private enum class NewPlayTab(val label: String) {
@@ -982,49 +876,14 @@ private fun SetupGameRow(
     available: Boolean,
     onClick: () -> Unit
 ) {
-    if (available) {
-        ListItem(
-            headlineContent = { Text(game.name, fontWeight = FontWeight.Medium) },
-            trailingContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Checklist,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Icon(
-                        Icons.Default.ChevronRight,
-                        contentDescription = "Open setup guide",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                }
-            },
-            modifier = Modifier
-                .clip(RoundedCornerShape(4.dp))
-                .clickable(onClick = onClick)
-        )
-    } else {
-        // Translucent, dimmed row: still listed so search finds it, but it cannot be opened.
-        ListItem(
-            headlineContent = {
-                Text(
-                    game.name,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                )
-            },
-            supportingContent = {
-                Text(
-                    "Setup guide not available yet",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            colors = ListItemDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
-            ),
-            modifier = Modifier.clip(RoundedCornerShape(4.dp))
-        )
+    // Games without a guide stay listed so search finds them, but cannot be opened.
+    GameListRow(
+        name = game.name,
+        thumbnailUrl = game.thumbnailUrl,
+        supporting = if (available) null else "No setup guide yet",
+        enabled = available,
+        onClick = onClick
+    ) {
+        if (available) RowChevron()
     }
 }

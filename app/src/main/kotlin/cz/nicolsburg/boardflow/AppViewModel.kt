@@ -51,7 +51,6 @@ import cz.nicolsburg.boardflow.ui.history.StatsTimeRange
 import cz.nicolsburg.boardflow.ui.history.computePlayStats
 import cz.nicolsburg.boardflow.ui.history.filterByTimeRange
 import cz.nicolsburg.boardflow.ui.history.resolveCurrentPlayerName
-import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -94,15 +93,6 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     val prefs get() = container.securePreferences
-
-    // --- Theme ---
-    private val _appTheme = MutableStateFlow(
-        try { AppTheme.valueOf(container.securePreferences.appTheme) }
-        catch (_: Exception) { AppTheme.DARK }
-    )
-    val appTheme: StateFlow<AppTheme> = _appTheme.asStateFlow()
-
-    fun setAppTheme(theme: AppTheme) { _appTheme.value = theme; prefs.appTheme = theme.name }
 
     // --- Sleeve preferred manufacturer ---
     private val _sleevePreferredManufacturer = MutableStateFlow(
@@ -2370,11 +2360,6 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 container.canonicalCollectionStore.replacePlayerRecognitionHints(imported.playerRecognitionHints)
 
             try {
-                _appTheme.value = AppTheme.valueOf(prefs.appTheme)
-            } catch (_: Exception) {
-                _appTheme.value = AppTheme.DARK
-            }
-            try {
                 _statsPlayScope.value = StatsPlayScope.valueOf(prefs.statsPlayScope)
             } catch (_: Exception) {
                 _statsPlayScope.value = StatsPlayScope.ALL_PLAYS
@@ -2391,6 +2376,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             loadRecentGames()
             loadChallenges()
         }
+    }
+
+    /**
+     * The form is opening the scanner. Drop the manual placeholder so the scanner waits for
+     * a real result, but keep the players already entered.
+     */
+    fun prepareScanFromLogPlay() {
+        cancelBackgroundRetry()
+        _extractedPlay.value = null
+        _scanError.value = null
     }
 
     fun setExtractedPlayManual() {
