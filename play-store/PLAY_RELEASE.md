@@ -42,14 +42,11 @@ Either way `app/release.jks` is your **upload key**. Keep it and its passwords b
 
 ## 5b. Google sign-in on a public app (you, in Google Cloud Console)
 
-BoardFlow asks for the full Google Drive scope (`auth/drive`) and the Sheets scope. Full Drive is a **restricted** scope: for an app anyone can install, Google requires OAuth app verification including a third-party security assessment. Until the app is verified, Google sign-in shows an "unverified app" warning and works for at most 100 users. For testing, add your testers as test users on the OAuth consent screen.
+BoardFlow asks for two Google scopes: `drive.file` (only the folders and QR images the app creates itself) and `spreadsheets` (the sheet you connect). Neither is a restricted scope, so no third-party security assessment is needed. `spreadsheets` is a **sensitive** scope: before the app is public, submit the OAuth consent screen for verification (app name, logo, the privacy policy URL, and a short video of the sign-in and sync). Until it is verified, sign-in shows an "unverified app" warning and works for at most 100 users. For testing, add your testers as test users on the OAuth consent screen.
 
-Two ways forward:
+On the consent screen, list exactly these scopes: `.../auth/drive.file` and `.../auth/spreadsheets`. Remove the full `.../auth/drive` scope if it is still listed from earlier versions.
 
-- **Narrow the scope (recommended).** Switch to `drive.file`, which only covers files the app creates or the user picks, so no security assessment is needed. Sheets stays a sensitive scope, which only needs the lighter verification. This needs a small code change: I can do it. Existing Drive folders made with the full scope would then need to be picked once.
-- **Keep the full Drive scope** and go through restricted-scope verification, including the annual security assessment.
-
-Google sign-in is optional in BoardFlow, so the rest of the app is unaffected either way.
+Google sign-in is optional in BoardFlow, so the rest of the app works without it.
 
 ## 6. Store listing (you, using these files)
 

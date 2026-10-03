@@ -19,7 +19,7 @@ Your BoardGameGeek password and Gemini API keys are kept in encrypted storage on
 BoardFlow sends data only to these services, and only when you set them up and use them:
 
 - **BoardGameGeek** (boardgamegeek.com). Your username and password are used to sign in. BoardFlow then reads your collection and play history, posts the plays you log, and saves the collection and rating changes you make. See the BoardGameGeek privacy policy.
-- **Google Sheets and Google Drive** (optional). If you sign in with Google, BoardFlow writes your collection to the spreadsheet you pick. It can also create Drive folders and QR codes. BoardFlow asks for access to your Google Drive and Sheets for this, and uses it only to read and write that spreadsheet and the folders and files it creates. See the Google privacy policy.
+- **Google Sheets and Google Drive** (optional). If you sign in with Google, BoardFlow writes your collection to the spreadsheet you pick. It can also create Drive folders and QR codes. BoardFlow can only see the Drive folders and files it created itself, plus the spreadsheet you connect; it has no access to the rest of your Drive. See the Google privacy policy.
 - **Google Gemini** (optional). If you add your own Gemini API key, a photo of a score sheet you choose to scan is sent to Google's Gemini API to read the scores. If AI chronicles are on, a short summary of a session is sent too: the game, player names, scores, moods and quote. This data is processed under your own Gemini API account and the Gemini API terms.
 
 BoardFlow does not sell or share your data with anyone else.

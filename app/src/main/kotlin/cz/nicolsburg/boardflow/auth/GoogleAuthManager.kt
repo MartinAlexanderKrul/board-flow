@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.auth
 
+import cz.nicolsburg.boardflow.SyncConfig
 import android.accounts.Account
 import android.app.Activity
 import android.content.Context
@@ -214,10 +215,7 @@ class GoogleAuthManager(
         return Account(email, GOOGLE_ACCOUNT_TYPE)
     }
 
-    private fun googleScopes(): List<Scope> = listOf(
-        Scope("https://www.googleapis.com/auth/drive"),
-        Scope("https://www.googleapis.com/auth/spreadsheets")
-    )
+    private fun googleScopes(): List<Scope> = SyncConfig.OAUTH_SCOPES.map(::Scope)
 
     companion object {
         private const val GOOGLE_ACCOUNT_TYPE = "com.google"

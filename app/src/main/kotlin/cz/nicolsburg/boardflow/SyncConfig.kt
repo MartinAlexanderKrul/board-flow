@@ -14,8 +14,11 @@ object SyncConfig {
     const val COL_SHARE_URL    = 24  // column Y
     const val COL_QR_IMAGE     = 25  // column Z
 
+    // drive.file: only the folders and QR images BoardFlow creates itself (not the whole Drive),
+    // so the app needs no restricted-scope verification. Spreadsheets covers the sheet the user
+    // connects, including one made outside the app.
     val OAUTH_SCOPES = listOf(
-        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
         "https://www.googleapis.com/auth/spreadsheets"
     )
 
