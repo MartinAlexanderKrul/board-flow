@@ -7,6 +7,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideJson
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideResolver
 import cz.nicolsburg.boardflow.model.LoadedSetupGuide
@@ -136,6 +137,35 @@ class QuickSetupViewModel(
 
     fun resetChecklist() {
         savedState[KEY_CHECKED] = arrayListOf<String>()
+    }
+
+    /** The guide on screen as a shareable JSON document (the same format as the catalog). */
+    fun exportJson(): String? = guide.value?.guide?.let(SetupGuideJson::toJsonString)
+
+    /** Removes the user's own version and shows the standard guide again. */
+    fun useStandardGuide() {
+        val current = guide.value ?: return
+        viewModelScope.launch {
+            repository.deleteUserGuide(current.guide.gameId)
+            reload()
+        }
+    }
+
+    /** Keeps the user's version after the standard guide was updated; hides the update note. */
+    fun keepUserGuide() {
+        val current = guide.value ?: return
+        viewModelScope.launch {
+            repository.keepUserGuide(current.guide.gameId)
+            guide.value = current.copy(basedOnVersion = current.upstreamVersion)
+        }
+    }
+
+    private suspend fun reload() {
+        val loaded = repository.loadGuide(requestedGameId, isOnline())
+        // Module ids can differ between versions: start the selection again, keep the ticks
+        // that still match a visible step.
+        if (loaded != null) initSelection(loaded)
+        guide.value = loaded
     }
 
     companion object {

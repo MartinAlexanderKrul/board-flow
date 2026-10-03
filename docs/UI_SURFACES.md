@@ -114,7 +114,8 @@ Source: `ui/setup/QuickSetupScreen.kt`
 - Header with the game, steps done and a progress bar
 - Player count and content (modules) chips
 - One checklist card per setup section. Once every step is ticked, the checklist folds into a single "All N setup steps done" row
-- `Easy to forget` and `Start playing` cards; the attribution line
+- `Easy to forget` and `Start playing` cards; the attribution line with `Share guide` (sends the guide as a `.json` file) and, for the user's own version, `Use standard guide`
+- `Updated guide available` card when the user's own version is older than the standard guide: `Keep mine` / `Use updated guide`
 - `Start game` starts the play timer and returns to Log Play with the Playing now banner. The screen stays awake while open
 
 ## Journal
@@ -162,7 +163,7 @@ Source: `ui/settings/SettingsScreen.kt`
 Every tab is a list of sections: a `BoardFlowSectionTitle` over one group of `BoardFlowSettingRow`s.
 
 - **Sync** (`ui/sync/SyncScreen.kt`): Accounts (Google, BGG with your username, Sheet with its Google name), BoardGameGeek, Sleeves, Google Sheets (sync, CSV import, Drive folders and QR codes, the save-QR switch); the log bar and `LogDialog`; `GoogleManageDialog`, `BggEditDialog`, `SpreadsheetConnectDialog`
-- **Preferences:** Stats, Logging plays (recommendations, chronicles, mood templates via `CustomMoodsDialog`), Collection (sleeve brand), Help (setup guide)
+- **Preferences:** Stats, Logging plays (recommendations, chronicles, mood templates via `CustomMoodsDialog`), Collection (sleeve brand), Quick guides (update guides, import a guide, clear downloaded guides), Help (setup guide)
 - **Scan:** Gemini (API key via `GeminiKeyDialog`, backup keys via `BackupKeysDialog`, model picker, refresh models) and Learned from scans (`RecognitionTemplatesDialog`, player hints, red clear rows)
 - **Data:** Backup and restore (include secrets switch, export, import) and Storage (red clear cache row)
 

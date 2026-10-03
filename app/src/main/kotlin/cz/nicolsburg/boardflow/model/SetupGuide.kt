@@ -122,8 +122,17 @@ enum class SetupGuideSource { BUNDLED, CATALOG, USER }
 
 data class LoadedSetupGuide(
     val guide: SetupGuide,
-    val source: SetupGuideSource
-)
+    val source: SetupGuideSource,
+    /** For a USER guide: the newest bundled or downloaded version of the same game, if any. */
+    val upstreamVersion: Int? = null,
+    /** For a USER guide: the upstream version it was made from or last checked against. */
+    val basedOnVersion: Int? = null
+) {
+    /** The standard guide changed since this user guide was made (or last kept). */
+    val upstreamUpdated: Boolean
+        get() = source == SetupGuideSource.USER && upstreamVersion != null &&
+            upstreamVersion > (basedOnVersion ?: 0)
+}
 
 // --- Resolved (rendered) form ---
 

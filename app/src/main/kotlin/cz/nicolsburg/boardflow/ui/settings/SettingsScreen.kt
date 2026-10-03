@@ -2,6 +2,13 @@
 
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.NoteAdd
+import androidx.compose.material.icons.filled.CloudOff
+import cz.nicolsburg.boardflow.data.setupguide.GuideImportResult
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideCounts
+import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Key
 import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
@@ -153,7 +160,9 @@ fun SettingsScreen(
     onSignOut: () -> Unit,
     onActiveTabChange: (String?) -> Unit = {},
     // Sync lives here as the first tab; the shell passes the Sync screen in.
-    syncContent: @Composable () -> Unit = {}
+    syncContent: @Composable () -> Unit = {},
+    // Quick Guides: counts, refresh, import and clearing downloaded copies (Preferences tab).
+    setupGuides: SetupGuideRepository? = null
 ) {
     val prefs = viewModel.prefs
     val context = LocalContext.current
@@ -196,6 +205,32 @@ fun SettingsScreen(
     val customMoods by viewModel.customMoods.collectAsState()
     var showCustomMoodsDialog by remember { mutableStateOf(false) }
     val hasCollection = cachedCollection.isNotEmpty()
+    val guideScope = androidx.compose.runtime.rememberCoroutineScope()
+    var guideCounts by remember { mutableStateOf<SetupGuideCounts?>(null) }
+    var guidesBusy by remember { mutableStateOf(false) }
+    var showClearGuidesConfirm by remember { mutableStateOf(false) }
+    LaunchedEffect(setupGuides) { guideCounts = setupGuides?.counts() }
+    val guideImportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val repo = setupGuides ?: return@rememberLauncherForActivityResult
+        if (uri == null) return@rememberLauncherForActivityResult
+        val json = runCatching {
+            context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
+        }.getOrNull()
+        if (json == null) {
+            messenger.show("Could not read that file")
+            return@rememberLauncherForActivityResult
+        }
+        guideScope.launch {
+            when (val result = repo.importUserGuide(json)) {
+                is GuideImportResult.Imported -> messenger.show(
+                    if (result.replacedYours) "Replaced your ${result.gameName} guide"
+                    else "${result.gameName} guide added"
+                )
+                is GuideImportResult.Invalid -> messenger.show("Not imported: ${result.reason}")
+            }
+            guideCounts = repo.counts()
+        }
+    }
 
     // One list state per tab: during the tab slide both tabs are on screen.
     val listStates = SettingsSection.entries.associateWith { rememberLazyListState() }
@@ -225,6 +260,25 @@ fun SettingsScreen(
                 messenger.show("Import failed: ${e.message}")
             }
         }
+    }
+
+    if (showClearGuidesConfirm && setupGuides != null) {
+        BoardFlowConfirmationDialog(
+            title = "Clear downloaded guides?",
+            message = "Removes guides downloaded after this app version. Built-in guides and your own stay; " +
+                "downloaded ones come back the next time the app is online.",
+            confirmLabel = "Clear",
+            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
+            onConfirm = {
+                showClearGuidesConfirm = false
+                guideScope.launch {
+                    setupGuides.clearDownloadedGuides()
+                    guideCounts = setupGuides.counts()
+                    messenger.show("Downloaded guides cleared")
+                }
+            },
+            onDismiss = { showClearGuidesConfirm = false }
+        )
     }
 
     showImportConfirm?.let { pendingJson ->
@@ -472,6 +526,62 @@ fun SettingsScreen(
                             detail = "Shown first in sleeve recommendations",
                             onClick = { manufacturerExpanded = true }
                         ) { BoardFlowSettingValue(currentManufacturer.label) }
+                    }
+                }
+                if (setupGuides != null) {
+                    item { BoardFlowSectionTitle(title = "Quick guides", supporting = "Every guide works offline.") }
+                    item {
+                        val counts = guideCounts
+                        BoardFlowFormGroup {
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.Checklist,
+                                title = "Update guides",
+                                detail = when {
+                                    guidesBusy -> "Checking for new and updated guides..."
+                                    counts == null -> "Checks for new and updated guides"
+                                    counts.yours > 0 -> "${counts.total} guides, ${counts.yours} of them yours"
+                                    else -> "${counts.total} guides"
+                                },
+                                enabled = !guidesBusy,
+                                onClick = {
+                                    if (!viewModel.isOnline()) {
+                                        messenger.show("You're offline. Guides update when you're online.")
+                                    } else {
+                                        guidesBusy = true
+                                        guideScope.launch {
+                                            val updated = setupGuides.refreshCatalogIfStale(isOnline = true, force = true)
+                                            guideCounts = setupGuides.counts()
+                                            guidesBusy = false
+                                            messenger.show(
+                                                when (updated) {
+                                                    0 -> "Guides are up to date"
+                                                    1 -> "1 guide updated"
+                                                    else -> "$updated guides updated"
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.NoteAdd,
+                                title = "Import a guide",
+                                detail = "Add a guide file someone shared, or your own edited copy",
+                                onClick = { guideImportLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }
+                            )
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.CloudOff,
+                                title = "Clear downloaded guides",
+                                detail = when (val n = counts?.downloaded ?: 0) {
+                                    0 -> "No downloaded guides. Built-in guides are part of the app."
+                                    1 -> "1 downloaded. Built-in guides and your own stay."
+                                    else -> "$n downloaded. Built-in guides and your own stay."
+                                },
+                                destructive = true,
+                                enabled = (counts?.downloaded ?: 0) > 0,
+                                onClick = { showClearGuidesConfirm = true }
+                            )
+                        }
                     }
                 }
                 item { BoardFlowSectionTitle(title = "Help") }

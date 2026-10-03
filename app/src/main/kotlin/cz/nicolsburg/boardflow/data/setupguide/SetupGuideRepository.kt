@@ -17,6 +17,15 @@ data class SetupGuideAvailability(
     val offlineReady: Boolean
 )
 
+/** How many guides the app knows, and how many are downloaded or the user's own (Settings). */
+data class SetupGuideCounts(val total: Int, val downloaded: Int, val yours: Int)
+
+/** Outcome of importing a guide file. */
+sealed interface GuideImportResult {
+    data class Imported(val gameName: String, val replacedYours: Boolean) : GuideImportResult
+    data class Invalid(val reason: String) : GuideImportResult
+}
+
 /** One guide as listed in the "All guides" view: its base game. */
 data class SetupGuideSummary(
     val gameId: Int,
@@ -25,7 +34,7 @@ data class SetupGuideSummary(
 
 /**
  * Combines the three guide layers:
- * - USER guides in Room always win (copy-on-write customisations; later phases),
+ * - USER guides in Room always win (imported or restored copies; never overwritten by upstream),
  * - otherwise the higher `version` of the BUNDLED asset and the downloaded CATALOG copy.
  *
  * Every document is parsed and validated before it is shown or stored; anything invalid is
@@ -84,9 +93,16 @@ class SetupGuideRepository(
             ?: run { refreshAvailability(); _availability.value[anyGameId]?.baseGameId }
             ?: return null
 
-        store.getSetupGuide(baseId, SetupGuideSource.USER)
-            ?.let { parseValid(it.guideJson, baseId) }
-            ?.let { return LoadedSetupGuide(it, SetupGuideSource.USER) }
+        store.getSetupGuide(baseId, SetupGuideSource.USER)?.let { row ->
+            parseValid(row.guideJson, baseId)?.let { guide ->
+                return LoadedSetupGuide(
+                    guide = guide,
+                    source = SetupGuideSource.USER,
+                    upstreamVersion = upstreamVersion(baseId),
+                    basedOnVersion = row.basedOnVersion
+                )
+            }
+        }
 
         if (isOnline) downloadIfNewer(baseId)
 
@@ -111,7 +127,8 @@ class SetupGuideRepository(
      * guides whose catalog version beats the bundled or downloaded one are fetched; a failed
      * download is retried on the next call.
      */
-    suspend fun refreshCatalogIfStale(isOnline: Boolean, force: Boolean = false) {
+    suspend fun refreshCatalogIfStale(isOnline: Boolean, force: Boolean = false): Int {
+        var downloaded = 0
         if (isOnline) {
             mutex.withLock {
                 val updatedAt = store.getSetupGuideCatalogUpdatedAt() ?: 0L
@@ -119,23 +136,104 @@ class SetupGuideRepository(
                     catalog.fetchIndex()?.let { store.replaceSetupGuideCatalog(it) }
                 }
             }
-            store.getSetupGuideCatalog()
+            downloaded = store.getSetupGuideCatalog()
                 .filter { it.isSupported() }
-                .forEach { downloadIfNewer(it.gameId) }
+                .count { downloadIfNewer(it.gameId) }
         }
+        refreshAvailability()
+        return downloaded
+    }
+
+    suspend fun counts(): SetupGuideCounts {
+        val stored = store.getSetupGuides()
+        return SetupGuideCounts(
+            total = _guides.value.size,
+            downloaded = stored.count { it.source == SetupGuideSource.CATALOG },
+            yours = stored.count { it.source == SetupGuideSource.USER }
+        )
+    }
+
+    /**
+     * Saves a guide file as the user's own version of that game's guide. It wins over the
+     * bundled and downloaded copies and is never overwritten by catalog updates; when the
+     * standard guide gets a newer version, Quick Setup offers to switch back.
+     */
+    suspend fun importUserGuide(json: String): GuideImportResult {
+        val guide = SetupGuideJson.parseOrNull(json)
+            ?: return GuideImportResult.Invalid("This file is not a BoardFlow setup guide")
+        val problems = SetupGuideValidator.validate(guide)
+        if (problems.isNotEmpty()) return GuideImportResult.Invalid(problems.first())
+        val replaced = store.getSetupGuide(guide.gameId, SetupGuideSource.USER) != null
+        saveUserGuide(guide, basedOnVersion = upstreamVersion(guide.gameId))
+        refreshAvailability()
+        return GuideImportResult.Imported(guide.gameName, replaced)
+    }
+
+    /** Removes the user's own version; the bundled or downloaded guide shows again. */
+    suspend fun deleteUserGuide(gameId: Int) {
+        store.deleteSetupGuide(gameId, SetupGuideSource.USER)
         refreshAvailability()
     }
 
-    private suspend fun downloadIfNewer(baseId: Int) = mutex.withLock {
+    /** Keeps the user's version after an upstream update, so the update note stops showing. */
+    suspend fun keepUserGuide(gameId: Int) {
+        val row = store.getSetupGuide(gameId, SetupGuideSource.USER) ?: return
+        store.saveSetupGuide(row.copy(basedOnVersion = upstreamVersion(gameId), updatedAt = System.currentTimeMillis()))
+    }
+
+    /** Deletes downloaded catalog copies; bundled guides and the user's own guides stay. */
+    suspend fun clearDownloadedGuides() {
+        store.clearSetupGuides(SetupGuideSource.CATALOG)
+        refreshAvailability()
+    }
+
+    /** The user's own guides as JSON documents, for backups. */
+    suspend fun userGuidesJson(): List<String> =
+        store.getSetupGuides().filter { it.source == SetupGuideSource.USER }.map { it.guideJson }
+
+    /** Restores the user's own guides from a backup; invalid documents are skipped. Returns the count. */
+    suspend fun restoreUserGuides(documents: List<String>): Int {
+        var restored = 0
+        documents.forEach { json ->
+            val guide = SetupGuideJson.parseOrNull(json) ?: return@forEach
+            if (SetupGuideValidator.validate(guide).isNotEmpty()) return@forEach
+            saveUserGuide(guide, basedOnVersion = upstreamVersion(guide.gameId))
+            restored++
+        }
+        refreshAvailability()
+        return restored
+    }
+
+    private suspend fun saveUserGuide(guide: SetupGuide, basedOnVersion: Int?) {
+        store.saveSetupGuide(
+            StoredSetupGuide(
+                gameId = guide.gameId,
+                source = SetupGuideSource.USER,
+                guideJson = SetupGuideJson.toJsonString(guide),
+                schemaVersion = guide.schemaVersion,
+                version = guide.version,
+                basedOnVersion = basedOnVersion
+            )
+        )
+    }
+
+    /** Newest standard (bundled or downloaded) version of a game's guide, or null if it has none. */
+    private suspend fun upstreamVersion(baseId: Int): Int? = listOfNotNull(
+        bundled.index().firstOrNull { it.gameId == baseId && it.isSupported() }?.version,
+        store.getSetupGuide(baseId, SetupGuideSource.CATALOG)?.version
+    ).maxOrNull()
+
+    /** Downloads the catalog copy when it is newer than the local one; true if one was saved. */
+    private suspend fun downloadIfNewer(baseId: Int): Boolean = mutex.withLock {
         val entry = store.getSetupGuideCatalog().firstOrNull { it.gameId == baseId && it.isSupported() }
-            ?: return@withLock
+            ?: return@withLock false
         val localVersion = maxOf(
             store.getSetupGuide(baseId, SetupGuideSource.CATALOG)?.version ?: 0,
             bundled.index().firstOrNull { it.gameId == baseId }?.version ?: 0
         )
-        if (entry.version <= localVersion) return@withLock
-        val json = catalog.fetchGuideJson(entry) ?: return@withLock
-        val guide = parseValid(json, baseId) ?: return@withLock
+        if (entry.version <= localVersion) return@withLock false
+        val json = catalog.fetchGuideJson(entry) ?: return@withLock false
+        val guide = parseValid(json, baseId) ?: return@withLock false
         store.saveSetupGuide(
             StoredSetupGuide(
                 gameId = baseId,
@@ -145,6 +243,7 @@ class SetupGuideRepository(
                 version = guide.version
             )
         )
+        true
     }
 
     private fun parseValid(json: String, expectedGameId: Int): SetupGuide? {

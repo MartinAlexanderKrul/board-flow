@@ -20,7 +20,9 @@ data class ImportedBackupData(
     val players: List<Player> = emptyList(),
     val challenges: List<Challenge> = emptyList(),
     val gameRecognitionHints: List<GameRecognitionHint> = emptyList(),
-    val playerRecognitionHints: List<PlayerRecognitionHint> = emptyList()
+    val playerRecognitionHints: List<PlayerRecognitionHint> = emptyList(),
+    /** The user's own Quick Setup guides (JSON documents); null when the backup has none (format < 8). */
+    val setupGuides: List<String>? = null
 )
 
 object BackupSerializer {
@@ -53,10 +55,11 @@ object BackupSerializer {
         challenges: List<Challenge>,
         collectionSnapshot: List<GameItem>,
         loggedPlays: List<LoggedPlay>,
-        cachedBggPlays: List<LoggedPlay>
+        cachedBggPlays: List<LoggedPlay>,
+        setupGuides: List<String> = emptyList()
     ): String {
         val root = JSONObject()
-        root.put("version", 7)
+        root.put("version", 8)
         root.put("exportDate", java.time.LocalDate.now().toString())
         root.put("includesSensitiveData", includeSensitiveData)
         root.put("settings", JSONObject().apply {
@@ -176,6 +179,10 @@ object BackupSerializer {
                     put("status", c.status.name)
                 })
             }
+        })
+        // Format 8: the user's own setup guides, each stored as its guide document.
+        root.put("setupGuides", JSONArray().also { arr ->
+            setupGuides.forEach { json -> runCatching { arr.put(JSONObject(json)) } }
         })
         root.put("collectionSnapshots", JSONObject().also { snapshots ->
             snapshots.put(CANONICAL_SNAPSHOT_ID, JSONArray().also { arr ->
@@ -316,7 +323,10 @@ object BackupSerializer {
             players = importedPlayers,
             challenges = importedChallenges,
             gameRecognitionHints = importedGameHints,
-            playerRecognitionHints = importedPlayerHints
+            playerRecognitionHints = importedPlayerHints,
+            setupGuides = root.optJSONArray("setupGuides")?.let { arr ->
+                (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.toString() }
+            }
         )
     }
 

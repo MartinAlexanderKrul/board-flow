@@ -55,7 +55,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.core.content.FileProvider
+import android.content.Context
+import android.content.Intent
+import java.io.File
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -88,6 +93,7 @@ fun QuickSetupScreen(
     thumbnailFor: (gameId: Int) -> String? = { null }
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     val view = LocalView.current
     DisposableEffect(view) {
@@ -120,6 +126,9 @@ fun QuickSetupScreen(
             onToggleStep = viewModel::toggleStep,
             onReset = viewModel::resetChecklist,
             onStartGame = { onStartGame(s.loaded.guide.gameId, s.loaded.guide.gameName) },
+            onShareGuide = { viewModel.exportJson()?.let { shareGuide(context, s.loaded.guide.gameName, it) } },
+            onUseStandardGuide = viewModel::useStandardGuide,
+            onKeepUserGuide = viewModel::keepUserGuide,
             thumbnailUrl = thumbnailFor(s.loaded.guide.gameId)
         )
     }
@@ -134,9 +143,13 @@ private fun QuickSetupContent(
     onToggleStep: (String) -> Unit,
     onReset: () -> Unit,
     onStartGame: () -> Unit,
+    onShareGuide: () -> Unit,
+    onUseStandardGuide: () -> Unit,
+    onKeepUserGuide: () -> Unit,
     thumbnailUrl: String? = null
 ) {
     val guide = state.loaded.guide
+    var showUseStandardConfirm by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
     var showResetConfirm by rememberSaveable { mutableStateOf(false) }
     val sections = state.resolved.sections
@@ -200,6 +213,26 @@ private fun QuickSetupContent(
         ) {
             item(key = "header") {
                 SetupHeader(state = state, thumbnailUrl = thumbnailUrl, onReset = { showResetConfirm = true })
+            }
+            if (state.loaded.upstreamUpdated) {
+                item(key = "upstream-update") {
+                    SectionCard {
+                        SectionLabel("Updated guide available")
+                        HintText(
+                            "You are using your own version of this guide. The standard guide is now " +
+                                "v${state.loaded.upstreamVersion}."
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            BoardFlowInlineAction(onClick = onKeepUserGuide, neutral = true) { Text("Keep mine") }
+                            Spacer(Modifier.width(Spacing.sm))
+                            BoardFlowInlineAction(onClick = { showUseStandardConfirm = true }) { Text("Use updated guide") }
+                        }
+                    }
+                }
             }
             if (state.isComplete) {
                 item(key = "done") {
@@ -269,14 +302,39 @@ private fun QuickSetupContent(
                 }
             }
             item(key = "attribution") {
-                Text(
-                    text = attribution(state),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    Text(
+                        text = attribution(state),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BoardFlowInlineAction(onClick = onShareGuide) {
+                            Text("Share guide")
+                        }
+                        if (state.loaded.source == SetupGuideSource.USER && state.loaded.upstreamVersion != null &&
+                            !state.loaded.upstreamUpdated
+                        ) {
+                            BoardFlowInlineAction(onClick = { showUseStandardConfirm = true }) {
+                                Text("Use standard guide")
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+
+    if (showUseStandardConfirm) {
+        BoardFlowConfirmationDialog(
+            title = "Use the standard guide?",
+            message = "Your version of this guide is removed from this phone. Share it first if you want to keep a copy.",
+            confirmLabel = "Use standard guide",
+            kind = cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind.DESTRUCTIVE,
+            onConfirm = { onUseStandardGuide(); showUseStandardConfirm = false },
+            onDismiss = { showUseStandardConfirm = false }
+        )
     }
 
     if (showResetConfirm) {
@@ -506,6 +564,21 @@ private fun HintText(text: String) {
     )
 }
 
+/** Shares the guide as a .json file, the same format the catalog and "Import a guide" use. */
+private fun shareGuide(context: Context, gameName: String, json: String) {
+    val safeName = gameName.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').ifBlank { "guide" }
+    val file = File(context.cacheDir, "$safeName-setup-guide.json")
+    file.writeText(json)
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "application/json"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        putExtra(Intent.EXTRA_SUBJECT, "$gameName setup guide")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(intent, "Share setup guide"))
+}
+
 private fun attribution(state: QuickSetupUiState.Ready): String {
     val guide = state.loaded.guide
     val origin = when (guide.provenance.origin) {
@@ -517,7 +590,7 @@ private fun attribution(state: QuickSetupUiState.Ready): String {
     val where = when (state.loaded.source) {
         SetupGuideSource.BUNDLED -> "built in"
         SetupGuideSource.CATALOG -> "downloaded"
-        SetupGuideSource.USER -> "customised"
+        SetupGuideSource.USER -> "your version"
     }
     return "$origin v${guide.version} ($where). Setup reminder only - see the rulebook for full rules."
 }

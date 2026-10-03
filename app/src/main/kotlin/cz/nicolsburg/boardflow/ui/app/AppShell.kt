@@ -674,6 +674,7 @@ fun BoardFlowApp(
                     onSignIn = onRequestSignIn,
                     onSignOut = onRequestSignOut,
                     onActiveTabChange = { activeTabLabel = it },
+                    setupGuides = setupGuideRepository,
                     syncContent = {
                         SyncScreen(
                             syncViewModel = syncViewModel,

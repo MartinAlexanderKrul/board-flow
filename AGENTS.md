@@ -131,7 +131,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `setupguide/` -- Quick Setup: `SetupGuideJson` (org.json format mapping), `SetupGuideValidator` (structural checks applied to every guide before it is shown or stored), `SetupGuideResolver` (pure: guide + player count + modules -> visible steps with amounts filled in), `SetupGuideIndex`, `BundledSetupGuideSource` (APK assets), `SetupGuideCatalogClient` (GitHub raw, quiet failure), `SetupGuideRepository` (layer resolution USER > newer of BUNDLED/CATALOG, availability map keyed by base/alias/module BGG ids, daily index refresh, then downloads every catalog guide newer than the local copy so all guides work offline; `AppShell.openQuickSetup` shows "available when you're online" for a catalog guide that is not downloaded yet)
   - `SessionMemoryJson.kt` -- `toSessionMemoryOrNull()`, `toJsonString()`, `parseMemoryFromNotes()` extension functions
   - `chronicle/` -- chronicle service pipeline: `SessionChronicleService` (plan + compose), `GeminiChronicleLineGenerator` (Gemini API, 4 retries, model fallback, 2.5 s timeout), `FallbackChronicleComposer` (deterministic offline fallback), `ChronicleLineGenerator` interface, `ChronicleRequest` and `ChronicleAiConfig` data classes
-  - `BackupSerializer.kt` -- backup JSON import/export (format version 7; includes `memory` JSON per play; exports players and challenges from Room)
+  - `BackupSerializer.kt` -- backup JSON import/export (format version 8; includes `memory` JSON per play; exports players and challenges from Room, and the user's own setup guides)
   - `SecurePreferences.kt` -- encrypted preferences (credentials, settings, roster, session, recognition hints, `chronicle_enabled`, `custom_moods`)
   - `QrGenerator.kt` -- QR code PNG generation and gallery save
   - `PlayShareSerializer.kt` -- play encode/decode for QR sharing
@@ -167,7 +167,7 @@ It stores:
 - game recognition hints (`game_recognition_hints` table)
 - player recognition hints (`player_recognition_hints` table)
 - sleeve tracking overrides (`game_sleeve_tracking` table)
-- setup guides: downloaded catalog copies and (later) user guides (`setup_guides`), plus the cached remote index (`setup_guide_catalog`); bundled guides are read straight from assets and are not copied into Room
+- setup guides: downloaded catalog copies and the user's own guides (`setup_guides`, source `CATALOG` / `USER`), plus the cached remote index (`setup_guide_catalog`); bundled guides are read straight from assets and are not copied into Room
 
 ### Preferences / Settings
 
@@ -191,7 +191,7 @@ Do not move live collection/history state back into large JSON blobs in preferen
 
 ### Backup Format
 
-`BackupSerializer` owns import/export JSON (format version 7).
+`BackupSerializer` owns import/export JSON (format version 8).
 
 Backups can contain:
 
@@ -204,6 +204,7 @@ Backups can contain:
 - sleeve exclusions
 - AI game recognition templates
 - AI player recognition templates
+- the user's own setup guides (`setupGuides`, format 8; each entry is a guide document; restoring adds or replaces them by game)
 - settings (theme, spreadsheet config, sleeve manufacturer preference)
 - optionally sensitive data (BGG password, Gemini API key)
 
@@ -280,6 +281,8 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - guide content is data, not code: edit `setup-guides/*.json`, bump `version` in the guide and `index.json`, and run `:app:testDebugUnitTest` (`BundledSetupGuidesTest` validates every guide and every configuration). Paraphrase rulebooks; do not paste their text
 - conditions are AND-only; express OR as two steps. Step ids must stay stable so ticks survive configuration changes
 - `Start game` calls `AppViewModel.startPlayTimer` for the guide's base game
+- the user's own guides: Settings > Preferences > Quick guides > `Import a guide` reads a guide `.json` (validated by `SetupGuideValidator`) and stores it as a `USER` row (`SetupGuideRepository.importUserGuide`). A `USER` guide wins over the bundled and downloaded copies and is never overwritten by catalog updates; it records the standard version it was based on (`basedOnVersion`), and when the standard guide gets newer Quick Setup shows `Updated guide available` with `Keep mine` / `Use updated guide`. Quick Setup's `Share guide` sends the guide on screen as a `.json` file (the catalog format); `Use standard guide` deletes the user's copy. There is no in-app guide editor yet: users edit the shared file and import it
+- Settings > Preferences > Quick guides also has `Update guides` (forced catalog check and download, reports how many were updated) and `Clear downloaded guides` (deletes `CATALOG` rows; built-in and user guides stay)
 
 ### Collection
 
@@ -320,7 +323,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 Four tabs, each a list of sections (`BoardFlowSectionTitle` over a `BoardFlowFormGroup` of `BoardFlowSettingRow`s):
 
 - **Sync**: accounts (Google, BGG showing the username, Sheet showing its Google name), BoardGameGeek, Sleeves, Google Sheets
-- **Preferences**: Stats, Logging plays, Collection, Help
+- **Preferences**: Stats, Logging plays, Collection, Quick guides, Help
 - **Scan**: Gemini (key and backup keys edited in dialogs, model picker, refresh) and Learned from scans
 - **Data**: Backup and restore, Storage
 

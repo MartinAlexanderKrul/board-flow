@@ -40,7 +40,8 @@
 ### Quick Guides
 - Setup cheat sheets (box, table, first turn) for each game, adjusted to player count, game mode and expansions
 - A session checklist, an "Easy to forget" list, and a Start game action that starts the play timer
-- Guides are open JSON in [`setup-guides/`](setup-guides/), bundled with the app and updated from GitHub without a new release
+- Guides are open JSON in [`setup-guides/`](setup-guides/), bundled with the app and updated from GitHub without a new release. Every guide works offline
+- Share any guide as a file, or import one as your own version (Settings > Preferences > Quick guides); your guides are included in backups
 
 ### Journal
 - **Plays:** every play with players, scores and winners; filters, search, edit, delete with Undo, and an outbox for unposted plays
@@ -145,7 +146,7 @@ app/src/main/kotlin/cz/nicolsburg/boardflow/
 | Google Sheets and Drive | `data/GoogleApiClient.kt`, `auth/GoogleAuthManager.kt` |
 | Gemini | `data/GeminiRepository.kt` (score extraction), `data/GeminiModels.kt` (model choice), `data/chronicle/` |
 | Background work | `BggSyncWorker` (collection), `BggPlayPostWorker` (unposted plays), `ChallengeNotificationWorker` |
-| Backups | `data/BackupSerializer.kt` (format version 7) |
+| Backups | `data/BackupSerializer.kt` (format version 8) |
 
 Key design decisions:
 

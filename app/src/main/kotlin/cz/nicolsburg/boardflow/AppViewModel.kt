@@ -2340,6 +2340,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val challenges = runBlocking { store.getChallenges() }
         val gameHints = runBlocking { store.getGameRecognitionHints() }
         val playerHints = runBlocking { store.getPlayerRecognitionHints() }
+        val userGuides = runBlocking { container.setupGuideRepository.userGuidesJson() }
         return prefs.exportAll(
             includeSensitiveData = includeSensitiveData,
             collectionSnapshot = collection,
@@ -2348,7 +2349,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             players = players,
             challenges = challenges,
             recognitionHints = gameHints,
-            playerRecognitionHints = playerHints
+            playerRecognitionHints = playerHints,
+            setupGuides = userGuides
         )
     }
 
@@ -2408,6 +2410,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 container.canonicalCollectionStore.replaceGameRecognitionHints(imported.gameRecognitionHints)
             if (imported.playerRecognitionHints.isNotEmpty())
                 container.canonicalCollectionStore.replacePlayerRecognitionHints(imported.playerRecognitionHints)
+            imported.setupGuides?.let { container.setupGuideRepository.restoreUserGuides(it) }
 
             try {
                 _statsPlayScope.value = StatsPlayScope.valueOf(prefs.statsPlayScope)
