@@ -12,7 +12,7 @@ BoardFlow currently supports all of the following:
 
 - local and online BGG play logging
 - offline-first local play saving
-- manual reposting of unposted local plays from History
+- unposted local plays post automatically when the device is online (`BggPlayPostWorker`), or by hand from History
 - edit and delete play flows
 - play quantity, incomplete flag, and nowInStats toggle
 - AI score extraction from images with Gemini (with model fallback/cycling), preceded by a local non-blocking scan quality warning for obviously dark, blurry, low-resolution, or too-far images; malformed responses automatically trigger a silent background retry — if it succeeds while the user is still on `LogPlayScreen`, a non-blocking banner offers to apply the cleaner result
@@ -22,12 +22,12 @@ BoardFlow currently supports all of the following:
 - saved player roster with aliases, optional BGG usernames, and Levenshtein fuzzy matching
 - collection browsing on a single My Shelf tab with owned / wishlist / played filter dimensions, plus sleeves
 - per-game sleeve exclusion (toggle individual games out of sleeve display)
-- configurable sleeve manufacturer priority (Appearance settings)
+- configurable sleeve manufacturer priority (Settings > Preferences)
 - game detail drill-ins with history and player links
-- expansion / sibling title detection and display in log flow; `RelatedGamesBanner` shows the first 6 related games by default with a "Show all (N)" / "Show less" toggle and `animateContentSize` smooth expand; 2–5 related titles are shown without a toggle
+- expansion / sibling title detection and display in log flow; `RelatedGamesBanner` is a single scrolling row of chips under the play details
 - record moment detection after logging (first win, new high score, win streak)
 - session memory: per-play mood chips (multi-select, preset + custom) and quote capture from `PlayDetailsDialog`
-- chronicle generation: AI-generated single atmospheric sentence per session using Gemini, with deterministic offline fallback; stored in `play_memories` Room table; persists independently of BGG sync; togglable via Settings > AI
+- chronicle generation: AI-generated single atmospheric sentence per session using Gemini, with deterministic offline fallback; stored in `play_memories` Room table; persists independently of BGG sync; togglable via Settings > Preferences
 - history tabs for plays, stats, and players
 - signature-based deduplication of local and BGG plays
 - QR code play sharing and import
@@ -73,7 +73,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
 - `ui/app/AppShell.kt`
   - app scaffold
   - header
-  - bottom nav (5 tabs: NewPlay, History, Collection, Sync, Settings)
+  - bottom nav (4 tabs: NewPlay, History, Collection, Settings); Settings tabs are Sync, Preferences, Scan, Data. Sync is the first (`SettingsScreen(syncContent = { SyncScreen(...) })`) and also covers the accounts: its status rows sign in to Google, edit the BGG account and connect the sheet. The setup guide link is in Preferences
   - screen routing
   - cross-screen deep-link style callbacks between Collection, History, Players, and Log Play
   - consumes `pendingHistoryNavigation` requests from `AppViewModel`
@@ -101,11 +101,11 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - play post/edit/delete flows (local and BGG)
   - local outbox posting for unposted plays (per-play and bulk)
   - record moment detection (first win, new high score, win streak)
-  - session memory and chronicle: `savePlayMemory()` persists moods/quote to `play_memories` and triggers chronicle generation; `ensureChronicleForPlay()` auto-generates when opening a play with memory but no chronicle; concurrency managed via `chronicleJobs`, `chronicleInFlightSourceKeys`, `chronicleGenerationLock`; `chroniclePendingPlayIds: StateFlow<Set<String>>` drives the `...` placeholder; `chronicleEnabled: StateFlow<Boolean>` gates all generation and display; custom mood management: `addCustomMoodIfNew`, `deleteCustomMood`, `renameCustomMood`
+  - session memory and chronicle: `savePlayMemory()` persists moods/quote to `play_memories` and triggers chronicle generation; `ensureChronicleForPlay()` auto-generates when opening a play with memory but no chronicle; concurrency managed via `chronicleJobs`, `chronicleInFlightSourceKeys`, `chronicleGenerationLock`; `chroniclePendingPlayIds: StateFlow<Set<String>>` drives the `...` placeholder; `chronicleEnabled: StateFlow<Boolean>` gates all generation and display; custom mood management: `addCustomMoodIfNew`, `deleteCustomMood`
   - expansion / sibling title detection (`GameRelations`); `findRelatedGames` uses `isExpansionOf()` helper supporting both separator-based (`"Root: Sub"`) and space-prefix-based (`"Root Sub"`) expansion names; detects when the selected game is itself a space-separated expansion and treats its prefix as the base
   - cross-tab navigation requests (`pendingHistoryNavigation`)
   - import/export and backup restore
-  - app theme and sleeve manufacturer preference state (`appTheme`, `sleevePreferredManufacturer`)
+  - sleeve manufacturer preference state (`sleevePreferredManufacturer`)
 - `SyncViewModel.kt`
   - Google auth state
   - spreadsheet connection state
@@ -123,7 +123,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - `GeminiRepository.kt` -- AI extraction (scores + game detection), model discovery, fallback cycling; debug-logged under TAG "Gemini"; sets `ExtractedPlay.modelUsed` to the winning model name and `ExtractedPlay.isMalformed = true` when JSON parsing fails
   - `GeminiModels.kt` -- model selection shared by scan and chronicle; no versioned model name is hardcoded. The stored model preference defaults to blank (`GeminiModels.AUTO`): candidates are the `gemini-flash-latest` / `gemini-flash-lite-latest` aliases plus the key's cached model list, ranked stable > preview, Flash > Flash-Lite (Flash-Lite first for chronicles), newest version first. Pro, TTS, image and other specialised models are filtered out by name (`SPECIALISED`); `scripts/gemini_model_probe.py` sends the real scan and chronicle requests to every listed model to re-check that filter. A pinned model goes first with the automatic chain behind it. HTTP 404 (retired model) or a 400 saying the model cannot take image/JSON requests rotates to the next candidate, drops the model, clears the pin if it was the pinned one (`SecurePreferences.markGeminiModelUnavailable`) and refreshes the list; the list also refreshes when older than 24 h at scan time
   - `ScanImageQualityAnalyzer.kt` -- local pre-Gemini image readability checks; does not persist image, player, or score data
-  - `CanonicalCollectionStore.kt` -- Room-backed live source of truth (DB v12); stores canonical games, logged plays, BGG play cache, play sessions, play memories, thumbnail cache, players, challenges, game recognition hints, player recognition hints, sleeve tracking, sleeve inventory, and setup guides (`setup_guides`, `setup_guide_catalog`); `getBggPlaysCache()` and `getLoggedPlays()` apply the `play_memories` overlay on read, with `parseMemoryFromNotes()` as fallback for plays with `$$mood:`/`$$quote:` lines in comments
+  - `CanonicalCollectionStore.kt` -- Room-backed live source of truth (DB v13); stores canonical games, logged plays, BGG play cache, play sessions, play memories, thumbnail cache, players, challenges, game recognition hints, player recognition hints, sleeve tracking, sleeve inventory, and setup guides (`setup_guides`, `setup_guide_catalog`); `getBggPlaysCache()` and `getLoggedPlays()` apply the `play_memories` overlay on read, with `parseMemoryFromNotes()` as fallback for plays with `$$mood:`/`$$quote:` lines in comments
   - `setupguide/` -- Quick Setup: `SetupGuideJson` (org.json format mapping), `SetupGuideValidator` (structural checks applied to every guide before it is shown or stored), `SetupGuideResolver` (pure: guide + player count + modules -> visible steps with amounts filled in), `SetupGuideIndex`, `BundledSetupGuideSource` (APK assets), `SetupGuideCatalogClient` (GitHub raw, quiet failure), `SetupGuideRepository` (layer resolution USER > newer of BUNDLED/CATALOG, availability map keyed by base/alias/module BGG ids, daily index refresh, prefetch for owned games)
   - `SessionMemoryJson.kt` -- `toSessionMemoryOrNull()`, `toJsonString()`, `parseMemoryFromNotes()` extension functions
   - `chronicle/` -- chronicle service pipeline: `SessionChronicleService` (plan + compose), `GeminiChronicleLineGenerator` (Gemini API, 4 retries, model fallback, 2.5 s timeout), `FallbackChronicleComposer` (deterministic offline fallback), `ChronicleLineGenerator` interface, `ChronicleRequest` and `ChronicleAiConfig` data classes
@@ -171,11 +171,11 @@ It stores:
 
 - BGG credentials (username, password)
 - Gemini key, model endpoint, available models cache
-- app theme (`app_theme`, enum name string)
+- app theme (`app_theme`; legacy, no longer read by the UI, still written to backups)
 - sleeve priority manufacturer (`sleeve_preferred_manufacturer`, `SleeveManufacturer` enum name)
 - player roster (legacy; still written for backup compatibility; Room is authoritative at runtime)
 - recent games (last 50)
-- sync preferences (spreadsheet ID, sheet tab name, Google email)
+- sync preferences (spreadsheet ID, its Google name `sync_spreadsheet_title` shown in the Sync Accounts rows and fetched once after sign-in when missing, sheet tab name, Google email)
 - session context (active game, players, location, timestamp)
 - sleeve exclusion list (game IDs)
 - per-game insight key cache
@@ -216,7 +216,7 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - search is debounced (800ms after typing stops); local collection is checked first; if no local match, BGG is called with `exact=1` first, then `exact=0` as a fallback if exact returns nothing
 - `isBggSearchActive` in `AppViewModel` prevents `loadCollection`, `updateFromCollection`, and `loadRecentGames` from overwriting `_searchResults` while a BGG search result set is displayed; the guard clears when the user selects a game or clears the query
 - lists longer than 20 items show a draggable fast-scroll bar on the right edge (`NewPlayScreen.FastScrollBar`): amber pill thumb, animated opacity (idle 20% / scrolling 65% / dragging 80%), floating letter bubble that leads the thumb position, and haptic feedback (`HapticFeedbackType.TextHandleMove`) per letter section change
-- selected games move into `LogPlayScreen`
+- selecting a game opens `LogPlayScreen` directly (form first); scanning is the `Scan scores` button on the form, which returns to the same form with the typed details intact (`AppViewModel.prepareScanFromLogPlay`, `AppShell.scanOpenedFromForm`)
 - session context may prefill players/location
 - AI extraction may prefill players/scores
 - `ScanScreen` runs `ScanImageQualityAnalyzer` before sending an image to Gemini; poor scans show a non-blocking "This scan may be hard to read." warning with a reason and "Use anyway" / "Retake" actions
@@ -243,7 +243,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - play posts are serialized by `playPostMutex` (History's per-play and bulk post use the same path) so a play is never posted twice
 - if offline or posting is unavailable, the play can still be saved locally
 - extra related games may post separately; failures there can leave local follow-up plays
-- local unposted plays are intentionally user-controlled from History rather than silently auto-posted on startup
+- unposted local plays are posted automatically once the device is online: `BggPlayPostWorker.enqueue` (unique work, network constraint, KEEP) is called at app start, when a play is saved offline, and when a background post fails. The worker and the app share `PlayPostLock` (one mutex, the local -> BGG id map, and a `postedInBackground` signal that makes `AppViewModel` reload history); every poster re-reads the play under the lock and skips it if it is already posted or gone, so a play is never posted twice. `deleteLocalPlay` takes the same lock and refuses a play that was just promoted (it is on BGG now). History's Post / Post all still work for posting right away
 - tapping X or back when Log Play has any data (unsaved changes, editable players, or an extracted play) shows a discard confirmation dialog; the check reads `AppViewModel` StateFlow values directly to avoid a one-frame `LaunchedEffect` delay
 - after posting, `AppViewModel` detects record moments (first win, new high score, win streak) by comparing against play history snapshot
 
@@ -264,13 +264,13 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - History includes:
   - `Plays`
   - `Challenges`
-  - `Stats` -- includes per-player stat profiles and a `HeadToHeadSection` with `BoardFlowPickerField` player selectors
+  - `Stats` -- a `Plays | Collection` switch; Plays includes per-player stat profiles and a `HeadToHeadSection` with `BoardFlowPickerField` player selectors
   - `Players`
 - the Plays tab also acts as the outbox surface for unposted local plays
 
 ### Quick Setup
 
-- entries: the `Quick Guides` tab in `NewPlayScreen` (`All guides` lists `SetupGuideRepository.guides`; `My games` shares the Log Play search results and dims rows without a guide), and the `Setup` button in `GameDetailsDialog` `HeaderSection`, shown when `SetupGuideRepository.availability` has the game's BGG id (base, alias, or a module `bggId`); both Collection and History wire it through `AppShell.openQuickSetup`
+- entries: the `Quick Guides` tab in `NewPlayScreen` (opens on `My games`, which shares the Log Play search results and dims rows without a guide; `All guides` lists `SetupGuideRepository.guides`), and the `Setup` button in `GameDetailsDialog` `HeaderSection`, shown when `SetupGuideRepository.availability` has the game's BGG id (base, alias, or a module `bggId`); both Collection and History wire it through `AppShell.openQuickSetup`
 - every guide opens at 2 players (clamped to the guide's range); modules with the same `group` are a single choice (radio) and exactly one available member is always on
 - route `AppRoutes.QUICK_SETUP` (`quick_setup/{gameId}?players={players}`); bottom nav hidden; `QuickSetupViewModel` is nav-scoped and keeps player count, modules and checked step ids in its `SavedStateHandle` only - never persisted, never written into the guide
 - guide content is data, not code: edit `setup-guides/*.json`, bump `version` in the guide and `index.json`, and run `:app:testDebugUnitTest` (`BundledSetupGuidesTest` validates every guide and every configuration). Paraphrase rulebooks; do not paste their text
@@ -280,7 +280,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 ### Collection
 
 - collection data is loaded through sync and propagated from the canonical Room snapshot
-- tabs are `My Shelf`, `Sleeves`, and `Stats`. Membership (owned / wishlist / played) is no
+- tabs are `My Shelf` and `Sleeves`; collection stats live in Journal → Stats behind a `Plays | Collection` switch (`HistoryScreen`, `CollectionStatsTab`). Membership (owned / wishlist / played) is no
   longer separate tabs — it lives in the `My Shelf` filter sheet as two single-select
   dimensions:
   - **Show** (`OwnershipFilter`): `Owned` (default) / `Wishlist` / `Played, not owned` / `Any`
@@ -294,12 +294,12 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
   searchable in Log Play (`AppViewModel.logPlayPool`), and resolve as game info from a play.
   Sleeve surfaces filter on `isOwned`, so they ignore played-only games.
 - game detail dialog is a major cross-link hub into History and Players
-- the detail dialog's bottom row is `Open BGG` / `Rules` / `Drive`; `Rules` appears when `RulebookLinks` (bundled `assets/rulebooks.json`, BGG id -> path in the public `boardgame-rulebooks` GitHub repo) has the game's id, and opens the PDF (or the folder when the game has several files) in the browser; entries that are full URLs (temporary RulesPal links for games with no PDF yet) are opened as-is; regenerate the JSON when rulebooks are added to that repo
+- the detail dialog's header buttons `Log play` / `Setup` / `History` are all the same solid amber pill (`DialogPrimaryActionButton`); its bottom row `BGG` / `Rules` / `Drive` is centred `BoardFlowSecondaryButton(compact = true)`s, the same 32dp size as the header buttons (`BoardFlowActionTokens.SecondaryButtonMinHeight` / `SecondaryButtonContentPadding`); `Rules` appears when `RulebookLinks` (bundled `assets/rulebooks.json`, BGG id -> path in the public `boardgame-rulebooks` GitHub repo) has the game's id, and opens the PDF (or the folder when the game has several files) in the browser; entries that are full URLs (temporary RulesPal links for games with no PDF yet) are opened as-is; regenerate the JSON when rulebooks are added to that repo
 - sleeve display respects per-game exclusion toggles
 
 ### Sync
 
-- Sync screen is the user-facing operational hub for:
+- Sync (Settings, first tab) is the user-facing operational hub for:
   - BGG readiness
   - Google readiness
   - sheet connection
@@ -316,13 +316,13 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - manages BGG credentials
 - manages Google sheet connection access points
 - manages Gemini configuration (key, model endpoint, model discovery)
-- manages theme (Light, Dark)
+- there is no theme setting: the app has one dark amber theme (`ui/theme/`: `Theme.kt` colours and `BoardFlowColors`, `Type.kt`, `Shape.kt`, `Spacing.kt`); use those tokens instead of raw sizes, radii and colours
 - manages sleeve manufacturer priority (`SleeveManufacturer`; persisted in `SecurePreferences`, exposed via `AppViewModel.sleevePreferredManufacturer`; used in `GameDetailDialog` via `SleeveEntry.preferredFor()`)
 - manages import/export (backup includes recognition templates since format v3)
 - can clear cached collection
-- AI section: view / edit / delete individual recognition templates; bulk-clear all templates with confirmation
-- AI section: Chronicles toggle (on by default); turning it off cancels all in-flight generation jobs and hides chronicle cards throughout the app
-- AI section: Mood Templates manager (`CustomMoodsDialog`) — view, rename (`EditMoodDialog`), and delete custom moods saved during session memory entry
+- Scan tab: view / edit / delete individual recognition templates (`RecognitionTemplatesDialog`); bulk-clear all templates with confirmation
+- Preferences tab: Chronicles toggle (on by default); turning it off cancels all in-flight generation jobs and hides chronicle cards throughout the app
+- Preferences: Mood templates (`CustomMoodsDialog`) - view and delete custom moods saved during session memory entry (delete asks first: it also removes the mood from every play)
 
 ### AI Game Recognition
 
@@ -400,7 +400,7 @@ Good images continue to Gemini immediately. Poor images show a warning in `ScanS
 - `replaceGameRecognitionHint()` does a full replace without merging (used by the Settings edit dialog)
 - `deleteGameRecognitionHint(gameObjectId)` removes one entry; `clearGameRecognitionHints()` removes all
 - Hints are included in backup export/import (format v3 `recognitionHints` array; import bulk-replaces)
-- Settings > AI shows the hint count, allows viewing (tap), editing categories or deleting (long press), and bulk clearing with confirmation
+- Settings > Scan shows the hint count; the templates dialog has an amber pen (edit categories) and a red trash per template, plus bulk clearing with confirmation
 
 ### AI Player Recognition (`data/PlayerRecognitionEngine.kt`)
 
@@ -416,7 +416,7 @@ Good images continue to Gemini immediately. Poor images show a warning in `ScanS
 
 `SecurePreferences.savePlayerRecognitionHint()` upserts by `(scannedNameNormalized, confirmedRosterPlayerId)` pair, incrementing `timesConfirmed` on collision.
 
-Settings > AI section shows the count of saved player hints and a "Clear player recognition hints" action.
+Settings > Scan shows the count of saved player hints and a "Clear player recognition hints" action.
 
 ### QR Play Sharing
 
@@ -443,7 +443,7 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
   - sleeve refresh owns sleeves only
 - full sync should update the canonical merged snapshot once at the end
 - local/offline history should not mutate canonical collection state
-- local unposted plays should remain visible and user-controlled
+- local unposted plays should remain visible in History until they are posted
 - BGG XML search outside the loaded collection requires the XML API token and should fail quietly to an empty result state if missing/rejected
 - player matching should stay explicit unless a match is truly exact
 - sleeve exclusions are per-game and stored in `SecurePreferences`; respect them in both display and export
@@ -492,6 +492,7 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 ## History / Roster Notes
 
 - saved roster players are distinct from arbitrary logged names
+- a player can have a default avatar colour (`Player.color`, `#RRGGBB`, blank = automatic from the name), picked in `EditPlayerDialog` and saved by `AppViewModel.updatePlayerColor`. `AppShell` provides `LocalPlayerColors` (name and aliases -> colour) so every `PlayerAvatar` uses it; a colour recorded on a play (red, blue, ...) still wins inside that play. Stored in the `players` table (`color`, migration 12 -> 13) and written to backups only when set
 - history rows should show all logged players, even if names are similar
 - general stats may treat unsaved names differently from roster views
 - roster-oriented views should stay roster-based
@@ -510,6 +511,34 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - per-game exclusions are stored in `SecurePreferences` as a `Set<String>` of game objectIds; managed via `SyncViewModel.toggleSleeveGameExclusion` / `excludeAllSleeveGames` / `includeAllSleeveGames`
 
 ## UI Conventions
+
+- build screens from the shared kit in `ui/common/BoardFlowKit.kt` (`BoardFlowCard`, `BoardFlowSectionTitle`, `GameListRow`, `GameCover`, `BoardFlowFormGroup` / `BoardFlowFormRow` / `BoardFlowInlineField`, `BoardFlowSettingRow` / `BoardFlowSettingValue`, `BoardFlowTextField`, `BoardFlowInfoPill`, `BoardFlowEmptyState`, `BoardFlowErrorBanner`) and the buttons, sheets and dialogs in `BoardFlowUi.kt`; do not style private surfaces, fields or rows per screen
+- forms are grouped rows on a tonal surface (icon, label, value), not one outlined box per field; surfaces separate by tone, not by borders
+- buttons are pills that hug their label (never `fillMaxWidth`), all in `BoardFlowUi.kt`:
+  - primary (`BoardFlowButton`): solid amber, 40dp. One per view: the action that moves the task forward (Save, Log play, Start game, Play again)
+  - secondary (`BoardFlowSecondaryButton`): amber outline and label on a transparent fill, same 40dp height. Alternatives next to the primary (Scan, Add player, Retake, the game detail links)
+  - cancel: white text (`BoardFlowInlineAction(neutral = true)`), left of the save button; `large = true` beside a 40dp button
+  - destructive (`BoardFlowDestructiveButton`): outlined red, 40dp (Remove, Clear rating, Clear collection cache). The action in `BoardFlowConfirmationDialog` is a solid red pill with a white Cancel. Red means data loss only
+  - a main Edit action is an amber pen icon next to the red delete icon on the left of the action row, with the primary pill alone on the right; a minor edit is amber "Edit" text
+  - two controls that sit next to each other have the same height and label size
+- amber (`colorScheme.primary`) is for emphasis, not for everything tappable: titles (game names), key numbers, the buttons above, text actions and the selected state. Chevrons, expanders, share and overflow icons, row icons and values are grey or white. Do not enlarge type or controls beyond the Material defaults: the original density is part of the look
+- on game art or the camera, pills are `Color.Black` at 50% with white labels; the one amber control on the camera is the shutter
+- the winner row is a translucent amber fill with no outline; session and chronicle cards are translucent grey (`Color.White` at 10%) with no outline
+- every tappable element is at least 48dp (`Dimens.MinTouchTarget`); dates shown to the user read `Oct 1, 2026`
+- every create, update and delete gets a snackbar via `LocalBoardFlowMessenger.current.show(message, actionLabel, onAction)` (hosted by `AppShell`); reversible local deletes (local plays, players, challenges, pause, archive) offer Undo instead of a confirmation dialog. Confirmations stay for BGG writes and irreversible actions. Explicit refreshes run without a "refresh again?" prompt
+- the top bar shows the destination (Log Play, Journal, Collection, Settings); the tab row shows the sub-location
+- the top bar shows the screen title, with a back arrow on pushed screens (scan, log play, quick setup, QR import); the bottom bar is a Material `NavigationBar`
+- every screen uses the kit. Two treatments, by purpose:
+  - forms and editors (Log Play, edit play, create challenge, player edit, sleeve inventory, account dialogs): a headline, grouped rows, and white Cancel text plus the save pill at the bottom right
+  - display screens (Challenges, Stats, game detail, Sleeves, Quick Setup): keep the content the screen always showed, on plain tonal cards with no outline and no colour tint; on one card only the key number, a status badge and real actions carry colour, secondary toggles ("Show 2 counted games") are white
+- status colours come from `BoardFlowColors` (`Success` done, `Warning` paused, `colorScheme.error` missed); do not composite amber over a surface, it turns brown
+- an editable value in a read-only grid keeps its white value and gets a grey chevron (`DetailCell` in `GameDetailDialog`)
+- text input outside a form group is `BoardFlowTextField` (tonal fill, label inside); inside a form group it is `BoardFlowInlineField`
+- labels are sentence case ("Refresh collection", not "Refresh Collection")
+- tab rows are `ScreenTabRow`: the label size is computed once so the widest label in `ScreenTabs.AllLabels` fits one line in a quarter of the screen (the most tabs any screen has), and every tab row uses that size; add new tab labels to `ScreenTabs.AllLabels`. Every tabbed screen also switches tabs on a horizontal swipe (`swipeToNavigateTabs`)
+- Settings and Sync are lists of sections: a `BoardFlowSectionTitle` (with an optional one-line `supporting`) over one `BoardFlowFormGroup` of `BoardFlowSettingRow`s (amber icon, title, grey detail, then a `BoardFlowSettingValue`, a switch or a chevron). Every action is a row, not a button; clear / delete rows are `destructive = true` (red). Text entry (Gemini key, backup keys) opens a dialog from its row. Results are snackbars
+- Journal play rows list every player on their own line (`HistoryListPlayerRow`)
+- Log Play hides its tabs, search field and "Playing" row while the list scrolls down and brings them back on the way up; it follows the drag direction (`NestedScrollConnection`), not the list position, so a short list does not flicker
 
 - preserve the current screen hierarchy and tab layout
 - prefer extracting small reusable helpers when a screen starts carrying duplicated framework glue

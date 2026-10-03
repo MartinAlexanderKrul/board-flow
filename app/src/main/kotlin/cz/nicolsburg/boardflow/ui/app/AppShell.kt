@@ -1,5 +1,23 @@
 ﻿package cz.nicolsburg.boardflow.ui.app
 
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarDuration
+import cz.nicolsburg.boardflow.ui.common.playerColorMap
+import cz.nicolsburg.boardflow.ui.common.LocalPlayerColors
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
+import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSnackbarHost
+import cz.nicolsburg.boardflow.ui.common.BoardFlowMessenger
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -105,12 +123,9 @@ private data class BottomNavTab(
 )
 
 private object AppChromeTokens {
-    val HeaderHorizontalPadding = 16.dp
-    val HeaderVerticalPadding = 8.dp
-    val HeaderContentSpacing = 8.dp
-    val HeaderLogoSize = 32.dp
-    val HeaderCloseSize = 40.dp
-    val BrandMetaSize = 10.sp
+    val HeaderHeight = 56.dp
+    val HeaderLogoSize = 28.dp
+    val HeaderCloseSize = 48.dp
 }
 
 @Composable
@@ -279,26 +294,59 @@ fun BoardFlowApp(
         BottomNavTab(AppRoutes.NEW_PLAY, "Log Play", Icons.AutoMirrored.Filled.NoteAdd),
         BottomNavTab(AppRoutes.HISTORY, "Journal", BoardFlowIcons.History),
         BottomNavTab(AppRoutes.COLLECTION, "Collection", BoardFlowIcons.Collection),
-        BottomNavTab(AppRoutes.SYNC, "Sync", BoardFlowIcons.Sync),
         BottomNavTab(AppRoutes.SETTINGS, "Settings", BoardFlowIcons.Settings)
     )
 
-    val selectedGameName = appViewModel.selectedGame?.name.orEmpty()
     val isScan = currentRoute?.startsWith("scan/") == true
     val isReview = currentRoute == AppRoutes.LOG_PLAY
     val isQuickSetup = currentRoute == AppRoutes.QUICK_SETUP
+    val isQrImport = currentRoute == AppRoutes.QR_IMPORT
 
-    val headerSubtitle = when {
-        currentRoute == AppRoutes.NEW_PLAY -> activeTabLabel ?: "Log a New Play"
-        currentRoute == AppRoutes.HISTORY -> activeTabLabel ?: "Play Journal"
-        currentRoute == AppRoutes.QR_IMPORT -> "Import Play"
-        currentRoute == AppRoutes.COLLECTION -> activeTabLabel ?: "My Collection"
-        currentRoute == AppRoutes.SYNC -> "Sync to Sheets"
-        currentRoute == AppRoutes.SETTINGS -> activeTabLabel ?: "Settings"
-        currentRoute == AppRoutes.CHALLENGES -> "Challenges"
-        isQuickSetup -> "Quick Guides"
-        isScan || isReview -> selectedGameName
+    // The top bar names the destination; the tab row below it shows the sub-location.
+    val headerTitle = when {
+        currentRoute == AppRoutes.NEW_PLAY -> "Log Play"
+        currentRoute == AppRoutes.HISTORY -> "Journal"
+        isQrImport -> "Import play"
+        currentRoute == AppRoutes.COLLECTION -> "Collection"
+        currentRoute == AppRoutes.SETTINGS -> "Settings"
+        isQuickSetup -> "Quick setup"
+        isScan -> "Scan scores"
+        isReview -> "Log play"
         else -> ""
+    }
+
+    // Logs a placeholder play on Jan 1 of your oldest play year, so an owned game counts as played.
+    fun markGameAsPlayed(gameId: Int, gameName: String) {
+        val oldestYear = historyPlays
+            .mapNotNull { it.date.substringBefore("-").toIntOrNull() }
+            .minOrNull()
+        val date = if (oldestYear != null) "$oldestYear-01-01" else LocalDate.now().toString()
+        val bggUsername = appViewModel.prefs.bggUsername.trim()
+        val selfName = if (bggUsername.isNotBlank()) {
+            players.firstOrNull { it.bggUsername.trim().equals(bggUsername, ignoreCase = true) }
+                ?.displayName ?: bggUsername
+        } else null
+        val playPlayers = if (selfName != null) listOf(PlayerResult(name = selfName, score = "", isWinner = false)) else emptyList()
+        appViewModel.saveImportedPlay(
+            LoggedPlay(
+                id = UUID.randomUUID().toString(),
+                gameId = gameId,
+                gameName = gameName,
+                date = date,
+                players = playPlayers,
+                durationMinutes = 0,
+                location = "",
+                postedToBgg = false,
+            )
+        )
+    }
+
+    // Opens Log Play for the game being timed; the form prefills the elapsed time.
+    fun logTimedPlay() {
+        val timer = appViewModel.activeTimer.value ?: return
+        appViewModel.setupLogPlayById(timer.gameId ?: 0, timer.gameName, null)
+        appViewModel.setExtractedPlayManual()
+        navController.navigate(AppRoutes.LOG_PLAY) { launchSingleTop = true }
     }
 
     fun leaveLogPlay() {
@@ -322,20 +370,35 @@ fun BoardFlowApp(
         }
     }
 
+    // The scanner is opened either from the play form (go back to it, keeping what was typed)
+    // or straight from the search field (nothing to go back to but the game list).
+    fun scanOpenedFromForm() = navController.previousBackStackEntry?.destination?.route == AppRoutes.LOG_PLAY
+
+    fun leaveScan() {
+        if (navController.currentDestination?.route?.startsWith("scan/") != true) return
+        if (scanOpenedFromForm()) {
+            navController.popBackStack()
+            return
+        }
+        appViewModel.clearLogPlayFlow()
+        if (!navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false)) {
+            navController.navigate(AppRoutes.NEW_PLAY) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
     val headerBack: (() -> Unit)? = when {
         isReview && !logPlayPostSaveShowing -> ({
             requestLeaveLogPlay()
         })
-        isScan -> ({
-            appViewModel.clearLogPlayFlow()
-            if (!navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false)) {
-                navController.navigate(AppRoutes.NEW_PLAY) {
-                    popUpTo(0) { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-        })
+        isScan -> ({ leaveScan() })
         isQuickSetup -> ({ navController.popBackStack() })
+        isQrImport -> ({
+            appViewModel.clearPendingImportedPlay()
+            navController.popBackStack()
+        })
         else -> null
     }
 
@@ -363,77 +426,70 @@ fun BoardFlowApp(
             null
         }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val messenger = remember(snackbarHostState, scope) {
+        object : BoardFlowMessenger {
+            override fun show(message: String, actionLabel: String?, onAction: (() -> Unit)?) {
+                scope.launch {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    val result = snackbarHostState.showSnackbar(
+                        message = message,
+                        actionLabel = actionLabel,
+                        duration = if (actionLabel != null) SnackbarDuration.Long else SnackbarDuration.Short
+                    )
+                    if (result == SnackbarResult.ActionPerformed) onAction?.invoke()
+                }
+            }
+        }
+    }
+
+    val playerColors = remember(players) { playerColorMap(players) }
+    CompositionLocalProvider(
+        LocalBoardFlowMessenger provides messenger,
+        LocalPlayerColors provides playerColors
+    ) {
     Box(Modifier.fillMaxSize()) {
     Scaffold(
+        snackbarHost = { BoardFlowSnackbarHost(snackbarHostState) },
         topBar = {
             AppHeader(
-                subtitle = headerSubtitle,
+                title = headerTitle,
                 onNavigateBack = headerBack,
                 showDivider = showHeaderDivider,
                 actionContent = headerAction,
                 activeTimer = activeTimer,
-                onTimerClick = {
-                    val timer = appViewModel.activeTimer.value
-                    if (timer != null) {
-                        appViewModel.setupLogPlayById(timer.gameId ?: 0, timer.gameName, null)
-                        appViewModel.setExtractedPlayManual()
-                        navController.navigate(AppRoutes.LOG_PLAY) { launchSingleTop = true }
-                    }
-                },
+                onTimerClick = ::logTimedPlay,
                 onTimerLongClick = { showStopTimerConfirm = true },
             )
         },
         bottomBar = {
-            if (!isScan && !isReview && !isQuickSetup) {
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.fillMaxWidth()
+            if (!isScan && !isReview && !isQuickSetup && !isQrImport) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    tonalElevation = 0.dp
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .navigationBarsPadding()
-                            .height(80.dp)
-                    ) {
-                        tabs.forEach { tab ->
-                            val selected = currentRoute == tab.route
-                            val amber = MaterialTheme.colorScheme.primary
-                            val tint = if (selected) amber
-                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .clickable {
-                                        if (currentRoute != tab.route) {
-                                            navController.navigate(tab.route) {
-                                                popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (selected) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.TopCenter)
-                                            .fillMaxWidth()
-                                            .height(2.dp)
-                                            .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
-                                            .background(amber)
-                                    )
+                    tabs.forEach { tab ->
+                        NavigationBarItem(
+                            selected = currentRoute == tab.route,
+                            onClick = {
+                                if (currentRoute != tab.route) {
+                                    navController.navigate(tab.route) {
+                                        popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(tab.icon, contentDescription = tab.label, tint = tint, modifier = Modifier.size(24.dp))
-                                    Text(tab.label, style = MaterialTheme.typography.labelSmall, color = tint)
-                                }
-                            }
-                        }
+                            },
+                            icon = { Icon(tab.icon, contentDescription = null) },
+                            label = { Text(tab.label, style = MaterialTheme.typography.labelMedium) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
                     }
                 }
             }
@@ -444,7 +500,7 @@ fun BoardFlowApp(
                 title = "Discard log play?",
                 message = "You have unsaved play details. If you leave now, those changes will be lost.",
                 confirmLabel = "Discard",
-                dismissLabel = "Keep Editing",
+                dismissLabel = "Keep editing",
                 kind = BoardFlowConfirmationKind.DESTRUCTIVE,
                 onConfirm = {
                     showDiscardLogPlayConfirm = false
@@ -459,7 +515,7 @@ fun BoardFlowApp(
                 title = "Stop timer?",
                 message = "This will stop tracking time for ${activeTimer?.gameName?.ifBlank { "this game" } ?: "this game"}.",
                 confirmLabel = "Stop",
-                dismissLabel = "Keep Running",
+                dismissLabel = "Keep running",
                 kind = BoardFlowConfirmationKind.DESTRUCTIVE,
                 onConfirm = {
                     showStopTimerConfirm = false
@@ -474,7 +530,11 @@ fun BoardFlowApp(
             startDestination = AppRoutes.NEW_PLAY,
             modifier = Modifier
                 .padding(innerPadding)
-                .nestedScroll(nestedScrollConnection)
+                .nestedScroll(nestedScrollConnection),
+            enterTransition = NavTransitions.enter,
+            exitTransition = NavTransitions.exit,
+            popEnterTransition = NavTransitions.popEnter,
+            popExitTransition = NavTransitions.popExit
         ) {
             composable(AppRoutes.NEW_PLAY) {
                 NewPlayScreen(
@@ -483,9 +543,8 @@ fun BoardFlowApp(
                         if (appViewModel.quickScanCorrectionMode.value) {
                             appViewModel.applyDetectedGameCorrection(game)
                             navController.navigate(AppRoutes.LOG_PLAY)
-                        } else if (appViewModel.isOnline()) {
-                            navController.navigate(AppRoutes.scan(game.id, game.name))
                         } else {
+                            // Picking a game opens the form; scanning is a button on it.
                             appViewModel.setExtractedPlayManual()
                             navController.navigate(AppRoutes.LOG_PLAY)
                         }
@@ -502,7 +561,8 @@ fun BoardFlowApp(
                     setupGuideAvailability = setupGuideAvailability,
                     allSetupGuides = allSetupGuides,
                     onOpenQuickSetup = ::openQuickSetup,
-                    onActiveTabChange = { activeTabLabel = it }
+                    onActiveTabChange = { activeTabLabel = it },
+                    onLogTimedPlay = ::logTimedPlay
                 )
             }
 
@@ -528,7 +588,8 @@ fun BoardFlowApp(
                         navController.navigate(AppRoutes.QR_IMPORT)
                     },
                     setupGuideAvailability = setupGuideAvailability,
-                    onOpenQuickSetup = ::openQuickSetup
+                    onOpenQuickSetup = ::openQuickSetup,
+                    onMarkAsPlayed = ::markGameAsPlayed
                 )
             }
 
@@ -540,12 +601,8 @@ fun BoardFlowApp(
                     personalRatings = personalRatings,
                     onLogPlay = { gameId, gameName, thumbnailUrl ->
                         appViewModel.setupLogPlayById(gameId, gameName, thumbnailUrl)
-                        if (appViewModel.isOnline()) {
-                            navController.navigate(AppRoutes.scan(gameId, gameName))
-                        } else {
-                            appViewModel.setExtractedPlayManual()
-                            navController.navigate(AppRoutes.LOG_PLAY)
-                        }
+                        appViewModel.setExtractedPlayManual()
+                        navController.navigate(AppRoutes.LOG_PLAY)
                     },
                     onViewHistory = { gameId ->
                         appViewModel.setPendingHistoryFilter(gameId = gameId)
@@ -597,52 +654,14 @@ fun BoardFlowApp(
                     },
                     onSaveCollectionStatus = { gameId, status ->
                         appViewModel.saveCollectionStatus(gameId, status)
+                        messenger.show("Collection status saved")
                     },
                     onRemoveFromCollection = { gameId ->
                         appViewModel.removeFromCollection(gameId)
+                        messenger.show("Removed from your BGG collection")
                     },
                     onClearCollectionStatus = { appViewModel.clearCollectionStatus() },
-                    onMarkAsPlayed = { gameId, gameName ->
-                        val oldestYear = historyPlays
-                            .mapNotNull { it.date.substringBefore("-").toIntOrNull() }
-                            .minOrNull()
-                        val date = if (oldestYear != null) "$oldestYear-01-01" else LocalDate.now().toString()
-                        val bggUsername = appViewModel.prefs.bggUsername.trim()
-                        val selfName = if (bggUsername.isNotBlank()) {
-                            players.firstOrNull { it.bggUsername.trim().equals(bggUsername, ignoreCase = true) }
-                                ?.displayName ?: bggUsername
-                        } else null
-                        val playPlayers = if (selfName != null) listOf(PlayerResult(name = selfName, score = "", isWinner = false)) else emptyList()
-                        appViewModel.saveImportedPlay(
-                            LoggedPlay(
-                                id = UUID.randomUUID().toString(),
-                                gameId = gameId,
-                                gameName = gameName,
-                                date = date,
-                                players = playPlayers,
-                                durationMinutes = 0,
-                                location = "",
-                                postedToBgg = false,
-                            )
-                        )
-                    },
-                )
-            }
-
-            composable(AppRoutes.SYNC) {
-                SyncScreen(
-                    syncViewModel = syncViewModel,
-                    onPickCsv = onRequestCsvPick,
-                    onSpreadsheetChanged = syncViewModel::setSpreadsheetId,
-                    onSignIn = onRequestSignIn,
-                    onSignOut = onRequestSignOut,
-                    bggUsername = appViewModel.prefs.bggUsername,
-                    bggPassword = appViewModel.prefs.bggPassword,
-                    onSaveBggCredentials = { username, password ->
-                        appViewModel.prefs.bggUsername = username
-                        appViewModel.prefs.bggPassword = password
-                        syncViewModel.refreshCredentialState()
-                    }
+                    onMarkAsPlayed = ::markGameAsPlayed,
                 )
             }
 
@@ -652,7 +671,23 @@ fun BoardFlowApp(
                     syncViewModel = syncViewModel,
                     onSignIn = onRequestSignIn,
                     onSignOut = onRequestSignOut,
-                    onActiveTabChange = { activeTabLabel = it }
+                    onActiveTabChange = { activeTabLabel = it },
+                    syncContent = {
+                        SyncScreen(
+                            syncViewModel = syncViewModel,
+                            onPickCsv = onRequestCsvPick,
+                            onSpreadsheetChanged = syncViewModel::setSpreadsheetId,
+                            onSignIn = onRequestSignIn,
+                            onSignOut = onRequestSignOut,
+                            bggUsername = appViewModel.prefs.bggUsername,
+                            bggPassword = appViewModel.prefs.bggPassword,
+                            onSaveBggCredentials = { username, password ->
+                                appViewModel.prefs.bggUsername = username
+                                appViewModel.prefs.bggPassword = password
+                                syncViewModel.refreshCredentialState()
+                            }
+                        )
+                    }
                 )
             }
 
@@ -670,8 +705,14 @@ fun BoardFlowApp(
                 ScanScreen(
                     viewModel = appViewModel,
                     gameName = gameName,
-                    onScoresExtracted = { navController.navigate(AppRoutes.LOG_PLAY) },
-                    onDiscard = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) }
+                    onScoresExtracted = {
+                        // ScanScreen can report twice for one result; act only while it is on top.
+                        if (navController.currentDestination?.route?.startsWith("scan/") == true) {
+                            if (scanOpenedFromForm()) navController.popBackStack()
+                            else navController.navigate(AppRoutes.LOG_PLAY)
+                        }
+                    },
+                    onDiscard = { leaveScan() }
                 )
             }
 
@@ -680,8 +721,14 @@ fun BoardFlowApp(
                     viewModel = appViewModel,
                     onPosted = {
                         appViewModel.clearLogPlayFlow()
+                        // Leave the scan/log screens first, then switch tabs exactly like the
+                        // bottom bar does. Navigating straight from here left the Log Play tab
+                        // restoring Journal on its next tap.
+                        navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false)
                         navController.navigate(AppRoutes.HISTORY) {
-                            popUpTo(AppRoutes.NEW_PLAY) { inclusive = false }
+                            popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     },
                     onChangeGame = { navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false) },
@@ -691,14 +738,15 @@ fun BoardFlowApp(
                         appViewModel.enterQuickScanCorrectionMode()
                         navController.popBackStack(AppRoutes.NEW_PLAY, inclusive = false)
                     },
+                    onScan = {
+                        appViewModel.prepareScanFromLogPlay()
+                        val game = appViewModel.selectedGame
+                        navController.navigate(AppRoutes.scan(game?.id ?: 0, game?.name ?: ""))
+                    },
                     onPickRecommendation = { game ->
-                        if (appViewModel.isOnline()) {
-                            navController.navigate(AppRoutes.scan(game.id, game.name))
-                        } else {
-                            appViewModel.setExtractedPlayManual()
-                            navController.navigate(AppRoutes.LOG_PLAY) {
-                                popUpTo(AppRoutes.LOG_PLAY) { inclusive = true }
-                            }
+                        appViewModel.setExtractedPlayManual()
+                        navController.navigate(AppRoutes.LOG_PLAY) {
+                            popUpTo(AppRoutes.LOG_PLAY) { inclusive = true }
                         }
                     },
                     onEditPlay = { play ->
@@ -720,11 +768,16 @@ fun BoardFlowApp(
                 val quickSetupViewModel: QuickSetupViewModel = viewModel(
                     factory = QuickSetupViewModel.factory(setupGuideRepository, appViewModel::isOnline)
                 )
+                val setupCollection by appViewModel.collection.collectAsState()
                 QuickSetupScreen(
                     viewModel = quickSetupViewModel,
+                    thumbnailFor = { id -> setupCollection.firstOrNull { it.id == id }?.thumbnailUrl },
                     onStartGame = { gameId, gameName ->
                         appViewModel.startPlayTimer(gameId, gameName)
-                        navController.popBackStack()
+                        navController.navigate(AppRoutes.NEW_PLAY) {
+                            popUpTo(AppRoutes.NEW_PLAY) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     },
                     onClose = { navController.popBackStack() }
                 )
@@ -843,12 +896,13 @@ fun BoardFlowApp(
         })
     }
     } // end Box
+    } // end messenger provider
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AppHeader(
-    subtitle: String,
+    title: String,
     onNavigateBack: (() -> Unit)? = null,
     showDivider: Boolean = false,
     actionContent: (@Composable () -> Unit)? = null,
@@ -869,99 +923,84 @@ private fun AppHeader(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        Box(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
+                .heightIn(min = AppChromeTokens.HeaderHeight)
                 .padding(
-                    horizontal = AppChromeTokens.HeaderHorizontalPadding,
-                    vertical = AppChromeTokens.HeaderVerticalPadding
+                    start = if (onNavigateBack != null) Spacing.xs else Spacing.lg,
+                    end = Spacing.sm
                 )
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppChromeTokens.HeaderContentSpacing),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 52.dp)
-            ) {
+            if (onNavigateBack != null) {
+                BoardFlowIconButton(onClick = onNavigateBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(Dimens.IconLarge)
+                    )
+                }
+            } else {
                 Icon(
                     painter = painterResource(R.drawable.app_logo),
                     contentDescription = null,
                     tint = Color.Unspecified,
                     modifier = Modifier.size(AppChromeTokens.HeaderLogoSize)
                 )
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(1.dp)
-                ) {
-                    Text(
-                        buildAnnotatedString {
-                            withStyle(
-                                SpanStyle(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            ) {
-                                append("BoardFlow")
-                            }
-                            append(" ")
-                            withStyle(
-                                SpanStyle(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-                                    fontSize = AppChromeTokens.BrandMetaSize
-                                )
-                            ) {
-                                append("by Nicolsburg")
-                            }
-                        },
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1
-                    )
-                    if (subtitle.isNotBlank()) {
-                        Text(
-                            subtitle,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                        )
-                    }
-                }
-                if (activeTimer != null) {
-                    val h = timerSeconds / 3600
-                    val m = (timerSeconds % 3600) / 60
-                    val s = timerSeconds % 60
-                    val label = if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                        modifier = Modifier.combinedClickable(
+            }
+            Text(
+                title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            if (activeTimer != null) {
+                val h = timerSeconds / 3600
+                val m = (timerSeconds % 3600) / 60
+                val s = timerSeconds % 60
+                val label = if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+                // 48dp tall hit area around a smaller pill.
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .clip(BoardFlowShape.Pill)
+                        .combinedClickable(
                             onClick = onTimerClick,
                             onLongClick = onTimerLongClick,
-                        ),
+                        )
+                ) {
+                    Surface(
+                        shape = BoardFlowShape.Pill,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Timer,
-                            contentDescription = "Open timed game",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier.size(13.dp),
-                        )
-                        Text(
-                            label,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        )
-                    }
-                }
-                actionContent?.invoke()
-                if (onNavigateBack != null) {
-                    BoardFlowIconButton(onClick = onNavigateBack, modifier = Modifier.size(AppChromeTokens.HeaderCloseSize)) {
-                        BoardFlowCloseGlyph(
-                            contentDescription = "Back",
-                            iconSize = 18.dp
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            modifier = Modifier.padding(horizontal = Spacing.md, vertical = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Timer,
+                                contentDescription = "Open timed game",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(Dimens.IconSmall),
+                            )
+                            Text(
+                                label,
+                                style = MaterialTheme.typography.labelLarge.withTabularNumbers(),
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 }
             }
+            actionContent?.invoke()
         }
 
         AnimatedVisibility(
@@ -970,8 +1009,8 @@ private fun AppHeader(
             exit = boardFlowFadeOut(),
         ) {
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = Dimens.Hairline,
             )
         }
     }

@@ -1,5 +1,17 @@
 package cz.nicolsburg.boardflow.ui.history
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
+import cz.nicolsburg.boardflow.ui.theme.InsightRarityColors
+import androidx.compose.ui.graphics.compositeOver
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.GameCover
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -98,7 +110,8 @@ internal fun StatsContent(
     sourcePlays: List<LoggedPlay> = emptyList(),
     onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
     onPlayerTapped: (String) -> Unit = {},
-    onPlaysFilter: ((recentDays: Int) -> Unit)? = null
+    onPlaysFilter: ((recentDays: Int) -> Unit)? = null,
+    thumbnailFor: (Int) -> String? = { null }
 ) {
     if (stats == null || !stats.hasSourcePlays) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -141,22 +154,32 @@ internal fun StatsContent(
     ) {
         // ── Time range filter ──────────────────────────────────────────────────
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                StatsTimeRange.entries.forEach { range ->
-                    FilterChip(
-                        selected = timeRange == range,
-                        onClick = { onTimeRangeChange(range) },
-                        label = { Text(range.displayLabel(), style = MaterialTheme.typography.labelMedium) }
-                    )
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                // Text options, quieter than the Plays / Collection switch above them.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    val today = LocalDate.now()
+                    StatsTimeRange.entries.forEach { range ->
+                        RangeOption(
+                            label = when (range) {
+                                StatsTimeRange.ALL -> "All time"
+                                StatsTimeRange.THIS_YEAR -> today.year.toString()
+                                StatsTimeRange.THIS_MONTH ->
+                                    today.month.name.lowercase().replaceFirstChar { it.uppercase() }
+                                StatsTimeRange.LAST_30 -> "30 days"
+                            },
+                            selected = timeRange == range,
+                            onClick = { onTimeRangeChange(range) }
+                        )
+                    }
                 }
                 if (stats.statsPlayScope != StatsPlayScope.ALL_PLAYS) {
-                    FilterChip(
-                        selected = true,
-                        onClick = {},
-                        label = { Text(sourceLabel, style = MaterialTheme.typography.labelMedium) }
+                    Text(
+                        sourceLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -201,7 +224,7 @@ internal fun StatsContent(
             // ── Hero rotating observation — THE centrepiece, always first ──────
             if (stats.activeObservations.isNotEmpty()) {
                 val insightLabel = when (timeRange) {
-                    StatsTimeRange.ALL        -> "Your Chronicle"
+                    StatsTimeRange.ALL        -> "Your chronicle"
                     StatsTimeRange.THIS_YEAR  -> "${LocalDate.now().year} So Far"
                     StatsTimeRange.THIS_MONTH -> "${LocalDate.now().month.name.lowercase().replaceFirstChar { it.uppercase() }}'s Table"
                     StatsTimeRange.LAST_30    -> "Recent Run"
@@ -227,7 +250,7 @@ internal fun StatsContent(
 
             // ── Top games ─────────────────────────────────────────────────────
             if (stats.topGames.isNotEmpty()) {
-                item { TopGamesSection(stats.topGames, rangeLabel = timeRange.displaySubtitle(), onGameTapped = onGameTapped) }
+                item { TopGamesSection(stats.topGames, rangeLabel = timeRange.displaySubtitle(), onGameTapped = onGameTapped, thumbnailFor = thumbnailFor) }
             }
 
             // ── Great Rivalries ───────────────────────────────────────────────
@@ -305,7 +328,7 @@ private fun NarrativeHeader(text: String, currentStreak: Int) {
         )
         if (currentStreak >= 3) {
             Surface(
-                shape = RoundedCornerShape(20.dp),
+                shape = BoardFlowShape.Pill,
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
             ) {
                 Row(
@@ -332,93 +355,12 @@ private fun NarrativeHeader(text: String, currentStreak: Int) {
 }
 
 @Composable
-private fun StatsBriefSection(
-    items: List<StatsBriefItem>,
-    rangeLabel: String,
-    onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
-    onPlayerTapped: (String) -> Unit = {}
-) {
-    SectionCard {
-        StatsCardHeader(title = "Table Brief", subtitle = rangeLabel)
-        Spacer(Modifier.height(10.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items.forEach { item ->
-                val onClick: (() -> Unit)? = when {
-                    item.gameFilter != null -> { { onGameTapped(item.gameFilter.first, item.gameFilter.second) } }
-                    item.playerFilter != null -> { { onPlayerTapped(item.playerFilter) } }
-                    else -> null
-                }
-                StatsBriefRow(item = item, onClick = onClick)
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatsBriefRow(
-    item: StatsBriefItem,
-    onClick: (() -> Unit)? = null
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
-        border = BorderStroke(0.5.dp, item.rarity.borderColor())
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .background(item.rarity.accentColor(), CircleShape)
-                    )
-                    Text(
-                        item.title,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Text(
-                    item.body,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            item.metric?.let { metric ->
-                Text(
-                    metric,
-                    style = MaterialTheme.typography.titleMedium.withTabularNumbers(),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.End
-                )
-            }
-        }
-    }
-}
-
-// ── Period in Review card ─────────────────────────────────────────────────────
-
-@Composable
 private fun PeriodReviewCard(review: PeriodReview) {
     val primary = MaterialTheme.colorScheme.primary
     val onSurface = MaterialTheme.colorScheme.onSurface
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape    = RoundedCornerShape(16.dp),
+        shape    = BoardFlowShape.Card,
         color    = primary.copy(alpha = 0.07f),
         border   = BorderStroke(0.5.dp, primary.copy(alpha = 0.14f))
     ) {
@@ -456,7 +398,7 @@ private fun HeroObservationCard(observations: List<SmartObservation>, label: Str
     }
     val observation = orderedObservations[(dayOfYear + offset) % orderedObservations.size]
     val isHighTier  = observation.rarity == InsightRarity.EPIC || observation.rarity == InsightRarity.LEGENDARY
-    val shape       = RoundedCornerShape(16.dp)
+    val shape       = BoardFlowShape.Card
     val textColor   = observation.rarity.primaryTextColor()
     val mutedColor  = observation.rarity.mutedTextColor()
     val accentColor = observation.rarity.accentColor()
@@ -557,11 +499,13 @@ private fun HeroObservationCard(observations: List<SmartObservation>, label: Str
                         color = mutedColor.copy(alpha = 0.72f)
                     )
                 }
-                Text(
-                    "Tap · ${(offset % observations.size) + 1} of ${observations.size}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = mutedColor.copy(alpha = 0.5f)
-                )
+                if (observations.size > 1) {
+                    Text(
+                        "Tap · ${(offset % observations.size) + 1} of ${observations.size}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = mutedColor.copy(alpha = 0.5f)
+                    )
+                }
             }
 
             // Shimmer overlay — single diagonal sweep, Epic/Legendary only
@@ -599,50 +543,50 @@ private fun InsightRarity.cardBrush(): Brush = when (this) {
         )
     )
     InsightRarity.NOTABLE -> Brush.linearGradient(
-        listOf(Color(0xFF12312D), MaterialTheme.colorScheme.surface)
+        listOf(InsightRarityColors.NotableStart, MaterialTheme.colorScheme.surface)
     )
     InsightRarity.RARE -> Brush.linearGradient(
-        listOf(Color(0xFF172B55), Color(0xFF1F1F32))
+        listOf(InsightRarityColors.RareStart, InsightRarityColors.RareEnd)
     )
     InsightRarity.EPIC -> Brush.linearGradient(
-        listOf(Color(0xFF2D174A), Color(0xFF17131F))
+        listOf(InsightRarityColors.EpicStart, InsightRarityColors.EpicEnd)
     )
     InsightRarity.LEGENDARY -> Brush.linearGradient(
-        listOf(Color(0xFFE3A72F), Color(0xFF5C3E10))
+        listOf(InsightRarityColors.LegendaryStart, InsightRarityColors.LegendaryEnd)
     )
 }
 
 @Composable
 private fun InsightRarity.primaryTextColor(): Color = when (this) {
-    InsightRarity.LEGENDARY -> Color(0xFF181208)
-    InsightRarity.RARE, InsightRarity.EPIC -> Color(0xFFF4F1EA)
+    InsightRarity.LEGENDARY -> InsightRarityColors.LegendaryText
+    InsightRarity.RARE, InsightRarity.EPIC -> InsightRarityColors.RareText
     else -> MaterialTheme.colorScheme.onSurface
 }
 
 @Composable
 private fun InsightRarity.mutedTextColor(): Color = when (this) {
-    InsightRarity.LEGENDARY -> Color(0xFF4A350B)
-    InsightRarity.RARE, InsightRarity.EPIC -> Color(0xFFD4D0DD)
-    InsightRarity.NOTABLE -> Color(0xFFBDE7DE)
+    InsightRarity.LEGENDARY -> InsightRarityColors.LegendaryMutedText
+    InsightRarity.RARE, InsightRarity.EPIC -> InsightRarityColors.RareMutedText
+    InsightRarity.NOTABLE -> InsightRarityColors.NotableText
     else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
 @Composable
 private fun InsightRarity.accentColor(): Color = when (this) {
     InsightRarity.COMMON -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-    InsightRarity.NOTABLE -> Color(0xFF80CBC4)
-    InsightRarity.RARE -> Color(0xFF9DB7FF)
-    InsightRarity.EPIC -> Color(0xFFC8A7FF)
-    InsightRarity.LEGENDARY -> Color(0xFF5C3E10)
+    InsightRarity.NOTABLE -> InsightRarityColors.Notable
+    InsightRarity.RARE -> InsightRarityColors.Rare
+    InsightRarity.EPIC -> InsightRarityColors.Epic
+    InsightRarity.LEGENDARY -> InsightRarityColors.LegendaryEnd
 }
 
 @Composable
 private fun InsightRarity.borderColor(): Color = when (this) {
     InsightRarity.COMMON -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-    InsightRarity.NOTABLE -> Color(0xFF80CBC4).copy(alpha = 0.36f)
-    InsightRarity.RARE -> Color(0xFF9DB7FF).copy(alpha = 0.42f)
-    InsightRarity.EPIC -> Color(0xFFC8A7FF).copy(alpha = 0.46f)
-    InsightRarity.LEGENDARY -> Color(0xFFFFD37A).copy(alpha = 0.52f)
+    InsightRarity.NOTABLE -> InsightRarityColors.Notable.copy(alpha = 0.36f)
+    InsightRarity.RARE -> InsightRarityColors.Rare.copy(alpha = 0.42f)
+    InsightRarity.EPIC -> InsightRarityColors.Epic.copy(alpha = 0.46f)
+    InsightRarity.LEGENDARY -> InsightRarityColors.LegendaryBorder.copy(alpha = 0.52f)
 }
 
 @Composable
@@ -655,10 +599,10 @@ private fun SummarySection(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = BoardFlowShape.Card,
         color = MaterialTheme.colorScheme.surface
     ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(modifier = Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
 
             // Hero row: plays count (left) + archetype (right)
             Row(
@@ -770,8 +714,7 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
     val dayLabels = listOf("M", "", "W", "", "F", "", "S")
 
     SectionCard {
-        StatsCardHeader(title = "Play History", subtitle = "Last 52 weeks")
-        Spacer(Modifier.height(4.dp))
+        StatsCardHeader(title = "Play history", subtitle = "Last 52 weeks")
 
         Row(modifier = Modifier.fillMaxWidth()) {
             // Fixed day-of-week labels
@@ -784,8 +727,8 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
                         if (label.isNotEmpty()) {
                             Text(
                                 label,
-                                fontSize = 7.sp,
-                                color = onSurfaceVariantColor.copy(alpha = 0.45f),
+                                fontSize = 9.sp,
+                                color = onSurfaceVariantColor,
                                 style = MaterialTheme.typography.labelSmall
                             )
                         }
@@ -806,10 +749,13 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
                             if (label.isNotEmpty()) {
                                 Text(
                                     label,
-                                    fontSize = 7.sp,
-                                    color = onSurfaceVariantColor.copy(alpha = 0.55f),
+                                    fontSize = 9.sp,
+                                    color = onSurfaceVariantColor,
                                     style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.align(Alignment.BottomStart)
+                                    softWrap = false,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomStart)
+                                        .wrapContentWidth(Alignment.Start, unbounded = true)
                                 )
                             }
                         }
@@ -836,7 +782,7 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
                                                 day.count > 0 -> primaryColor.copy(alpha = alpha)
                                                 else -> surfaceVariantColor.copy(alpha = 0.45f)
                                             },
-                                            RoundedCornerShape(2.dp)
+                                            BoardFlowShape.Tiny
                                         )
                                 )
                             }
@@ -867,7 +813,7 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
                         .background(
                             if (level == 0f) surfaceVariantColor.copy(alpha = 0.45f)
                             else primaryColor.copy(alpha = level * 0.85f + 0.15f),
-                            RoundedCornerShape(2.dp)
+                            BoardFlowShape.Tiny
                         )
                 )
             }
@@ -977,15 +923,16 @@ private fun BucketBarChart(values: List<Int>, labels: List<String>, highlightInd
 private fun TopGamesSection(
     games: List<GameStat>,
     rangeLabel: String = "All time",
-    onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> }
+    onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
+    thumbnailFor: (Int) -> String? = { null }
 ) {
     SectionCard {
-        StatsCardHeader(title = "Top Games", subtitle = rangeLabel)
-        Spacer(Modifier.height(12.dp))
+        StatsCardHeader(title = "Top games", subtitle = rangeLabel)
         val maxPlays = games.firstOrNull()?.plays ?: 1
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             games.forEachIndexed { i, game ->
                 TopGameRow(game = game, rank = i + 1, maxPlays = maxPlays,
+                    thumbnailUrl = thumbnailFor(game.gameId),
                     onClick = { onGameTapped(game.gameId, game.name) })
             }
         }
@@ -993,56 +940,63 @@ private fun TopGamesSection(
 }
 
 @Composable
-private fun TopGameRow(game: GameStat, rank: Int, maxPlays: Int, onClick: () -> Unit = {}) {
+private fun TopGameRow(
+    game: GameStat,
+    rank: Int,
+    maxPlays: Int,
+    thumbnailUrl: String? = null,
+    onClick: () -> Unit = {}
+) {
     val fraction by animateFloatAsState(
         targetValue = if (maxPlays > 0) game.plays.toFloat() / maxPlays else 0f,
         animationSpec = boardFlowTween(BoardFlowMotion.ChartRowDuration + rank * BoardFlowMotion.ChartRowStagger),
         label = "bar_$rank"
     )
-    val rankBadgeColor = when (rank) {
-        1 -> Color(0xFFE6A817); 2 -> Color(0xFF9E9E9E); 3 -> Color(0xFFBF7D3A)
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
-    val rankTextColor = if (rank <= 3) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-    val barColor = when (rank) {
-        1 -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.primary.copy(alpha = maxOf(0.38f, 1f - rank * 0.07f))
-    }
+    val barColor = MaterialTheme.colorScheme.primary.copy(alpha = if (rank == 1) 1f else maxOf(0.38f, 1f - rank * 0.07f))
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(BoardFlowShape.Control)
+            .clickable(onClick = onClick)
+            .heightIn(min = Dimens.MinTouchTarget)
     ) {
-        Box(
-            modifier = Modifier.size(22.dp).background(rankBadgeColor, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("$rank", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = rankTextColor, fontSize = 9.sp)
-        }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        GameCover(name = game.name, thumbnailUrl = thumbnailUrl, size = 40.dp)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
                 game.name,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (rank <= 3) FontWeight.SemiBold else FontWeight.Normal,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Box(
-                modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Box(modifier = Modifier.fillMaxWidth(fraction).fillMaxHeight().background(barColor, RoundedCornerShape(2.dp)))
-            }
+            StatBar(fraction = fraction, color = barColor)
         }
         Text(
             "${game.plays}",
-            style = MaterialTheme.typography.labelLarge.withTabularNumbers(),
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.width(30.dp),
+            style = MaterialTheme.typography.titleMedium.withTabularNumbers(),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.widthIn(min = 30.dp),
             textAlign = TextAlign.End
         )
+    }
+}
+
+@Composable
+private fun StatBar(fraction: Float, color: Color, innerFraction: Float? = null) {
+    Box(
+        modifier = Modifier.fillMaxWidth().height(6.dp).clip(BoardFlowShape.Pill)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth(fraction).fillMaxHeight()
+                .background(if (innerFraction != null) color.copy(alpha = 0.4f) else color, BoardFlowShape.Pill)
+        )
+        if (innerFraction != null) {
+            Box(modifier = Modifier.fillMaxWidth(innerFraction).fillMaxHeight().background(color, BoardFlowShape.Pill))
+        }
     }
 }
 
@@ -1082,8 +1036,7 @@ private fun HeadToHeadSection(players: List<Player>, sourcePlays: List<LoggedPla
     }
 
     SectionCard {
-        StatsCardHeader(title = "Head to Head", subtitle = "Pick two players")
-        Spacer(Modifier.height(12.dp))
+        StatsCardHeader(title = "Head to head", subtitle = "Pick two players")
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1166,12 +1119,12 @@ private fun HeadToHeadSection(players: List<Player>, sourcePlays: List<LoggedPla
                             )
                             Box(
                                 modifier = Modifier.weight(1f).height(6.dp)
-                                    .clip(RoundedCornerShape(3.dp))
+                                    .clip(BoardFlowShape.Pill)
                                     .background(MaterialTheme.colorScheme.surfaceVariant)
                             ) {
                                 Box(
                                     modifier = Modifier.fillMaxWidth(aFractionAnim).fillMaxHeight()
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f), RoundedCornerShape(3.dp))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f), BoardFlowShape.Pill)
                                 )
                                 Box(
                                     modifier = Modifier.align(Alignment.Center)
@@ -1237,8 +1190,7 @@ private fun HeadToHeadSection(players: List<Player>, sourcePlays: List<LoggedPla
 @Composable
 private fun RivalryPairsSection(pairs: List<RivalryPair>) {
     SectionCard {
-        StatsCardHeader(title = "Great Rivalries", subtitle = "At your table")
-        Spacer(Modifier.height(4.dp))
+        StatsCardHeader(title = "Great rivalries", subtitle = "At your table")
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             pairs.forEach { pair -> RivalryPairRow(pair) }
         }
@@ -1281,13 +1233,13 @@ private fun RivalryPairRow(pair: RivalryPair) {
                 textAlign = TextAlign.End
             )
             Box(
-                modifier = Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp))
+                modifier = Modifier.weight(1f).height(6.dp).clip(BoardFlowShape.Pill)
                     .background(surfaceVariant)
             ) {
                 // Player A wins (left side)
                 Box(
                     modifier = Modifier.fillMaxWidth(aFractionAnim).fillMaxHeight()
-                        .background(primaryColor.copy(alpha = 0.9f), RoundedCornerShape(3.dp))
+                        .background(primaryColor.copy(alpha = 0.9f), BoardFlowShape.Pill)
                 )
                 // Center divider dot
                 Box(
@@ -1334,33 +1286,15 @@ private fun RivalryPairRow(pair: RivalryPair) {
 // ── Day of week ────────────────────────────────────────────────────────────────
 
 @Composable
-private fun DayOfWeekSection(dist: List<Pair<String, Int>>, rangeLabel: String = "All time") {
-    val peak = dist.maxByOrNull { it.second }
-    val subtitle = peak?.takeIf { it.second > 0 }?.let { "${it.first} · $rangeLabel" }
-    SectionCard {
-        StatsCardHeader(title = "Favourite Day", subtitle = subtitle)
-        Spacer(Modifier.height(12.dp))
-        BucketBarChart(
-            values = dist.map { it.second },
-            labels = dist.map { it.first },
-            highlightIndex = dist.indexOfFirst { it == peak && it.second > 0 }
-        )
-    }
-}
-
-// ── Top players ────────────────────────────────────────────────────────────────
-
-@Composable
 private fun TopPlayersSection(
     topPlayers: List<PlayerStat>,
     rangeLabel: String = "All time",
     onPlayerTapped: (String) -> Unit = {}
 ) {
     SectionCard {
-        StatsCardHeader(title = "Top Players", subtitle = rangeLabel)
-        Spacer(Modifier.height(12.dp))
+        StatsCardHeader(title = "Top players", subtitle = rangeLabel)
         val maxPlays = topPlayers.firstOrNull()?.plays ?: 1
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             topPlayers.forEachIndexed { i, player ->
                 TopPlayerRow(player = player, rank = i + 1, maxPlays = maxPlays,
                     onClick = { onPlayerTapped(player.displayName) })
@@ -1381,22 +1315,15 @@ private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int, onClick: 
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(BoardFlowShape.Control)
+            .clickable(onClick = onClick)
+            .heightIn(min = Dimens.MinTouchTarget)
     ) {
-        Box(
-            modifier = Modifier.size(28.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                player.displayName.take(1).uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                fontSize = 11.sp
-            )
-        }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        PlayerAvatar(name = player.displayName, size = 40.dp)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1404,8 +1331,8 @@ private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int, onClick: 
             ) {
                 Text(
                     player.displayName,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (rank == 1) FontWeight.SemiBold else FontWeight.Normal,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -1413,37 +1340,24 @@ private fun TopPlayerRow(player: PlayerStat, rank: Int, maxPlays: Int, onClick: 
                 if (hasWinData) {
                     Text(
                         "${(winRate * 100).roundToInt()}% wins",
-                        style = MaterialTheme.typography.labelSmall.withTabularNumbers(),
+                        style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 6.dp)
                     )
                 }
             }
-            Box(
-                modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(fraction).fillMaxHeight()
-                        .background(
-                            MaterialTheme.colorScheme.secondary.copy(alpha = maxOf(0.4f, 1f - rank * 0.08f)),
-                            RoundedCornerShape(2.dp)
-                        )
-                )
-                if (hasWinData) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(fraction * winRate).fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.secondary, RoundedCornerShape(2.dp))
-                    )
-                }
-            }
+            // Full bar = plays, solid part = wins.
+            StatBar(
+                fraction = fraction,
+                color = MaterialTheme.colorScheme.primary,
+                innerFraction = if (hasWinData) fraction * winRate else 0f
+            )
         }
         Text(
             "${player.plays}",
-            style = MaterialTheme.typography.labelLarge.withTabularNumbers(),
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.width(30.dp),
+            style = MaterialTheme.typography.titleMedium.withTabularNumbers(),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.widthIn(min = 30.dp),
             textAlign = TextAlign.End
         )
     }
@@ -1457,44 +1371,26 @@ private fun OnThisDaySection(
     onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> }
 ) {
     SectionCard {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                Icons.Default.CalendarToday,
-                contentDescription = null,
-                modifier = Modifier.size(15.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-            )
-            Text(
-                "On This Day",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        HorizontalDivider(
-            modifier = Modifier.padding(top = 4.dp),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-        )
+        StatsCardHeader(title = "On this day")
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             entries.forEach { entry ->
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     val yearsLabel = if (entry.yearsAgo == 1) "1 year ago" else "${entry.yearsAgo} years ago"
                     Text(
                         "$yearsLabel · ${entry.year}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     entry.plays.forEach { play ->
                         val winners = play.players.filter { it.isWinner }.map { it.name }
                             .filter { it.isNotBlank() }
                         val winnerText = if (winners.isNotEmpty()) " · ${winners.joinToString()} won" else ""
                         Row(
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                onGameTapped(play.gameId, play.gameName)
-                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(BoardFlowShape.Control)
+                                .clickable { onGameTapped(play.gameId, play.gameName) }
+                                .heightIn(min = Dimens.MinTouchTarget),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -1505,8 +1401,8 @@ private fun OnThisDaySection(
                             )
                             Text(
                                 play.gameName + winnerText,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -1531,7 +1427,6 @@ private fun MoreNumbersSection(
     if (insights.isEmpty()) return
     SectionCard {
         StatsCardHeader(title = "Records", subtitle = rangeLabel)
-        Spacer(Modifier.height(4.dp))
         Column {
             insights.forEachIndexed { index, insight ->
                 // Priority: game > player > date filter
@@ -1547,8 +1442,9 @@ private fun MoreNumbersSection(
                 AchievementRow(insight = insight, onClick = onClick)
                 if (index < insights.lastIndex) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 44.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)
+                        modifier = Modifier.padding(start = 52.dp),
+                        thickness = Dimens.Hairline,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                     )
                 }
             }
@@ -1565,27 +1461,25 @@ private fun AchievementRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (isClickable) Modifier.clickable(onClick = onClick!!) else Modifier)
-            .padding(vertical = 10.dp),
+            .then(if (onClick != null) Modifier.clip(BoardFlowShape.Control).clickable(onClick = onClick) else Modifier)
+            .heightIn(min = 56.dp)
+            .padding(vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Icon pill
         Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.primaryContainer.copy(
-                alpha = if (isClickable) 0.7f else 0.45f
-            ),
-            modifier = Modifier.size(32.dp)
+            shape = BoardFlowShape.Control,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            modifier = Modifier.size(40.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = insight.icon,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary.copy(
-                        alpha = if (isClickable) 1f else 0.75f
-                    )
+                    modifier = Modifier.size(Dimens.Icon),
+                    tint = if (isClickable) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -1597,15 +1491,14 @@ private fun AchievementRow(
         ) {
             Text(
                 text = insight.label,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (insight.detail != null) {
                 Text(
                     text = insight.detail,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1620,17 +1513,15 @@ private fun AchievementRow(
             Text(
                 text = insight.value,
                 style = MaterialTheme.typography.titleMedium.withTabularNumbers(),
-                fontWeight = FontWeight.Bold,
-                color = if (isClickable) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.End
             )
             if (isClickable) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                    imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    modifier = Modifier.size(13.dp),
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    modifier = Modifier.size(Dimens.Icon),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -1638,60 +1529,46 @@ private fun AchievementRow(
 }
 
 @Composable
-private fun InsightChip(
-    icon: ImageVector,
-    value: String,
-    label: String,
-    detail: String? = null,
-    onClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
-) {
-    val border = if (onClick != null)
-        androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f))
-    else null
-    Surface(
-        modifier = modifier.then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-        border = border
+private fun StatsCardHeader(title: String, subtitle: String? = null) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            Icon(
-                icon, contentDescription = null,
-                modifier = Modifier.size(15.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = if (onClick != null) 0.9f else 0.7f)
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(value, style = MaterialTheme.typography.titleLarge.withTabularNumbers(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (detail != null) {
-                Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-            }
+        Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+        if (subtitle != null) {
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
-// ── Shared helpers ────────────────────────────────────────────────────────────
-
+/** One time range: amber and underlined when selected, grey otherwise. */
 @Composable
-private fun StatsCardHeader(title: String, subtitle: String? = null) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+private fun RangeOption(label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .heightIn(min = Dimens.MinTouchTarget)
+            .clip(BoardFlowShape.Control)
+            .selectable(selected = selected, onClick = onClick, role = Role.Tab)
+            .padding(horizontal = Spacing.sm),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+            Box(
+                Modifier
+                    .padding(top = 2.dp)
+                    .width(16.dp)
+                    .height(2.dp)
+                    .clip(BoardFlowShape.Pill)
+                    .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
+            )
         }
-        HorizontalDivider(
-            modifier = Modifier.padding(top = 4.dp),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-        )
     }
 }

@@ -1,5 +1,33 @@
 ﻿package cz.nicolsburg.boardflow.ui.players
 
+import cz.nicolsburg.boardflow.ui.theme.PlayerColors
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import cz.nicolsburg.boardflow.ui.common.playerInitialColor
+import cz.nicolsburg.boardflow.ui.common.parsePlayerColor
+import cz.nicolsburg.boardflow.ui.common.PlayerColorChoices
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.BorderStroke
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,7 +90,7 @@ internal data class PlayerStats(
 )
 
 internal val PlayerStats.winRate: Int
-    get() = if (totalPlays > 0) wins * 100 / totalPlays else 0
+    get() = if (totalPlays > 0) kotlin.math.round(wins * 100f / totalPlays).toInt() else 0
 
 internal fun List<LoggedPlay>.statsForPlayer(player: Player): PlayerStats {
     val names = (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() }
@@ -106,166 +134,98 @@ internal fun formatPlayDate(yyyyMMdd: String): String = try {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun PlayersScreen(viewModel: AppViewModel) {
-    val players    by viewModel.players.collectAsState()
-    val sourcePlays by viewModel.historyPlays.collectAsState()
-    val sortedPlayers = remember(players, sourcePlays) { players.sortedByRecentActivity(sourcePlays) }
-
-    var showAddDialog  by remember { mutableStateOf(false) }
-    var editingPlayer  by remember { mutableStateOf<Player?>(null) }
-    var viewingPlayer  by remember { mutableStateOf<Player?>(null) }
-
-    LaunchedEffect(Unit) {
-        viewModel.loadPlayers(); viewModel.loadPlayHistory(); viewModel.loadCachedBggPlays()
-    }
-
-    if (showAddDialog) {
-        AddPlayerDialog(
-            onDismiss = { showAddDialog = false },
-            onAdd = { name -> viewModel.addNewPlayer(name); showAddDialog = false }
-        )
-    }
-
-    viewingPlayer?.let { vp ->
-        val livePlayer = players.find { it.id == vp.id }
-        if (livePlayer != null) {
-            val stats = remember(sourcePlays, livePlayer) { sourcePlays.statsForPlayer(livePlayer) }
-            val rivalries = remember(sourcePlays, livePlayer) { sourcePlays.rivalriesForPlayer(livePlayer) }
-            PlayerDetailDialog(
-                player = livePlayer,
-                stats = stats,
-                rivalries = rivalries,
-                onDismiss = { viewingPlayer = null },
-                onEdit = { editingPlayer = livePlayer; viewingPlayer = null }
-            )
-        } else { viewingPlayer = null }
-    }
-
-    editingPlayer?.let { ep ->
-        val livePlayer = players.find { it.id == ep.id }
-        if (livePlayer != null) {
-            EditPlayerDialog(
-                player = livePlayer,
-                onDismiss = { editingPlayer = null },
-                onRenameDisplayName = { viewModel.updatePlayerDisplayName(livePlayer.id, it) },
-                onUpdateBggUsername = { viewModel.updatePlayerBggUsername(livePlayer.id, it) },
-                onAddAlias = { viewModel.addPlayerAlias(livePlayer.id, it) },
-                onRemoveAlias = { viewModel.removePlayerAlias(livePlayer.id, it) },
-                onToggleHidden = { viewModel.updatePlayerHidden(livePlayer.id, it) },
-                onDelete = { viewModel.deletePlayer(livePlayer.id); editingPlayer = null }
-            )
-        } else {
-            editingPlayer = null
-        }
-    }
-
-    Scaffold(
-        topBar = {},
-        contentWindowInsets = WindowInsets(0),
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add player")
-            }
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (players.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(32.dp)) {
-                        Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(72.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
-                        Text("No players yet", style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Players are added automatically when you log plays.\nTap + to add your first player manually.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                    }
-                }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)) {
-                    items(sortedPlayers, key = { it.id }) { player ->
-                        val stats = remember(sourcePlays, player) { sourcePlays.statsForPlayer(player) }
-                        PlayerListItem(player = player, stats = stats,
-                            onTap = { viewingPlayer = player })
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 internal fun PlayerListItem(player: Player, stats: PlayerStats, onTap: () -> Unit = {}) {
-    SectionCard(onClick = onTap) {
+    Surface(
+        onClick = onTap,
+        modifier = Modifier.fillMaxWidth(),
+        shape = BoardFlowShape.Card,
+        color = MaterialTheme.colorScheme.surface
+    ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(start = Spacing.md, end = Spacing.xs, top = Spacing.md, bottom = Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            PlayerAvatar(player.displayName)
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            PlayerAvatar(player.displayName, size = 44.dp)
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         player.displayName,
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        // Player names stay white everywhere; the chevron shows the row opens.
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     if (player.isHidden) {
                         Icon(
                             Icons.Default.VisibilityOff,
                             contentDescription = "Hidden from stats",
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                            modifier = Modifier.size(Dimens.IconSmall),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
-                val infoParts = buildList {
-                    if (player.bggUsername.isNotBlank()) add("BGG: ${player.bggUsername}")
-                    if (player.aliases.isNotEmpty()) add("Also: ${player.aliases.joinToString(", ")}")
-                }
-                if (infoParts.isNotEmpty()) {
-                    Text(
-                        infoParts.joinToString("  ·  "),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
                 Text(
-                    if (stats.lastPlayedDate != null) "Last played ${stats.lastPlayedDate}" else "No plays yet",
+                    if (stats.totalPlays > 0) {
+                        listOfNotNull(
+                            if (stats.totalPlays == 1) "1 play" else "${stats.totalPlays} plays",
+                            "${stats.winRate}% wins",
+                            stats.lastPlayedDate?.let { "last $it" }
+                        ).joinToString(" · ")
+                    } else {
+                        "No plays yet"
+                    },
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                        alpha = if (stats.lastPlayedDate != null) 1f else 0.6f
-                    )
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 stats.favoriteGame?.let { game ->
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Fav:",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            game,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Text(
+                        "Most played: $game",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
+            }
+            Box(Modifier.size(width = 32.dp, height = Dimens.MinTouchTarget), contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
 
+/** Avatar, name and a line of context: the header of every player dialog. */
+@Composable
+private fun PlayerDialogHeader(name: String, supporting: String, color: Color? = null) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PlayerAvatar(name.ifBlank { "?" }, size = 56.dp, color = color)
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+            if (supporting.isNotBlank()) {
+                Text(
+                    supporting,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -277,271 +237,186 @@ internal fun EditPlayerDialog(
     onAddAlias: (String) -> Unit,
     onRemoveAlias: (String) -> Unit,
     onToggleHidden: (Boolean) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onUpdateColor: (String) -> Unit = {},
+    onSaved: () -> Unit = {}
 ) {
+    var color        by remember { mutableStateOf(player.color) }
     var displayName  by remember { mutableStateOf(player.displayName) }
     var bggUsername  by remember { mutableStateOf(player.bggUsername) }
     var isHidden     by remember { mutableStateOf(player.isHidden) }
     var localAliases by remember { mutableStateOf(player.aliases) }
     var newAlias     by remember { mutableStateOf("") }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(player.displayName) { displayName = player.displayName }
     LaunchedEffect(player.bggUsername) { bggUsername = player.bggUsername }
     LaunchedEffect(player.isHidden)    { isHidden    = player.isHidden }
+    LaunchedEffect(player.color)       { color       = player.color }
 
-    if (showDeleteConfirm) {
-        BoardFlowConfirmationDialog(
-            title = "Delete player?",
-            message = "Delete \"${player.displayName}\" and all aliases? This cannot be undone.",
-            confirmLabel = "Delete",
-            dismissLabel = "Cancel",
-            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
-            onConfirm = onDelete,
-            onDismiss = { showDeleteConfirm = false }
-        )
-        return
-    }
 
     val identityChanged = (displayName.isNotBlank() && displayName != player.displayName)
             || bggUsername.trim() != player.bggUsername
             || isHidden != player.isHidden
+            || color != player.color
             || localAliases != player.aliases
+    val canAdd = newAlias.isNotBlank() && newAlias.trim() !in localAliases
+    val doAdd = { if (canAdd) { localAliases = localAliases + newAlias.trim(); newAlias = "" } }
 
     AnimatedDialog(onDismissRequest = onDismiss) {
-        LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    PlayerAvatar(player.displayName, size = 48.dp)
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            player.displayName,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            "Edit profile, aliases, and visibility",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+        Column {
+            LazyColumn(
+                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                item {
+                    // The header avatar previews the colour before it is saved.
+                    PlayerDialogHeader(
+                        player.displayName,
+                        "Edit player",
+                        color = parsePlayerColor(color) ?: playerInitialColor(player.displayName)
+                    )
+                }
+
+                item {
+                    BoardFlowFormGroup(raised = true) {
+                        BoardFlowFormRow(label = "Name", icon = Icons.Default.Person) {
+                            BoardFlowInlineField(
+                                value = displayName,
+                                onValueChange = { displayName = it },
+                                placeholder = "Player name",
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        BoardFlowFormDivider()
+                        BoardFlowFormRow(label = "BGG user", icon = BoardFlowIcons.OpenWeb) {
+                            BoardFlowInlineField(
+                                value = bggUsername,
+                                onValueChange = { bggUsername = it },
+                                placeholder = "Optional",
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        BoardFlowFormDivider()
+                        BoardFlowFormRow(label = "Hide from stats", icon = Icons.Default.VisibilityOff, labelWidth = null) {
+                            Switch(checked = isHidden, onCheckedChange = { isHidden = it })
+                        }
                     }
                 }
-            }
 
-            item {
-                SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(
-                            "Identity",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        BoardFlowSectionTitle(
+                            title = "Colour",
+                            supporting = "Used for this player's circle across the app"
                         )
-                        OutlinedTextField(
-                            value = displayName,
-                            onValueChange = { displayName = it },
-                            label = { Text("Display name") },
-                            placeholder = { Text("e.g. Alice") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = bggUsername,
-                            onValueChange = { bggUsername = it },
-                            label = { Text("BGG username") },
-                            placeholder = { Text("e.g. boardgamer42") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-
-            item {
-                SectionCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                            ) {
-                                Icon(
-                                    Icons.Default.VisibilityOff,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(8.dp).size(16.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(
-                                    "Hide from stats",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    "Excluded from leaderboards, rivalries, and recommendations.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ColorSwatch(
+                                fill = playerInitialColor(player.displayName),
+                                label = "Automatic",
+                                selected = color.isBlank(),
+                                automatic = true,
+                                onClick = { color = "" }
+                            )
+                            PlayerColorChoices.forEach { (label, hex) ->
+                                ColorSwatch(
+                                    fill = parsePlayerColor(hex) ?: Color.Gray,
+                                    label = label,
+                                    selected = color.equals(hex, ignoreCase = true),
+                                    onClick = { color = hex }
                                 )
                             }
                         }
-                        Switch(
-                            checked = isHidden,
-                            onCheckedChange = { isHidden = it },
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
                     }
                 }
-            }
 
-            item {
-                SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(
-                            "Aliases",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            "Other names this player uses across your play logs.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        BoardFlowSectionTitle(
+                            title = "Aliases",
+                            supporting = "Other names this player goes by in your plays"
                         )
                         if (localAliases.isNotEmpty()) {
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                                 localAliases.forEach { alias ->
                                     InputChip(
                                         selected = false,
-                                        onClick = {},
-                                        label = { Text(alias) },
+                                        onClick = { localAliases = localAliases.filter { it != alias } },
+                                        label = { Text(alias, style = MaterialTheme.typography.labelLarge) },
+                                        shape = BoardFlowShape.Pill,
                                         trailingIcon = {
-                                            IconButton(
-                                                onClick = { localAliases = localAliases.filter { it != alias } },
-                                                modifier = Modifier.size(18.dp)
-                                            ) {
-                                                BoardFlowCloseGlyph(
-                                                    contentDescription = "Remove $alias",
-                                                    modifier = Modifier.size(14.dp),
-                                                    iconSize = 14.dp
-                                                )
-                                            }
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = "Remove $alias",
+                                                modifier = Modifier.size(Dimens.IconSmall),
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
                                         }
                                     )
                                 }
                             }
                         }
-                        val canAdd = newAlias.isNotBlank() && newAlias.trim() !in localAliases
-                        val doAdd = { if (canAdd) { localAliases = localAliases + newAlias.trim(); newAlias = "" } }
-                        OutlinedTextField(
-                            value = newAlias,
-                            onValueChange = { newAlias = it },
-                            label = { Text("Add alias") },
-                            placeholder = { Text("e.g. Al") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = { doAdd() }),
-                            trailingIcon = {
-                                IconButton(onClick = doAdd, enabled = canAdd) {
+                        BoardFlowFormGroup(raised = true) {
+                            BoardFlowFormRow(label = "Add alias", labelWidth = 96.dp) {
+                                BoardFlowInlineField(
+                                    value = newAlias,
+                                    onValueChange = { newAlias = it },
+                                    placeholder = "Another name",
+                                    modifier = Modifier.weight(1f)
+                                )
+                                BoardFlowIconButton(onClick = doAdd, enabled = canAdd) {
                                     Icon(
                                         Icons.Default.Add,
                                         contentDescription = "Add alias",
                                         tint = if (canAdd) MaterialTheme.colorScheme.primary
-                                               else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                                               else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
-                        )
+                        }
                     }
                 }
             }
 
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            HorizontalDivider(thickness = Dimens.Hairline, color = MaterialTheme.colorScheme.outlineVariant)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = Spacing.sm, end = Spacing.lg, top = Spacing.md, bottom = Spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BoardFlowIconButton(
+                    onClick = onDelete,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    BoardFlowDestructiveButton(
-                        onClick = { showDeleteConfirm = true },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(BoardFlowIcons.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Delete")
-                    }
-                    BoardFlowButton(
-                        onClick = {
-                            if (displayName.isNotBlank() && displayName != player.displayName) onRenameDisplayName(displayName)
-                            if (bggUsername.trim() != player.bggUsername) onUpdateBggUsername(bggUsername)
-                            if (isHidden != player.isHidden) onToggleHidden(isHidden)
-                            val toAdd = localAliases - player.aliases.toSet()
-                            val toRemove = player.aliases - localAliases.toSet()
-                            toAdd.forEach { onAddAlias(it) }
-                            toRemove.forEach { onRemoveAlias(it) }
-                            onDismiss()
-                        },
-                        enabled = identityChanged,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(BoardFlowIcons.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Save")
-                    }
+                    Icon(BoardFlowIcons.Delete, contentDescription = "Delete player", modifier = Modifier.size(Dimens.Icon))
+                }
+                Spacer(Modifier.weight(1f))
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
+                BoardFlowButton(
+                    onClick = {
+                        if (displayName.isNotBlank() && displayName != player.displayName) onRenameDisplayName(displayName)
+                        if (bggUsername.trim() != player.bggUsername) onUpdateBggUsername(bggUsername)
+                        if (isHidden != player.isHidden) onToggleHidden(isHidden)
+                        if (color != player.color) onUpdateColor(color)
+                        val toAdd = localAliases - player.aliases.toSet()
+                        val toRemove = player.aliases - localAliases.toSet()
+                        toAdd.forEach { onAddAlias(it) }
+                        toRemove.forEach { onRemoveAlias(it) }
+                        onSaved()
+                        onDismiss()
+                    },
+                    enabled = identityChanged
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                    Spacer(Modifier.width(Spacing.sm))
+                    Text("Save")
                 }
             }
-        }
-    }
-}
-
-@Composable
-internal fun PlayerDialog(
-    onDismissRequest: () -> Unit,
-    title: String,
-    actions: @Composable ColumnScope.() -> Unit = {},
-    content: @Composable ColumnScope.() -> Unit
-) {
-    AnimatedDialog(onDismissRequest = onDismissRequest) {
-        LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                item {
-                    Column(content = content)
-                }
-                item {
-                    Column(content = actions)
-                }
         }
     }
 }
@@ -675,38 +550,14 @@ fun PlayersTabContent(
 
 @Composable
 private fun HiddenPlayersSectionHeader(count: Int, expanded: Boolean, onToggle: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onToggle)
-            .padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    BoardFlowSectionTitle(
+        title = "Hidden players ($count)",
+        modifier = Modifier.clip(BoardFlowShape.Control).clickable(onClick = onToggle)
     ) {
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-        )
-        Icon(
-            Icons.Default.VisibilityOff,
-            contentDescription = null,
-            modifier = Modifier.size(12.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        )
-        Text(
-            "Hidden · $count",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
-        )
         Icon(
             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
             contentDescription = if (expanded) "Collapse hidden" else "Expand hidden",
-            modifier = Modifier.size(14.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        )
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            tint = MaterialTheme.colorScheme.primary
         )
     }
 }
@@ -728,161 +579,159 @@ internal fun PlayerDetailDialog(
     // True when the dialog is showing the app user's own profile — enables "You" framing in rivalries
     val isCurrentPlayer = currentPlayerName != null &&
         (listOf(player.displayName) + player.aliases).any { it.equals(currentPlayerName, ignoreCase = true) }
-    PlayerDialog(
-        onDismissRequest = onDismiss,
-        title = player.displayName,
-        actions = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+    val recentPlays = remember(sourcePlays, player) { sourcePlays.recentPlaysForPlayer(player, 5) }
+    val names = remember(player) { (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() } }
+
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        Column {
+            LazyColumn(
+                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
-                if (onViewPlays != null) {
-                    BoardFlowSecondaryButton(
-                        onClick = onViewPlays,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(15.dp))
-                        Spacer(Modifier.width(5.dp))
-                        Text("All plays")
-                    }
+                item {
+                    PlayerDialogHeader(
+                        name = player.displayName,
+                        supporting = listOfNotNull(
+                            player.bggUsername.takeIf { it.isNotBlank() }?.let { "BGG: $it" },
+                            player.aliases.takeIf { it.isNotEmpty() }?.let { "also ${it.joinToString(", ")}" }
+                        ).joinToString(" · ")
+                    )
                 }
-                BoardFlowSecondaryButton(
-                    onClick = onEdit,
-                    modifier = if (onViewPlays != null) Modifier.weight(1f) else Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Edit")
-                }
-            }
-        }
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            if (player.bggUsername.isNotBlank() || player.aliases.isNotEmpty()) {
-                SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (player.bggUsername.isNotBlank()) {
-                            DetailRow("BGG username", player.bggUsername)
-                        }
-                        if (player.aliases.isNotEmpty()) {
-                            DetailRow("Aliases", player.aliases.joinToString(", "))
-                        }
-                    }
-                }
-            }
 
-            if (stats.totalPlays > 0) {
-                SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("Play Stats", style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            PlayerStatCell("Plays", "${stats.totalPlays}", Modifier.weight(1f),
-                                onClick = onViewPlays)
-                            PlayerStatCell("Wins", "${stats.wins}", Modifier.weight(1f))
-                            PlayerStatCell("Win rate", "${stats.winRate}%", Modifier.weight(1f))
-                        }
-                        if (stats.currentWinStreak >= 2) {
-                            DetailRow("Current streak", "${stats.currentWinStreak} in a row 🔥",
-                                valueColor = MaterialTheme.colorScheme.primary)
-                        }
-                        stats.lastPlayedDate?.let { DetailRow("Last played", it) }
-                        stats.favoriteGame?.let { gameName ->
-                            val gameId = stats.favoriteGameId
-                            DetailRow(
-                                "Most played", gameName,
-                                valueColor = MaterialTheme.colorScheme.primary,
-                                onClick = if (onViewGame != null && gameId != null) {
-                                    { onViewGame(gameId, gameName) }
-                                } else null
-                            )
+                if (stats.totalPlays > 0) {
+                    item {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                            PlayerStatCell("plays", "${stats.totalPlays}", Modifier.weight(1f), onClick = onViewPlays)
+                            PlayerStatCell("wins", "${stats.wins}", Modifier.weight(1f))
+                            PlayerStatCell("win rate", "${stats.winRate}%", Modifier.weight(1f))
                         }
                     }
-                }
-            } else {
-                Text(
-                    "No plays recorded yet",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-            }
-
-            val recentPlays = remember(sourcePlays, player) { sourcePlays.recentPlaysForPlayer(player, 5) }
-            if (recentPlays.isNotEmpty()) {
-                SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("Recent Activity", style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold)
-                        recentPlays.forEach { play ->
-                            val names = (listOf(player.displayName) + player.aliases).map { it.lowercase().trim() }
-                            val won = play.players.any { it.name.lowercase().trim() in names && it.isWinner }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    play.gameName,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
+                    item {
+                        BoardFlowFormGroup(raised = true) {
+                            var first = true
+                            if (stats.currentWinStreak >= 2) {
+                                DetailRow("Streak", "${stats.currentWinStreak} wins in a row")
+                                first = false
+                            }
+                            stats.lastPlayedDate?.let {
+                                if (!first) BoardFlowFormDivider()
+                                DetailRow("Last played", it)
+                                first = false
+                            }
+                            stats.favoriteGame?.let { gameName ->
+                                if (!first) BoardFlowFormDivider()
+                                val gameId = stats.favoriteGameId
+                                DetailRow(
+                                    "Most played", gameName,
+                                    onClick = if (onViewGame != null && gameId != null) {
+                                        { onViewGame(gameId, gameName) }
+                                    } else null
                                 )
-                                Spacer(Modifier.width(8.dp))
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        formatPlayDate(play.date),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Surface(
-                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
-                                        color = if (won) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            }
+                        }
+                    }
+                } else {
+                    item {
+                        Text(
+                            "No plays recorded yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (recentPlays.isNotEmpty()) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                            BoardFlowSectionTitle(title = "Recent plays")
+                            BoardFlowFormGroup(raised = true) {
+                                recentPlays.forEachIndexed { index, play ->
+                                    if (index > 0) BoardFlowFormDivider()
+                                    val won = play.players.any { it.name.lowercase().trim() in names && it.isWinner }
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = Dimens.MinTouchTarget)
+                                            .padding(horizontal = Spacing.lg),
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            if (won) "W" else "L",
-                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (won) MaterialTheme.colorScheme.primary
-                                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                            play.gameName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
                                         )
+                                        Text(
+                                            formatPlayDate(play.date),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        if (won) {
+                                            Icon(
+                                                Icons.Default.EmojiEvents,
+                                                contentDescription = "Won",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(Dimens.Icon)
+                                            )
+                                        } else {
+                                            Spacer(Modifier.size(Dimens.Icon))
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (rivalries.isNotEmpty()) {
-                SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("Rivalries", style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold)
-                        rivalries.forEach { rivalry ->
-                            val rivalPlayer = allPlayers.firstOrNull { p ->
-                                (listOf(p.displayName) + p.aliases).any {
-                                    it.equals(rivalry.opponentName, ignoreCase = true)
+                if (rivalries.isNotEmpty()) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                            BoardFlowSectionTitle(title = "Rivalries")
+                            BoardFlowFormGroup(raised = true) {
+                                rivalries.forEachIndexed { index, rivalry ->
+                                    if (index > 0) BoardFlowFormDivider()
+                                    val rivalPlayer = allPlayers.firstOrNull { p ->
+                                        (listOf(p.displayName) + p.aliases).any {
+                                            it.equals(rivalry.opponentName, ignoreCase = true)
+                                        }
+                                    }
+                                    RivalryRow(
+                                        rivalry = rivalry,
+                                        isCurrentPlayer = isCurrentPlayer,
+                                        onClick = if (onViewRival != null && rivalPlayer != null) {
+                                            { onViewRival(rivalPlayer) }
+                                        } else null
+                                    )
                                 }
                             }
-                            RivalryRow(
-                                rivalry = rivalry,
-                                isCurrentPlayer = isCurrentPlayer,
-                                onClick = if (onViewRival != null && rivalPlayer != null) {
-                                    { onViewRival(rivalPlayer) }
-                                } else null
-                            )
                         }
                     }
+                }
+            }
+
+            HorizontalDivider(thickness = Dimens.Hairline, color = MaterialTheme.colorScheme.outlineVariant)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BoardFlowIconButton(onClick = onEdit) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit player",
+                        modifier = Modifier.size(Dimens.Icon),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                if (onViewPlays != null) {
+                    BoardFlowButton(onClick = onViewPlays) { Text("All plays") }
                 }
             }
         }
@@ -896,64 +745,42 @@ private fun PlayerStatCell(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
-    val shape = RoundedCornerShape(8.dp)
-    Surface(
-        modifier = modifier
-            .clip(shape)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = shape,
-        color = if (onClick != null)
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-        else
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        border = if (onClick != null)
-            androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f))
-        else null
-    ) {
+    val content: @Composable () -> Unit = {
         Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.md),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary)
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+            Text(
+                value,
+                style = MaterialTheme.typography.titleLarge.withTabularNumbers(),
+                // Amber only on the cell that opens something.
+                color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            )
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+    if (onClick != null) {
+        Surface(onClick = onClick, modifier = modifier, shape = BoardFlowShape.Card,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh, content = content)
+    } else {
+        Surface(modifier = modifier, shape = BoardFlowShape.Card,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh, content = content)
     }
 }
 
 @Composable
-private fun DetailRow(
-    label: String,
-    value: String,
-    valueColor: Color = Color.Unspecified,
-    onClick: (() -> Unit)? = null
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(vertical = if (onClick != null) 2.dp else 0.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(88.dp))
+private fun DetailRow(label: String, value: String, onClick: (() -> Unit)? = null) {
+    BoardFlowFormRow(label = label, labelWidth = 104.dp, onClick = onClick) {
         Text(
             value,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(1f),
-            color = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else valueColor
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
         if (onClick != null) {
-            Icon(
-                Icons.Default.History,
-                contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
-            )
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -967,14 +794,14 @@ private fun RivalryRow(
     val winFraction = if (rivalry.playsTogetherCount > 0)
         rivalry.myWins.toFloat() / rivalry.playsTogetherCount else 0f
 
-    // Personalised narrative — only shown when viewing the app user's own rivalries
+    // Personalised narrative: only when viewing the app user's own rivalries
     val narrative: String? = if (isCurrentPlayer) when {
         rivalry.myWins > rivalry.theirWins ->
-            "You lead ${rivalry.opponentName} ${rivalry.myWins}–${rivalry.theirWins}."
+            "You lead ${rivalry.myWins}-${rivalry.theirWins}"
         rivalry.theirWins > rivalry.myWins ->
-            "${rivalry.opponentName} leads you ${rivalry.theirWins}–${rivalry.myWins}."
+            "${rivalry.opponentName} leads ${rivalry.theirWins}-${rivalry.myWins}"
         rivalry.myWins > 0 ->
-            "Locked at ${rivalry.myWins} each."
+            "Level at ${rivalry.myWins} each"
         else -> null
     } else null
 
@@ -982,44 +809,48 @@ private fun RivalryRow(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(vertical = if (onClick != null) 2.dp else 0.dp),
+            .padding(start = Spacing.lg, end = Spacing.md, top = Spacing.md, bottom = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        PlayerAvatar(rivalry.opponentName, size = 28.dp)
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(),
+        PlayerAvatar(rivalry.opponentName, size = 32.dp)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically) {
-                Text(rivalry.opponentName, style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium)
-                Text("${rivalry.playsTogetherCount} plays together",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (narrative != null) {
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    narrative,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
-                    fontWeight = FontWeight.Medium
+                    rivalry.opponentName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "${rivalry.myWins}-${rivalry.theirWins}",
+                    style = MaterialTheme.typography.titleSmall.withTabularNumbers(),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             LinearProgressIndicator(
                 progress = { winFraction },
-                modifier = Modifier.fillMaxWidth().height(4.dp),
+                modifier = Modifier.fillMaxWidth().height(6.dp).clip(BoardFlowShape.Pill),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.EmojiEvents, contentDescription = null,
-                    modifier = Modifier.size(11.dp),
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
-                Text("${rivalry.myWins}–${rivalry.theirWins}",
-                    style = MaterialTheme.typography.labelSmall.withTabularNumbers(),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            Text(
+                listOfNotNull(
+                    narrative,
+                    if (rivalry.playsTogetherCount == 1) "1 play together" else "${rivalry.playsTogetherCount} plays together"
+                ).joinToString(" · "),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (onClick != null) {
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -1030,37 +861,78 @@ internal fun AddPlayerDialog(
     onAdd: (String) -> Unit
 ) {
     var newName by remember { mutableStateOf("") }
-    PlayerDialog(
-        onDismissRequest = onDismiss,
-        title = "New Player",
-        actions = {
-            BoardFlowButton(
-                onClick = { onAdd(newName) },
-                enabled = newName.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Add Player")
-            }
-        }
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                "Add a player manually. They will also continue to be created automatically from logged plays.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(4.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text("New player", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
                 Text(
-                    "Display Name",
-                    style = MaterialTheme.typography.labelMedium,
+                    "Players are also added automatically when you log a play with a new name.",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                OutlinedTextField(
-                    value = newName, onValueChange = { newName = it },
-                    placeholder = { Text("e.g. Alice") }, singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            }
+            BoardFlowFormGroup(raised = true) {
+                BoardFlowFormRow(label = "Name", icon = Icons.Default.Person) {
+                    BoardFlowInlineField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        placeholder = "Player name",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End)
+            ) {
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
+                BoardFlowButton(onClick = { onAdd(newName) }, enabled = newName.isNotBlank()) { Text("Add player") }
+            }
+        }
+    }
+}
+
+/** One choice in the colour picker: a 40dp circle, ringed and ticked when selected. */
+@Composable
+private fun ColorSwatch(
+    fill: Color,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    automatic: Boolean = false
+) {
+    val mark = if (fill.luminance() > 0.55f) PlayerColors.DarkInk else Color.White
+    Box(
+        modifier = Modifier
+            .size(Dimens.MinTouchTarget)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .semantics {
+                contentDescription = label
+                role = Role.RadioButton
+                this.selected = selected
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = CircleShape,
+            color = fill,
+            border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface) else null
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                when {
+                    selected -> Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        tint = mark,
+                        modifier = Modifier.size(Dimens.Icon)
+                    )
+                    automatic -> Text("A", color = mark, style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }

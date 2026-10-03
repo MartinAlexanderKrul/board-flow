@@ -29,7 +29,7 @@ import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.NoteAdd
-import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Storage
@@ -68,11 +68,10 @@ fun IntroScreen(onDismiss: () -> Unit) {
             item { IntroSetupSteps() }
             item { IntroSettingsOverview() }
             item {
-                BoardFlowButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Got it, let's play!")
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    BoardFlowButton(onClick = onDismiss) {
+                        Text("Got it, let's play")
+                    }
                 }
                 Spacer(Modifier.height(8.dp))
             }
@@ -111,7 +110,7 @@ private fun IntroHeader() {
             textAlign = TextAlign.Center
         )
         Text(
-            "Your board game play tracker — from the table to the stats.",
+            "Your board game play tracker, from the table to the stats.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -149,25 +148,25 @@ private fun IntroSetupSteps() {
         SetupStep(
             number = 1,
             title = "Add your BGG account",
-            description = "Go to Settings → Accounts and enter your BoardGameGeek username and password. This lets the app read your collection.",
+            description = "Open Settings, Sync and enter your BoardGameGeek username and password. This lets the app read your collection and post your plays.",
             optional = false
         )
         SetupStep(
             number = 2,
             title = "Sync your collection",
-            description = "Open the Sync tab and tap Refresh to pull in your owned games and wishlists from BGG.",
+            description = "Open Settings, Sync and tap Refresh collection to pull in your owned games and wishlists from BGG.",
             optional = false
         )
         SetupStep(
             number = 3,
             title = "Connect Google Sheets",
-            description = "In Settings → Accounts, sign in with Google and link a spreadsheet to export plays automatically.",
+            description = "In Settings, Sync, sign in with Google and link a spreadsheet to export plays automatically.",
             optional = true
         )
         SetupStep(
             number = 4,
             title = "Enable AI scoresheet scanning",
-            description = "Add a Gemini API key in Settings → Scan to let the camera read scoresheet photos and fill in scores for you.",
+            description = "Add a Gemini API key in Settings, Scan to let the camera read scoresheet photos and fill in scores for you.",
             optional = true
         )
     }
@@ -268,7 +267,7 @@ private fun IntroSettingsOverview() {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        SettingsGroupHeader("Accounts")
+        SettingsGroupHeader("Sync")
         SettingItem(
             icon = Icons.Default.People,
             title = "BoardGameGeek",
@@ -277,20 +276,20 @@ private fun IntroSettingsOverview() {
         SettingItem(
             icon = Icons.Default.CloudDone,
             title = "Google",
-            description = "Sign in with Google to enable Google Sheets export. Completely optional — the rest of the app works without it.",
+            description = "Sign in with Google to enable Google Sheets export. Completely optional; the rest of the app works without it.",
             optional = true
+        )
+        SettingItem(
+            icon = Icons.Default.GridOn,
+            title = "Refresh and sync",
+            description = "Refresh your collection and sleeve sizes from BGG, sync plays to your sheet, import a CSV, and create Drive folders and QR codes."
         )
 
         SettingsGroupHeader("Preferences")
         SettingItem(
-            icon = Icons.Default.Palette,
-            title = "Theme",
-            description = "Switch between Light, Dark, or follow the system setting."
-        )
-        SettingItem(
             icon = Icons.Default.GridOn,
-            title = "History stats",
-            description = "Choose which plays count toward stats — all logged plays, locally logged only, or BGG-synced plays."
+            title = "Stats source",
+            description = "Choose which plays count toward stats: all logged plays, locally logged only, or BGG-synced plays."
         )
         SettingItem(
             icon = Icons.Default.People,
@@ -308,6 +307,11 @@ private fun IntroSettingsOverview() {
             icon = Icons.Default.Layers,
             title = "Sleeve manufacturer",
             description = "Sets your preferred brand for sleeve size recommendations shown in the Collection tab."
+        )
+        SettingItem(
+            icon = Icons.Default.Info,
+            title = "Setup guide",
+            description = "This guide, any time you need it."
         )
         SettingItem(
             icon = Icons.Default.Bookmark,
@@ -343,11 +347,11 @@ private fun IntroSettingsOverview() {
         SettingItem(
             icon = Icons.Default.Storage,
             title = "Collection cache",
-            description = "Locally cached BGG collection. Clear it to force a full re-sync on the next Sync tab refresh."
+            description = "Locally cached BGG collection. Clear it to force a full re-sync on the next refresh."
         )
         SettingItem(
             icon = Icons.Default.Backup,
-            title = "Backup & Restore",
+            title = "Backup and restore",
             description = "Export your full app state (plays, roster, challenges, settings) to a file. Use Restore on a new device to move everything over."
         )
     }
@@ -357,9 +361,8 @@ private fun IntroSettingsOverview() {
 private fun SettingsGroupHeader(title: String) {
     Text(
         title,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.SemiBold,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(top = 4.dp)
     )
 }

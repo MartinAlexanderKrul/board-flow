@@ -1,5 +1,11 @@
 package cz.nicolsburg.boardflow.data
 
+import androidx.work.NetworkType
+import androidx.work.Constraints
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.ExistingWorkPolicy
+import androidx.work.WorkManager
+import kotlinx.coroutines.sync.withLock
 import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
@@ -23,7 +29,29 @@ class BggPlayPostWorker(context: Context, params: WorkerParameters) : CoroutineW
         val roster = store.getPlayers()
 
         var anyFailed = false
-        for (play in unposted) {
+        var postedAny = false
+        for (candidate in unposted) {
+            // Under the shared lock, and re-read: the app may have posted or deleted this play
+            // since the list above was taken.
+            val posted = PlayPostLock.mutex.withLock {
+                val play = store.getLoggedPlays().firstOrNull { it.id == candidate.id } ?: return@withLock false
+                if (play.postedToBgg) return@withLock false
+                postOne(play, repository, store, roster)
+            }
+            if (posted == null) anyFailed = true else if (posted) postedAny = true
+        }
+        if (postedAny) PlayPostLock.notifyPostedInBackground()
+        return if (anyFailed) Result.retry() else Result.success()
+    }
+
+    /** True when posted, null when BGG refused it. (The caller passes false for a skipped play.) */
+    private suspend fun postOne(
+        play: cz.nicolsburg.boardflow.model.LoggedPlay,
+        repository: BggRepository,
+        store: CanonicalCollectionStore,
+        roster: List<cz.nicolsburg.boardflow.model.Player>
+    ): Boolean? {
+        run {
             val players = play.players.map { pr ->
                 val trimmed = pr.name.trim()
                 val canonical = roster.firstOrNull { p ->
@@ -50,14 +78,19 @@ class BggPlayPostWorker(context: Context, params: WorkerParameters) : CoroutineW
                     postedToBgg = true
                 )
                 store.saveLoggedPlay(posted)
-                if (posted.id != play.id) store.deleteLoggedPlay(play.id)
+                if (posted.id != play.id) {
+                    // Moods and the quote are keyed by play id: carry them to the BGG id.
+                    play.memory?.let { store.savePlayMemory(posted.id, it) }
+                    store.deleteLoggedPlay(play.id)
+                    PlayPostLock.promotedIds[play.id] = posted.id
+                }
                 Log.i(TAG, "Posted play ${play.id} -> ${posted.id}")
+                return true
             }.onFailure {
                 Log.w(TAG, "Failed to post play ${play.id}: ${it.message}")
-                anyFailed = true
             }
+            return null
         }
-        return if (anyFailed) Result.retry() else Result.success()
     }
 
     private fun buildUsernameMap(players: List<PlayerResult>, roster: List<cz.nicolsburg.boardflow.model.Player>): Map<Int, String> {
@@ -73,5 +106,20 @@ class BggPlayPostWorker(context: Context, params: WorkerParameters) : CoroutineW
 
     companion object {
         private const val TAG = "BggPlayPostWorker"
+        private const val WORK_NAME = "bgg_post_unposted"
+
+        /**
+         * Posts every unposted local play once the device is online. Queued at app start and
+         * whenever a play is saved without reaching BGG; a run already waiting is kept.
+         */
+        fun enqueue(context: Context) {
+            WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
+                WORK_NAME,
+                ExistingWorkPolicy.KEEP,
+                OneTimeWorkRequestBuilder<BggPlayPostWorker>()
+                    .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                    .build()
+            )
+        }
     }
 }

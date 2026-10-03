@@ -282,6 +282,7 @@ class SecurePreferences(context: Context) {
                 put("bggUsername", p.bggUsername)
                 p.lastPlayedAt?.let { put("lastPlayedAt", it) }
                 if (p.isHidden) put("isHidden", true)
+                if (p.color.isNotBlank()) put("color", p.color)
             })
         }
         prefs.edit().putString(KEY_PLAYERS, json.toString()).apply()
@@ -300,7 +301,8 @@ class SecurePreferences(context: Context) {
                     aliases = (0 until aliasArr.length()).map { aliasArr.getString(it) },
                     bggUsername = obj.optString("bggUsername", ""),
                     lastPlayedAt = obj.optLong("lastPlayedAt", 0L).takeIf { it > 0L },
-                    isHidden = obj.optBoolean("isHidden", false)
+                    isHidden = obj.optBoolean("isHidden", false),
+                    color = obj.optString("color", "")
                 )
             }
         } catch (e: Exception) { emptyList() }
@@ -649,6 +651,11 @@ class SecurePreferences(context: Context) {
         get() = prefs.getString(KEY_SYNC_SPREADSHEET_ID, "") ?: ""
         set(value) = prefs.edit().putString(KEY_SYNC_SPREADSHEET_ID, value.trim()).apply()
 
+    /** The connected spreadsheet's name in Google, shown in Settings, Sync instead of its id. */
+    var syncSpreadsheetTitle: String
+        get() = prefs.getString(KEY_SYNC_SPREADSHEET_TITLE, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_SYNC_SPREADSHEET_TITLE, value.trim()).apply()
+
     var syncSheetTabName: String
         get() = prefs.getString(KEY_SYNC_SHEET_TAB_NAME, "GAMES")?.let {
             if (it.isBlank()) "GAMES" else it
@@ -764,6 +771,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_SHEET_TAB_NAME      = "sheet_tab_name"
         private const val KEY_SYNC_SPREADSHEET_ID = "sync_spreadsheet_id"
         private const val KEY_SYNC_SHEET_TAB_NAME = "sync_sheet_tab_name"
+        private const val KEY_SYNC_SPREADSHEET_TITLE = "sync_spreadsheet_title"
         private const val KEY_GOOGLE_AUTHORIZED_EMAIL = "google_authorized_email"
         private const val KEY_COLLECTION_SNAPSHOT_PREFIX = "collection_snapshot_"
         private const val KEY_SLEEVES_EXCLUDED = "sleeves_excluded_game_ids"

@@ -1,5 +1,16 @@
 package cz.nicolsburg.boardflow.ui.common
 
+import cz.nicolsburg.boardflow.ui.theme.PlayerColors
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.material3.Switch
+import androidx.compose.animation.AnimatedVisibility
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,7 +59,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -56,9 +69,6 @@ import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
 import kotlinx.coroutines.delay
-
-private val PlayerCardShape = RoundedCornerShape(22.dp)
-private val CompactFieldShape = RoundedCornerShape(14.dp)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -73,7 +83,9 @@ fun PlayerResultEditorCard(
     requestScoreFocus: Boolean = false,
     onFocusDone: () -> Unit = {},
     requestNameFocus: Boolean = false,
-    onNameFocusDone: () -> Unit = {}
+    onNameFocusDone: () -> Unit = {},
+    // Inside a dialog the row sits on a raised surface and needs the next tone up.
+    containerColor: Color = MaterialTheme.colorScheme.surface
 ) {
     val scoreFocusRequester = remember { FocusRequester() }
     val nameFocusRequester = remember { FocusRequester() }
@@ -107,209 +119,179 @@ fun PlayerResultEditorCard(
         }
     }
 
+    // One line per player: who, did they win, what did they score. Everything else
+    // (name, team, rating, first play, remove) is behind the chevron.
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(
-                if (collapsed && onToggleCollapsed != null) Modifier.clickable(onClick = onToggleCollapsed)
-                else Modifier
-            ),
-        shape = PlayerCardShape,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
+        modifier = modifier.fillMaxWidth(),
+        shape = BoardFlowShape.Card,
+        color = containerColor
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 15.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            if (collapsed) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 64.dp)
+                    .padding(start = Spacing.md, end = Spacing.xs),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(BoardFlowShape.Control)
+                        .then(
+                            if (onToggleCollapsed != null) Modifier.clickable(onClick = onToggleCollapsed)
+                            else Modifier
+                        )
+                        .heightIn(min = Dimens.MinTouchTarget),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        if (player.isWinner) {
-                            Icon(
-                                Icons.Default.EmojiEvents,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(13.dp)
-                            )
-                        }
+                    PlayerAvatar(player.name.ifBlank { "?" }, size = 36.dp)
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = player.name.ifBlank { "Player" },
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = if (player.isWinner) MaterialTheme.colorScheme.primary
+                            text = player.name.ifBlank { "New player" },
+                            style = MaterialTheme.typography.titleSmall,
+                            color = if (player.name.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant
                                     else MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        if (player.score.isNotBlank()) {
+                        val details = listOfNotNull(
+                            player.color.trim().takeIf { it.isNotBlank() },
+                            "First play".takeIf { player.isNew },
+                            // BGG sends 0 or N/A for "not rated".
+                            player.rating.trim().takeIf { (it.toDoubleOrNull() ?: 0.0) > 0.0 }?.let { "Rated $it" }
+                        ).joinToString(" · ")
+                        if (details.isNotBlank()) {
                             Text(
-                                player.score,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                ),
-                                color = if (player.isWinner) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        if (onToggleCollapsed != null) {
-                            Icon(
-                                Icons.Default.ExpandMore,
-                                contentDescription = "Expand player",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-                                modifier = Modifier.size(18.dp)
+                                details,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                 }
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.Top
+                BoardFlowIconButton(onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) }) {
+                    Icon(
+                        Icons.Default.EmojiEvents,
+                        contentDescription = "Winner",
+                        tint = if (player.isWinner) MaterialTheme.colorScheme.primary
+                               else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(Dimens.IconLarge)
+                    )
+                }
+                Surface(
+                    shape = BoardFlowShape.Control,
+                    color = if (containerColor == MaterialTheme.colorScheme.surface) {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    },
+                    modifier = Modifier.size(width = 76.dp, height = 44.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        SmallFieldLabel("Name")
-                        CompactTonalTextField(
+                    // Saved players start at "0". Show that as the placeholder rather than as
+                    // text, so typing 62 can never produce "062".
+                    BoardFlowInlineField(
+                        value = if (player.score == "0") "" else player.score,
+                        // Scores are numbers; a hardware or pasted letter is dropped.
+                        onValueChange = { typed ->
+                            onUpdate(player.copy(score = typed.filter { it.isDigit() || it == '-' || it == '.' }))
+                        },
+                        placeholder = "0",
+                        keyboardType = KeyboardType.Number,
+                        textAlign = TextAlign.Center,
+                        textStyle = MaterialTheme.typography.titleMedium.withTabularNumbers(),
+                        textColor = if (player.isWinner) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.sm)
+                            .semantics { contentDescription = "Score" }
+                            .focusRequester(scoreFocusRequester)
+                    )
+                }
+                if (onToggleCollapsed != null) {
+                    BoardFlowIconButton(onClick = onToggleCollapsed) {
+                        Icon(
+                            if (collapsed) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
+                            contentDescription = if (collapsed) "Expand player" else "Collapse player",
+                            modifier = Modifier.size(Dimens.IconLarge)
+                        )
+                    }
+                } else {
+                    Spacer(Modifier.width(Spacing.sm))
+                }
+            }
+
+            AnimatedVisibility(visible = !collapsed) {
+                Column {
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Name") {
+                        BoardFlowInlineField(
                             value = player.name,
                             onValueChange = { onUpdate(player.copy(name = it)) },
-                            label = "Name",
+                            placeholder = "Player name",
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .weight(1f)
                                 .focusRequester(nameFocusRequester)
                                 .onFocusChanged { nameFocused = it.isFocused }
                         )
-                    }
-
-                    if (onToggleCollapsed != null) {
-                        BoardFlowIconButton(
-                            onClick = onToggleCollapsed,
-                            modifier = Modifier.padding(top = 4.dp),
-                            colors = androidx.compose.material3.IconButtonDefaults.iconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                            )
-                        ) {
-                            Icon(
-                                Icons.Default.ExpandLess,
-                                contentDescription = "Collapse player",
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-
-                    BoardFlowIconButton(
-                        onClick = onRemove,
-                        modifier = Modifier.padding(top = 4.dp),
-                        colors = androidx.compose.material3.IconButtonDefaults.iconButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.72f)
-                        )
-                    ) {
-                        Icon(
-                            BoardFlowIcons.Delete,
-                            contentDescription = "Remove player",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-
-                if (exactMatch != null || suggestedMatches.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
                         if (exactMatch != null) {
-                            MatchedPlayerChip(exactMatch.displayName)
-                        }
-                        suggestedMatches.forEach { match ->
-                            SuggestionChip(
-                                onClick = { onUpdate(player.copy(name = match.displayName)) },
-                                label = { Text(match.displayName, style = MaterialTheme.typography.labelMedium) },
-                                colors = SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.22f)
-                                ),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f))
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = "Saved player",
+                                modifier = Modifier.size(Dimens.Icon),
+                                tint = BoardFlowColors.Success
                             )
                         }
                     }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        SmallFieldLabel("Score")
-                        CompactTonalTextField(
-                            value = player.score,
-                            onValueChange = { onUpdate(player.copy(score = it)) },
-                            label = "Score",
-                            modifier = Modifier.focusRequester(scoreFocusRequester),
-                            keyboardType = KeyboardType.Number,
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                        )
+                    if (suggestedMatches.isNotEmpty()) {
+                        FlowRow(
+                            modifier = Modifier.padding(horizontal = Spacing.lg),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            suggestedMatches.forEach { match ->
+                                SuggestionChip(
+                                    onClick = { onUpdate(player.copy(name = match.displayName)) },
+                                    label = { Text(match.displayName, style = MaterialTheme.typography.labelLarge) },
+                                    shape = BoardFlowShape.Pill
+                                )
+                            }
+                        }
                     }
-                    WinnerChip(
-                        selected = player.isWinner,
-                        onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) }
-                    )
-                    FirstPlayChip(
-                        checked = player.isNew,
-                        onCheckedChange = { onUpdate(player.copy(isNew = it)) }
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        SmallFieldLabel("Team")
-                        CompactTonalTextField(
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Team") {
+                        BoardFlowInlineField(
                             value = player.color,
                             onValueChange = { onUpdate(player.copy(color = it)) },
-                            label = "Team",
-                            placeholder = "Color / faction",
-                            modifier = Modifier.fillMaxWidth(),
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
+                            placeholder = "Colour or faction",
+                            modifier = Modifier.weight(1f)
                         )
                     }
-                    Column(
-                        modifier = Modifier.weight(0.52f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        SmallFieldLabel("Rating")
-                        CompactTonalTextField(
-                            value = player.rating,
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Rating") {
+                        BoardFlowInlineField(
+                            value = if ((player.rating.trim().toDoubleOrNull() ?: 1.0) == 0.0) "" else player.rating,
                             onValueChange = { onUpdate(player.copy(rating = it)) },
-                            label = "Rating",
-                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = "1 to 10",
                             keyboardType = KeyboardType.Number,
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
+                            modifier = Modifier.weight(1f)
                         )
+                    }
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "First play", labelWidth = null) {
+                        Switch(checked = player.isNew, onCheckedChange = { onUpdate(player.copy(isNew = it)) })
+                    }
+                    BoardFlowFormDivider()
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.sm),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        BoardFlowInlineAction(onClick = onRemove, icon = BoardFlowIcons.Delete, destructive = true) {
+                            Text("Remove player", color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
             }
@@ -318,203 +300,8 @@ fun PlayerResultEditorCard(
 }
 
 @Composable
-private fun WinnerChip(
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val tint = MaterialTheme.colorScheme.primary
-    TogglePill(
-        selected = selected,
-        onClick = onClick,
-        modifier = modifier,
-        selectedTint = tint
-    ) {
-        Icon(
-            Icons.Default.EmojiEvents,
-            contentDescription = "Winner",
-            modifier = Modifier.size(16.dp),
-            tint = if (selected) tint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-        )
-        Text(
-            "Winner",
-            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
-            color = if (selected) tint else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun MatchedPlayerChip(name: String) {
-    SuggestionChip(
-        onClick = {},
-        label = { Text("Matched $name", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false) },
-        icon = {
-            Icon(
-                Icons.Default.Check,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        },
-        colors = SuggestionChipDefaults.suggestionChipColors(
-            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-            labelColor = MaterialTheme.colorScheme.primary
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-    )
-}
-
-@Composable
-private fun FirstPlayChip(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val tint = MaterialTheme.colorScheme.primary
-    TogglePill(
-        selected = checked,
-        onClick = { onCheckedChange(!checked) },
-        modifier = modifier,
-        selectedTint = tint
-    ) {
-        Icon(
-            Icons.Default.FiberNew,
-            contentDescription = "First play",
-            modifier = Modifier.size(16.dp),
-            tint = if (checked) tint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-        )
-        Text(
-            "First play",
-            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
-            color = if (checked) tint else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun TogglePill(
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    selectedTint: Color,
-    content: @Composable () -> Unit
-) {
-    val shape = RoundedCornerShape(18.dp)
-    Surface(
-        modifier = modifier
-            .clip(shape)
-            .clickable(onClick = onClick),
-        shape = shape,
-        color = if (selected) selectedTint.copy(alpha = 0.14f)
-        else MaterialTheme.colorScheme.surface.copy(alpha = 0.2f),
-        border = BorderStroke(
-            1.dp,
-            if (selected) selectedTint.copy(alpha = 0.32f)
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .height(36.dp)
-                .padding(horizontal = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) { content() }
-    }
-}
-
-@Composable
-private fun CompactTonalTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    modifier: Modifier = Modifier,
-    placeholder: String? = null,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    textStyle: TextStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
-    showLabel: Boolean = false,
-    readOnly: Boolean = false,
-    singleLine: Boolean = true,
-    minLines: Int = 1,
-    maxLines: Int = 1,
-    trailingContent: @Composable (() -> Unit)? = null
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        readOnly = readOnly,
-        singleLine = singleLine,
-        minLines = minLines,
-        maxLines = maxLines,
-        shape = CompactFieldShape,
-        textStyle = textStyle,
-        label = if (showLabel) {
-            {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
-                )
-            }
-        } else null,
-        placeholder = (placeholder ?: if (showLabel) null else label)?.let {
-            {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (showLabel) 12.sp else 14.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                )
-            }
-        },
-        trailingIcon = trailingContent,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f),
-            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f),
-            focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
-            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-        ),
-    modifier = modifier.height(if (singleLine) 52.dp else 92.dp)
-    )
-}
-
-@Composable
-private fun SmallFieldLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
-    )
-}
-
-@Composable
 private fun PlayerColorDot(colorName: String, modifier: Modifier = Modifier) {
-    val knownColors = mapOf(
-        "red" to Color(0xFFE53935),
-        "blue" to Color(0xFF1E88E5),
-        "green" to Color(0xFF43A047),
-        "yellow" to Color(0xFFFDD835),
-        "orange" to Color(0xFFFB8C00),
-        "purple" to Color(0xFF8E24AA),
-        "white" to Color(0xFFF5F5F5),
-        "black" to Color(0xFF212121),
-        "pink" to Color(0xFFE91E63),
-        "brown" to Color(0xFF6D4C41),
-        "gray" to Color(0xFF757575),
-        "grey" to Color(0xFF757575),
-        "cyan" to Color(0xFF00ACC1),
-        "teal" to Color(0xFF00897B),
-        "lime" to Color(0xFF7CB342)
-    )
-    val parsed = knownColors[colorName.lowercase().trim()]
-        ?: runCatching { Color(android.graphics.Color.parseColor(colorName)) }.getOrNull()
+    val parsed = PlayerColors.resolve(colorName)
     if (parsed != null) {
         Box(modifier = modifier.background(parsed, CircleShape))
     } else {

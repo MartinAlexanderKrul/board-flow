@@ -77,7 +77,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     private val _spreadsheetId = MutableStateFlow("")
     val spreadsheetId: StateFlow<String> = _spreadsheetId.asStateFlow()
 
-    private val _spreadsheetTitle = MutableStateFlow("")
+    private val _spreadsheetTitle = MutableStateFlow(securePrefs.syncSpreadsheetTitle)
     val spreadsheetTitle: StateFlow<String> = _spreadsheetTitle.asStateFlow()
 
     private val _sheetTabName = MutableStateFlow(SyncConfig.SHEET_TAB_NAME)
@@ -117,12 +117,37 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setAccount(account: Account?) {
         _account.value = account
+        if (account != null) loadMissingSpreadsheetTitle(account)
     }
 
     fun setSpreadsheetId(id: String) {
         val normalizedId = extractSheetId(id)
+        if (normalizedId != securePrefs.syncSpreadsheetId) {
+            // Another sheet: its name is not known yet.
+            _spreadsheetTitle.value = ""
+            securePrefs.syncSpreadsheetTitle = ""
+        }
         _spreadsheetId.value = normalizedId
         securePrefs.syncSpreadsheetId = normalizedId
+        _account.value?.let(::loadMissingSpreadsheetTitle)
+    }
+
+    /**
+     * Sheets connected before the name was stored only have an id: ask Google for the name once
+     * signed in. Quiet on failure; the Sync screen then says "Connected sheet".
+     */
+    private fun loadMissingSpreadsheetTitle(account: Account) {
+        val id = _spreadsheetId.value.ifBlank { securePrefs.syncSpreadsheetId }
+        if (id.isBlank() || _spreadsheetTitle.value.isNotBlank()) return
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { GoogleApiClient(getApplication(), account, id).getSpreadsheetDetails() }
+                .onSuccess { details ->
+                    if (details.id == _spreadsheetId.value && details.title != details.id) {
+                        _spreadsheetTitle.value = details.title
+                        securePrefs.syncSpreadsheetTitle = details.title
+                    }
+                }
+        }
     }
 
     fun setSheetTabName(name: String) {
@@ -134,6 +159,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun reloadLocalSyncPreferences() {
+        _spreadsheetTitle.value = securePrefs.syncSpreadsheetTitle
         setSpreadsheetId(securePrefs.syncSpreadsheetId)
         setSheetTabName(securePrefs.syncSheetTabName)
         _sleevesExcludedGameIds.value = securePrefs.getSleevesExcludedGameIds()
@@ -712,6 +738,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         _spreadsheetTitle.value = details.title
         _sheetTabName.value = details.firstSheetTitle
         securePrefs.syncSpreadsheetId = details.id
+        securePrefs.syncSpreadsheetTitle = details.title
         securePrefs.syncSheetTabName = details.firstSheetTitle
     }
 

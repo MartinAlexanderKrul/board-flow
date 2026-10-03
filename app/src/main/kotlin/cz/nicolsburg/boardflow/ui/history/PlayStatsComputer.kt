@@ -339,7 +339,7 @@ fun buildInsights(
             add(StatsInsight(
                 icon = Icons.Default.LocalFireDepartment,
                 value = "${streak}W",
-                label = "Hot Hand",
+                label = "Hot hand",
                 detail = "$name is on a tear right now",
                 playerFilter = name
             ))
@@ -347,15 +347,15 @@ fun buildInsights(
         if (recent7 > 2) add(StatsInsight(
             icon = Icons.AutoMirrored.Filled.TrendingUp,
             value = "$recent7",
-            label = "This Week",
-            detail = "$recent7 plays in the last 7 days",
+            label = "This week",
+            detail = "$recent7 ${if (recent7 == 1) "play" else "plays"} in the last 7 days",
             recentDaysFilter = 7
         ))
         mostThisMonth?.let { (name, count) ->
             add(StatsInsight(
                 icon = Icons.Default.CalendarToday,
                 value = "${count}×",
-                label = "This Month",
+                label = "This month",
                 detail = name,
                 recentDaysFilter = 31
             ))
@@ -363,7 +363,7 @@ fun buildInsights(
         if (bestStreak > 1) add(StatsInsight(
             icon = Icons.Default.EmojiEvents,
             value = "${bestStreak}d",
-            label = "Personal Best",
+            label = "Personal best",
             detail = "Your longest daily streak ever"
         ))
         longestSession?.let { (name, minutes) ->
@@ -380,7 +380,7 @@ fun buildInsights(
             add(StatsInsight(
                 icon = Icons.Default.Star,
                 value = "${game.plays}×",
-                label = "Signature Game",
+                label = "Signature game",
                 detail = game.name,
                 gameFilter = game.gameId to game.name
             ))
@@ -389,7 +389,7 @@ fun buildInsights(
             add(StatsInsight(
                 icon = Icons.Default.Group,
                 value = "${player.plays}",
-                label = "Table Regular",
+                label = "Table regular",
                 detail = "${player.displayName} shows up the most",
                 playerFilter = player.displayName
             ))
@@ -397,8 +397,8 @@ fun buildInsights(
         add(StatsInsight(
             icon = Icons.AutoMirrored.Filled.TrendingUp,
             value = "H-$hIndex",
-            label = "Gamer Level",
-            detail = if (hIndex > 0) "$hIndex games played at least $hIndex times each" else "Replay favorites to level up"
+            label = "Gamer level",
+            detail = if (hIndex == 1) "1 game played at least once" else if (hIndex > 1) "$hIndex games played at least $hIndex times each" else "Replay favorites to level up"
         ))
     }
 }

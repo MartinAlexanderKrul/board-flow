@@ -1,5 +1,26 @@
 ﻿package cz.nicolsburg.boardflow.ui.sync
 
+import androidx.compose.material3.Switch
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.UploadFile
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSettingRow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
+import androidx.compose.ui.draw.alpha
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import android.accounts.Account
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
@@ -71,7 +92,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 
 // ── Log summary model ─────────────────────────────────────────────────────────
@@ -82,6 +102,21 @@ private fun List<LogEntry>.deriveSummary(): LogSummary? {
     if (isEmpty()) return null
     val header = lastOrNull { it.type == LogEntry.Type.HEADER }
     val result = lastOrNull { it.type == LogEntry.Type.DONE || it.type == LogEntry.Type.ERROR }
+
+    // A run can end on a DONE entry even though an earlier step failed (for example the
+    // play history fetch). Do not report that as a clean "Done".
+    val runStart = indexOfLast { it.type == LogEntry.Type.HEADER }.coerceAtLeast(0)
+    val runErrors = subList(runStart, size).filter { it.type == LogEntry.Type.ERROR }
+    if (result?.type == LogEntry.Type.DONE && runErrors.isNotEmpty()) {
+        val failed = if (runErrors.size == 1) "1 step failed" else "${runErrors.size} steps failed"
+        return LogSummary(
+            headline = "Finished with errors",
+            detail = listOfNotNull(result.status.ifBlank { null }, "$failed: ${runErrors.first().status}")
+                .joinToString(" - "),
+            isError = true
+        )
+    }
+
     val headline = when {
         result?.name?.contains("Collection cached", ignoreCase = true) == true -> "Collection updated"
         result?.name?.contains("Sleeve refresh", ignoreCase = true) == true -> "Sleeve data refreshed"
@@ -139,10 +174,10 @@ fun SyncScreen(
         else -> null
     }
 
-    // Compact display label for the connected sheet
+    // The sheet's name from Google; never its id.
     val sheetDisplayLabel = when {
         spreadsheetTitle.isNotBlank() -> spreadsheetTitle
-        spreadsheetId.isNotBlank() -> "…${spreadsheetId.takeLast(8)}"
+        spreadsheetId.isNotBlank() -> "Connected sheet"
         else -> ""
     }
 
@@ -155,14 +190,8 @@ fun SyncScreen(
     var showClearLogConfirm by remember { mutableStateOf(false) }
     var pendingSyncAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
-    fun triggerSync(action: () -> Unit) {
-        val elapsed = System.currentTimeMillis() - lastSyncedAt
-        if (lastSyncedAt > 0L && elapsed < 3_600_000L) {
-            pendingSyncAction = action
-        } else {
-            action()
-        }
-    }
+    // Tapping refresh is an explicit request, so it runs without asking again.
+    fun triggerSync(action: () -> Unit) = action()
 
     val listState = rememberLazyListState()
 
@@ -285,11 +314,12 @@ fun SyncScreen(
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // ── Readiness hub (status + actions) ──────────────────────
+                BoardFlowSectionTitle(title = "Accounts")
                 ReadinessHub(
                     googleConnected = googleConnected,
                     googleLabel = account?.name.orEmpty(),
                     bggConnected = hasBggCredentials,
+                    bggLabel = bggUsername.trim(),
                     sheetConnected = hasConfiguredSheet,
                     sheetLabel = sheetDisplayLabel,
                     onManageGoogle = { showGoogleModal = true },
@@ -297,124 +327,120 @@ fun SyncScreen(
                     onChangeSheet = { showSheetModal = true }
                 )
 
-                // ── Step 1 — BGG ──────────────────────────────────────────
-                StepSectionHeader(
-                    step = "1",
-                    title = "BoardGameGeek",
-                    subtitle = "Fetch your latest collection from BGG."
-                )
-                SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        BoardFlowButton(
-                            onClick = { triggerSync { syncViewModel.refreshCollection(forceRefresh = true) } },
-                            enabled = !busy && hasBggCredentials,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.size(8.dp))
-                            Text("Refresh Collection")
-                        }
-                        BoardFlowOutlinedButton(
-                            onClick = { triggerSync { syncViewModel.refreshSleeveDataFromBgg(forceRefresh = true) } },
-                            enabled = !busy && hasBggCredentials,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Refresh Sleeve Sizes")
-                        }
-                        BoardFlowOutlinedButton(
-                            onClick = { triggerSync { syncViewModel.backupSleeveStatusToBgg() } },
-                            enabled = !busy && hasBggCredentials,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Back Up Sleeve Status to BGG")
-                        }
-                        if (!hasBggCredentials) {
-                            InlineHint("Set up your BGG account", onClick = { showBggModal = true })
-                        }
-                    }
+                // Every sync action is a row, grouped under a section title (same as Settings).
+                BoardFlowSectionTitle(title = "BoardGameGeek")
+                BoardFlowFormGroup {
+                    BoardFlowSettingRow(
+                        icon = Icons.Default.Refresh,
+                        title = "Refresh collection",
+                        detail = "Fetch your latest collection from BGG.",
+                        enabled = !busy && hasBggCredentials,
+                        onClick = { triggerSync { syncViewModel.refreshCollection(forceRefresh = true) } }
+                    )
+                }
+                if (!hasBggCredentials) {
+                    InlineHint("Set up your BGG account", onClick = { showBggModal = true })
                 }
 
-                // ── Step 2 — Google Sheets (only when signed in to Google) ──
+                BoardFlowSectionTitle(title = "Sleeves")
+                BoardFlowFormGroup {
+                    BoardFlowSettingRow(
+                        icon = BoardFlowIcons.Sleeves,
+                        title = "Refresh sleeve sizes",
+                        detail = "Read card counts and sizes from BGG.",
+                        enabled = !busy && hasBggCredentials,
+                        onClick = { triggerSync { syncViewModel.refreshSleeveDataFromBgg(forceRefresh = true) } }
+                    )
+                    BoardFlowFormDivider()
+                    BoardFlowSettingRow(
+                        icon = Icons.Default.CloudUpload,
+                        title = "Back up sleeve status to BGG",
+                        detail = "Saves sleeved / to sleeve in each game's private notes.",
+                        enabled = !busy && hasBggCredentials,
+                        onClick = { syncViewModel.backupSleeveStatusToBgg() }
+                    )
+                }
+
+                // Google Sheets (only when signed in to Google)
                 AnimatedVisibility(visible = googleConnected) {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        HorizontalDivider()
-
-                        StepSectionHeader(
-                            step = "2",
-                            title = "Google Sheets",
-                            subtitle = "Push your collection to the connected spreadsheet."
-                        )
-                        SectionCard {
-                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                BoardFlowButton(
-                                    onClick = {
-                                        val acc = account ?: return@BoardFlowButton
-                                        triggerSync {
-                                            onSpreadsheetChanged(spreadsheetId)
-                                            syncViewModel.syncBgg(acc, forceRefresh = true)
-                                        }
-                                    },
-                                    enabled = !busy && canSync,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.size(8.dp))
-                                    Text("Sync to Google Sheets")
+                        BoardFlowSectionTitle(title = "Google Sheets")
+                        val sheetReady = !busy && account != null && hasConfiguredSheet
+                        BoardFlowFormGroup {
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.Sync,
+                                title = "Sync to Google Sheets",
+                                detail = "Push your collection to the connected spreadsheet.",
+                                enabled = !busy && canSync,
+                                onClick = {
+                                    val acc = account ?: return@BoardFlowSettingRow
+                                    triggerSync {
+                                        onSpreadsheetChanged(spreadsheetId)
+                                        syncViewModel.syncBgg(acc, forceRefresh = true)
+                                    }
                                 }
-
-                                if (!canSync && syncHint != null) {
-                                    InlineHint(
-                                        text = syncHint,
-                                        onClick = when {
-                                            !hasBggCredentials -> { { showBggModal = true } }
-                                            else -> null
-                                        }
-                                    )
+                            )
+                            BoardFlowFormDivider()
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.UploadFile,
+                                title = "Import from CSV",
+                                detail = "Merge a CSV file into the spreadsheet.",
+                                enabled = sheetReady,
+                                onClick = {
+                                    account ?: return@BoardFlowSettingRow
+                                    onSpreadsheetChanged(spreadsheetId)
+                                    onPickCsv()
                                 }
+                            )
+                            BoardFlowFormDivider()
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.FolderOpen,
+                                title = "Create Drive folders and QR codes",
+                                detail = "A Drive folder and a QR code for each game.",
+                                enabled = sheetReady,
+                                onClick = {
+                                    val acc = account ?: return@BoardFlowSettingRow
+                                    onSpreadsheetChanged(spreadsheetId)
+                                    syncViewModel.createFolders(acc, saveQrToGallery = saveQrToDevice)
+                                }
+                            )
+                            BoardFlowFormDivider()
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.QrCode,
+                                title = "Also save QR images to this phone",
+                                detail = "Copies the QR codes into your gallery.",
+                                onClick = { saveQrToDevice = !saveQrToDevice }
+                            ) {
+                                Switch(checked = saveQrToDevice, onCheckedChange = { saveQrToDevice = it })
                             }
                         }
-
-                        HorizontalDivider()
-
-                        // ── Advanced (collapsed) ──────────────────────────
-                        AdvancedSection(
-                            busy = busy,
-                            account = account,
-                            hasConfiguredSheet = hasConfiguredSheet,
-                            saveQrToDevice = saveQrToDevice,
-                            onSaveQrChanged = { saveQrToDevice = it },
-                            onPickCsv = {
-                                account ?: return@AdvancedSection
-                                onSpreadsheetChanged(spreadsheetId)
-                                onPickCsv()
-                            },
-                            onCreateFolders = {
-                                val acc = account ?: return@AdvancedSection
-                                onSpreadsheetChanged(spreadsheetId)
-                                syncViewModel.createFolders(acc, saveQrToGallery = saveQrToDevice)
-                            }
-                        )
+                        if (!canSync && syncHint != null) {
+                            InlineHint(
+                                text = syncHint,
+                                onClick = if (!hasBggCredentials) ({ showBggModal = true }) else null
+                            )
+                        }
                     }
                 }
 
                 // ── Controls ──────────────────────────────────────────────
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
                     if (busy) {
-                        BoardFlowOutlinedButton(
-                            onClick = { syncViewModel.stopSync() },
-                            modifier = Modifier.weight(1f)
+                        BoardFlowSecondaryButton(
+                            onClick = { syncViewModel.stopSync() }
                         ) {
                             Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.size(4.dp))
                             Text("Stop")
                         }
                     }
-                    BoardFlowOutlinedButton(
-                        onClick = { showClearLogConfirm = true },
-                        enabled = log.isNotEmpty(),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Clear Log")
+                    if (log.isNotEmpty()) {
+                        BoardFlowInlineAction(onClick = { showClearLogConfirm = true }) {
+                            Text("Clear log")
+                        }
                     }
                 }
 
@@ -433,46 +459,41 @@ private fun ReadinessHub(
     googleConnected: Boolean,
     googleLabel: String,
     bggConnected: Boolean,
+    bggLabel: String,
     sheetConnected: Boolean,
     sheetLabel: String,
     onManageGoogle: () -> Unit,
     onEditBgg: () -> Unit,
     onChangeSheet: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-            ActionStatusRow(
-                label = "Google",
-                connected = googleConnected,
-                detail = if (googleConnected) googleLabel else "Not signed in",
-                actionLabel = if (googleConnected) "Manage" else "Sign in",
-                onAction = onManageGoogle
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), thickness = 0.5.dp)
-            ActionStatusRow(
-                label = "BGG",
-                connected = bggConnected,
-                detail = if (bggConnected) "Account saved" else "Not set up",
-                actionLabel = if (bggConnected) "Edit" else "Set up",
-                onAction = onEditBgg
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), thickness = 0.5.dp)
-            ActionStatusRow(
-                label = "Sheet",
-                connected = sheetConnected,
-                detail = if (sheetConnected) sheetLabel else "No sheet selected",
-                actionLabel = when {
-                    sheetConnected -> "Change"
-                    googleConnected -> "Connect"
-                    else -> null
-                },
-                onAction = if (sheetConnected || googleConnected) onChangeSheet else null
-            )
-        }
+    BoardFlowFormGroup {
+        ActionStatusRow(
+            label = "Google",
+            connected = googleConnected,
+            detail = if (googleConnected) googleLabel else "Not signed in",
+            actionLabel = if (googleConnected) "Manage" else "Sign in",
+            onAction = onManageGoogle
+        )
+        BoardFlowFormDivider()
+        ActionStatusRow(
+            label = "BGG",
+            connected = bggConnected,
+            detail = if (bggConnected) bggLabel.ifBlank { "Account saved" } else "Not set up",
+            actionLabel = if (bggConnected) "Edit" else "Set up",
+            onAction = onEditBgg
+        )
+        BoardFlowFormDivider()
+        ActionStatusRow(
+            label = "Sheet",
+            connected = sheetConnected,
+            detail = if (sheetConnected) sheetLabel else "No sheet selected",
+            actionLabel = when {
+                sheetConnected -> "Change"
+                googleConnected -> "Connect"
+                else -> null
+            },
+            onAction = if (sheetConnected || googleConnected) onChangeSheet else null
+        )
     }
 }
 
@@ -487,81 +508,37 @@ private fun ActionStatusRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .then(if (onAction != null) Modifier.clickable(onClick = onAction) else Modifier)
+            .heightIn(min = Dimens.FieldHeight)
+            .padding(horizontal = Spacing.lg),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         Icon(
             if (connected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-            contentDescription = null,
-            modifier = Modifier.size(14.dp),
-            tint = if (connected) Color(0xFF4CAF50)
-            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+            contentDescription = if (connected) "Ready" else "Not ready",
+            modifier = Modifier.size(Dimens.Icon),
+            tint = if (connected) BoardFlowColors.Success else MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(64.dp)
         )
         Text(
             detail,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (connected) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (connected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         if (actionLabel != null && onAction != null) {
-            Surface(
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                modifier = Modifier.clickable(onClick = onAction)
-            ) {
-                Text(
-                    actionLabel,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun StepSectionHeader(step: String, title: String, subtitle: String?) {
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-                modifier = Modifier.size(20.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        step,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
             Text(
-                title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-        if (subtitle != null) {
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 28.dp)
+                actionLabel,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -590,101 +567,18 @@ private fun InlineHint(text: String, onClick: (() -> Unit)? = null) {
 }
 
 @Composable
-private fun AdvancedSection(
-    busy: Boolean,
-    account: Account?,
-    hasConfiguredSheet: Boolean,
-    saveQrToDevice: Boolean,
-    onSaveQrChanged: (Boolean) -> Unit,
-    onPickCsv: () -> Unit,
-    onCreateFolders: () -> Unit
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                "Advanced",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Icon(
-                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Collapse" else "Expand",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        BoardFlowAnimatedVisibility(visible = expanded) {
-            SectionCard {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    AdvancedGroupLabel("Import & Export")
-                    BoardFlowOutlinedButton(
-                        onClick = onPickCsv,
-                        enabled = !busy && account != null && hasConfiguredSheet,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Import from CSV")
-                    }
-
-                    AdvancedGroupLabel("Automation")
-                    BoardFlowOutlinedButton(
-                        onClick = onCreateFolders,
-                        enabled = !busy && account != null && hasConfiguredSheet,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Create Drive Folders & QR Codes")
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Checkbox(checked = saveQrToDevice, onCheckedChange = onSaveQrChanged)
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Also save QR images to this device", style = MaterialTheme.typography.bodySmall)
-                            Text(
-                                "Enable this to copy QR PNG files into local storage.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AdvancedGroupLabel(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-        modifier = Modifier.padding(top = 4.dp)
-    )
-}
-
-@Composable
 private fun LogBar(log: List<LogEntry>, busy: Boolean, onClick: () -> Unit) {
     val summary = log.deriveSummary() ?: return
-    val (containerColor, contentColor) = when {
-        busy -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-        summary.isError -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-        else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+    val containerColor = MaterialTheme.colorScheme.surface
+    val contentColor = MaterialTheme.colorScheme.onSurface
+    val headlineColor = when {
+        busy -> MaterialTheme.colorScheme.onSurface
+        summary.isError -> MaterialTheme.colorScheme.error
+        else -> BoardFlowColors.Success
     }
 
     Surface(
         color = containerColor,
-        tonalElevation = 2.dp,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
@@ -692,7 +586,8 @@ private fun LogBar(log: List<LogEntry>, busy: Boolean, onClick: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 9.dp),
+                .heightIn(min = 56.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -704,15 +599,15 @@ private fun LogBar(log: List<LogEntry>, busy: Boolean, onClick: () -> Unit) {
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(summary.headline, color = contentColor, style = MaterialTheme.typography.labelLarge)
+                Text(summary.headline, color = headlineColor, style = MaterialTheme.typography.titleSmall)
                 summary.detail?.let {
                     Text(it, color = contentColor.copy(alpha = 0.75f), style = MaterialTheme.typography.bodySmall)
                 }
             }
             Text(
                 "View details",
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor.copy(alpha = 0.65f)
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
             )
             Icon(
                 Icons.Default.ExpandMore,
@@ -745,27 +640,24 @@ private fun LogDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        "Last operation",
-                        style = MaterialTheme.typography.titleMedium,
+                        "Last sync",
+                        style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.weight(1f)
                     )
                 }
 
                 // User-facing result summary
                 if (summary != null) {
-                    val summaryContainer = if (summary.isError)
-                        MaterialTheme.colorScheme.errorContainer
-                    else MaterialTheme.colorScheme.primaryContainer
-                    val summaryContent = if (summary.isError)
-                        MaterialTheme.colorScheme.onErrorContainer
-                    else MaterialTheme.colorScheme.onPrimaryContainer
+                    val summaryContainer = MaterialTheme.colorScheme.surfaceContainerHigh
+                    val summaryContent = if (summary.isError) MaterialTheme.colorScheme.error
+                    else BoardFlowColors.Success
 
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         color = summaryContainer,
-                        shape = MaterialTheme.shapes.small
+                        shape = BoardFlowShape.Control
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
@@ -816,7 +708,7 @@ private fun LogDialog(
 @Composable
 private fun LogEntryRow(entry: LogEntry) {
     val (iconText, iconColor) = when (entry.type) {
-        LogEntry.Type.DONE -> "OK" to Color(0xFF4CAF50)
+        LogEntry.Type.DONE -> "OK" to BoardFlowColors.Success
         LogEntry.Type.INSERTED -> "+" to MaterialTheme.colorScheme.primary
         LogEntry.Type.UPDATED -> "~" to MaterialTheme.colorScheme.onSurfaceVariant
         LogEntry.Type.ERROR -> "x" to MaterialTheme.colorScheme.error
@@ -893,9 +785,9 @@ private fun GoogleManageDialog(
                         verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            "Google Account",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
+                            "Google account",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -910,30 +802,33 @@ private fun GoogleManageDialog(
                             )
                             Text(
                                 accountEmail,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
                     item {
-                        BoardFlowOutlinedButton(
-                            onClick = { showSignOutConfirm = true },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Sign out")
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            BoardFlowSecondaryButton(
+                                onClick = { showSignOutConfirm = true }
+                            ) {
+                                Text("Sign out")
+                            }
                         }
                     }
                 } else {
                     item {
                         Text(
                             "Sign in to enable Google Sheets sync.",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     item {
-                        BoardFlowButton(onClick = onSignIn, modifier = Modifier.fillMaxWidth()) {
-                            Text("Sign in with Google")
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            BoardFlowButton(onClick = onSignIn) {
+                                Text("Sign in with Google")
+                            }
                         }
                     }
                 }
@@ -964,38 +859,29 @@ private fun BggEditDialog(
                         verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            "BGG Account",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
+                            "BGG account",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                "Username",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            OutlinedTextField(
+                        Column {
+                            BoardFlowTextField(
                                 value = username,
                                 onValueChange = { username = it },
-                                placeholder = { Text("e.g. boardgamer42") },
+                                label = { Text("Username") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                "Password",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            OutlinedTextField(
+                        Column {
+                            BoardFlowTextField(
                                 value = password,
                                 onValueChange = { password = it },
+                                label = { Text("Password") },
                                 singleLine = true,
                                 visualTransformation = if (showPwd) VisualTransformation.None else PasswordVisualTransformation(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -1003,7 +889,7 @@ private fun BggEditDialog(
                                     IconButton(onClick = { showPwd = !showPwd }) {
                                         Icon(
                                             if (showPwd) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                            contentDescription = "Toggle password"
+                                            contentDescription = if (showPwd) "Hide password" else "Show password"
                                         )
                                     }
                                 },
@@ -1013,12 +899,17 @@ private fun BggEditDialog(
                     }
                 }
                 item {
-                    BoardFlowButton(
-                        onClick = { onSave(username.trim(), password.trim()) },
-                        enabled = username.isNotBlank(),
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                     ) {
-                        Text("Save")
+                        BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
+                        BoardFlowButton(
+                            onClick = { onSave(username.trim(), password.trim()) },
+                            enabled = username.isNotBlank()
+                        ) {
+                            Text("Save")
+                        }
                     }
                 }
         }

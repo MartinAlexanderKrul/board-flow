@@ -1,5 +1,12 @@
 ﻿package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
+import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.common.GameCover
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
@@ -97,7 +104,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowPressScale
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
@@ -114,8 +120,7 @@ private enum class SortMode(val label: String) {
 
 private enum class TabMode(val label: String) {
     SHELF("My Shelf"),
-    SLEEVES("Sleeves"),
-    STATS("Stats")
+    SLEEVES("Sleeves")
 }
 
 private enum class OwnershipFilter(val label: String) {
@@ -168,12 +173,7 @@ fun CollectionScreen(
     var pendingSyncConfirm by remember { mutableStateOf(false) }
 
     fun triggerSync(action: () -> Unit = { syncViewModel.refreshCollection(forceRefresh = true) }) {
-        val elapsed = System.currentTimeMillis() - lastSyncedAt
-        if (lastSyncedAt > 0L && elapsed < 3_600_000L) {
-            pendingSyncConfirm = true
-        } else {
-            action()
-        }
+        action()
     }
 
     if (pendingSyncConfirm) {
@@ -194,6 +194,7 @@ fun CollectionScreen(
         )
     }
 
+    val messenger = LocalBoardFlowMessenger.current
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(SortMode.RATING) }
     var tabMode by remember { mutableStateOf(TabMode.SHELF) }
@@ -230,7 +231,6 @@ fun CollectionScreen(
     val showHeaderFilterAction =
         !controlsVisible &&
                 tabMode != TabMode.SLEEVES &&
-                tabMode != TabMode.STATS &&
                 allGames.isNotEmpty() &&
                 !loading &&
                 error == null
@@ -249,6 +249,9 @@ fun CollectionScreen(
     }
 
     val playedGameIds = remember(historyPlays) { historyPlays.map { it.gameId }.toSet() }
+    val historyPlayCounts = remember(historyPlays) {
+        historyPlays.groupBy { it.gameId }.mapValues { (_, plays) -> plays.sumOf { it.quantity.coerceAtLeast(1) } }
+    }
 
     val filteredGames = remember(allGames, searchQuery, sortMode, tabMode, filterOwnership, filterPlayStatus, filterPlayers, filterBestFor, filterRecommendedFor, playedGameIds) {
         var result = allGames
@@ -274,7 +277,6 @@ fun CollectionScreen(
                 }
             }
             TabMode.SLEEVES -> emptyList()
-            TabMode.STATS -> emptyList()
         }
 
         filterPlayers?.let { players ->
@@ -491,7 +493,12 @@ fun CollectionScreen(
                                 onLoad = if (hasBggCredentials) ({ triggerSync() }) else null
                             )
 
-                            tabMode == TabMode.SLEEVES -> SleevesContent(
+                            else -> BoardFlowTabContent(
+                                target = tabMode,
+                                order = { it.ordinal },
+                                modifier = Modifier.fillMaxSize()
+                            ) { mode ->
+                            if (mode == TabMode.SLEEVES) SleevesContent(
                                 allGames = allGames,
                                 listState = sleeveListState,
                                 excludedGameIds = sleevesExcludedGameIds,
@@ -499,13 +506,12 @@ fun CollectionScreen(
                                 onToggleExclusion = { syncViewModel.toggleSleeveGameExclusion(it) },
                                 onExcludeAll = { syncViewModel.excludeAllSleeveGames(it) },
                                 onIncludeAll = { syncViewModel.includeAllSleeveGames() },
-                                onSetInventoryCount = { name, count -> syncViewModel.setSleeveInventoryCount(name, count) },
+                                onSetInventoryCount = { name, count ->
+                                    syncViewModel.setSleeveInventoryCount(name, count)
+                                    messenger.show(if (count > 0) "Sleeve count saved" else "Sleeve count cleared")
+                                },
                                 initiallyExpandedGroup = sleevesHighlightGroup
-                            )
-
-                            tabMode == TabMode.STATS -> CollectionStatsTab(allGames, onMarkAsPlayed)
-
-                            else -> {
+                            ) else {
                                 Column(modifier = Modifier.fillMaxSize()) {
                                     BoardFlowAnimatedVisibility(visible = controlsVisible) {
                                         GameSearchField(
@@ -572,7 +578,7 @@ fun CollectionScreen(
                                                         modifier = Modifier.fillMaxWidth(),
                                                         contentAlignment = Alignment.Center
                                                     ) {
-                                                        BoardFlowOutlinedButton(
+                                                        BoardFlowSecondaryButton(
                                                             onClick = {
                                                                 sortMode = SortMode.RATING
                                                                 filterOwnership = OwnershipFilter.OWNED
@@ -590,6 +596,7 @@ fun CollectionScreen(
                                         }
                                     }
                                 }
+                            }
                             }
                         }
                     }
@@ -633,7 +640,7 @@ private fun ShimmerGameCard() {
             Box(
                 Modifier
                     .size(76.dp)
-                    .background(shimmer, RoundedCornerShape(8.dp))
+                    .background(shimmer, BoardFlowShape.Cover)
             )
             Column(
                 modifier = Modifier.weight(1f),
@@ -643,19 +650,19 @@ private fun ShimmerGameCard() {
                     Modifier
                         .fillMaxWidth(0.7f)
                         .height(14.dp)
-                        .background(shimmer, RoundedCornerShape(4.dp))
+                        .background(shimmer, BoardFlowShape.Small)
                 )
                 Box(
                     Modifier
                         .fillMaxWidth(0.45f)
                         .height(10.dp)
-                        .background(shimmer, RoundedCornerShape(4.dp))
+                        .background(shimmer, BoardFlowShape.Small)
                 )
                 Box(
                     Modifier
                         .fillMaxWidth(0.3f)
                         .height(10.dp)
-                        .background(shimmer, RoundedCornerShape(4.dp))
+                        .background(shimmer, BoardFlowShape.Small)
                 )
             }
         }
@@ -718,10 +725,10 @@ private fun EmptyState(
                         "No cached collection is available on this device yet. Refresh from BGG in the Sync tab to cache it here."
 
                     !accountReady ->
-                        "Use the Sync tab to refresh your collection from BGG and cache it on this device."
+                        "Refresh your collection from BGG in Settings, Sync."
 
                     !spreadsheetReady ->
-                        "Connect a spreadsheet in the Sync tab."
+                        "Connect a spreadsheet in Settings, Sync."
 
                     else ->
                         "Tap refresh to load your collection."
@@ -732,7 +739,7 @@ private fun EmptyState(
             )
             if (accountReady && spreadsheetReady && onLoad != null) {
                 BoardFlowButton(onClick = onLoad) {
-                    Text("Load Collection")
+                    Text("Load collection")
                 }
             }
         }
@@ -745,10 +752,6 @@ private fun GameCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val bggUrl = bggSleevesUrl(game)
-    val driveUrl = game.shareUrl?.takeIf { it.isNotBlank() }
-
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "cardScale")
@@ -757,32 +760,29 @@ private fun GameCard(
         modifier = modifier
             .fillMaxWidth()
             .scale(scale)
-            .clip(BoardFlowSurfaceTokens.Shape)
+            .clip(BoardFlowShape.Card)
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
                 onClick = onClick
             ),
-        shape = BoardFlowSurfaceTokens.Shape,
+        shape = BoardFlowShape.Card,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
+                .padding(Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            CollectionThumbnail(
-                game = game,
-                onOpenBgg = bggUrl?.let { { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it))) } },
-                onOpenDrive = driveUrl?.let { { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it))) } }
-            )
+            // BGG and Drive links live in the game's detail sheet, where they are full-size buttons.
+            GameCover(name = game.name, thumbnailUrl = game.thumbnailUrl, size = 72.dp)
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -791,25 +791,36 @@ private fun GameCard(
                 ) {
                     Text(
                         game.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
                     game.rating?.let {
-                        InlineStat(
-                            icon = Icons.Default.Star,
-                            label = formatDecimal(it),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Star,
+                                contentDescription = "Rating",
+                                modifier = Modifier.size(12.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                formatDecimal(it),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.White
+                            )
+                        }
                     }
                     if (game.isWishlisted) {
                         Icon(
                             Icons.Default.Bookmark,
                             contentDescription = "Wishlisted",
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.secondary
+                            modifier = Modifier.size(Dimens.IconSmall),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -836,11 +847,13 @@ private fun GameCard(
                     val recommendation = buildList {
                         game.bestPlayers?.takeIf { it.isNotBlank() }?.let { add("Best: $it") }
                         game.recommendedPlayers?.takeIf { it.isNotBlank() }?.let { add("Recommended: $it") }
-                    }.joinToString("  -  ")
+                    }.joinToString(" · ")
 
                     Text(
                         recommendation,
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -853,94 +866,6 @@ private fun collectionWeightLabel(weight: Double): String = when (gameWeightLabe
     "Medium-Light" -> "Mid-Light"
     "Medium-Heavy" -> "Mid-Heavy"
     else -> gameWeightLabel(weight)
-}
-
-@Composable
-private fun CollectionThumbnail(
-    game: GameItem,
-    onOpenBgg: (() -> Unit)?,
-    onOpenDrive: (() -> Unit)?
-) {
-    val shape = MaterialTheme.shapes.medium
-
-    Box(modifier = Modifier.size(76.dp)) {
-        if (!game.thumbnailUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = game.thumbnailUrl,
-                contentDescription = game.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(76.dp)
-                    .clip(shape)
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(76.dp)
-                    .clip(shape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.GridView,
-                    contentDescription = null,
-                    modifier = Modifier.size(30.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SmallLinkIcon(
-                icon = Icons.Default.Language,
-                contentDescription = "Open on BoardGameGeek",
-                onClick = onOpenBgg
-            )
-            SmallLinkIcon(
-                icon = Icons.Default.FolderOpen,
-                contentDescription = "Open Drive folder",
-                onClick = onOpenDrive
-            )
-        }
-    }
-}
-
-@Composable
-private fun SmallLinkIcon(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: (() -> Unit)?
-) {
-    Surface(
-        color = if (onClick != null) {
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        },
-        shape = MaterialTheme.shapes.small,
-        modifier = Modifier
-            .shadow(1.dp, MaterialTheme.shapes.small)
-            .clickable(enabled = onClick != null) { onClick?.invoke() }
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier
-                .padding(horizontal = 6.dp, vertical = 4.dp)
-                .size(12.dp),
-            tint = if (onClick != null) {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-            }
-        )
-    }
 }
 
 private fun playerCountMatches(rawValue: String?, players: Int): Boolean {
@@ -1005,29 +930,11 @@ private fun FilterSheetContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.FilterAlt,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        "Sort & Filter",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        "Collection view",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            Text(
+                "Sort and filter",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             if (hasActiveFilters) {
                 BoardFlowInlineAction(onClick = onReset) { Text("Reset") }
             }
@@ -1088,7 +995,7 @@ private fun FilterSheetContent(
         }
 
         BoardFlowFilterSection(
-            label = "Player Counts",
+            label = "Player counts",
             detail = "Games filtered by player count information."
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -1117,7 +1024,7 @@ private fun FilterSheetContent(
     }
 }
 
-// One labelled group inside the merged "Player Counts" card. The label and its definition sit on
+// One labelled group inside the merged "Player counts" card. The label and its definition sit on
 // their own line above the chips, giving the chip row the full card width so all seven chips fit on
 // a single line even on narrow phones. All chips use BoardFlowFilterChip so their selected/
 // unselected styling and interaction match the other filter chips in the sheet.

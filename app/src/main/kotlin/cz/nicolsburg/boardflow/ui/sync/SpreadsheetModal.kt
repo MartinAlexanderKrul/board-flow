@@ -1,5 +1,8 @@
 ﻿package cz.nicolsburg.boardflow.ui.sync
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,7 +26,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.text.style.TextAlign
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 
 @Composable
 fun SpreadsheetConnectDialog(
@@ -46,9 +48,9 @@ fun SpreadsheetConnectDialog(
                         verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            if (currentSheetName != null) "Change Sheet" else "Connect Sheet",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
+                            if (currentSheetName != null) "Change sheet" else "Connect sheet",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -67,7 +69,7 @@ fun SpreadsheetConnectDialog(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        OutlinedTextField(
+                        BoardFlowTextField(
                             value = input,
                             onValueChange = { input = it },
                             label = { Text("Spreadsheet URL or ID") },
@@ -77,12 +79,17 @@ fun SpreadsheetConnectDialog(
                     }
                 }
                 item {
-                    BoardFlowButton(
-                        onClick = { onConnect(input.trim()) },
-                        enabled = input.isNotBlank(),
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                     ) {
-                        Text("Connect")
+                        BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
+                        BoardFlowButton(
+                            onClick = { onConnect(input.trim()) },
+                            enabled = input.isNotBlank()
+                        ) {
+                            Text("Connect")
+                        }
                     }
                 }
                 if (onCreateNew != null) {
@@ -103,18 +110,15 @@ fun SpreadsheetConnectDialog(
                     }
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BoardFlowOutlinedButton(
-                                onClick = onCreateNew,
-                                modifier = Modifier.fillMaxWidth()
+                            BoardFlowSecondaryButton(
+                                onClick = onCreateNew
                             ) {
-                                Text("Create New Sheet from BGG")
+                                Text("Create new sheet from BGG")
                             }
                             Text(
                                 "Creates a new Google Sheet populated with your BGG collection.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

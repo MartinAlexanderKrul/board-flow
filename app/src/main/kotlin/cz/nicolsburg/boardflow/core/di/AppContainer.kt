@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.core.di
 
+import cz.nicolsburg.boardflow.data.BggPlayPostWorker
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -30,6 +31,9 @@ class AppContainer(context: Context) {
         bundled = BundledSetupGuideSource(appContext),
         catalog = SetupGuideCatalogClient()
     )
+
+    /** Lets [BggPlayPostWorker] post plays that were saved without reaching BGG. */
+    fun scheduleUnpostedPlayPost() = BggPlayPostWorker.enqueue(appContext)
 
     fun isOnline(): Boolean {
         val connectivityManager = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager

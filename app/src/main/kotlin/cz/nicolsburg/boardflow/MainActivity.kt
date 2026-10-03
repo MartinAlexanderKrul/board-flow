@@ -16,9 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import cz.nicolsburg.boardflow.auth.GoogleAuthManager
@@ -65,8 +63,7 @@ class MainActivity : ComponentActivity() {
         scheduleWorkers()
 
         setContent {
-            val appTheme by appViewModel.appTheme.collectAsState()
-            BggCombinedTheme(appTheme = appTheme) {
+            BggCombinedTheme {
                 BoardFlowApp(
                     appViewModel = appViewModel,
                     syncViewModel = syncViewModel,
@@ -180,13 +177,7 @@ class MainActivity : ComponentActivity() {
                 .build()
         )
 
-        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-            "bgg_post_unposted",
-            ExistingWorkPolicy.KEEP,
-            OneTimeWorkRequestBuilder<BggPlayPostWorker>()
-                .setConstraints(networkConstraint)
-                .build()
-        )
+        BggPlayPostWorker.enqueue(applicationContext)
 
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             ChallengeNotificationWorker.WORK_NAME,

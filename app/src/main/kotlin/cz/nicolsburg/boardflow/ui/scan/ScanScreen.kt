@@ -1,5 +1,11 @@
 ﻿package cz.nicolsburg.boardflow.ui.scan
 
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
 import android.Manifest
 import android.content.Context
 import android.net.Uri
@@ -43,7 +49,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraSecondaryAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraPermissionPrompt
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraScene
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -152,7 +157,7 @@ fun ScanScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Error:",
+                        text = "Scan failed",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -170,8 +175,8 @@ fun ScanScreen(
                     BoardFlowButton(onClick = { galleryLauncher.launch("image/*") }) {
                         Text("Try again from gallery")
                     }
-                    BoardFlowOutlinedButton(onClick = onEnterManually) {
-                        Text("Enter Manually")
+                    BoardFlowSecondaryButton(onClick = onEnterManually) {
+                        Text("Enter manually")
                     }
                 }
 
@@ -191,6 +196,7 @@ fun ScanScreen(
                             Spacer(Modifier.weight(1f))
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
+                                shape = BoardFlowShape.Sheet,
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
                                 Column(
@@ -199,7 +205,8 @@ fun ScanScreen(
                                 ) {
                                     Text(
                                         "Use this photo?",
-                                        style = MaterialTheme.typography.titleMedium
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     AsyncImage(
                                         model = file,
@@ -208,6 +215,7 @@ fun ScanScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .heightIn(min = 220.dp, max = 360.dp)
+                                            .clip(BoardFlowShape.Control)
                                     )
                                     if (qualityAnalysisRunning) {
                                         Row(
@@ -229,13 +237,13 @@ fun ScanScreen(
                                             Icon(
                                                 Icons.Default.Warning,
                                                 contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.error,
+                                                tint = BoardFlowColors.Warning,
                                                 modifier = Modifier.size(18.dp)
                                             )
                                             Text(
                                                 "This scan may be hard to read.",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.error
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = BoardFlowColors.Warning
                                             )
                                         }
                                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -252,22 +260,21 @@ fun ScanScreen(
                                         }
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                                         ) {
-                                            BoardFlowOutlinedButton(
-                                                onClick = { pendingPhoto = null },
-                                                modifier = Modifier.weight(1f)
-                                            ) {
-                                                Text("Retake")
-                                            }
-                                            BoardFlowButton(
+                                            // A poor photo: retaking is the recommended way on.
+                                            BoardFlowSecondaryButton(
                                                 onClick = {
                                                     viewModel.extractScores(file)
                                                     pendingPhoto = null
-                                                },
-                                                modifier = Modifier.weight(1f)
+                                                }
                                             ) {
                                                 Text("Use anyway")
+                                            }
+                                            BoardFlowButton(
+                                                onClick = { pendingPhoto = null }
+                                            ) {
+                                                Text("Retake")
                                             }
                                         }
                                     } else {
@@ -278,11 +285,10 @@ fun ScanScreen(
                                         )
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                                         ) {
-                                            BoardFlowOutlinedButton(
-                                                onClick = { pendingPhoto = null },
-                                                modifier = Modifier.weight(1f)
+                                            BoardFlowSecondaryButton(
+                                                onClick = { pendingPhoto = null }
                                             ) {
                                                 Text("Retake")
                                             }
@@ -291,10 +297,9 @@ fun ScanScreen(
                                                     viewModel.extractScores(file)
                                                     pendingPhoto = null
                                                 },
-                                                modifier = Modifier.weight(1f),
                                                 enabled = !qualityAnalysisRunning
                                             ) {
-                                                Text("Use Photo")
+                                                Text("Use photo")
                                             }
                                         }
                                     }
@@ -328,7 +333,7 @@ fun ScanScreen(
 
                     BoardFlowCameraScene(
                         title = gameName,
-                        subtitle = "Line up the scoresheet, then tap anywhere or use the capture button.",
+                        subtitle = "Line up the scoresheet, then tap anywhere or use the shutter.",
                         preview = {
                             AndroidView(
                                 factory = { ctx ->
@@ -371,33 +376,38 @@ fun ScanScreen(
                                 modifier = Modifier
                                     .align(Alignment.BottomCenter)
                                     .padding(horizontal = 20.dp, vertical = 24.dp),
-                                status = "Tap anywhere or use Capture",
-                                primaryAction = {
-                                    BoardFlowButton(
-                                        onClick = { capturePhoto() },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Capture")
-                                    }
-                                },
+                                status = "Tap anywhere or use the shutter",
                                 secondaryActions = {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         BoardFlowCameraSecondaryAction(
                                             icon = Icons.Default.Photo,
                                             label = "Gallery",
-                                            onClick = { galleryLauncher.launch("image/*") },
-                                            modifier = Modifier.weight(1f)
+                                            onClick = { galleryLauncher.launch("image/*") }
                                         )
+                                        // The shutter: the one amber control on the camera.
+                                        Surface(
+                                            onClick = { capturePhoto() },
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(72.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    Icons.Default.CameraAlt,
+                                                    contentDescription = "Capture",
+                                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                                    modifier = Modifier.size(28.dp)
+                                                )
+                                            }
+                                        }
                                         BoardFlowCameraSecondaryAction(
                                             icon = Icons.Default.Edit,
                                             label = "Manual",
-                                            onClick = onEnterManually,
-                                            modifier = Modifier.weight(1f)
+                                            onClick = onEnterManually
                                         )
                                     }
                                 }
@@ -415,13 +425,13 @@ fun ScanScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             BoardFlowButton(onClick = { cameraPermission.launchPermissionRequest() }) {
-                                Text("Grant Permission")
+                                Text("Allow camera")
                             }
-                            BoardFlowOutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
+                            BoardFlowSecondaryButton(onClick = { galleryLauncher.launch("image/*") }) {
                                 Text("Pick from gallery instead")
                             }
-                            BoardFlowOutlinedButton(onClick = onEnterManually) {
-                                Text("Enter Manually")
+                            BoardFlowSecondaryButton(onClick = onEnterManually) {
+                                Text("Enter manually")
                             }
                         }
                     }

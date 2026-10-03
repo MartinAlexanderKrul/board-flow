@@ -1,5 +1,12 @@
 ﻿package cz.nicolsburg.boardflow.ui.common
 
+import cz.nicolsburg.boardflow.ui.theme.PlayerColors
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerColors
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateContentSize
@@ -101,6 +108,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.popup
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.theme.Dimens
 import kotlin.math.roundToInt
 
 @Composable
@@ -130,10 +139,10 @@ fun SectionHeader(
 
 object BoardFlowSurfaceTokens {
     val CornerRadius = 12.dp
-    val Shape = RoundedCornerShape(CornerRadius)
+    val Shape = BoardFlowShape.Control
     /** Larger rounded shape for prominent feature content surfaces (session cards, play cards, banners). */
-    val ContentCardShape = RoundedCornerShape(16.dp)
-    val CardContentPadding = 12.dp
+    val ContentCardShape = BoardFlowShape.Card
+    val CardContentPadding = 16.dp
     val FilterControlHeight = 36.dp
     val FilterControlHorizontalPadding = 14.dp
     val FilterIconSize = 16.dp
@@ -150,8 +159,8 @@ fun SectionCard(
         containerColor = if (accented) MaterialTheme.colorScheme.surfaceVariant
         else MaterialTheme.colorScheme.surface
     )
-    val border = if (accented) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f))
-    else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+    // Cards separate by tone; only the accented one carries a line.
+    val border = if (accented) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)) else null
     val cardModifier = modifier
         .fillMaxWidth()
         .animateContentSize(animationSpec = boardFlowTween(BoardFlowMotion.ContentResizeDuration))
@@ -166,7 +175,7 @@ fun SectionCard(
         Card(
             onClick = onClick,
             modifier = cardModifier,
-            shape = BoardFlowSurfaceTokens.Shape,
+            shape = BoardFlowSurfaceTokens.ContentCardShape,
             colors = colors,
             border = border,
             content = columnContent
@@ -174,7 +183,7 @@ fun SectionCard(
     } else {
         Card(
             modifier = cardModifier,
-            shape = BoardFlowSurfaceTokens.Shape,
+            shape = BoardFlowSurfaceTokens.ContentCardShape,
             colors = colors,
             border = border,
             content = columnContent
@@ -198,7 +207,7 @@ fun BoardFlowFilterChip(
         modifier = modifier.defaultMinSize(minHeight = BoardFlowSurfaceTokens.FilterControlHeight),
         enabled = enabled,
         leadingIcon = leadingIcon,
-        shape = BoardFlowSurfaceTokens.Shape,
+        shape = BoardFlowShape.Pill,
         colors = boardFlowFilterChipColors()
     )
 }
@@ -209,23 +218,21 @@ fun BoardFlowFilterSection(
     detail: String,
     content: @Composable () -> Unit
 ) {
-    SectionCard {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    detail,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            content()
+    // A heading and its chips, straight on the sheet: no box around each group.
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column {
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+        content()
     }
 }
 
@@ -239,7 +246,7 @@ fun boardFlowFilterChipColors() = FilterChipDefaults.filterChipColors(
 object BoardFlowModalTokens {
     val TopDismissDragAreaHeight = 36.dp
     val DismissThreshold = 96.dp
-    val BottomSheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+    val BottomSheetShape = BoardFlowShape.SheetTop
     const val DismissGestureRegionFraction = 0.25f
 }
 
@@ -338,17 +345,25 @@ fun AnimatedDialog(
                             }
                         }
                     },
+                shape = BoardFlowShape.Sheet,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     backdrop?.invoke()
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        BoardFlowDismissDragHandle()
+                    if (backdrop != null) {
+                        // Over artwork the handle floats on top, so the title starts near
+                        // the top edge instead of below an empty strip.
+                        Box(modifier = Modifier.padding(top = 20.dp)) { content() }
+                        BoardFlowDismissDragHandle(Modifier.height(20.dp))
+                    } else {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            BoardFlowDismissDragHandle()
 
-                        // Content weight(fill=false) gives it bounded height so inner
-                        // LazyColumns scroll correctly, while short dialogs stay compact.
-                        Box(modifier = Modifier.weight(1f, fill = false)) {
-                            content()
+                            // Content weight(fill=false) gives it bounded height so inner
+                            // LazyColumns scroll correctly, while short dialogs stay compact.
+                            Box(modifier = Modifier.weight(1f, fill = false)) {
+                                content()
+                            }
                         }
                     }
                 }
@@ -370,6 +385,8 @@ fun BoardFlowModalBottomSheet(
         sheetState = sheetState,
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
+        // No tonal elevation: it would tint every surface inside the sheet amber.
+        tonalElevation = 0.dp,
         shape = BoardFlowModalTokens.BottomSheetShape,
         dragHandle = { BoardFlowDismissDragHandle() },
         content = content
@@ -401,11 +418,19 @@ private fun BoardFlowDismissDragHandle(
 fun TextStyle.withTabularNumbers(): TextStyle = copy(fontFeatureSettings = "tnum")
 
 object BoardFlowActionTokens {
-    val ButtonMinHeight = 48.dp
-    val ButtonShape = RoundedCornerShape(16.dp)
-    val ButtonContentPadding = ButtonDefaults.ContentPadding
+    // Buttons are compact pills that hug their label. Do not stretch them with fillMaxWidth;
+    // a wide slab reads as a banner, not as something to press.
+    // 40dp visible; Material still reserves a 48dp touch target around it.
+    val ButtonMinHeight = 40.dp
+    val ButtonShape = BoardFlowShape.Pill
+    val ButtonContentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
     val InlineActionContentPadding = ButtonDefaults.TextButtonContentPadding
-    val IconButtonSize = 40.dp
+    val SecondaryButtonMinHeight = 32.dp
+    // Compact pills (32dp): the game detail header buttons and its BGG / Rules / Drive links.
+    val SecondaryButtonContentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+    val IconButtonSize = Dimens.MinTouchTarget
+    // Translucent black: always a step darker than the card, dialog or page underneath.
+    val SecondaryContainer = Color.Black.copy(alpha = 0.34f)
     val IconSize = 20.dp
     val CompactIconSize = 18.dp
     val IconTextSpacing = 8.dp
@@ -419,7 +444,7 @@ enum class BoardFlowConfirmationKind {
 
 private object BoardFlowConfirmationTokens {
     val MaxWidth = 360.dp
-    val Shape = RoundedCornerShape(20.dp)
+    val Shape = BoardFlowShape.Sheet
     val OuterPadding = 32.dp
     val ContentPadding = 20.dp
     val ContentPaddingBottom = 12.dp
@@ -451,103 +476,66 @@ fun BoardFlowConfirmationDialog(
             dismissOnClickOutside = dismissOnOutsideTap
         )
     ) {
-        Card(
+        val destructive = kind == BoardFlowConfirmationKind.DESTRUCTIVE
+        val accent = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        val resolvedIcon = icon ?: if (destructive) Icons.Default.WarningAmber else null
+
+        Surface(
             modifier = modifier
-                .padding(BoardFlowConfirmationTokens.OuterPadding)
+                .padding(horizontal = 32.dp)
                 .fillMaxWidth()
                 .widthIn(max = BoardFlowConfirmationTokens.MaxWidth),
-            shape = BoardFlowConfirmationTokens.Shape,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            ),
-            border = BorderStroke(
-                1.dp,
-                when (kind) {
-                    BoardFlowConfirmationKind.DESTRUCTIVE -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
-                    else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-                }
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            shape = BoardFlowShape.Sheet,
+            color = MaterialTheme.colorScheme.surface
         ) {
             Column(
-                modifier = Modifier.padding(
-                    start = BoardFlowConfirmationTokens.ContentPadding,
-                    end = BoardFlowConfirmationTokens.ContentPadding,
-                    top = BoardFlowConfirmationTokens.ContentPadding,
-                    bottom = BoardFlowConfirmationTokens.ContentPaddingBottom
-                ),
-                verticalArrangement = Arrangement.spacedBy(BoardFlowConfirmationTokens.MessageSpacing)
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(BoardFlowConfirmationTokens.HeaderSpacing)) {
-                    val resolvedIcon = icon ?: if (kind == BoardFlowConfirmationKind.DESTRUCTIVE) {
-                        Icons.Default.WarningAmber
-                    } else {
-                        null
-                    }
-
-                    if (resolvedIcon != null) {
-                        Surface(
-                            color = when (kind) {
-                                BoardFlowConfirmationKind.DESTRUCTIVE -> MaterialTheme.colorScheme.error.copy(alpha = 0.10f)
-                                else -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.75f)
-                            },
-                            shape = CircleShape,
-                            modifier = Modifier.size(BoardFlowConfirmationTokens.IconContainerSize)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = resolvedIcon,
-                                    contentDescription = null,
-                                    tint = when (kind) {
-                                        BoardFlowConfirmationKind.DESTRUCTIVE -> MaterialTheme.colorScheme.error
-                                        else -> MaterialTheme.colorScheme.primary
-                                    },
-                                    modifier = Modifier.size(BoardFlowConfirmationTokens.IconSize)
-                                )
-                            }
-                        }
-                    }
-
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            message,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        BoardFlowConfirmationTokens.ActionSpacing,
-                        Alignment.End
-                    ),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val confirmColor = when (kind) {
-                        BoardFlowConfirmationKind.DESTRUCTIVE -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.primary
-                    }
-                    TextButton(onClick = onDismiss) {
-                        Text(
-                            dismissLabel,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (resolvedIcon != null) {
+                        Icon(
+                            imageVector = resolvedIcon,
+                            contentDescription = null,
+                            tint = accent,
+                            modifier = Modifier.size(Dimens.IconLarge)
                         )
                     }
-                    TextButton(onClick = onConfirm) {
-                        Text(
-                            confirmLabel,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = confirmColor,
-                            fontWeight = FontWeight.SemiBold
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Text(
+                    message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // The way out is quiet; the action itself carries the colour.
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Text(dismissLabel, style = MaterialTheme.typography.labelMedium)
+                    }
+                    BoardFlowSecondaryButton(
+                        onClick = onConfirm,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = accent,
+                            contentColor = if (destructive) MaterialTheme.colorScheme.onError
+                                           else MaterialTheme.colorScheme.onPrimary
                         )
+                    ) {
+                        Text(confirmLabel)
                     }
                 }
             }
@@ -556,7 +544,7 @@ fun BoardFlowConfirmationDialog(
 }
 
 @Composable
-fun BoardFlowPrimaryButton(
+fun BoardFlowButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -580,26 +568,42 @@ fun BoardFlowPrimaryButton(
     )
 }
 
+/**
+ * The secondary button: amber outline and label on a transparent fill, the same height as the
+ * primary. Use for alternatives next to the one filled action of a view.
+ */
 @Composable
 fun BoardFlowSecondaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
+    colors: ButtonColors = ButtonDefaults.buttonColors(
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.primary,
+        disabledContainerColor = Color.Transparent,
+        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+    ),
+    // 32dp instead of 40dp, for a row of small links (game detail: BGG, Rules, Drive).
+    compact: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "btnScale")
-    OutlinedButton(
+    Button(
         onClick = onClick,
         modifier = modifier
-            .defaultMinSize(minHeight = BoardFlowActionTokens.ButtonMinHeight)
+            .heightIn(min = if (compact) BoardFlowActionTokens.SecondaryButtonMinHeight else BoardFlowActionTokens.ButtonMinHeight)
             .scale(scale),
         enabled = enabled,
         colors = colors,
+        border = BorderStroke(
+            1.dp,
+            if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+        ),
         shape = BoardFlowActionTokens.ButtonShape,
-        contentPadding = BoardFlowActionTokens.ButtonContentPadding,
+        contentPadding = if (compact) BoardFlowActionTokens.SecondaryButtonContentPadding else BoardFlowActionTokens.ButtonContentPadding,
         interactionSource = interactionSource,
         content = content
     )
@@ -615,6 +619,7 @@ fun BoardFlowDestructiveButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "destructiveBtnScale")
+    // Outlined red, at the primary button's size so it lines up with a Save next to it.
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
@@ -641,13 +646,23 @@ fun BoardFlowInlineAction(
     enabled: Boolean = true,
     icon: ImageVector? = null,
     destructive: Boolean = false,
+    // True when it sits next to a full-size button: neighbours share one size.
+    large: Boolean = false,
+    // Plain white text, for Cancel and Close: leaving loses nothing, so it is neither amber nor red.
+    neutral: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
-    val tint = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val tint = when {
+        neutral -> MaterialTheme.colorScheme.onSurface
+        destructive -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.primary
+    }
     TextButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = if (large) modifier.defaultMinSize(minHeight = BoardFlowActionTokens.ButtonMinHeight) else modifier,
         enabled = enabled,
+        // The label takes the tint too, not just the icon.
+        colors = ButtonDefaults.textButtonColors(contentColor = tint),
         contentPadding = BoardFlowActionTokens.InlineActionContentPadding
     ) {
         Row(
@@ -662,7 +677,10 @@ fun BoardFlowInlineAction(
                     modifier = Modifier.size(16.dp)
                 )
             }
-            content()
+            // Same label size as the button it sits next to.
+            ProvideTextStyle(
+                if (large) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium
+            ) { content() }
         }
     }
 }
@@ -686,36 +704,6 @@ fun BoardFlowIconButton(
         content()
     }
 }
-
-@Composable
-fun BoardFlowButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    colors: ButtonColors = ButtonDefaults.buttonColors(),
-    content: @Composable RowScope.() -> Unit
-) = BoardFlowPrimaryButton(
-    onClick = onClick,
-    modifier = modifier,
-    enabled = enabled,
-    colors = colors,
-    content = content
-)
-
-@Composable
-fun BoardFlowOutlinedButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
-    content: @Composable RowScope.() -> Unit
-) = BoardFlowSecondaryButton(
-    onClick = onClick,
-    modifier = modifier,
-    enabled = enabled,
-    colors = colors,
-    content = content
-)
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -762,9 +750,9 @@ fun Popover(
                 .widthIn(max = 320.dp)
                 .background(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(16.dp)
+                    shape = BoardFlowShape.Card
                 )
-                .shadow(8.dp, RoundedCornerShape(16.dp))
+                .shadow(8.dp, BoardFlowShape.Card)
                 .then(modifier)
         ) {
             content()
@@ -784,10 +772,6 @@ fun BoardFlowPickerField(
         targetValue = if (expanded) 180f else 0f,
         label = "PickerChevron"
     )
-    val borderColor = if (expanded)
-        MaterialTheme.colorScheme.primary
-    else
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
     val labelColor = if (expanded)
         MaterialTheme.colorScheme.primary
     else
@@ -801,14 +785,15 @@ fun BoardFlowPickerField(
                 contentDescription = "$label, $value"
                 role = Role.Button
             },
-        shape = BoardFlowSurfaceTokens.Shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, borderColor)
+        // A tonal field: it only gets a line while its sheet is open.
+        shape = BoardFlowShape.Control,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        border = if (expanded) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -819,14 +804,16 @@ fun BoardFlowPickerField(
                 )
                 Text(
                     value,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Icon(
                 Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
-                tint = labelColor,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .size(20.dp)
                     .rotate(chevronRotation)
@@ -920,36 +907,6 @@ fun <T> BoardFlowPickerSheet(
     }
 }
 
-@Composable
-fun BoardFlowTonalButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-    content: @Composable RowScope.() -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "tonalBtnScale")
-    FilledTonalButton(
-        onClick = onClick,
-        modifier = modifier
-            .height(42.dp)
-            .scale(scale),
-        enabled = enabled,
-        shape = BoardFlowActionTokens.ButtonShape,
-        contentPadding = contentPadding,
-        colors = ButtonDefaults.filledTonalButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.24f),
-            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
-        ),
-        interactionSource = interactionSource,
-        content = content
-    )
-}
-
 // ---------------------------------------------------------------------------
 // Shared player avatar — consistent across Players list, Rivalries, Log Play
 // ---------------------------------------------------------------------------
@@ -963,12 +920,34 @@ fun playerInitials(name: String): String {
     }
 }
 
+/** The colours a player can pick as their own. */
+val PlayerColorChoices: List<Pair<String, String>> = listOf(
+    "Red" to "#E53935", "Pink" to "#E91E63", "Purple" to "#8E24AA", "Violet" to "#7C4DFF",
+    "Blue" to "#1E88E5", "Cyan" to "#00ACC1", "Teal" to "#00897B", "Green" to "#43A047",
+    "Lime" to "#7CB342", "Yellow" to "#FDD835", "Orange" to "#FB8C00", "Brown" to "#6D4C41",
+    "Grey" to "#757575", "White" to "#F5F5F5"
+)
+
+fun parsePlayerColor(hex: String): Color? =
+    hex.trim().takeIf { it.isNotBlank() }?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
+
+/**
+ * Chosen avatar colours by lower-case player name and alias, provided by AppShell from the roster,
+ * so every [PlayerAvatar] picks them up without each screen passing them along.
+ */
+val LocalPlayerColors = compositionLocalOf<Map<String, Color>> { emptyMap() }
+
+fun playerColorMap(players: List<cz.nicolsburg.boardflow.model.Player>): Map<String, Color> = buildMap {
+    players.forEach { player ->
+        val color = parsePlayerColor(player.color) ?: return@forEach
+        (player.aliases + player.displayName).forEach { name ->
+            name.trim().lowercase().takeIf { it.isNotBlank() }?.let { put(it, color) }
+        }
+    }
+}
+
 fun playerInitialColor(name: String): Color {
-    val palette = listOf(
-        Color(0xFF7C4DFF), Color(0xFF448AFF), Color(0xFF00ACC1),
-        Color(0xFF43A047), Color(0xFFFF8F00), Color(0xFFE91E63),
-        Color(0xFF795548), Color(0xFF546E7A)
-    )
+    val palette = PlayerColors.automatic
     return palette[(name.hashCode() and 0x7FFFFFFF) % palette.size]
 }
 
@@ -982,27 +961,43 @@ fun BoardFlowCloseGlyph(
     Icon(
         imageVector = Icons.Default.Close,
         contentDescription = contentDescription,
-        tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+        // Close is navigation, not emphasis: grey like the other utility icons.
+        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
         modifier = modifier.size(iconSize)
     )
 }
 
+/**
+ * Initials on a coloured circle. [color] overrides the name-based colour, e.g. with the
+ * colour the player used in a play.
+ */
 @Composable
-fun PlayerAvatar(name: String, size: Dp = 46.dp, modifier: Modifier = Modifier) {
+fun PlayerAvatar(name: String, size: Dp = 46.dp, modifier: Modifier = Modifier, color: Color? = null) {
     val initials = if (size.value <= 32f) name.trim().take(1).uppercase()
                    else playerInitials(name)
+    val fill = color ?: LocalPlayerColors.current[name.trim().lowercase()] ?: playerInitialColor(name)
     Surface(
         modifier = modifier.size(size),
         shape = CircleShape,
-        color = playerInitialColor(name)
+        color = fill
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 initials,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                // Dark initials on light colours (white, yellow) so they stay readable.
+                color = if (fill.luminance() > 0.55f) PlayerColors.DarkInk else Color.White,
                 fontSize = minOf(size.value * 0.40f, 14f).sp
             )
         }
     }
 }
+
+/** Colours for every date picker: the app's surface, not Material's tinted container. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun boardFlowDatePickerColors(): DatePickerColors = DatePickerDefaults.colors(
+    containerColor = MaterialTheme.colorScheme.surface,
+    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    headlineContentColor = MaterialTheme.colorScheme.onSurface
+)

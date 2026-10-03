@@ -1,5 +1,11 @@
 package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowActionTokens
+import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import androidx.compose.material.icons.filled.ChevronRight
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
@@ -104,7 +110,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowDestructiveButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
-import cz.nicolsburg.boardflow.ui.common.BoardFlowPrimaryButton
 import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import cz.nicolsburg.boardflow.ui.history.ContextualInsightStrip
@@ -122,7 +127,7 @@ private data class InfoSection(
 
 private object GameDetailTokens {
     val CardPadding = 14.dp
-    val CardCorner = RoundedCornerShape(16.dp)
+    val CardCorner = BoardFlowShape.Card
     const val CardBorderAlpha = 0.12f
     const val NeutralCardAlpha = 0.04f
     const val FeaturedCardAlpha = 0.045f
@@ -250,7 +255,8 @@ fun GameDetailsDialog(
         }
     }
     val compactHeaderAlpha by remember {
-        derivedStateOf { ((headerCollapse - 0.12f) / 0.88f).coerceIn(0f, 1f) }
+        // The compact bar takes over only once the full header has faded, so the two never overlap.
+        derivedStateOf { ((headerCollapse - 0.45f) / 0.3f).coerceIn(0f, 1f) }
     }
 
     val rulesUrl = remember(gameObjectId) { RulebookLinks.urlFor(context, gameObjectId) }
@@ -351,38 +357,39 @@ fun GameDetailsDialog(
 
                 if (bggUrl != null || rulesUrl != null || driveUrl != null) {
                     item {
+                        // Links out of the app: secondary buttons, centred under the content.
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
                         ) {
                             if (bggUrl != null) {
-                                DialogUtilityActionButton(
+                                BoardFlowSecondaryButton(
                                     onClick = { open(bggUrl) },
-                                    modifier = Modifier.weight(1f)
+                                    compact = true
                                 ) {
-                                    Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp).alpha(0.65f))
-                                    Spacer(Modifier.width(5.dp))
-                                    Text("Open BGG")
+                                    Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("BGG", style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                             if (rulesUrl != null) {
-                                DialogUtilityActionButton(
+                                BoardFlowSecondaryButton(
                                     onClick = { open(rulesUrl) },
-                                    modifier = Modifier.weight(1f)
+                                    compact = true
                                 ) {
-                                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp).alpha(0.65f))
-                                    Spacer(Modifier.width(5.dp))
-                                    Text("Rules")
+                                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Rules", style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                             if (driveUrl != null) {
-                                DialogUtilityActionButton(
+                                BoardFlowSecondaryButton(
                                     onClick = { open(driveUrl) },
-                                    modifier = Modifier.weight(1f)
+                                    compact = true
                                 ) {
-                                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp).alpha(0.65f))
-                                    Spacer(Modifier.width(5.dp))
-                                    Text("Drive")
+                                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Drive", style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                         }
@@ -449,13 +456,12 @@ private fun DetailEditorHeader(title: String, subtitle: String) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             subtitle,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -499,8 +505,8 @@ private fun RatingPickerDialog(
                                 .weight(1f)
                                 .clip(CircleShape)
                                 .clickable { onRate(n) }
-                                .padding(vertical = 6.dp)
-                                .size(26.dp),
+                                .padding(vertical = 10.dp)
+                                .size(28.dp),
                             tint = if (selected) MaterialTheme.colorScheme.primary
                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                         )
@@ -513,8 +519,10 @@ private fun RatingPickerDialog(
                 )
             }
             if (personalRating != null) {
-                BoardFlowDestructiveButton(onClick = onClear, modifier = Modifier.fillMaxWidth()) {
-                    Text("Clear rating")
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    BoardFlowDestructiveButton(onClick = onClear) {
+                        Text("Clear rating")
+                    }
                 }
             }
         }
@@ -637,21 +645,19 @@ private fun CollectionStatusEditorDialog(
             if (state.loaded) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
                     // Clearing every flag leaves a zeroed entry behind, so removal is its own action.
                     if (state.inCollection) {
                         BoardFlowDestructiveButton(
                             onClick = { confirmRemove = true },
-                            enabled = !busy,
-                            modifier = Modifier.weight(1f)
+                            enabled = !busy
                         ) { Text("Remove") }
                     }
-                    BoardFlowPrimaryButton(
+                    BoardFlowButton(
                         // The write runs in the background; the row behind shows the new status at once.
                         onClick = { onSave(draft); onDismiss() },
-                        enabled = !busy,
-                        modifier = Modifier.weight(1f)
+                        enabled = !busy
                     ) {
                         if (state.saving) {
                             CircularProgressIndicator(
@@ -704,6 +710,8 @@ private fun HeaderSection(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            // Fades out as it scrolls under the compact bar.
+            .alpha((1f - collapse / 0.5f).coerceIn(0f, 1f))
             .padding(top = 10.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top
@@ -759,10 +767,10 @@ private fun HeaderSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 game.rating?.let {
-                    InlineStat(
-                        icon = Icons.Default.Star,
+                    StatusChip(
                         label = formatDecimal(it),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.82f)
+                        icon = Icons.Default.Star,
+                        tint = Color.White
                     )
                 }
                 headerChips.forEach { chip ->
@@ -786,31 +794,31 @@ private fun HeaderSection(
                         Icon(
                             Icons.Default.Casino,
                             contentDescription = null,
-                            modifier = Modifier.size(14.dp).alpha(0.70f)
+                            modifier = Modifier.size(14.dp)
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("Log Play", style = MaterialTheme.typography.labelMedium)
+                        Text("Log play", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false)
                     }
                     if (hasQuickSetup) {
-                        DialogSecondaryActionButton(onClick = onOpenQuickSetup) {
+                        DialogPrimaryActionButton(onClick = onOpenQuickSetup) {
                             Icon(
                                 Icons.Default.Checklist,
                                 contentDescription = null,
-                                modifier = Modifier.size(14.dp).alpha(0.70f)
+                                modifier = Modifier.size(14.dp)
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text("Setup", style = MaterialTheme.typography.labelMedium)
+                            Text("Setup", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false)
                         }
                     }
                     if (hasHistory) {
-                        DialogSecondaryActionButton(onClick = { onViewHistory(gameObjectId) }) {
+                        DialogPrimaryActionButton(onClick = { onViewHistory(gameObjectId) }) {
                             Icon(
                                 Icons.Default.History,
                                 contentDescription = null,
-                                modifier = Modifier.size(14.dp).alpha(0.70f)
+                                modifier = Modifier.size(14.dp)
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text("History", style = MaterialTheme.typography.labelMedium)
+                            Text("History", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false)
                         }
                     }
                 }
@@ -834,9 +842,8 @@ private fun YourStatsCard(
     val outlineVariant   = MaterialTheme.colorScheme.outlineVariant
 
     Surface(
-        color = primary.copy(alpha = 0.08f),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
         shape = GameDetailTokens.CardCorner,
-        border = BorderStroke(1.dp, outlineVariant.copy(alpha = 0.20f)),
         tonalElevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -856,7 +863,7 @@ private fun YourStatsCard(
                     tint = primary.copy(alpha = 0.72f)
                 )
                 Text(
-                    text = "Your Stats",
+                    text = "Your stats",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = primary.copy(alpha = 0.72f)
@@ -1077,9 +1084,9 @@ private fun YourStatsCard(
 @Composable
 private fun InfoGroupBlock(sections: List<InfoSection>) {
     Surface(
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
         shape = GameDetailTokens.CardCorner,
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f)),
+
         tonalElevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1124,12 +1131,12 @@ private fun SleevesBlock(
     var expanded by remember { mutableStateOf(false) }
 
     Surface(
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.025f),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
         shape = GameDetailTokens.CardCorner,
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.10f)),
         tonalElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
+            .clip(GameDetailTokens.CardCorner)
             .clickable { expanded = !expanded }
     ) {
         Column {
@@ -1179,9 +1186,9 @@ private fun SleevesBlock(
                 }
                 Icon(
                     if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
-                    modifier = Modifier.size(18.dp)
+                    contentDescription = if (expanded) "Collapse sleeves" else "Expand sleeves",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(Dimens.IconLarge)
                 )
             }
 
@@ -1252,9 +1259,8 @@ internal fun SleeveTrackingActionSheetContent(
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+            shape = BoardFlowShape.Card,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Column {
                 SleeveTrackingActionRow(
@@ -1374,8 +1380,7 @@ private fun MasteryStrip(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape    = MaterialTheme.shapes.medium,
-        color    = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
-        border   = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
+        color    = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
     ) {
         Row(
             modifier              = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
@@ -1406,23 +1411,24 @@ private fun StatusChip(
     tint: Color,
     iconOnly: Boolean = false
 ) {
-    Surface(color = tint.copy(alpha = 0.05f), shape = CircleShape) {
+    // Sits on the game art: a dark pill keeps it readable on any cover.
+    Surface(color = Color.Black.copy(alpha = 0.5f), shape = BoardFlowShape.Pill) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 icon,
-                contentDescription = null,
-                modifier = Modifier.size(10.dp),
-                tint = tint.copy(alpha = 0.84f)
+                contentDescription = if (iconOnly) label else null,
+                modifier = Modifier.size(14.dp),
+                tint = tint
             )
             if (!iconOnly) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = tint.copy(alpha = 0.82f)
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = 0.92f)
                 )
             }
         }
@@ -1475,7 +1481,14 @@ private fun DetailCell(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .then(
+                    if (onClick != null) {
+                        Modifier
+                            .clip(BoardFlowShape.Control)
+                            .clickable(onClick = onClick)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                    } else Modifier
+                )
                 .padding(
                     horizontal = if (emphasizeSurface) 10.dp else 2.dp,
                     vertical = if (emphasizeSurface) 9.dp else 3.dp
@@ -1507,10 +1520,17 @@ private fun DetailCell(
                         } else {
                             MaterialTheme.typography.bodyMedium.withTabularNumbers()
                         },
-                        color = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = if (secondary) 0.76f else 0.84f
-                        )
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (secondary) 0.76f else 0.84f)
                     )
+                    if (onClick != null) {
+                        Icon(
+                            // The chevron alone marks the rows that open an editor.
+                            Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(Dimens.IconSmall),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             } else {
                 Text(
@@ -1520,9 +1540,7 @@ private fun DetailCell(
                     } else {
                         MaterialTheme.typography.bodyMedium.withTabularNumbers()
                     },
-                    color = MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = if (secondary) 0.76f else 0.84f
-                    )
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (secondary) 0.76f else 0.84f)
                 )
             }
         }
@@ -1603,8 +1621,7 @@ private fun SleevesSection(
                     ) {
                         Text(
                             text = genericName ?: size.ifBlank { "Unknown size" },
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.90f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -1613,14 +1630,14 @@ private fun SleevesSection(
                         if (genericName != null && size.isNotBlank()) {
                             Text(
                                 text = size,
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f),
                                 maxLines = 1
                             )
                             if (preferred != null) {
                                 Text(
                                     text = compactManufacturerLine(preferred.first, preferred.second),
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -1637,7 +1654,7 @@ private fun SleevesSection(
                     if (total > 0) {
                         Surface(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(11.dp)
+                            shape = BoardFlowShape.Pill
                         ) {
                             Box(
                                 modifier = Modifier.defaultMinSize(minWidth = 40.dp, minHeight = 22.dp),
@@ -1645,8 +1662,7 @@ private fun SleevesSection(
                             ) {
                                 Text(
                                     text = "$total",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -1845,9 +1861,8 @@ private fun CompactStickyHeader(
 ) {
     if (alpha <= 0f) return
     Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f * alpha),
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.08f * alpha)),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = BoardFlowShape.Card,
         modifier = modifier.alpha(alpha)
     ) {
         Row(
@@ -1899,13 +1914,13 @@ private fun DialogPrimaryActionButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 32.dp),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.heightIn(min = BoardFlowActionTokens.SecondaryButtonMinHeight),
+        shape = BoardFlowShape.Pill,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
         ),
-        contentPadding = PaddingValues(horizontal = 11.dp, vertical = 5.dp)
+        contentPadding = BoardFlowActionTokens.SecondaryButtonContentPadding
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -1914,55 +1929,3 @@ private fun DialogPrimaryActionButton(
         )
     }
 }
-
-@Composable
-private fun DialogSecondaryActionButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.heightIn(min = 32.dp),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.11f),
-            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f)
-        ),
-        contentPadding = PaddingValues(horizontal = 11.dp, vertical = 5.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            content = content
-        )
-    }
-}
-
-@Composable
-private fun DialogUtilityActionButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.heightIn(min = 32.dp),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f)
-        ),
-        contentPadding = PaddingValues(horizontal = 11.dp, vertical = 5.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            content = content
-        )
-    }
-}
-
-

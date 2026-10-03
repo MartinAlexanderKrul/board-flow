@@ -1,5 +1,7 @@
 ﻿package cz.nicolsburg.boardflow
 
+import kotlinx.coroutines.sync.withLock
+import cz.nicolsburg.boardflow.data.PlayPostLock
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -51,7 +53,6 @@ import cz.nicolsburg.boardflow.ui.history.StatsTimeRange
 import cz.nicolsburg.boardflow.ui.history.computePlayStats
 import cz.nicolsburg.boardflow.ui.history.filterByTimeRange
 import cz.nicolsburg.boardflow.ui.history.resolveCurrentPlayerName
-import cz.nicolsburg.boardflow.ui.theme.AppTheme
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -94,15 +95,6 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     val prefs get() = container.securePreferences
-
-    // --- Theme ---
-    private val _appTheme = MutableStateFlow(
-        try { AppTheme.valueOf(container.securePreferences.appTheme) }
-        catch (_: Exception) { AppTheme.DARK }
-    )
-    val appTheme: StateFlow<AppTheme> = _appTheme.asStateFlow()
-
-    fun setAppTheme(theme: AppTheme) { _appTheme.value = theme; prefs.appTheme = theme.name }
 
     // --- Sleeve preferred manufacturer ---
     private val _sleevePreferredManufacturer = MutableStateFlow(
@@ -369,7 +361,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun selectGame(game: BggGame) {
+    fun selectGame(picked: BggGame) {
+        // Search results and recent games can lack a cover; borrow it from the collection.
+        val game = if (picked.thumbnailUrl.isNullOrBlank()) gameForLogPlay(picked.id, picked.name).copy(yearPublished = picked.yearPublished) else picked
         isBggSearchActive = false
         selectedGame = game
         _logPlayHasUnsavedChanges.value = false
@@ -651,7 +645,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun applyDetectedGameCorrection(game: BggGame) {
         val extracted = _extractedPlay.value
         Log.d(TAG_SCAN, "Correction game selected: ${game.name}; extractedDataPreserved=${extracted != null} players=${extracted?.players?.size ?: 0}")
-        extracted?.let { saveHintForGame(game, it) }
+        // Manual entry has no scan evidence, so it must not create a recognition template.
+        extracted
+            ?.takeIf { !it.detectedGameTitle.isNullOrBlank() || it.detectedScoringCategories.isNotEmpty() }
+            ?.let { saveHintForGame(game, it) }
         if (extracted != null && extracted.players.isNotEmpty()) {
             initEditablePlayers(extracted.players)
             Log.d(TAG_SCAN, "Re-initialized ${extracted.players.size} player(s) from extracted play")
@@ -669,7 +666,31 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** Turns a raw Gemini failure into a sentence the user can act on; the raw text stays in Logcat. */
+    private fun scanErrorMessage(raw: String?): String {
+        val text = raw.orEmpty()
+        val summary = when {
+            listOf("401", "403", "PERMISSION_DENIED", "API key", "API_KEY").any { text.contains(it, ignoreCase = true) } ->
+                "Gemini rejected the API key. Check it in Settings > Scan, or enter the play manually."
+            listOf("429", "RESOURCE_EXHAUSTED", "quota").any { text.contains(it, ignoreCase = true) } ->
+                "Gemini's quota is used up for now. Try again later, or enter the play manually."
+            else -> "The scoresheet could not be read. Try again, or enter the play manually."
+        }
+        val detail = text.lineSequence().firstOrNull { it.isNotBlank() }?.trim()?.take(120)
+        return if (detail.isNullOrBlank()) summary else "$summary\n\nDetails: $detail"
+    }
+
     fun extractScores(imageFile: File) {
+        if (!prefs.hasGeminiKey()) {
+            _extractedPlay.value = null
+            _scanError.value = "Scanning needs a Gemini API key. Add one in Settings > Scan, or enter the play manually."
+            return
+        }
+        if (!isOnline()) {
+            _extractedPlay.value = null
+            _scanError.value = "You are offline. Connect to the internet to scan, or enter the play manually."
+            return
+        }
         viewModelScope.launch {
             _scanStartedWithGame.value = (selectedGame?.id ?: 0) != 0
             Log.d(TAG_AUTO_SWITCH, "Scan started; preselectedGame=${selectedGame?.name ?: "none"} scanStartedWithGame=${_scanStartedWithGame.value}")
@@ -771,7 +792,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 }
             }.onFailure {
                 Log.e(TAG_AUTO_SWITCH, "Scan failed: ${it.message}")
-                _scanError.value = it.message
+                _scanError.value = scanErrorMessage(it.message)
             }
             _scanLoading.value = false
             _scanStreaming.value = false
@@ -950,10 +971,24 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _players.value = list.toList(); persistPlayers(_players.value)
     }
 
+    /** [color] is "#RRGGBB", or blank to go back to the automatic colour. */
+    fun updatePlayerColor(id: String, color: String) {
+        val list = _players.value.toMutableList(); val idx = list.indexOfFirst { it.id == id }
+        if (idx >= 0) list[idx] = list[idx].copy(color = color.trim())
+        _players.value = list.toList(); persistPlayers(_players.value)
+    }
+
     fun updatePlayerHidden(id: String, isHidden: Boolean) {
         val list = _players.value.toMutableList(); val idx = list.indexOfFirst { it.id == id }
         if (idx >= 0) list[idx] = list[idx].copy(isHidden = isHidden)
         _players.value = list.toList(); persistPlayers(_players.value)
+    }
+
+    /** Puts back a player removed with [deletePlayer] (Undo). */
+    fun restorePlayer(player: Player) {
+        if (_players.value.any { it.id == player.id }) return
+        val list = (_players.value + player).sortedBy { it.displayName.lowercase() }
+        _players.value = list; persistPlayers(list)
     }
 
     fun deletePlayer(id: String) { _players.value = _players.value.filter { it.id != id }; persistPlayers(_players.value) }
@@ -1920,13 +1955,33 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun deleteLocalPlay(playId: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
-            runCatching {
-                val deletedPlay = _playHistory.value.firstOrNull { it.id == playId }
-                container.canonicalCollectionStore.deleteLoggedPlay(playId)
-                _playHistory.value = _playHistory.value.filter { it.id != playId }
-                clearActiveSessionIfMatchingPlay(deletedPlay)
-            }.onSuccess { onSuccess() }
+            // Under the post lock: a post in flight finishes first, and a play it has just put on
+            // BGG is not quietly removed here while it stays on BGG.
+            val result = playPostMutex.withLock {
+                runCatching {
+                    val stored = container.canonicalCollectionStore.getLoggedPlays().firstOrNull { it.id == playId }
+                    if (stored == null && promotedPlayIds.containsKey(playId)) {
+                        _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+                        error("This play was just posted to BGG. Open it again to delete it there.")
+                    }
+                    val deletedPlay = stored ?: _playHistory.value.firstOrNull { it.id == playId }
+                    container.canonicalCollectionStore.deleteLoggedPlay(playId)
+                    _playHistory.value = _playHistory.value.filter { it.id != playId }
+                    clearActiveSessionIfMatchingPlay(deletedPlay)
+                }
+            }
+            result.onSuccess { onSuccess() }
                 .onFailure { onError(it.message ?: "Failed to delete local play") }
+        }
+    }
+
+    /** Puts back a local play removed with [deleteLocalPlay] (Undo). */
+    fun restoreLocalPlay(play: LoggedPlay) {
+        viewModelScope.launch {
+            runCatching {
+                container.canonicalCollectionStore.saveLoggedPlay(play)
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            }
         }
     }
 
@@ -2010,15 +2065,26 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             stopPlayTimer()
             onSuccess(if (creds != null) mainPlay.copy(postedToBgg = true) else mainPlay, challengeProgressAfter)
             if (creds != null) postPlaysInBackground(plays.map { it.id }, creds)
+            else container.scheduleUnpostedPlayPost()
         }
     }
 
     // Play posts run one at a time, so a "post all" started during a background post waits and
     // then no longer sees the plays that post has just promoted.
-    private val playPostMutex = kotlinx.coroutines.sync.Mutex()
+    // Shared with BggPlayPostWorker, which posts unposted plays when the network comes back.
+    private val playPostMutex = PlayPostLock.mutex
 
     // Local play id -> the BGG id it was promoted to, for callers still holding the local copy.
-    private val promotedPlayIds = java.util.concurrent.ConcurrentHashMap<String, String>()
+    private val promotedPlayIds = PlayPostLock.promotedIds
+
+    init {
+        // The worker posted plays while the app is open: show them as posted straight away.
+        viewModelScope.launch {
+            PlayPostLock.postedInBackground.collect {
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            }
+        }
+    }
 
     /**
      * Posts locally saved plays to BGG without holding the UI. The ids must already be in
@@ -2038,7 +2104,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 _expectedPostedPlayIds.value = _expectedPostedPlayIds.value - playIds.toSet()
             }
             if (failed > 0) {
-                _postResult.value = "Saved locally. $failed play(s) could not be posted to BGG - post them from History."
+                _postResult.value = "Saved locally. $failed play(s) could not be posted to BGG yet. They will be posted when BGG can be reached, or post them from History."
+                container.scheduleUnpostedPlayPost()
             }
         }
     }
@@ -2343,11 +2410,6 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 container.canonicalCollectionStore.replacePlayerRecognitionHints(imported.playerRecognitionHints)
 
             try {
-                _appTheme.value = AppTheme.valueOf(prefs.appTheme)
-            } catch (_: Exception) {
-                _appTheme.value = AppTheme.DARK
-            }
-            try {
                 _statsPlayScope.value = StatsPlayScope.valueOf(prefs.statsPlayScope)
             } catch (_: Exception) {
                 _statsPlayScope.value = StatsPlayScope.ALL_PLAYS
@@ -2364,6 +2426,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             loadRecentGames()
             loadChallenges()
         }
+    }
+
+    /**
+     * The form is opening the scanner. Drop the manual placeholder so the scanner waits for
+     * a real result, but keep the players already entered.
+     */
+    fun prepareScanFromLogPlay() {
+        cancelBackgroundRetry()
+        _extractedPlay.value = null
+        _scanError.value = null
     }
 
     fun setExtractedPlayManual() {
@@ -2757,8 +2829,21 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         return LogPlayPrefill(location = "", durationSuggestion = elapsedMin.toString())
     }
 
+    /**
+     * A game for Log Play from just an id and name (play again, timer, links): the cover comes from
+     * the collection, or the history thumbnail cache for games outside it, so the form shows the
+     * real box art instead of the initial.
+     */
+    private fun gameForLogPlay(gameId: Int, gameName: String, thumbnailUrl: String? = null): BggGame {
+        val known = _allGames.value.firstOrNull { it.id == gameId }
+        val art = thumbnailUrl?.takeIf { it.isNotBlank() }
+            ?: known?.thumbnailUrl?.takeIf { it.isNotBlank() }
+            ?: _historyThumbnailCache.value[gameId]?.takeIf { it.isNotBlank() }
+        return BggGame(gameId, gameName, known?.yearPublished, art)
+    }
+
     fun setupPlayAgain(ctx: SessionContext) {
-        val game = BggGame(ctx.gameId, ctx.gameName, null, null)
+        val game = gameForLogPlay(ctx.gameId, ctx.gameName)
         selectedGame = game
         _editablePlayers.value = ctx.players.map { it.copy(score = "0", isWinner = false) }
         _extractedPlay.value = null
@@ -2775,13 +2860,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun setupPlayAgainFromSession(plays: List<LoggedPlay>) {
         val first = plays.firstOrNull() ?: return
-        val primaryGame = BggGame(first.gameId, first.gameName, null, null)
+        val primaryGame = gameForLogPlay(first.gameId, first.gameName)
         selectedGame = primaryGame
         _editablePlayers.value = first.players.map { it.copy(score = "0", isWinner = false) }
         _extractedPlay.value = null
         _additionalGames.value = plays.drop(1)
             .distinctBy { it.gameId }
-            .map { BggGame(it.gameId, it.gameName, null, null) }
+            .map { gameForLogPlay(it.gameId, it.gameName) }
         _gameRelations.value = findRelatedGames(primaryGame, _allGames.value)
         _logPlayPrefill = LogPlayPrefill(location = first.location)
         _logPlayHasUnsavedChanges.value = false
@@ -2790,7 +2875,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun setupPlayAgainFromPlay(play: LoggedPlay) = setupPlayAgainFromSession(listOf(play))
 
     fun setupLogPlayById(gameId: Int, gameName: String, thumbnailUrl: String?) {
-        val game = BggGame(gameId, gameName, null, thumbnailUrl)
+        val game = gameForLogPlay(gameId, gameName, thumbnailUrl)
         selectedGame = game
         _editablePlayers.value = emptyList()
         _extractedPlay.value = null
@@ -2984,7 +3069,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("best_tonight", "Best For Tonight", "$playerCount players at the table", picks)
+        return RecommendationLane("best_tonight", "Best for tonight", "$playerCount players at the table", picks)
     }
 
     private fun buildGroupFavoritesLane(
@@ -2999,7 +3084,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("group_favorites", "Great With This Group", "Based on your shared history", picks)
+        return RecommendationLane("group_favorites", "Great with this group", "Based on your shared history", picks)
     }
 
     private fun buildNeglectedFavoritesLane(
@@ -3025,7 +3110,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("neglected_favorites", "Neglected Favorites", "Loved before, due for a return", picks)
+        return RecommendationLane("neglected_favorites", "Neglected favorites", "Loved before, due for a return", picks)
     }
 
     private fun buildQuickOptionLane(
@@ -3045,7 +3130,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("quick_option", "Quick To Table", "Shorter picks for this group size", picks)
+        return RecommendationLane("quick_option", "Quick to table", "Shorter picks for this group size", picks)
     }
 
     private fun scoreGamesForGroup(
