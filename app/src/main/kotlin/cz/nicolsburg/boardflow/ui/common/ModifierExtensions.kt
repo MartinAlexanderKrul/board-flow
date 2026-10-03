@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.common
 
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,7 +11,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 
 fun Modifier.clickableRow(
-    shape: Shape = RoundedCornerShape(12.dp),
+    shape: Shape = BoardFlowShape.Control,
     onClick: () -> Unit,
 ): Modifier = this
     .clip(shape)

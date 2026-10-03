@@ -2,6 +2,7 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import cz.nicolsburg.boardflow.ui.collection.CollectionStatsTab
 import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
 import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
@@ -1592,16 +1593,16 @@ private fun ShimmerPlayCard() {
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(Modifier.width(72.dp).height(10.dp).background(shimmer, RoundedCornerShape(4.dp)))
-            Box(Modifier.fillMaxWidth(0.55f).height(14.dp).background(shimmer, RoundedCornerShape(4.dp)))
+            Box(Modifier.width(72.dp).height(10.dp).background(shimmer, BoardFlowShape.Small))
+            Box(Modifier.fillMaxWidth(0.55f).height(14.dp).background(shimmer, BoardFlowShape.Small))
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 repeat(2) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Box(Modifier.fillMaxWidth(0.4f).height(10.dp).background(shimmer, RoundedCornerShape(4.dp)))
-                        Box(Modifier.width(32.dp).height(10.dp).background(shimmer, RoundedCornerShape(4.dp)))
+                        Box(Modifier.fillMaxWidth(0.4f).height(10.dp).background(shimmer, BoardFlowShape.Small))
+                        Box(Modifier.width(32.dp).height(10.dp).background(shimmer, BoardFlowShape.Small))
                     }
                 }
             }
@@ -1622,17 +1623,7 @@ private fun PlayBadge(label: String) {
     }
 }
 
-internal fun resolvedPlayerColor(colorName: String): Color? {
-    val knownColors = mapOf(
-        "red" to Color(0xFFE53935), "blue" to Color(0xFF1E88E5), "green" to Color(0xFF43A047),
-        "yellow" to Color(0xFFFDD835), "orange" to Color(0xFFFB8C00), "purple" to Color(0xFF8E24AA),
-        "white" to Color(0xFFF5F5F5), "black" to Color(0xFF212121), "pink" to Color(0xFFE91E63),
-        "brown" to Color(0xFF6D4C41), "gray" to Color(0xFF757575), "grey" to Color(0xFF757575),
-        "cyan" to Color(0xFF00ACC1), "teal" to Color(0xFF00897B), "lime" to Color(0xFF7CB342)
-    )
-    return knownColors[colorName.lowercase().trim()]
-        ?: runCatching { Color(android.graphics.Color.parseColor(colorName)) }.getOrNull()
-}
+internal fun resolvedPlayerColor(colorName: String): Color? = PlayerColors.resolve(colorName)
 
 @Composable
 private fun playerMetaText(player: PlayerResult): String? {

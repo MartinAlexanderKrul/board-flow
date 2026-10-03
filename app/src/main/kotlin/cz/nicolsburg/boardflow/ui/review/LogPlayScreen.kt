@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.review
 
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material3.ButtonDefaults
 import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
@@ -1008,7 +1009,7 @@ private fun AiOutputCard(rawText: String, modelUsed: String? = null) {
     val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
     Surface(
-        shape = RoundedCornerShape(18.dp),
+        shape = BoardFlowShape.Card,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
@@ -1148,7 +1149,7 @@ private fun PostSaveCard(
             Box {
             Card(
                 modifier  = Modifier.fillMaxWidth().heightIn(max = maxCardHeight),
-                shape     = RoundedCornerShape(28.dp),
+                shape     = BoardFlowShape.Sheet,
                 elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
             ) {
                 val heroColor = MaterialTheme.colorScheme.primary
@@ -1265,7 +1266,7 @@ private fun PostSaveCard(
                     if (hasAnyChallengeData) {
                         Spacer(Modifier.height(16.dp))
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
+                            shape = BoardFlowShape.Control,
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)),
                             modifier = Modifier.fillMaxWidth()
@@ -1287,7 +1288,7 @@ private fun PostSaveCard(
                                 val pri = MaterialTheme.colorScheme.primary
                                 challengeAdvances.filter { it.isNewlyComplete }.forEach { advance ->
                                     Surface(
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = BoardFlowShape.Control,
                                         color = pc.copy(alpha = 0.65f),
                                         border = BorderStroke(1.dp, pri.copy(alpha = 0.35f)),
                                         modifier = Modifier.fillMaxWidth()
@@ -1332,7 +1333,7 @@ private fun PostSaveCard(
                                 // Progress advances — in-progress card, one step below completion
                                 challengeAdvances.filter { !it.isNewlyComplete }.take(2).forEach { advance ->
                                     Surface(
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = BoardFlowShape.Control,
                                         color = pc.copy(alpha = 0.30f),
                                         border = BorderStroke(1.dp, pri.copy(alpha = 0.20f)),
                                         modifier = Modifier.fillMaxWidth()
@@ -1369,7 +1370,7 @@ private fun PostSaveCard(
                                                     modifier = Modifier.weight(1f)
                                                 )
                                                 Surface(
-                                                    shape = RoundedCornerShape(999.dp),
+                                                    shape = BoardFlowShape.Pill,
                                                     color = pc.copy(alpha = 0.80f)
                                                 ) {
                                                     Text(
@@ -1386,7 +1387,7 @@ private fun PostSaveCard(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .height(6.dp)
-                                                    .clip(RoundedCornerShape(999.dp)),
+                                                    .clip(BoardFlowShape.Pill),
                                                 color = pri,
                                                 trackColor = pc.copy(alpha = 0.50f)
                                             )
@@ -1432,7 +1433,7 @@ private fun PostSaveCard(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .height(3.dp)
-                                                        .clip(RoundedCornerShape(999.dp)),
+                                                        .clip(BoardFlowShape.Pill),
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.30f),
                                                     trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
                                                 )
@@ -1505,7 +1506,7 @@ private fun PostSaveCard(
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     nextRecommendations.take(2).forEach { pick ->
                                         Surface(
-                                            shape = RoundedCornerShape(12.dp),
+                                            shape = BoardFlowShape.Control,
                                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
                                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
                                             modifier = Modifier.clickable { onPickRecommendation(pick.game) }
@@ -1562,7 +1563,7 @@ private fun VictoryPlayerRow(player: PlayerResult) {
     val isWinner = player.isWinner
     val primary  = MaterialTheme.colorScheme.primary
     Surface(
-        shape  = RoundedCornerShape(12.dp),
+        shape  = BoardFlowShape.Control,
         color  = if (isWinner) primary.copy(alpha = 0.20f)
                  else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
         border = if (isWinner) BorderStroke(1.dp, primary.copy(alpha = 0.55f)) else null
@@ -1635,7 +1636,7 @@ private data class FireParticle(
 
 private fun buildFireworks(primary: Color): List<FireParticle> {
     val rng = Random(42)
-    val palette = listOf(primary, primary, Color.White, Color(0xFFFFF59D))
+    val palette = listOf(primary, primary, Color.White, BoardFlowColors.Celebration)
     // Five burst origins concentrated at the top of the screen so particles
     // fan down through the card header without reaching the action buttons.
     val bursts = listOf(
@@ -1701,7 +1702,7 @@ private fun FireworksLayer(primaryColor: Color, modifier: Modifier = Modifier) {
 private fun ScanRetryBanner(onApply: () -> Unit, onDismiss: () -> Unit) {
     val primary = MaterialTheme.colorScheme.primary
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = BoardFlowShape.Card,
         color = primary.copy(alpha = 0.08f),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1837,7 +1838,7 @@ private fun GameSuggestionBanner(
 ) {
     val onSurfaceMuted = MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
-        shape    = RoundedCornerShape(16.dp),
+        shape    = BoardFlowShape.Card,
         color    = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.14f),
         border   = androidx.compose.foundation.BorderStroke(
             1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)

@@ -635,7 +635,7 @@ private fun ShimmerGameCard() {
             Box(
                 Modifier
                     .size(76.dp)
-                    .background(shimmer, RoundedCornerShape(8.dp))
+                    .background(shimmer, BoardFlowShape.Cover)
             )
             Column(
                 modifier = Modifier.weight(1f),
@@ -645,19 +645,19 @@ private fun ShimmerGameCard() {
                     Modifier
                         .fillMaxWidth(0.7f)
                         .height(14.dp)
-                        .background(shimmer, RoundedCornerShape(4.dp))
+                        .background(shimmer, BoardFlowShape.Small)
                 )
                 Box(
                     Modifier
                         .fillMaxWidth(0.45f)
                         .height(10.dp)
-                        .background(shimmer, RoundedCornerShape(4.dp))
+                        .background(shimmer, BoardFlowShape.Small)
                 )
                 Box(
                     Modifier
                         .fillMaxWidth(0.3f)
                         .height(10.dp)
-                        .background(shimmer, RoundedCornerShape(4.dp))
+                        .background(shimmer, BoardFlowShape.Small)
                 )
             }
         }

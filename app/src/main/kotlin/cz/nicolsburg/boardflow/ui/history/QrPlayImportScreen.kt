@@ -2,6 +2,7 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import androidx.compose.material3.ButtonDefaults
 import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
@@ -344,7 +345,7 @@ private fun QrSessionImportReview(
         ) {
             item {
                 Surface(
-                    shape = RoundedCornerShape(22.dp),
+                    shape = BoardFlowShape.Sheet,
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
                 ) {
@@ -380,7 +381,7 @@ private fun QrSessionImportReview(
 
             items(plays, key = { it.id }) { play ->
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = BoardFlowShape.Card,
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
                 ) {
@@ -404,7 +405,7 @@ private fun QrSessionImportReview(
             errorMessage?.let { message ->
                 item {
                     Surface(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = BoardFlowShape.Card,
                         color = MaterialTheme.colorScheme.errorContainer
                     ) {
                         Text(
@@ -506,7 +507,7 @@ private fun QrPlayImportReview(
         ) {
             item {
                 Surface(
-                    shape = RoundedCornerShape(22.dp),
+                    shape = BoardFlowShape.Sheet,
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
                 ) {
@@ -517,7 +518,7 @@ private fun QrPlayImportReview(
                         Text("Import play", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(play.gameName, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
+                            shape = BoardFlowShape.Control,
                             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.42f)
                         ) {
                             Text(
@@ -646,7 +647,7 @@ private fun QrPlayImportReview(
             errorMessage?.let { message ->
                 item {
                     Surface(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = BoardFlowShape.Card,
                         color = MaterialTheme.colorScheme.errorContainer
                     ) {
                         Text(
@@ -728,7 +729,7 @@ private fun SmallToggleCard(
     Surface(
         modifier = modifier,
         onClick = onClick,
-        shape = RoundedCornerShape(14.dp),
+        shape = BoardFlowShape.Control,
         color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
         else MaterialTheme.colorScheme.surface.copy(alpha = 0.42f),
         border = BorderStroke(

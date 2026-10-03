@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.common
 
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
@@ -109,7 +110,7 @@ fun BoardFlowCameraActionPanel(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
+        shape = BoardFlowShape.Sheet,
         color = Color.Black.copy(alpha = 0.42f)
     ) {
         Column(

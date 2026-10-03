@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.common
 
+import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerColors
 import androidx.compose.runtime.compositionLocalOf
@@ -746,9 +747,9 @@ fun Popover(
                 .widthIn(max = 320.dp)
                 .background(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(16.dp)
+                    shape = BoardFlowShape.Card
                 )
-                .shadow(8.dp, RoundedCornerShape(16.dp))
+                .shadow(8.dp, BoardFlowShape.Card)
                 .then(modifier)
         ) {
             content()
@@ -943,11 +944,7 @@ fun playerColorMap(players: List<cz.nicolsburg.boardflow.model.Player>): Map<Str
 }
 
 fun playerInitialColor(name: String): Color {
-    val palette = listOf(
-        Color(0xFF7C4DFF), Color(0xFF448AFF), Color(0xFF00ACC1),
-        Color(0xFF43A047), Color(0xFFFF8F00), Color(0xFFE91E63),
-        Color(0xFF795548), Color(0xFF546E7A)
-    )
+    val palette = PlayerColors.automatic
     return palette[(name.hashCode() and 0x7FFFFFFF) % palette.size]
 }
 
@@ -985,7 +982,7 @@ fun PlayerAvatar(name: String, size: Dp = 46.dp, modifier: Modifier = Modifier, 
                 initials,
                 fontWeight = FontWeight.Bold,
                 // Dark initials on light colours (white, yellow) so they stay readable.
-                color = if (fill.luminance() > 0.55f) Color(0xFF1C1C1E) else Color.White,
+                color = if (fill.luminance() > 0.55f) PlayerColors.DarkInk else Color.White,
                 fontSize = minOf(size.value * 0.40f, 14f).sp
             )
         }

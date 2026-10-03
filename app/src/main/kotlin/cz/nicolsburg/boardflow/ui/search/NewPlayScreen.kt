@@ -566,7 +566,7 @@ private fun PlayingWithRow(
 
         AnimatedVisibility(visible = pickerExpanded) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = BoardFlowShape.Control,
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
             ) {
@@ -901,8 +901,8 @@ private fun ShimmerGameRow() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Box(Modifier.weight(1f).height(14.dp).background(shimmer, RoundedCornerShape(4.dp)))
-        Box(Modifier.size(16.dp).background(shimmer, RoundedCornerShape(3.dp)))
+        Box(Modifier.weight(1f).height(14.dp).background(shimmer, BoardFlowShape.Small))
+        Box(Modifier.size(16.dp).background(shimmer, BoardFlowShape.Pill))
     }
 }
 

@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.common
 
+import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -300,25 +301,7 @@ fun PlayerResultEditorCard(
 
 @Composable
 private fun PlayerColorDot(colorName: String, modifier: Modifier = Modifier) {
-    val knownColors = mapOf(
-        "red" to Color(0xFFE53935),
-        "blue" to Color(0xFF1E88E5),
-        "green" to Color(0xFF43A047),
-        "yellow" to Color(0xFFFDD835),
-        "orange" to Color(0xFFFB8C00),
-        "purple" to Color(0xFF8E24AA),
-        "white" to Color(0xFFF5F5F5),
-        "black" to Color(0xFF212121),
-        "pink" to Color(0xFFE91E63),
-        "brown" to Color(0xFF6D4C41),
-        "gray" to Color(0xFF757575),
-        "grey" to Color(0xFF757575),
-        "cyan" to Color(0xFF00ACC1),
-        "teal" to Color(0xFF00897B),
-        "lime" to Color(0xFF7CB342)
-    )
-    val parsed = knownColors[colorName.lowercase().trim()]
-        ?: runCatching { Color(android.graphics.Color.parseColor(colorName)) }.getOrNull()
+    val parsed = PlayerColors.resolve(colorName)
     if (parsed != null) {
         Box(modifier = modifier.background(parsed, CircleShape))
     } else {

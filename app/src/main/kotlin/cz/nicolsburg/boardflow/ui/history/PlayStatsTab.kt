@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.theme.InsightRarityColors
 import androidx.compose.ui.graphics.compositeOver
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
@@ -330,7 +331,7 @@ private fun NarrativeHeader(text: String, currentStreak: Int) {
         )
         if (currentStreak >= 3) {
             Surface(
-                shape = RoundedCornerShape(20.dp),
+                shape = BoardFlowShape.Pill,
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
             ) {
                 Row(
@@ -362,7 +363,7 @@ private fun PeriodReviewCard(review: PeriodReview) {
     val onSurface = MaterialTheme.colorScheme.onSurface
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape    = RoundedCornerShape(16.dp),
+        shape    = BoardFlowShape.Card,
         color    = primary.copy(alpha = 0.07f),
         border   = BorderStroke(0.5.dp, primary.copy(alpha = 0.14f))
     ) {
@@ -400,7 +401,7 @@ private fun HeroObservationCard(observations: List<SmartObservation>, label: Str
     }
     val observation = orderedObservations[(dayOfYear + offset) % orderedObservations.size]
     val isHighTier  = observation.rarity == InsightRarity.EPIC || observation.rarity == InsightRarity.LEGENDARY
-    val shape       = RoundedCornerShape(16.dp)
+    val shape       = BoardFlowShape.Card
     val textColor   = observation.rarity.primaryTextColor()
     val mutedColor  = observation.rarity.mutedTextColor()
     val accentColor = observation.rarity.accentColor()
@@ -545,50 +546,50 @@ private fun InsightRarity.cardBrush(): Brush = when (this) {
         )
     )
     InsightRarity.NOTABLE -> Brush.linearGradient(
-        listOf(Color(0xFF12312D), MaterialTheme.colorScheme.surface)
+        listOf(InsightRarityColors.NotableStart, MaterialTheme.colorScheme.surface)
     )
     InsightRarity.RARE -> Brush.linearGradient(
-        listOf(Color(0xFF172B55), Color(0xFF1F1F32))
+        listOf(InsightRarityColors.RareStart, InsightRarityColors.RareEnd)
     )
     InsightRarity.EPIC -> Brush.linearGradient(
-        listOf(Color(0xFF2D174A), Color(0xFF17131F))
+        listOf(InsightRarityColors.EpicStart, InsightRarityColors.EpicEnd)
     )
     InsightRarity.LEGENDARY -> Brush.linearGradient(
-        listOf(Color(0xFFE3A72F), Color(0xFF5C3E10))
+        listOf(InsightRarityColors.LegendaryStart, InsightRarityColors.LegendaryEnd)
     )
 }
 
 @Composable
 private fun InsightRarity.primaryTextColor(): Color = when (this) {
-    InsightRarity.LEGENDARY -> Color(0xFF181208)
-    InsightRarity.RARE, InsightRarity.EPIC -> Color(0xFFF4F1EA)
+    InsightRarity.LEGENDARY -> InsightRarityColors.LegendaryText
+    InsightRarity.RARE, InsightRarity.EPIC -> InsightRarityColors.RareText
     else -> MaterialTheme.colorScheme.onSurface
 }
 
 @Composable
 private fun InsightRarity.mutedTextColor(): Color = when (this) {
-    InsightRarity.LEGENDARY -> Color(0xFF4A350B)
-    InsightRarity.RARE, InsightRarity.EPIC -> Color(0xFFD4D0DD)
-    InsightRarity.NOTABLE -> Color(0xFFBDE7DE)
+    InsightRarity.LEGENDARY -> InsightRarityColors.LegendaryMutedText
+    InsightRarity.RARE, InsightRarity.EPIC -> InsightRarityColors.RareMutedText
+    InsightRarity.NOTABLE -> InsightRarityColors.NotableText
     else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
 @Composable
 private fun InsightRarity.accentColor(): Color = when (this) {
     InsightRarity.COMMON -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-    InsightRarity.NOTABLE -> Color(0xFF80CBC4)
-    InsightRarity.RARE -> Color(0xFF9DB7FF)
-    InsightRarity.EPIC -> Color(0xFFC8A7FF)
-    InsightRarity.LEGENDARY -> Color(0xFF5C3E10)
+    InsightRarity.NOTABLE -> InsightRarityColors.Notable
+    InsightRarity.RARE -> InsightRarityColors.Rare
+    InsightRarity.EPIC -> InsightRarityColors.Epic
+    InsightRarity.LEGENDARY -> InsightRarityColors.LegendaryEnd
 }
 
 @Composable
 private fun InsightRarity.borderColor(): Color = when (this) {
     InsightRarity.COMMON -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-    InsightRarity.NOTABLE -> Color(0xFF80CBC4).copy(alpha = 0.36f)
-    InsightRarity.RARE -> Color(0xFF9DB7FF).copy(alpha = 0.42f)
-    InsightRarity.EPIC -> Color(0xFFC8A7FF).copy(alpha = 0.46f)
-    InsightRarity.LEGENDARY -> Color(0xFFFFD37A).copy(alpha = 0.52f)
+    InsightRarity.NOTABLE -> InsightRarityColors.Notable.copy(alpha = 0.36f)
+    InsightRarity.RARE -> InsightRarityColors.Rare.copy(alpha = 0.42f)
+    InsightRarity.EPIC -> InsightRarityColors.Epic.copy(alpha = 0.46f)
+    InsightRarity.LEGENDARY -> InsightRarityColors.LegendaryBorder.copy(alpha = 0.52f)
 }
 
 @Composable
@@ -784,7 +785,7 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
                                                 day.count > 0 -> primaryColor.copy(alpha = alpha)
                                                 else -> surfaceVariantColor.copy(alpha = 0.45f)
                                             },
-                                            RoundedCornerShape(2.dp)
+                                            BoardFlowShape.Tiny
                                         )
                                 )
                             }
@@ -815,7 +816,7 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
                         .background(
                             if (level == 0f) surfaceVariantColor.copy(alpha = 0.45f)
                             else primaryColor.copy(alpha = level * 0.85f + 0.15f),
-                            RoundedCornerShape(2.dp)
+                            BoardFlowShape.Tiny
                         )
                 )
             }
@@ -1121,12 +1122,12 @@ private fun HeadToHeadSection(players: List<Player>, sourcePlays: List<LoggedPla
                             )
                             Box(
                                 modifier = Modifier.weight(1f).height(6.dp)
-                                    .clip(RoundedCornerShape(3.dp))
+                                    .clip(BoardFlowShape.Pill)
                                     .background(MaterialTheme.colorScheme.surfaceVariant)
                             ) {
                                 Box(
                                     modifier = Modifier.fillMaxWidth(aFractionAnim).fillMaxHeight()
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f), RoundedCornerShape(3.dp))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f), BoardFlowShape.Pill)
                                 )
                                 Box(
                                     modifier = Modifier.align(Alignment.Center)
@@ -1235,13 +1236,13 @@ private fun RivalryPairRow(pair: RivalryPair) {
                 textAlign = TextAlign.End
             )
             Box(
-                modifier = Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp))
+                modifier = Modifier.weight(1f).height(6.dp).clip(BoardFlowShape.Pill)
                     .background(surfaceVariant)
             ) {
                 // Player A wins (left side)
                 Box(
                     modifier = Modifier.fillMaxWidth(aFractionAnim).fillMaxHeight()
-                        .background(primaryColor.copy(alpha = 0.9f), RoundedCornerShape(3.dp))
+                        .background(primaryColor.copy(alpha = 0.9f), BoardFlowShape.Pill)
                 )
                 // Center divider dot
                 Box(

@@ -822,7 +822,7 @@ private fun LogDialog(
 @Composable
 private fun LogEntryRow(entry: LogEntry) {
     val (iconText, iconColor) = when (entry.type) {
-        LogEntry.Type.DONE -> "OK" to Color(0xFF4CAF50)
+        LogEntry.Type.DONE -> "OK" to BoardFlowColors.Success
         LogEntry.Type.INSERTED -> "+" to MaterialTheme.colorScheme.primary
         LogEntry.Type.UPDATED -> "~" to MaterialTheme.colorScheme.onSurfaceVariant
         LogEntry.Type.ERROR -> "x" to MaterialTheme.colorScheme.error

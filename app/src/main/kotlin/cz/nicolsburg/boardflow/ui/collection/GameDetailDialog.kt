@@ -126,7 +126,7 @@ private data class InfoSection(
 
 private object GameDetailTokens {
     val CardPadding = 14.dp
-    val CardCorner = RoundedCornerShape(16.dp)
+    val CardCorner = BoardFlowShape.Card
     const val CardBorderAlpha = 0.12f
     const val NeutralCardAlpha = 0.04f
     const val FeaturedCardAlpha = 0.045f
@@ -1613,8 +1613,7 @@ private fun SleevesSection(
                     ) {
                         Text(
                             text = genericName ?: size.ifBlank { "Unknown size" },
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.90f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -1623,14 +1622,14 @@ private fun SleevesSection(
                         if (genericName != null && size.isNotBlank()) {
                             Text(
                                 text = size,
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f),
                                 maxLines = 1
                             )
                             if (preferred != null) {
                                 Text(
                                     text = compactManufacturerLine(preferred.first, preferred.second),
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -1647,7 +1646,7 @@ private fun SleevesSection(
                     if (total > 0) {
                         Surface(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(11.dp)
+                            shape = BoardFlowShape.Pill
                         ) {
                             Box(
                                 modifier = Modifier.defaultMinSize(minWidth = 40.dp, minHeight = 22.dp),
@@ -1655,8 +1654,7 @@ private fun SleevesSection(
                             ) {
                                 Text(
                                     text = "$total",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -1856,7 +1854,7 @@ private fun CompactStickyHeader(
     if (alpha <= 0f) return
     Surface(
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f * alpha),
-        shape = RoundedCornerShape(16.dp),
+        shape = BoardFlowShape.Card,
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.08f * alpha)),
         modifier = modifier.alpha(alpha)
     ) {

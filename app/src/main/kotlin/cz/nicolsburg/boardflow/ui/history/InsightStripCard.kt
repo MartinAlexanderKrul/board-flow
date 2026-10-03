@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.theme.InsightRarityColors
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -80,7 +81,7 @@ private fun InsightStripCard(
 
     // Border becomes more visible and shifts colour for Rare+
     val borderColor = when (rarity) {
-        InsightRarity.LEGENDARY -> Color(0xFFF0A500)             // amber
+        InsightRarity.LEGENDARY -> InsightRarityColors.Legendary
         InsightRarity.EPIC      -> MaterialTheme.colorScheme.tertiary
         InsightRarity.RARE      -> MaterialTheme.colorScheme.primary
         else                    -> MaterialTheme.colorScheme.primary
@@ -95,7 +96,7 @@ private fun InsightStripCard(
 
     // Icon tint: more opaque and colour-shifted for higher tiers
     val iconTint = when (rarity) {
-        InsightRarity.LEGENDARY -> Color(0xFFF0A500)
+        InsightRarity.LEGENDARY -> InsightRarityColors.Legendary
         InsightRarity.EPIC      -> MaterialTheme.colorScheme.tertiary
         InsightRarity.RARE      -> MaterialTheme.colorScheme.primary
         InsightRarity.NOTABLE   -> MaterialTheme.colorScheme.primary

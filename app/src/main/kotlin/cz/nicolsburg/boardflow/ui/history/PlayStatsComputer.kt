@@ -398,7 +398,7 @@ fun buildInsights(
             icon = Icons.AutoMirrored.Filled.TrendingUp,
             value = "H-$hIndex",
             label = "Gamer level",
-            detail = if (hIndex > 0) "$hIndex games played at least $hIndex times each" else "Replay favorites to level up"
+            detail = if (hIndex == 1) "1 game played at least once" else if (hIndex > 1) "$hIndex games played at least $hIndex times each" else "Replay favorites to level up"
         ))
     }
 }

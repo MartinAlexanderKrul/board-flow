@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.players
 
+import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.role
@@ -903,7 +904,7 @@ private fun ColorSwatch(
     onClick: () -> Unit,
     automatic: Boolean = false
 ) {
-    val mark = if (fill.luminance() > 0.55f) Color(0xFF1C1C1E) else Color.White
+    val mark = if (fill.luminance() > 0.55f) PlayerColors.DarkInk else Color.White
     Box(
         modifier = Modifier
             .size(Dimens.MinTouchTarget)
