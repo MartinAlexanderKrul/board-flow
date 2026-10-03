@@ -651,6 +651,11 @@ class SecurePreferences(context: Context) {
         get() = prefs.getString(KEY_SYNC_SPREADSHEET_ID, "") ?: ""
         set(value) = prefs.edit().putString(KEY_SYNC_SPREADSHEET_ID, value.trim()).apply()
 
+    /** The connected spreadsheet's name in Google, shown in Settings, Sync instead of its id. */
+    var syncSpreadsheetTitle: String
+        get() = prefs.getString(KEY_SYNC_SPREADSHEET_TITLE, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_SYNC_SPREADSHEET_TITLE, value.trim()).apply()
+
     var syncSheetTabName: String
         get() = prefs.getString(KEY_SYNC_SHEET_TAB_NAME, "GAMES")?.let {
             if (it.isBlank()) "GAMES" else it
@@ -766,6 +771,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_SHEET_TAB_NAME      = "sheet_tab_name"
         private const val KEY_SYNC_SPREADSHEET_ID = "sync_spreadsheet_id"
         private const val KEY_SYNC_SHEET_TAB_NAME = "sync_sheet_tab_name"
+        private const val KEY_SYNC_SPREADSHEET_TITLE = "sync_spreadsheet_title"
         private const val KEY_GOOGLE_AUTHORIZED_EMAIL = "google_authorized_email"
         private const val KEY_COLLECTION_SNAPSHOT_PREFIX = "collection_snapshot_"
         private const val KEY_SLEEVES_EXCLUDED = "sleeves_excluded_game_ids"

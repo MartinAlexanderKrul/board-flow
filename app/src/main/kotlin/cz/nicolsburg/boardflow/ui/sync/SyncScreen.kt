@@ -174,10 +174,10 @@ fun SyncScreen(
         else -> null
     }
 
-    // Compact display label for the connected sheet
+    // The sheet's name from Google; never its id.
     val sheetDisplayLabel = when {
         spreadsheetTitle.isNotBlank() -> spreadsheetTitle
-        spreadsheetId.isNotBlank() -> "…${spreadsheetId.takeLast(8)}"
+        spreadsheetId.isNotBlank() -> "Connected sheet"
         else -> ""
     }
 
@@ -319,6 +319,7 @@ fun SyncScreen(
                     googleConnected = googleConnected,
                     googleLabel = account?.name.orEmpty(),
                     bggConnected = hasBggCredentials,
+                    bggLabel = bggUsername.trim(),
                     sheetConnected = hasConfiguredSheet,
                     sheetLabel = sheetDisplayLabel,
                     onManageGoogle = { showGoogleModal = true },
@@ -458,6 +459,7 @@ private fun ReadinessHub(
     googleConnected: Boolean,
     googleLabel: String,
     bggConnected: Boolean,
+    bggLabel: String,
     sheetConnected: Boolean,
     sheetLabel: String,
     onManageGoogle: () -> Unit,
@@ -476,7 +478,7 @@ private fun ReadinessHub(
         ActionStatusRow(
             label = "BGG",
             connected = bggConnected,
-            detail = if (bggConnected) "Account saved" else "Not set up",
+            detail = if (bggConnected) bggLabel.ifBlank { "Account saved" } else "Not set up",
             actionLabel = if (bggConnected) "Edit" else "Set up",
             onAction = onEditBgg
         )

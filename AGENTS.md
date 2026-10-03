@@ -175,7 +175,7 @@ It stores:
 - sleeve priority manufacturer (`sleeve_preferred_manufacturer`, `SleeveManufacturer` enum name)
 - player roster (legacy; still written for backup compatibility; Room is authoritative at runtime)
 - recent games (last 50)
-- sync preferences (spreadsheet ID, sheet tab name, Google email)
+- sync preferences (spreadsheet ID, its Google name `sync_spreadsheet_title` shown in the Sync Accounts rows and fetched once after sign-in when missing, sheet tab name, Google email)
 - session context (active game, players, location, timestamp)
 - sleeve exclusion list (game IDs)
 - per-game insight key cache
