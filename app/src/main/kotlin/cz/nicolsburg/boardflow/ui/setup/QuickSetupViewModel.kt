@@ -88,6 +88,23 @@ class QuickSetupViewModel(
             guide.value = loaded
             loadFinished.value = true
         }
+        // An edit saved from the guide editor (or an import) changes what this screen shows.
+        viewModelScope.launch {
+            var first = true
+            repository.userGuideChanges.collect {
+                if (first) first = false else reloadKeepingSelection()
+            }
+        }
+    }
+
+    private suspend fun reloadKeepingSelection() {
+        val loaded = repository.loadGuide(requestedGameId, isOnline()) ?: return
+        val g = loaded.guide
+        val players = playerCount.value.takeIf { it > 0 } ?: return run { initSelection(loaded); guide.value = loaded }
+        val known = g.modules.map { it.id }.toSet()
+        val selected = modules.value.filter { it in known }.toSet()
+        savedState[KEY_MODULES] = ArrayList(SetupGuideResolver.effectiveModules(g, players, selected))
+        guide.value = loaded
     }
 
     private fun initSelection(loaded: LoadedSetupGuide) {

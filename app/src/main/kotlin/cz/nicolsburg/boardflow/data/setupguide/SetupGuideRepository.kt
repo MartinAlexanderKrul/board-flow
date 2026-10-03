@@ -2,6 +2,7 @@ package cz.nicolsburg.boardflow.data.setupguide
 
 import android.util.Log
 import cz.nicolsburg.boardflow.data.CanonicalCollectionStore
+import cz.nicolsburg.boardflow.model.GuideOrigin
 import cz.nicolsburg.boardflow.model.LoadedSetupGuide
 import cz.nicolsburg.boardflow.model.SetupGuide
 import cz.nicolsburg.boardflow.model.SetupGuideSource
@@ -52,6 +53,11 @@ class SetupGuideRepository(
     val availability: StateFlow<Map<Int, SetupGuideAvailability>> = _availability.asStateFlow()
 
     private val _guides = MutableStateFlow<List<SetupGuideSummary>>(emptyList())
+
+    private val _userGuideChanges = MutableStateFlow(0)
+
+    /** Bumps whenever a user guide is saved, imported, restored or removed; open guides reload on it. */
+    val userGuideChanges: StateFlow<Int> = _userGuideChanges.asStateFlow()
 
     /** Every known guide (bundled, catalog, user), one per base game, sorted by name. */
     val guides: StateFlow<List<SetupGuideSummary>> = _guides.asStateFlow()
@@ -166,13 +172,33 @@ class SetupGuideRepository(
         val replaced = store.getSetupGuide(guide.gameId, SetupGuideSource.USER) != null
         saveUserGuide(guide, basedOnVersion = upstreamVersion(guide.gameId))
         refreshAvailability()
+        _userGuideChanges.value++
         return GuideImportResult.Imported(guide.gameName, replaced)
+    }
+
+    /**
+     * Saves a guide edited in the app as the user's own version. Returns the validator's problems
+     * (nothing is saved then), or an empty list on success. Keeps the standard version an
+     * existing user copy was based on, so a pending "updated guide" note does not disappear.
+     */
+    suspend fun saveEditedGuide(edited: SetupGuide): List<String> {
+        val guide = edited.copy(
+            provenance = edited.provenance.copy(origin = GuideOrigin.USER, reviewed = true)
+        )
+        val problems = SetupGuideValidator.validate(guide)
+        if (problems.isNotEmpty()) return problems
+        val existing = store.getSetupGuide(guide.gameId, SetupGuideSource.USER)
+        saveUserGuide(guide, basedOnVersion = existing?.basedOnVersion ?: upstreamVersion(guide.gameId))
+        refreshAvailability()
+        _userGuideChanges.value++
+        return emptyList()
     }
 
     /** Removes the user's own version; the bundled or downloaded guide shows again. */
     suspend fun deleteUserGuide(gameId: Int) {
         store.deleteSetupGuide(gameId, SetupGuideSource.USER)
         refreshAvailability()
+        _userGuideChanges.value++
     }
 
     /** Keeps the user's version after an upstream update, so the update note stops showing. */
@@ -201,6 +227,7 @@ class SetupGuideRepository(
             restored++
         }
         refreshAvailability()
+        if (restored > 0) _userGuideChanges.value++
         return restored
     }
 

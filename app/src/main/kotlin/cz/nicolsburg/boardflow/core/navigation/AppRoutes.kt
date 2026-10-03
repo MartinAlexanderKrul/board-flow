@@ -13,8 +13,10 @@ object AppRoutes {
     const val SESSION_IMPORT = "session_import?data={data}"
     const val LOG_PLAY = "log_play"
     const val QUICK_SETUP = "quick_setup/{gameId}"
+    const val GUIDE_EDITOR = "guide_editor/{gameId}"
 
     fun quickSetup(gameId: Int): String = "quick_setup/$gameId"
+    fun guideEditor(gameId: Int): String = "guide_editor/$gameId"
 
     fun scan(gameId: Int, gameName: String): String =
         "scan/$gameId/${URLEncoder.encode(gameName, "UTF-8")}"

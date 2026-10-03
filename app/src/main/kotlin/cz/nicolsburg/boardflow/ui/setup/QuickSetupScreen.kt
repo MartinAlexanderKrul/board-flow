@@ -90,6 +90,7 @@ fun QuickSetupScreen(
     viewModel: QuickSetupViewModel,
     onStartGame: (gameId: Int, gameName: String) -> Unit,
     onClose: () -> Unit,
+    onEditGuide: (gameId: Int) -> Unit = {},
     thumbnailFor: (gameId: Int) -> String? = { null }
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -127,6 +128,7 @@ fun QuickSetupScreen(
             onReset = viewModel::resetChecklist,
             onStartGame = { onStartGame(s.loaded.guide.gameId, s.loaded.guide.gameName) },
             onShareGuide = { viewModel.exportJson()?.let { shareGuide(context, s.loaded.guide.gameName, it) } },
+            onEditGuide = { onEditGuide(s.loaded.guide.gameId) },
             onUseStandardGuide = viewModel::useStandardGuide,
             onKeepUserGuide = viewModel::keepUserGuide,
             thumbnailUrl = thumbnailFor(s.loaded.guide.gameId)
@@ -144,6 +146,7 @@ private fun QuickSetupContent(
     onReset: () -> Unit,
     onStartGame: () -> Unit,
     onShareGuide: () -> Unit,
+    onEditGuide: () -> Unit,
     onUseStandardGuide: () -> Unit,
     onKeepUserGuide: () -> Unit,
     thumbnailUrl: String? = null
@@ -309,7 +312,10 @@ private fun QuickSetupContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 4.dp)
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    FlowRow(verticalArrangement = Arrangement.Center) {
+                        BoardFlowInlineAction(onClick = onEditGuide) {
+                            Text("Edit guide")
+                        }
                         BoardFlowInlineAction(onClick = onShareGuide) {
                             Text("Share guide")
                         }

@@ -112,6 +112,8 @@ import cz.nicolsburg.boardflow.ui.scan.ScanScreen
 import cz.nicolsburg.boardflow.ui.search.NewPlayScreen
 import cz.nicolsburg.boardflow.ui.settings.SettingsScreen
 import cz.nicolsburg.boardflow.ui.setup.QuickSetupScreen
+import cz.nicolsburg.boardflow.ui.setup.GuideEditorScreen
+import cz.nicolsburg.boardflow.ui.setup.GuideEditorViewModel
 import cz.nicolsburg.boardflow.ui.setup.QuickSetupViewModel
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 import cz.nicolsburg.boardflow.ui.sync.SyncScreen
@@ -291,6 +293,9 @@ fun BoardFlowApp(
     val isScan = currentRoute?.startsWith("scan/") == true
     val isReview = currentRoute == AppRoutes.LOG_PLAY
     val isQuickSetup = currentRoute == AppRoutes.QUICK_SETUP
+    val isGuideEditor = currentRoute == AppRoutes.GUIDE_EDITOR
+    // The editor confirms unsaved changes itself; the top bar's back arrow just asks it to.
+    var guideEditorBackRequests by remember { mutableIntStateOf(0) }
     val isQrImport = currentRoute == AppRoutes.QR_IMPORT
 
     // The top bar names the destination; the tab row below it shows the sub-location.
@@ -301,6 +306,7 @@ fun BoardFlowApp(
         currentRoute == AppRoutes.COLLECTION -> "Collection"
         currentRoute == AppRoutes.SETTINGS -> "Settings"
         isQuickSetup -> "Quick setup"
+        isGuideEditor -> "Edit guide"
         isScan -> "Scan scores"
         isReview -> "Log play"
         else -> ""
@@ -386,6 +392,7 @@ fun BoardFlowApp(
         })
         isScan -> ({ leaveScan() })
         isQuickSetup -> ({ navController.popBackStack() })
+        isGuideEditor -> ({ guideEditorBackRequests++ })
         isQrImport -> ({
             appViewModel.clearPendingImportedPlay()
             navController.popBackStack()
@@ -465,7 +472,7 @@ fun BoardFlowApp(
             )
         },
         bottomBar = {
-            if (!isScan && !isReview && !isQuickSetup && !isQrImport) {
+            if (!isScan && !isReview && !isQuickSetup && !isGuideEditor && !isQrImport) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.background,
                     tonalElevation = 0.dp
@@ -782,6 +789,25 @@ fun BoardFlowApp(
                             launchSingleTop = true
                         }
                     },
+                    onEditGuide = { gameId ->
+                        navController.navigate(AppRoutes.guideEditor(gameId)) { launchSingleTop = true }
+                    },
+                    onClose = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = AppRoutes.GUIDE_EDITOR,
+                arguments = listOf(
+                    navArgument(GuideEditorViewModel.ARG_GAME_ID) { type = NavType.IntType }
+                )
+            ) {
+                val editorViewModel: GuideEditorViewModel = viewModel(
+                    factory = GuideEditorViewModel.factory(setupGuideRepository, appViewModel::isOnline)
+                )
+                GuideEditorScreen(
+                    viewModel = editorViewModel,
+                    backRequests = guideEditorBackRequests,
                     onClose = { navController.popBackStack() }
                 )
             }
