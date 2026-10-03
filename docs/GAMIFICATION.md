@@ -1,6 +1,8 @@
-# BoardFlow Gamification, Memory, And Recommendation Reference
+# Insights, challenges and recommendations
 
-BoardFlow has a deterministic engagement layer built from play history rather than XP systems or random rewards. This document covers the shipped mechanics that make the data feel alive.
+BoardFlow makes your play history feel alive without points, levels or random rewards. Everything here is computed from the plays you log. This document describes the shipped mechanics and where they live.
+
+All paths are relative to `app/src/main/kotlin/cz/nicolsburg/boardflow/`.
 
 ## Design Principles
 
@@ -21,12 +23,11 @@ Defined in `model/Models.kt` as `InsightRarity`.
 | `EPIC` | Chronicle | large achievement or memorable trend |
 | `LEGENDARY` | Legacy | rare long-term record |
 
-Rarity drives visual treatment in the history stats surfaces:
+Rarity drives the visual treatment on the stats surfaces. The tier colours live in `InsightRarityColors` (`ui/theme/Theme.kt`):
 
-- background alpha
-- border emphasis
-- accent color
-- shimmer and haptic treatment on the strongest cards
+- accent colour and gradient
+- emphasis of the card
+- shimmer and haptic feedback on the strongest cards
 
 ## Insight Surfaces
 
@@ -91,7 +92,7 @@ This is intentionally quiet UI. There is no progression bar or ceremony.
 
 ## Period Review
 
-`buildPeriodReview()` creates an auto-generated review card at the top of Stats.
+`buildPeriodReview()` creates an auto-generated review card at the top of Journal > Stats > Plays.
 
 Trigger windows:
 
@@ -129,7 +130,7 @@ Session memories live in the Room table `play_memories`.
 
 Important notes:
 
-- current Room DB version is `10`
+- the Room database is at version 13 (`CanonicalCollectionStore`)
 - `play_memories` is independent of BGG sync
 - read paths overlay stored memory onto both local and cached BGG plays
 - if no Room memory exists, legacy `$$mood:` and `$$quote:` lines in comments can still be parsed as fallback
@@ -189,7 +190,7 @@ Current supported types:
 
 ### Persistence
 
-Challenges are stored in Room (`challenges` table in `CanonicalCollectionStore`, DB v12).
+Challenges are stored in Room (`challenges` table in `CanonicalCollectionStore`).
 
 On first load, `AppViewModel` migrates challenges from `SecurePreferences` to Room if the Room table is empty. `SecurePreferences` retains a legacy copy for backup compatibility.
 
@@ -201,16 +202,17 @@ Current shipped lifecycle:
 - auto-create monthly challenge when needed
 - create
 - edit (`AppViewModel.updateChallenge`)
-- pause (`AppViewModel.pauseChallenge` -- sets status to `PAUSED`)
-- archive (`AppViewModel.archiveChallenge` -- sets status to `ARCHIVED`)
+- pause and resume (`AppViewModel.pauseChallenge`, status `PAUSED`)
+- archive and restore (`AppViewModel.archiveChallenge`, status `ARCHIVED`)
 - delete
+- every change shows a snackbar; pause, archive and delete offer Undo
 - live progress calculation via `AppViewModel.getChallengeProgressList()`
 - push notifications via `ChallengeNotificationWorker` (WorkManager):
   - deadline warning when 3 days remain and challenge is incomplete
   - completion notification when `currentCount >= targetCount`
   - streak-broken notification for `PLAY_STREAK` type challenges
 
-Paused and archived challenges are shown in collapsible sections in `ChallengesTabContent`, separate from active ones.
+The Challenges tab in Journal (`ChallengesTabContent`) shows the Challenge Board summary, then collapsible sections: Active, Paused, Missed (the period ended before the goal was reached), Completed and Archived. Status colours: amber for active, `BoardFlowColors.Warning` for paused, `BoardFlowColors.Success` for completed, and the error colour for missed. A challenge whose name repeats its goal shows only the name.
 
 ## Recommendations
 
@@ -226,7 +228,7 @@ BoardFlow currently ships two recommendation systems controlled by `recommendati
 
 ### Post-Save Good Picks
 
-`LogPlayScreen` shows a collapsible "Try next" section after logging when:
+The post-save card in `LogPlayScreen` shows a collapsible "Try next" section after logging when:
 
 - recommendations are enabled
 - the player count can be matched against owned games
@@ -265,7 +267,7 @@ The `notRecommendedPlayers` field was added in migration `6 -> 7`.
 | stats hero card | `ui/history/PlayStatsTab.kt` |
 | mastery pill | `ui/collection/GameDetailDialog.kt` |
 | challenge state | `AppViewModel.kt` |
-| challenge UI | `ui/challenges/ChallengesScreen.kt` |
+| challenge UI | `ui/challenges/ChallengesScreen.kt` (Journal > Challenges) |
 | pre-log recommendations | `ui/search/NewPlayScreen.kt` |
-| post-log recommendations | `ui/review/LogPlayScreen.kt` |
+| post-log recommendations | `ui/review/LogPlayScreen.kt` (post-save card) |
 | chronicle orchestration | `data/chronicle/SessionChronicleService.kt` |

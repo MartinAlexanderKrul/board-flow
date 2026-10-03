@@ -1,8 +1,10 @@
 # AGENTS.md
 
+Guidance for AI agents and contributors changing the BoardFlow code. For a product overview, build setup and the documentation index, see [`README.md`](README.md); for every screen and shared component, see [`docs/UI_SURFACES.md`](docs/UI_SURFACES.md).
+
 ## Purpose
 
-This repository contains the BoardFlow Android app.
+This repository contains the BoardFlow Android app (version 6, released on GitHub; Google Play release material in `play-store/`).
 
 Agents working here should preserve the current user-facing design language while improving correctness, maintainability, and architectural clarity. The app has already accumulated several interconnected flows, so the main job is usually to make the existing product work more coherently rather than to reinvent it.
 
@@ -28,7 +30,9 @@ BoardFlow currently supports all of the following:
 - record moment detection after logging (first win, new high score, win streak)
 - session memory: per-play mood chips (multi-select, preset + custom) and quote capture from `PlayDetailsDialog`
 - chronicle generation: AI-generated single atmospheric sentence per session using Gemini, with deterministic offline fallback; stored in `play_memories` Room table; persists independently of BGG sync; togglable via Settings > Preferences
-- history tabs for plays, stats, and players
+- Journal tabs for plays, challenges, stats (a Plays / Collection switch) and players
+- player avatar colours (`Player.color`)
+- one dark amber design system, with motion between screens and tabs (`NavTransitions`, `BoardFlowTabContent`)
 - signature-based deduplication of local and BGG plays
 - QR code play sharing and import
 - Google Sheets / Drive sync
@@ -313,9 +317,18 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 
 ### Settings
 
-- manages BGG credentials
-- manages Google sheet connection access points
-- manages Gemini configuration (key, model endpoint, model discovery)
+Four tabs, each a list of sections (`BoardFlowSectionTitle` over a `BoardFlowFormGroup` of `BoardFlowSettingRow`s):
+
+- **Sync**: accounts (Google, BGG showing the username, Sheet showing its Google name), BoardGameGeek, Sleeves, Google Sheets
+- **Preferences**: Stats, Logging plays, Collection, Help
+- **Scan**: Gemini (key and backup keys edited in dialogs, model picker, refresh) and Learned from scans
+- **Data**: Backup and restore, Storage
+
+Details:
+
+- manages BGG credentials (Sync > Accounts > BGG > Edit)
+- manages Google account and sheet connection (Sync > Accounts)
+- manages Gemini configuration (key, backup keys, model, model discovery)
 - there is no theme setting: the app has one dark amber theme (`ui/theme/`: `Theme.kt` colours and `BoardFlowColors`, `Type.kt`, `Shape.kt`, `Spacing.kt`); use those tokens instead of raw sizes, radii and colours
 - manages sleeve manufacturer priority (`SleeveManufacturer`; persisted in `SecurePreferences`, exposed via `AppViewModel.sleevePreferredManufacturer`; used in `GameDetailDialog` via `SleeveEntry.preferredFor()`)
 - manages import/export (backup includes recognition templates since format v3)
@@ -487,7 +500,7 @@ Settings > Scan shows the count of saved player hints and a "Clear player recogn
 - `getPrivateInfo` reads the site's JSON endpoint (`/api/collections?objectid=..&objecttype=thing&userid=..`, userid from `/api/users/current`), not xmlapi2: the XML collection is cached and serves stale private info for a while after a write, and resending a stale read undoes the previous edit (seen live). The JSON keys equal the form field names; a game not in the collection returns `{"items":[]}`
 - xmlapi2 only includes `<privateinfo>` with `showprivate=1` and WITHOUT `brief=1` (brief drops it), and only for entries that have any private info
 - precedence for sleeve status is local edit (`game_sleeve_tracking`) > spreadsheet `sleeved` value > BGG marker; `SyncViewModel.applyCollectionStatuses` reads markers with the status sync and only fills games that have neither, persisting them to `game_sleeve_tracking`
-- a sleeve status change mirrors to BGG right away (`maybeMirrorSleeveTrackingToBgg`); the Sync screen's "Back Up Sleeve Status to BGG" (`backupSleeveStatusToBgg`) pushes every game whose marker differs, one read + one post per game, throttled
+- a sleeve status change mirrors to BGG right away (`maybeMirrorSleeveTrackingToBgg`); Settings > Sync's "Back up sleeve status to BGG" (`backupSleeveStatusToBgg`) pushes every game whose marker differs, one read + one post per game, throttled
 
 ## History / Roster Notes
 
@@ -521,7 +534,7 @@ Settings > Scan shows the count of saved player hints and a "Clear player recogn
   - destructive (`BoardFlowDestructiveButton`): outlined red, 40dp (Remove, Clear rating, Clear collection cache). The action in `BoardFlowConfirmationDialog` is a solid red pill with a white Cancel. Red means data loss only
   - a main Edit action is an amber pen icon next to the red delete icon on the left of the action row, with the primary pill alone on the right; a minor edit is amber "Edit" text
   - two controls that sit next to each other have the same height and label size
-- amber (`colorScheme.primary`) is for emphasis, not for everything tappable: titles (game names), key numbers, the buttons above, text actions and the selected state. Chevrons, expanders, share and overflow icons, row icons and values are grey or white. Do not enlarge type or controls beyond the Material defaults: the original density is part of the look
+- amber (`colorScheme.primary`) is for emphasis, not for everything tappable: titles (game names), key numbers, the buttons above, text actions and the selected state. Chevrons, expanders, share and overflow icons, form-row icons and values are grey or white. The exception is `BoardFlowSettingRow` (Settings, Sync), whose leading icon is amber, or red for a destructive row. Do not enlarge type or controls beyond the Material defaults: the original density is part of the look
 - on game art or the camera, pills are `Color.Black` at 50% with white labels; the one amber control on the camera is the shutter
 - the winner row is a translucent amber fill with no outline; session and chronicle cards are translucent grey (`Color.White` at 10%) with no outline
 - every tappable element is at least 48dp (`Dimens.MinTouchTarget`); dates shown to the user read `Oct 1, 2026`
@@ -567,6 +580,7 @@ Before finishing substantial changes, run:
 
 ```sh
 ./gradlew.bat :app:compileDebugKotlin
+./gradlew.bat :app:testDebugUnitTest
 ```
 
 Also use this when startup behavior, resources, or packaging may be affected:
@@ -577,6 +591,10 @@ Also use this when startup behavior, resources, or packaging may be affected:
 
 If you only changed docs or a very small behavior fix, compile is usually enough.
 
+Release builds are shrunk with R8. Before a release, smoke-test the release variant: build it signed with the debug key so it installs over the debug app without losing data (`./gradlew.bat :app:assembleRelease -Pandroid.injected.signing.store.file=<debug.keystore> -Pandroid.injected.signing.store.password=android -Pandroid.injected.signing.key.alias=androiddebugkey -Pandroid.injected.signing.key.password=android`), then build the real one with `:app:assembleRelease` / `:app:bundleRelease`. Releases: bump `versionCode` / `versionName`, tag `vX.Y.Z`, attach the APK to a GitHub release; Google Play steps are in `play-store/PLAY_RELEASE.md`.
+
+On this Windows machine Java and git sit behind HTTPS inspection: add `-Djavax.net.ssl.trustStoreType=Windows-ROOT` to Gradle when it needs to download dependencies, and use `git -c http.sslBackend=schannel` for fetch / pull / push.
+
 ## Important Runtime Note
 
 Google sign-in and Google Sheets / Drive access depend on external Firebase / Google Cloud OAuth configuration. A successful compile does not guarantee runtime sign-in success if SHA fingerprints or OAuth client setup are wrong.
@@ -585,7 +603,8 @@ Google sign-in and Google Sheets / Drive access depend on external Firebase / Go
 
 Current notable choices:
 
-- Java 17 / Kotlin JVM target 17
+- Java 17 / Kotlin JVM target 17, Kotlin 2.0
+- Android Gradle Plugin 8.9.3, Gradle 8.14, compile and target SDK 36 (Android 16), min SDK 26
 - Compose + Material 3
 - Navigation Compose
 - Credential Manager + Google Identity
@@ -593,6 +612,7 @@ Current notable choices:
 - CameraX
 - Coil
 - Room
+- WorkManager, Jetpack Glance (widgets), ZXing (QR)
 
 Avoid adding Retrofit / Moshi back unless there is a clear need; they were removed as unused.
 

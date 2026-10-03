@@ -1,517 +1,181 @@
 # BoardFlow
 
-BoardFlow is an Android app for logging board game plays with a mix of local-first persistence, BoardGameGeek integration, Google Sheets and Drive sync, sleeve tracking, widgets, and AI-assisted score extraction.
+**A board game play journal for Android.** Log plays in seconds, scan score sheets with AI, follow your stats and challenges, and keep your BoardGameGeek collection at hand.
 
-It is built with Jetpack Compose and uses Room as the live runtime source of truth for collection data, local logged plays, cached BGG plays, session memories, and thumbnail cache data.
+[![Latest release](https://img.shields.io/github/v/release/MartinAlexanderKrul/board-flow?label=release)](https://github.com/MartinAlexanderKrul/board-flow/releases/latest)
+![Android 8.0+](https://img.shields.io/badge/Android-8.0%2B-3DDC84)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4)
 
-## What The App Does
+<p>
+  <img src="play-store/graphics/phone/01_logplay.png" width="160" alt="Log Play">
+  <img src="play-store/graphics/phone/02_form.png" width="160" alt="Logging a play">
+  <img src="play-store/graphics/phone/03_journal.png" width="160" alt="Journal">
+  <img src="play-store/graphics/phone/05_stats.png" width="160" alt="Stats">
+  <img src="play-store/graphics/phone/07_detail.png" width="160" alt="Game detail">
+</p>
 
-BoardFlow combines several connected workflows in one app:
+## Contents
 
-- search your owned collection first, then fall back to BGG search
-- log plays online to BGG or save them locally when offline
-- keep an outbox of unposted local plays; they post automatically once BGG can be reached, or from History
-- scan a scoresheet image with Gemini to prefill players and scores
-- warn locally when a scan is too dark, blurry, low-resolution, or framed too far away
-- recognize the game from scan evidence using saved recognition hints and collection matching
-- recognize roster players from scanned names using hints, aliases, and fuzzy matching
-- review play history, stats, players, and challenge progress
-- capture session memories with moods, quote, and an AI chronicle line
-- browse owned games, wishlist entries, sleeves, and detailed game metadata
-- sync collection data with Google Sheets and Drive
-- import CSV rows into a connected sheet
-- create and share QR exports for individual plays or full sessions, then import them back into the app
-- show home-screen widgets for the last session, rotating daily insights, and monthly play stats with challenge progress
-- suggest "Good Picks" before and after logging based on player count fit and history
+- [Features](#features)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Building, testing and releasing](#building-testing-and-releasing)
+- [Architecture](#architecture)
+- [Data and privacy](#data-and-privacy)
+- [Documentation](#documentation)
+- [Contributing setup guides](#contributing-setup-guides)
 
-## Main Product Areas
+## Features
 
 ### Log Play
+- Search your collection first, with BoardGameGeek search (base games and expansions) as a fallback
+- Recommendations for what to play next, based on player count and history
+- A grouped form for date, duration, location, notes, quantity, incomplete and "count in stats"; player rows with scores, teams and winners
+- **Score sheet scanning:** a local quality check warns about dark, blurry or distant photos, then Gemini reads players, scores and the game. Recognised players and games are matched to your roster and collection, and the app learns from every confirmed scan
+- **Offline first:** every play is saved on the phone first and posted to BGG in the background. Plays saved offline are posted automatically once you are online, or from the Journal outbox
+- After saving: record moments (first win, new high score, win streak), challenge progress and "Try next" picks
+- A play timer, a "Playing now" banner, and session continuation for game nights
 
-Primary screens:
+### Quick Guides
+- Setup cheat sheets (box, table, first turn) for each game, adjusted to player count, game mode and expansions
+- A session checklist, an "Easy to forget" list, and a Start game action that starts the play timer
+- Guides are open JSON in [`setup-guides/`](setup-guides/), bundled with the app and updated from GitHub without a new release
 
-- `ui/search/NewPlayScreen.kt`
-- `ui/scan/ScanScreen.kt`
-- `ui/review/LogPlayScreen.kt`
-
-Key behavior:
-
-1. Choose a game from recent titles, owned collection search, recommendations, or BGG search.
-2. Optionally continue the current session, play again from history, or jump in from a widget quick scan.
-3. Optionally scan a scoresheet image and let Gemini prefill players, scores, and detected game evidence.
-4. Review the extracted result, correct the game if needed, edit players and metadata, then log or save locally.
-5. After save, show record moments, challenge progress, and optional Good Picks recommendations.
-
-Notable details:
-
-- search is debounced and prefers owned collection results before BGG XML search
-- BGG search includes both base games and expansions
-- result lists longer than 20 items show a draggable fast-scroll bar
-- scan extraction supports malformed-response background retry with a non-blocking apply banner
-- correction mode preserves extracted players and scores while the user re-selects the game
-- editable player rows are shared between log, edit, and QR import review flows
-- plays support quantity, incomplete, and "now in stats" toggles
-
-### History
-
-Primary screen:
-
-- `ui/history/HistoryScreen.kt`
-
-Tabs:
-
-- `Plays`
-- `Challenges`
-- `Stats` (includes per-player profiles and head-to-head picker)
-- `Players`
-
-Key behavior:
-
-- merges local logged plays with cached BGG plays
-- deduplicates with signature matching and lighter history correlation matching
-- shows an outbox for unposted local plays (posted automatically when online, or by hand with Post / Post all)
-- supports edit, delete, repost, play again, and QR share actions for individual plays and full sessions
-- drives roster-based player views and richer stats surfaces
-- overlays session memories and chronicle lines onto both local and cached BGG plays
+### Journal
+- **Plays:** every play with players, scores and winners; filters, search, edit, delete with Undo, and an outbox for unposted plays
+- **Challenges:** personal goals (play counts, distinct games, streaks, group plays, unplayed games) with progress and deadline reminders
+- **Stats:** a Plays / Collection switch. Plays covers activity heatmap, top games and players, rivalries, head-to-head and insights. Collection covers play depth, complexity and sleeve coverage
+- **Players:** roster with aliases, BGG usernames and avatar colours
+- **Session memory:** moods, a quote and an AI-written chronicle line for each session
+- **Sharing:** a play or a whole session as a QR code, importable on another phone
 
 ### Collection
-
-Primary screens:
-
-- `ui/collection/CollectionScreen.kt`
-- `ui/collection/GameDetailDialog.kt`
-
-Tabs:
-
-- `My Shelf`
-- `Sleeves`
-- `Stats`
-
-Key behavior:
-
-- collection data comes from the canonical Room snapshot
-- `My Shelf` lists owned games by default; the filter sheet exposes membership as filter
-  dimensions instead of separate tabs:
-  - **Show**: `Owned` (default) / `Wishlist` / `Played, not owned` / `Any`
-  - **Play status**: `Any` (default) / `Played` / `Unplayed`
-  - **Players** / **Best for** / **Recommended for** player-count filters
-- played-but-not-owned games are cached as `GameItem`s during sync
-  (`SyncViewModel.enrichPlayedGames`) so they appear under `Show -> Played, not owned`, are
-  searchable in Log Play, and open as game info from a play; sleeves ignore them
-- game detail acts as a cross-link hub into history and players
-- sleeve data respects per-game exclusions stored in preferences
-- player-count recommendation data includes Best, Recommended, and Not Recommended values
-- games with a setup guide show a `Setup` action that opens Quick Setup (see below)
-
-### Quick Setup
-
-Primary files:
-
-- `ui/setup/QuickSetupScreen.kt`, `ui/setup/QuickSetupViewModel.kt`
-- `data/setupguide/` (`SetupGuideJson`, `SetupGuideResolver`, `SetupGuideValidator`, `SetupGuideRepository`)
-- `setup-guides/` at the repo root (the guide content itself; see `setup-guides/README.md`)
-
-A box -> table -> first turn cheat sheet for games you already know. It is not a rulebook.
-
-- open it from the `Quick Guides` tab on the Log Play screen (same search; `All guides` lists every
-  guide, `My games` lists owned games and marks those without a guide "not available yet"), or
-  from the `Setup` button in the game detail
-  dialog (Collection and Journal). Opening an
-  expansion that a guide lists as a module opens the base game's guide with that module on
-- pick the player count (every guide opens at 2 players, clamped to its range), the mode for
-  games that have one (e.g. Mistborn: Competitive / Co-op), and the expansions/modules, and
-  only the matching steps are shown. Quantities are resolved per configuration and shown in bold
-- setup sections are a checklist. Ticks are session-only (`SavedStateHandle`) and never change the
-  guide. `Reset` clears them. `Easy to forget` and `Start playing` cards follow the checklist
-- `Start game` starts the header play timer (so Log Play later gets the duration) and closes the screen
-- the screen stays awake while open
-- guide layers: USER guides in Room (reserved for later customisation) win. Otherwise the app uses
-  the higher `version` of the bundled asset or the downloaded catalog copy
-- the catalog is the same `setup-guides/` folder served from GitHub (`raw.githubusercontent.com`).
-  The index refreshes at most daily. Guides for owned games are prefetched so they work offline.
-  Network failures are silent
-
-### Sync
-
-Primary screens:
-
-- `ui/sync/SyncScreen.kt`
-- `ui/sync/SpreadsheetModal.kt`
-
-Key behavior:
-
-- manages BGG readiness, Google readiness, and spreadsheet connection state
-- refreshes BGG collection and sleeve data
-- syncs collection data into Google Sheets
-- creates or connects a spreadsheet
-- imports CSV data into a sheet
-- creates Drive folders and QR assets
-- keeps a user-visible sync log
-- performs a silent startup refresh only when the last successful sync is older than 4 hours
+- **My Shelf:** your BGG collection with filters for owned, wishlist and played games, play status and best player count
+- **Game detail:** your stats, player-count advice, ratings, BGG collection status and rating editing, sleeves, and links to BGG, rules and Drive
+- **Sleeves:** sleeves needed per size, owned sleeve counts, per-game exclusions and a preferred brand
 
 ### Settings
+- **Sync:** accounts (BGG and Google), collection and sleeve refresh, sleeve status backup to BGG, Google Sheets sync, CSV import, Drive folders and QR codes, and a sync log
+- **Preferences:** stats source, recommendations, chronicles, mood templates, sleeve brand and the setup guide
+- **Scan:** Gemini key, backup keys and model, and what the app has learned from scans
+- **Data:** backup and restore, and cache management
 
-Primary screen:
+### Widgets
+- Last session, daily insight, and this month's plays with the most urgent challenge. Each widget has a camera button that opens a quick scan
 
-- `ui/settings/SettingsScreen.kt`
+## Getting started
 
-Tabs:
+### Requirements
 
-- `Accounts`
-- `Preferences`
-- `Scan`
-- `Data`
+| Tool | Version |
+| --- | --- |
+| Android Studio | a current stable release |
+| JDK | 17 |
+| Android SDK | platform 36 (compile and target), min SDK 26 (Android 8.0) |
+| Gradle | 8.14 (wrapper included) |
 
-Key behavior:
-
-- BGG credentials and Google account management
-- Gemini API keys, model endpoint, and model discovery
-- theme, stats source, recommendations toggle, chronicle toggle, sleeve brand priority
-- recognition template management
-- player recognition hint clearing
-- backup export and import
-- collection cache clearing
-- custom mood template management
-
-## AI Features
-
-### Score Extraction
-
-`GeminiRepository` extracts:
-
-- players and scores
-- detected game title
-- detected game confidence
-- detected scoring categories
-- short evidence text
-
-Requests use `streamGenerateContent?alt=sse` (SSE streaming). The UI transitions from **"Sending to AI…"** to **"Reading response…"** as soon as the first SSE chunk arrives, giving the user immediate feedback without waiting for the full response.
-
-`responseMimeType: "application/json"` is set on every request so the model is structurally constrained to emit valid JSON. This eliminates malformed responses. The background-retry-with-banner path still exists as a safety net but should never trigger under normal conditions.
-
-Image resolution is capped at **1200 px** on the longest dimension (previously 800 px), giving the model more detail for dense or handwritten score sheets. Output tokens are budgeted at **2048** with `temperature 0.15` and `topP 0.90`.
-
-### Game Recognition
-
-`GameRecognitionEngine` ranks collection candidates using:
-
-- title similarity
-- category text appearing in the game name
-- saved category-template overlap
-- saved title bonus
-
-`AppViewModel` can auto-switch the selected game when confidence gates are met, or show a ranked suggestion banner when they are not.
-
-### Player Recognition
-
-`PlayerRecognitionEngine` resolves scanned names through:
-
-1. saved scan hints
-2. exact alias or display-name match
-3. fuzzy Levenshtein match
-
-Only high-confidence non-fuzzy results are auto-applied.
-
-### Chronicles
-
-Session memories can include:
-
-- moods
-- quote
-- note
-- chronicle line
-
-Chronicles are generated by `SessionChronicleService`, which reuses existing results when the source key matches, calls Gemini when generation is needed, and falls back deterministically when Gemini is unavailable.
-
-## Challenges And Recommendations
-
-### Challenges
-
-Current challenge types:
-
-- `PLAY_N_TIMES`
-- `PLAY_SPECIFIC_GAME`
-- `PLAY_N_DISTINCT`
-- `PLAYER_WIN_STREAK`
-- `PLAY_WITH_GROUP_N_TIMES`
-- `PLAY_STREAK`
-- `PLAY_N_UNPLAYED`
-
-Challenge progress is calculated live from history in `AppViewModel.getChallengeProgressList()`. The app also auto-creates a monthly challenge when challenge state is first loaded and the current period does not already have one.
-
-### Recommendations
-
-BoardFlow currently has two recommendation surfaces:
-
-- pre-log recommendations on `NewPlayScreen`
-- post-log Good Picks in `LogPlayScreen`
-
-Both respect the user preference toggle `recommendationsEnabled`. Player-count fit prioritizes:
-
-1. Not Recommended -> filtered out
-2. Best -> top score
-3. Recommended
-4. official min/max range
-
-## Storage Model
-
-### Room
-
-`data/CanonicalCollectionStore.kt` is the live runtime source of truth.
-
-It stores:
-
-- canonical merged collection snapshot
-- local logged plays
-- cached BGG play history
-- play sessions
-- session memories in `play_memories`
-- history thumbnail cache in `game_thumbnail_cache`
-- players in `players`
-- challenges in `challenges`
-- game recognition hints in `game_recognition_hints`
-- player recognition hints in `player_recognition_hints`
-- sleeve tracking in `game_sleeve_tracking`
-- owned sleeve counts in `sleeve_inventory`
-- downloaded / user setup guides in `setup_guides` (whole JSON documents) and the cached remote
-  guide index in `setup_guide_catalog`
-
-Current DB version: `12`
-
-Recent migrations of note:
-
-- `6 -> 7`: adds `notRecommendedPlayers` to `canonical_games`
-- `7 -> 8`: adds `game_thumbnail_cache`
-- `8 -> 9`: adds `players`, `challenges`, `game_recognition_hints`, `player_recognition_hints`
-- `9 -> 10`: adds `game_sleeve_tracking`
-- `10 -> 11`: adds `sleeve_inventory`
-- `11 -> 12`: adds `setup_guides` and `setup_guide_catalog`
-
-### SecurePreferences
-
-`data/SecurePreferences.kt` stores:
-
-- BGG credentials
-- Gemini keys and selected model endpoint
-- theme, stats scope, chronicle toggle, recommendations toggle
-- roster players and aliases (legacy; now also in Room — migrated on first load)
-- recent games
-- Google sync preferences
-- session context
-- sleeve exclusions
-- recognition hints
-- player recognition hints
-- custom moods and mood usage order
-- challenges (legacy; now also in Room — migrated on first load)
-
-### Backup Format
-
-`data/BackupSerializer.kt` currently exports backup format version `7`.
-
-Backups can include:
-
-- collection snapshot
-- local logged plays
-- cached BGG plays
-- players
-- recent games
-- model list cache
-- game recognition hints
-- player recognition hints
-- custom moods and mood usage order
-- challenges
-- settings
-- optionally sensitive data such as BGG password and Gemini keys
-
-Import is selective: only keys present in the backup replace existing values.
-
-## Architecture Map
-
-Primary entry points:
-
-- `MainActivity.kt`
-- `ui/app/AppShell.kt`
-
-Core view models:
-
-- `AppViewModel.kt`
-- `SyncViewModel.kt`
-
-Important supporting modules:
-
-- `auth/GoogleAuthManager.kt`
-- `core/di/AppContainer.kt`
-- `core/navigation/AppRoutes.kt`
-- `data/BggRepository.kt`
-- `data/BggApiClient.kt`
-- `data/GoogleApiClient.kt`
-- `data/GeminiRepository.kt`
-- `data/CanonicalCollectionStore.kt`
-
-High-level responsibilities:
-
-- `MainActivity`: Android lifecycle, auth launchers, widget intent entry points
-- `AppShell`: scaffold, routing, header state, bottom navigation, cross-screen hops
-- `AppViewModel`: search, log flow, history, roster, recognition, challenges, chronicles, recommendations, import/export
-- `SyncViewModel`: account state, sheet state, collection refresh, sleeves, CSV import, Drive and QR sync surfaces
-
-## Package Layout
-
-```text
-app/src/main/kotlin/cz/nicolsburg/boardflow/
-  AppViewModel.kt
-  MainActivity.kt
-  SyncConfig.kt
-  SyncViewModel.kt
-  auth/
-  core/
-  data/
-  model/
-  ui/
-```
-
-Key UI areas:
-
-- `ui/app`
-- `ui/search`
-- `ui/scan`
-- `ui/review`
-- `ui/history`
-- `ui/challenges`
-- `ui/collection`
-- `ui/settings`
-- `ui/sync`
-- `ui/widget`
-
-## Documentation Index
-
-- UI surface inventory: [`docs/UI_SURFACES.md`](docs/UI_SURFACES.md)
-- gamification, chronicles, challenges, and recommendations: [`docs/GAMIFICATION.md`](docs/GAMIFICATION.md)
-- logging tags and Logcat usage: [`docs/LOGGING.md`](docs/LOGGING.md)
-- widget architecture and behavior: [`docs/WIDGETS.md`](docs/WIDGETS.md)
-
-## External Integrations
-
-### BoardGameGeek
-
-Used for:
-
-- collection refresh
-- BGG XML search
-- play history fetch
-- play post/edit/delete
-- sleeve-related metadata
-
-Notes:
-
-- authenticated play actions use cookie-backed session persistence
-- XML search outside local collection requires `BGG_XML_API_TOKEN`
-- failed token-backed search degrades quietly to empty results
-
-### Google Identity, Sheets, and Drive
-
-Used for:
-
-- account selection and authorization
-- spreadsheet creation and connection
-- collection sync into sheets
-- CSV import
-- per-game Drive folder and QR asset flows
-
-### Gemini
-
-Used for:
-
-- score extraction from images
-- chronicle generation
-
-#### API key and model configuration
-
-- user-provided primary API key
-- extra API keys for rotation (`SecurePreferences.getGeminiExtraApiKeys`)
-- model discovery via `listAvailableModels` (v1beta → v1 fallback)
-- default model: `gemini-2.0-flash-lite`
-
-#### Rotation strategy (score extraction and chronicle)
-
-When a request returns HTTP 429 or 503:
-
-1. **Zero-quota check** — if the response body contains `"limit: 0"`, the model is immediately marked exhausted and key rotation is skipped. The model is added to a session-scoped `zeroQuotaModels` set and `onModelExhausted` is called so the ViewModel can persist a 24-hour TTL via `SecurePreferences.markModelExhausted`.
-2. **Key rotation** — if the failure is a normal rate limit and more keys are available, the next key is tried. Score extraction uses exponential backoff (2 s, 4 s, 8 s… capped at 16 s) for 429s and a flat 2 s for 503s.
-3. **Model rotation** — once all keys for a model are exhausted, the next model from the priority list is tried and the key index resets to 0.
-
-Up to 10 attempts total across all key+model combinations.
-
-#### Model priority order (score extraction)
-
-```
-gemini-2.0-flash → gemini-2.0-flash-lite → gemini-1.5-flash-latest →
-gemini-1.5-flash → gemini-2.5-flash-preview-05-20 → gemini-2.5-flash →
-gemini-1.5-pro-latest → gemini-1.5-pro → (remaining available models, alphabetical)
-```
-
-Models outside the priority list sort after all prioritised entries, gemini-prefixed first.
-
-#### Model exhaustion persistence
-
-`SecurePreferences.markModelExhausted(model)` stores a per-model expiry timestamp (default 24 h TTL). `getEffectiveModels()` filters out models whose TTL has not yet expired, so quota recovers automatically after a reset without user action. The older `removeAvailableModel` (permanent removal) is retained for backup/restore compatibility only.
-
-#### Session-scoped model stickiness
-
-When the repository rotates to a fallback model during a scan, `AppViewModel` caches the new model for 5 minutes (`sessionModel` / `sessionModelExpiry`). Subsequent scans within that window reuse the working model rather than retrying the exhausted one.
-
-## Build
-
-From repo root:
+### Build and run
 
 ```sh
-./gradlew.bat :app:compileDebugKotlin
-./gradlew.bat :app:assembleDebug
+git clone https://github.com/MartinAlexanderKrul/board-flow.git
+cd board-flow
+./gradlew.bat :app:installDebug      # build and install on a connected device or emulator
 ```
 
-Debug APK output:
+On macOS or Linux use `./gradlew` instead of `./gradlew.bat`.
 
-```text
-app/build/outputs/apk/debug/board-flow-debug.apk
-```
-
-Install on a connected device or emulator:
-
-```sh
-./gradlew.bat :app:installDebug
-```
+The app runs without any accounts: Log Play, Journal and Quick Guides work offline. Add a BGG account in **Settings > Sync** to load your collection and post plays.
 
 ## Configuration
 
-Common runtime settings:
+Local build settings live in `local.properties` (not committed):
 
-- BGG username
-- BGG password
-- Gemini API key
-- Gemini model endpoint
+| Key | Purpose | Required |
+| --- | --- | --- |
+| `BGG_XML_API_TOKEN` | BoardGameGeek XML API token for searching games outside your collection. Can also be set as an environment variable | For BGG search |
+| `RELEASE_STORE_FILE` | Path to the release keystore (default `release.jks` in `app/`) | Release builds |
+| `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD` | Release signing | Release builds |
 
-Google auth and API flows also require valid external configuration:
+Google sign-in (Sheets and Drive) needs external setup:
 
-- `google-services.json`
-- Android and Web OAuth clients
-- correct debug and release SHA fingerprints
+- `app/src/google-services.json` from the Firebase project
+- Android OAuth clients registered with the SHA-1 fingerprints of the debug key, the release key, and Play's app signing key when distributed through Google Play
+- OAuth consent screen scopes `drive.file` and `spreadsheets` (see [`SyncConfig.kt`](app/src/main/kotlin/cz/nicolsburg/boardflow/SyncConfig.kt))
 
-## Verification
+User settings such as BGG credentials and the Gemini API key are entered in the app and stored in encrypted preferences.
 
-Recommended after meaningful changes:
-
-```sh
-./gradlew.bat :app:compileDebugKotlin
-```
-
-Use this when resources, packaging, or signing-related behavior changed:
+## Building, testing and releasing
 
 ```sh
-./gradlew.bat :app:assembleDebug
+./gradlew.bat :app:compileDebugKotlin     # fast compile check
+./gradlew.bat :app:testDebugUnitTest      # unit tests, including validation of every setup guide
+./gradlew.bat :app:assembleDebug          # debug APK: app/build/outputs/apk/debug/
+./gradlew.bat :app:assembleRelease        # signed, R8-shrunk APK: app/build/outputs/apk/release/
+./gradlew.bat :app:bundleRelease          # Play Store bundle: app/build/outputs/bundle/release/
 ```
 
-## Known Documentation Notes
+> **Behind an HTTPS-inspecting proxy or antivirus?** If Gradle fails with `PKIX path building failed`, add `-Djavax.net.ssl.trustStoreType=Windows-ROOT` to use the Windows certificate store.
 
-- This repo currently has no `app/src/test` or `app/src/androidTest` source set.
-- The docs in `docs/` are intended to describe shipped behavior, not aspirational features.
-- Keep docs in UTF-8 and prefer plain ASCII punctuation to avoid mojibake.
+**Releases.** Bump `versionCode` and `versionName` in [`app/build.gradle.kts`](app/build.gradle.kts), tag the commit (`vX.Y.Z`), and attach the signed APK to a GitHub release. Google Play distribution is documented in [`play-store/PLAY_RELEASE.md`](play-store/PLAY_RELEASE.md), together with the store listing, privacy policy and Data safety answers.
+
+## Architecture
+
+BoardFlow is a single-module Jetpack Compose app with a small manual dependency container. It uses unidirectional data flow: view models expose `StateFlow`s, and screens render them.
+
+```text
+app/src/main/kotlin/cz/nicolsburg/boardflow/
+  MainActivity.kt        thin entry point: lifecycle, auth launchers, widget intents
+  AppViewModel.kt        log flow, history, roster, recognition, challenges, chronicles, posting
+  SyncViewModel.kt       accounts, collection and sleeve refresh, Sheets, Drive, sync log
+  auth/                  Google sign-in and authorisation
+  core/                  dependency container, navigation routes
+  data/                  BGG, Google, Gemini clients; Room store; workers; setup guides; chronicles
+  model/                 data classes and the sleeve size database
+  ui/                    screens by feature, plus the shared design system in ui/common and ui/theme
+```
+
+| Concern | Where |
+| --- | --- |
+| Navigation and app shell | `ui/app/AppShell.kt`, `ui/app/NavTransitions.kt`, `core/navigation/AppRoutes.kt` |
+| Design system | `ui/theme/` (colours, type, shapes, spacing) and `ui/common/` (`BoardFlowKit`, `BoardFlowUi`, `BoardFlowMotion`, `ScreenTabRow`) |
+| Live data | Room via `data/CanonicalCollectionStore.kt` (database version 13) |
+| Settings and secrets | `data/SecurePreferences.kt` (encrypted shared preferences) |
+| BoardGameGeek | `data/BggApiClient.kt` (XML API, sleeves), `data/BggRepository.kt` (login, plays, collection writes) |
+| Google Sheets and Drive | `data/GoogleApiClient.kt`, `auth/GoogleAuthManager.kt` |
+| Gemini | `data/GeminiRepository.kt` (score extraction), `data/GeminiModels.kt` (model choice), `data/chronicle/` |
+| Background work | `BggSyncWorker` (collection), `BggPlayPostWorker` (unposted plays), `ChallengeNotificationWorker` |
+| Backups | `data/BackupSerializer.kt` (format version 7) |
+
+Key design decisions:
+
+- **Room is the source of truth** for collection, plays, players, challenges, recognition hints, sleeves and setup guides. Preferences hold settings and credentials only.
+- **Source-aware merging.** BGG owns identity, stats and history. Google Sheets owns sheet-only values. Sleeve refresh owns sleeves.
+- **Optimistic BGG writes.** The app shows the expected result at once and talks to BGG in the background. One shared lock (`PlayPostLock`) makes sure a play is never posted twice.
+- **No hard-coded AI models.** `GeminiModels` picks the newest stable Flash model the key can use, and moves to the next one when a model is busy or retired.
+
+Agents and contributors working on the code should start with [`AGENTS.md`](AGENTS.md): it maps every flow, the UI conventions and the gotchas.
+
+## Data and privacy
+
+BoardFlow has no server, ads or analytics. Data stays on the device and in the accounts the user connects: BoardGameGeek, optionally Google Sheets and Drive (only files the app creates, plus the connected sheet), and optionally the Gemini API with the user's own key. See the [privacy policy](play-store/privacy-policy.md).
+
+## Documentation
+
+| Document | Contents |
+| --- | --- |
+| [`AGENTS.md`](AGENTS.md) | Architecture, flows, conventions and gotchas: the reference for code changes |
+| [`docs/UI_SURFACES.md`](docs/UI_SURFACES.md) | Every screen, dialog and sheet, and the shared components behind them |
+| [`docs/GAMIFICATION.md`](docs/GAMIFICATION.md) | Insights, record moments, mastery, challenges, chronicles and recommendations |
+| [`docs/WIDGETS.md`](docs/WIDGETS.md) | Home screen widgets |
+| [`docs/LOGGING.md`](docs/LOGGING.md) | Logcat tags and filters for debugging |
+| [`setup-guides/README.md`](setup-guides/README.md) | Quick Setup guide format and writing rules |
+| [`play-store/`](play-store/) | Google Play listing, privacy policy, Data safety and release checklist |
+
+## Contributing setup guides
+
+Quick Setup guides are plain JSON files, one per game. To add or fix one, follow [`setup-guides/README.md`](setup-guides/README.md), run `./gradlew.bat :app:testDebugUnitTest` to validate it, and open a pull request. Merged guides reach every install through the remote catalog.
+
+---
+
+BoardFlow is an independent project and is not affiliated with or endorsed by BoardGameGeek.

@@ -1,6 +1,8 @@
-# BoardFlow Logging Reference
+# Logging
 
-BoardFlow uses Android's native `android.util.Log`. Most feature areas define a dedicated `TAG` so Logcat filtering stays practical during debugging.
+BoardFlow logs through `android.util.Log`. Each feature area has its own tag, so you can follow one flow in Logcat without the noise of the others. Paths are relative to `app/src/main/kotlin/cz/nicolsburg/boardflow/`.
+
+> Network bodies and most traces are for debug builds. Release builds turn HTTP logging off (`HttpLoggingInterceptor.Level.NONE`), and passwords and API keys are always redacted.
 
 ## Levels
 
@@ -109,27 +111,27 @@ Used for:
 Typical messages (score extraction):
 
 ```
-GEMINI request score-extract start initialModel=gemini-2.0-flash-lite file=score_….jpg size=…B availableModels=N availableApiKeys=N
-GEMINI request score-extract attempt=1/10 model=gemini-2.0-flash-lite key=1/2 url=…key=REDACTED
-GEMINI response score-extract attempt=1/10 model=gemini-2.0-flash-lite code=200 elapsedMs=…ms streaming=true
-GEMINI stream-started score-extract model=gemini-2.0-flash-lite attempt=1
-GEMINI success score-extract model=gemini-2.0-flash-lite attempt=1 totalMs=… accumulated=…chars
+GEMINI request score-extract start initialModel=gemini-flash-latest file=score_….jpg size=…B availableModels=N availableApiKeys=N
+GEMINI request score-extract attempt=1/10 model=gemini-flash-latest key=1/2 url=…key=REDACTED
+GEMINI response score-extract attempt=1/10 model=gemini-flash-latest code=200 elapsedMs=…ms streaming=true
+GEMINI stream-started score-extract model=gemini-flash-latest attempt=1
+GEMINI success score-extract model=gemini-flash-latest attempt=1 totalMs=… accumulated=…chars
 GEMINI parsed score-extract date=… players=N game=… conf=… categories=N
 ```
 
 Key rotation (RPM rate limit, extra key available):
 
 ```
-GEMINI zero-quota score-extract model=gemini-2.0-flash-lite — skipping key rotation
-GEMINI rotate-key score-extract http=429 model=gemini-2.0-flash-lite key=2/2 attempt=1/10
-GEMINI rotate-model score-extract http=429 from=gemini-2.0-flash-lite to=gemini-2.0-flash resetKey=1/2 attempt=2/10
+GEMINI zero-quota score-extract model=gemini-flash-latest — skipping key rotation
+GEMINI rotate-key score-extract http=429 model=gemini-flash-latest key=2/2 attempt=1/10
+GEMINI rotate-model score-extract http=429 from=gemini-flash-latest to=gemini-flash-lite-latest resetKey=1/2 attempt=2/10
 ```
 
 Model exhaustion and fallback:
 
 ```
-GEMINI zero-quota score-extract model=gemini-2.0-flash-lite — skipping key rotation
-GEMINI rotate-model score-extract http=429 from=gemini-2.0-flash-lite to=gemini-2.0-flash resetKey=1/2 attempt=1/10
+GEMINI zero-quota score-extract model=gemini-flash-latest — skipping key rotation
+GEMINI rotate-model score-extract http=429 from=gemini-flash-latest to=gemini-flash-lite-latest resetKey=1/2 attempt=1/10
 ```
 
 Parse degradation (JSON mode active; should be rare):
@@ -146,7 +148,13 @@ GEMINI response list-models api=v1beta code=200 body=…
 GEMINI success list-models api=v1beta count=N
 ```
 
-Chronicle tag is `Chronicle`; log messages follow the same pattern prefixed with `chronicle` instead of `score-extract`.
+Model choice is automatic (`data/GeminiModels.kt`): the `gemini-flash-latest` aliases first, then the key's own model list, newest stable Flash first. A model that answers HTTP 404 or cannot take the request is dropped and the next one is tried.
+
+### `Chronicle`
+
+File: `data/chronicle/GeminiChronicleLineGenerator.kt`
+
+Chronicle line generation. Messages follow the Gemini pattern, with `chronicle` in place of `score-extract`, and fall back to the offline composer when every attempt fails.
 
 ### `ScanQuality`
 
@@ -201,9 +209,32 @@ Typical messages:
 - `Play logged: gameId=...`
 - delete confirmation-step traces
 
+### `BggPlayPostWorker`
+
+File: `data/BggPlayPostWorker.kt`
+
+Background posting of unposted local plays once the device is online.
+
+Typical messages:
+
+- `Posted play <local id> -> <BGG id>`
+- `Failed to post play <id>: ...`
+
+### `SetupGuides`
+
+Files: `data/setupguide/`
+
+Quick Setup catalog refresh, guide downloads and validation failures. Network failures are logged and otherwise silent.
+
+### `RulebookLinks`
+
+File: `data/RulebookLinks.kt`
+
+Loading of the bundled `rulebooks.json` that backs the Rules button in game detail.
+
 ## HTTP Logging
 
-`BggApiClient` and `BggRepository` use `HttpLoggingInterceptor` in debug-style traces. Request and response lines are logged through their module tag, and sensitive headers are redacted.
+`BggApiClient` and `BggRepository` use `HttpLoggingInterceptor`: full request and response bodies in debug builds, nothing in release builds. Lines are logged through the module's tag, and the BGG password is redacted. Debug logs still contain session cookies, so do not share raw debug Logcat output.
 
 ## Logcat Filter Examples
 
@@ -220,10 +251,10 @@ tag:QuickScan | tag:PlayerRecognition
 Quick scan correction and scanned-player resolution.
 
 ```text
-tag:BggApiClient | tag:BggRepository
+tag:BggApiClient | tag:BggRepository | tag:BggPlayPostWorker
 ```
 
-BGG network activity.
+BGG network activity and background posting.
 
 ```text
 level:warn

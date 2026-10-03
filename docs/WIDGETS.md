@@ -1,8 +1,8 @@
-# BoardFlow Widgets
+# Home screen widgets
 
-BoardFlow ships three home-screen widgets built with Jetpack Glance.
+BoardFlow has three home screen widgets, built with Jetpack Glance: **Last session**, **Daily insight** and **This month**. Each one has a camera button that opens a quick scan.
 
-Shared widget code lives in:
+Shared widget code lives in (paths relative to `app/src/main/kotlin/cz/nicolsburg/boardflow/`):
 
 - `ui/widget/SessionsWidget.kt`
 - `ui/widget/DailyInsightWidget.kt`
@@ -48,7 +48,7 @@ The header is rendered as a bitmap so the widgets can keep a consistent branded 
 
 ## Size Tiers
 
-Both widgets use responsive sizing with tiny, compact, small, and expanded layouts.
+All three widgets use responsive sizing with tiny, compact, small and expanded layouts.
 
 | Tier | General behavior |
 | --- | --- |
@@ -75,7 +75,7 @@ Typical content:
 
 Update model:
 
-- periodic alarm-driven refresh
+- periodic alarm-driven refresh every 5 minutes (`SessionGlanceWidget.INTERVAL_MS`)
 
 ## Daily Insight Widget
 
