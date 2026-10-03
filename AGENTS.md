@@ -12,7 +12,7 @@ BoardFlow currently supports all of the following:
 
 - local and online BGG play logging
 - offline-first local play saving
-- manual reposting of unposted local plays from History
+- unposted local plays post automatically when the device is online (`BggPlayPostWorker`), or by hand from History
 - edit and delete play flows
 - play quantity, incomplete flag, and nowInStats toggle
 - AI score extraction from images with Gemini (with model fallback/cycling), preceded by a local non-blocking scan quality warning for obviously dark, blurry, low-resolution, or too-far images; malformed responses automatically trigger a silent background retry — if it succeeds while the user is still on `LogPlayScreen`, a non-blocking banner offers to apply the cleaner result
@@ -243,7 +243,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - play posts are serialized by `playPostMutex` (History's per-play and bulk post use the same path) so a play is never posted twice
 - if offline or posting is unavailable, the play can still be saved locally
 - extra related games may post separately; failures there can leave local follow-up plays
-- local unposted plays are intentionally user-controlled from History rather than silently auto-posted on startup
+- unposted local plays are posted automatically once the device is online: `BggPlayPostWorker.enqueue` (unique work, network constraint, KEEP) is called at app start, when a play is saved offline, and when a background post fails. The worker and the app share `PlayPostLock` (one mutex, the local -> BGG id map, and a `postedInBackground` signal that makes `AppViewModel` reload history); every poster re-reads the play under the lock and skips it if it is already posted or gone, so a play is never posted twice. `deleteLocalPlay` takes the same lock and refuses a play that was just promoted (it is on BGG now). History's Post / Post all still work for posting right away
 - tapping X or back when Log Play has any data (unsaved changes, editable players, or an extracted play) shows a discard confirmation dialog; the check reads `AppViewModel` StateFlow values directly to avoid a one-frame `LaunchedEffect` delay
 - after posting, `AppViewModel` detects record moments (first win, new high score, win streak) by comparing against play history snapshot
 
@@ -443,7 +443,7 @@ Settings > Scan shows the count of saved player hints and a "Clear player recogn
   - sleeve refresh owns sleeves only
 - full sync should update the canonical merged snapshot once at the end
 - local/offline history should not mutate canonical collection state
-- local unposted plays should remain visible and user-controlled
+- local unposted plays should remain visible in History until they are posted
 - BGG XML search outside the loaded collection requires the XML API token and should fail quietly to an empty result state if missing/rejected
 - player matching should stay explicit unless a match is truly exact
 - sleeve exclusions are per-game and stored in `SecurePreferences`; respect them in both display and export

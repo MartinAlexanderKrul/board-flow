@@ -10,7 +10,7 @@ BoardFlow combines several connected workflows in one app:
 
 - search your owned collection first, then fall back to BGG search
 - log plays online to BGG or save them locally when offline
-- keep an outbox of unposted local plays and post them later from History
+- keep an outbox of unposted local plays; they post automatically once BGG can be reached, or from History
 - scan a scoresheet image with Gemini to prefill players and scores
 - warn locally when a scan is too dark, blurry, low-resolution, or framed too far away
 - recognize the game from scan evidence using saved recognition hints and collection matching
@@ -69,7 +69,7 @@ Key behavior:
 
 - merges local logged plays with cached BGG plays
 - deduplicates with signature matching and lighter history correlation matching
-- shows a manual outbox for unposted local plays
+- shows an outbox for unposted local plays (posted automatically when online, or by hand with Post / Post all)
 - supports edit, delete, repost, play again, and QR share actions for individual plays and full sessions
 - drives roster-based player views and richer stats surfaces
 - overlays session memories and chronicle lines onto both local and cached BGG plays

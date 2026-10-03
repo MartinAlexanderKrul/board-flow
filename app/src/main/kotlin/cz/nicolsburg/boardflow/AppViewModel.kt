@@ -1,5 +1,7 @@
 ﻿package cz.nicolsburg.boardflow
 
+import kotlinx.coroutines.sync.withLock
+import cz.nicolsburg.boardflow.data.PlayPostLock
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -1951,12 +1953,22 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun deleteLocalPlay(playId: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
-            runCatching {
-                val deletedPlay = _playHistory.value.firstOrNull { it.id == playId }
-                container.canonicalCollectionStore.deleteLoggedPlay(playId)
-                _playHistory.value = _playHistory.value.filter { it.id != playId }
-                clearActiveSessionIfMatchingPlay(deletedPlay)
-            }.onSuccess { onSuccess() }
+            // Under the post lock: a post in flight finishes first, and a play it has just put on
+            // BGG is not quietly removed here while it stays on BGG.
+            val result = playPostMutex.withLock {
+                runCatching {
+                    val stored = container.canonicalCollectionStore.getLoggedPlays().firstOrNull { it.id == playId }
+                    if (stored == null && promotedPlayIds.containsKey(playId)) {
+                        _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+                        error("This play was just posted to BGG. Open it again to delete it there.")
+                    }
+                    val deletedPlay = stored ?: _playHistory.value.firstOrNull { it.id == playId }
+                    container.canonicalCollectionStore.deleteLoggedPlay(playId)
+                    _playHistory.value = _playHistory.value.filter { it.id != playId }
+                    clearActiveSessionIfMatchingPlay(deletedPlay)
+                }
+            }
+            result.onSuccess { onSuccess() }
                 .onFailure { onError(it.message ?: "Failed to delete local play") }
         }
     }
@@ -2051,15 +2063,26 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             stopPlayTimer()
             onSuccess(if (creds != null) mainPlay.copy(postedToBgg = true) else mainPlay, challengeProgressAfter)
             if (creds != null) postPlaysInBackground(plays.map { it.id }, creds)
+            else container.scheduleUnpostedPlayPost()
         }
     }
 
     // Play posts run one at a time, so a "post all" started during a background post waits and
     // then no longer sees the plays that post has just promoted.
-    private val playPostMutex = kotlinx.coroutines.sync.Mutex()
+    // Shared with BggPlayPostWorker, which posts unposted plays when the network comes back.
+    private val playPostMutex = PlayPostLock.mutex
 
     // Local play id -> the BGG id it was promoted to, for callers still holding the local copy.
-    private val promotedPlayIds = java.util.concurrent.ConcurrentHashMap<String, String>()
+    private val promotedPlayIds = PlayPostLock.promotedIds
+
+    init {
+        // The worker posted plays while the app is open: show them as posted straight away.
+        viewModelScope.launch {
+            PlayPostLock.postedInBackground.collect {
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            }
+        }
+    }
 
     /**
      * Posts locally saved plays to BGG without holding the UI. The ids must already be in
@@ -2079,7 +2102,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 _expectedPostedPlayIds.value = _expectedPostedPlayIds.value - playIds.toSet()
             }
             if (failed > 0) {
-                _postResult.value = "Saved locally. $failed play(s) could not be posted to BGG - post them from History."
+                _postResult.value = "Saved locally. $failed play(s) could not be posted to BGG yet. They will be posted when BGG can be reached, or post them from History."
+                container.scheduleUnpostedPlayPost()
             }
         }
     }
