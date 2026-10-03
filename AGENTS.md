@@ -535,6 +535,7 @@ Settings > Scan shows the count of saved player hints and a "Clear player recogn
 - an editable value in a read-only grid keeps its white value and gets a grey chevron (`DetailCell` in `GameDetailDialog`)
 - text input outside a form group is `BoardFlowTextField` (tonal fill, label inside); inside a form group it is `BoardFlowInlineField`
 - labels are sentence case ("Refresh collection", not "Refresh Collection")
+- tab rows are `ScreenTabRow`: the label size is computed once so the widest label in `ScreenTabs.AllLabels` fits one line in a quarter of the screen (the most tabs any screen has), and every tab row uses that size; add new tab labels to `ScreenTabs.AllLabels`. Every tabbed screen also switches tabs on a horizontal swipe (`swipeToNavigateTabs`)
 - Settings and Sync are lists of sections: a `BoardFlowSectionTitle` (with an optional one-line `supporting`) over one `BoardFlowFormGroup` of `BoardFlowSettingRow`s (amber icon, title, grey detail, then a `BoardFlowSettingValue`, a switch or a chevron). Every action is a row, not a button; clear / delete rows are `destructive = true` (red). Text entry (Gemini key, backup keys) opens a dialog from its row. Results are snackbars
 - Journal play rows list every player on their own line (`HistoryListPlayerRow`)
 - Log Play hides its tabs, search field and "Playing" row while the list scrolls down and brings them back on the way up; it follows the drag direction (`NestedScrollConnection`), not the list position, so a short list does not flicker

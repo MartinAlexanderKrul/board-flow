@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.search
 
+import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -245,6 +246,18 @@ fun NewPlayScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(hideOnScroll)
+                // Swipe between Log Play and Quick Guides, like the other tabbed screens.
+                .then(
+                    if (correctionMode) Modifier
+                    else Modifier.swipeToNavigateTabs(
+                        tabCount = NewPlayTab.entries.size,
+                        selectedIndex = selectedTab.ordinal,
+                        onNavigate = {
+                            selectedTab = NewPlayTab.entries[it]
+                            query = ""
+                        }
+                    )
+                )
                 .padding(horizontal = 16.dp)
         ) {
             BoardFlowAnimatedVisibility(visible = controlsVisible) {
