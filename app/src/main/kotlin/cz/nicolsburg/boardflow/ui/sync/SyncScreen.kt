@@ -1,5 +1,10 @@
 ﻿package cz.nicolsburg.boardflow.ui.sync
 
+import androidx.compose.material3.Switch
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.UploadFile
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSettingRow
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
@@ -309,7 +314,7 @@ fun SyncScreen(
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // ── Readiness hub (status + actions) ──────────────────────
+                BoardFlowSectionTitle(title = "Accounts")
                 ReadinessHub(
                     googleConnected = googleConnected,
                     googleLabel = account?.name.orEmpty(),
@@ -321,22 +326,24 @@ fun SyncScreen(
                     onChangeSheet = { showSheetModal = true }
                 )
 
-                // ── Step 1 — BGG ──────────────────────────────────────────
-                StepSectionHeader(
-                    step = "1",
-                    title = "BoardGameGeek",
-                    subtitle = "Fetch your latest collection from BGG."
-                )
-                BoardFlowButton(
-                    onClick = { triggerSync { syncViewModel.refreshCollection(forceRefresh = true) } },
-                    enabled = !busy && hasBggCredentials
-                ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
-                    Spacer(Modifier.size(8.dp))
-                    Text("Refresh collection")
-                }
+                // Every sync action is a row, grouped under a section title (same as Settings).
+                BoardFlowSectionTitle(title = "BoardGameGeek")
                 BoardFlowFormGroup {
-                    SyncActionRow(
+                    BoardFlowSettingRow(
+                        icon = Icons.Default.Refresh,
+                        title = "Refresh collection",
+                        detail = "Fetch your latest collection from BGG.",
+                        enabled = !busy && hasBggCredentials,
+                        onClick = { triggerSync { syncViewModel.refreshCollection(forceRefresh = true) } }
+                    )
+                }
+                if (!hasBggCredentials) {
+                    InlineHint("Set up your BGG account", onClick = { showBggModal = true })
+                }
+
+                BoardFlowSectionTitle(title = "Sleeves")
+                BoardFlowFormGroup {
+                    BoardFlowSettingRow(
                         icon = BoardFlowIcons.Sleeves,
                         title = "Refresh sleeve sizes",
                         detail = "Read card counts and sizes from BGG.",
@@ -344,78 +351,74 @@ fun SyncScreen(
                         onClick = { triggerSync { syncViewModel.refreshSleeveDataFromBgg(forceRefresh = true) } }
                     )
                     BoardFlowFormDivider()
-                    SyncActionRow(
+                    BoardFlowSettingRow(
                         icon = Icons.Default.CloudUpload,
                         title = "Back up sleeve status to BGG",
                         detail = "Saves sleeved / to sleeve in each game's private notes.",
                         enabled = !busy && hasBggCredentials,
-                        // Not a collection sync, so it skips the "Sync again?" prompt.
                         onClick = { syncViewModel.backupSleeveStatusToBgg() }
                     )
                 }
-                if (!hasBggCredentials) {
-                    InlineHint("Set up your BGG account", onClick = { showBggModal = true })
-                }
 
-                // ── Step 2 — Google Sheets (only when signed in to Google) ──
+                // Google Sheets (only when signed in to Google)
                 AnimatedVisibility(visible = googleConnected) {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        HorizontalDivider()
-
-                        StepSectionHeader(
-                            step = "2",
-                            title = "Google Sheets",
-                            subtitle = "Push your collection to the connected spreadsheet."
-                        )
-                        run {
-                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                BoardFlowButton(
-                                    onClick = {
-                                        val acc = account ?: return@BoardFlowButton
-                                        triggerSync {
-                                            onSpreadsheetChanged(spreadsheetId)
-                                            syncViewModel.syncBgg(acc, forceRefresh = true)
-                                        }
-                                    },
-                                    enabled = !busy && canSync
-                                ) {
-                                    Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.size(8.dp))
-                                    Text("Sync to Google Sheets")
+                        BoardFlowSectionTitle(title = "Google Sheets")
+                        val sheetReady = !busy && account != null && hasConfiguredSheet
+                        BoardFlowFormGroup {
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.Sync,
+                                title = "Sync to Google Sheets",
+                                detail = "Push your collection to the connected spreadsheet.",
+                                enabled = !busy && canSync,
+                                onClick = {
+                                    val acc = account ?: return@BoardFlowSettingRow
+                                    triggerSync {
+                                        onSpreadsheetChanged(spreadsheetId)
+                                        syncViewModel.syncBgg(acc, forceRefresh = true)
+                                    }
                                 }
-
-                                if (!canSync && syncHint != null) {
-                                    InlineHint(
-                                        text = syncHint,
-                                        onClick = when {
-                                            !hasBggCredentials -> { { showBggModal = true } }
-                                            else -> null
-                                        }
-                                    )
+                            )
+                            BoardFlowFormDivider()
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.UploadFile,
+                                title = "Import from CSV",
+                                detail = "Merge a CSV file into the spreadsheet.",
+                                enabled = sheetReady,
+                                onClick = {
+                                    account ?: return@BoardFlowSettingRow
+                                    onSpreadsheetChanged(spreadsheetId)
+                                    onPickCsv()
                                 }
+                            )
+                            BoardFlowFormDivider()
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.FolderOpen,
+                                title = "Create Drive folders and QR codes",
+                                detail = "A Drive folder and a QR code for each game.",
+                                enabled = sheetReady,
+                                onClick = {
+                                    val acc = account ?: return@BoardFlowSettingRow
+                                    onSpreadsheetChanged(spreadsheetId)
+                                    syncViewModel.createFolders(acc, saveQrToGallery = saveQrToDevice)
+                                }
+                            )
+                            BoardFlowFormDivider()
+                            BoardFlowSettingRow(
+                                icon = Icons.Default.QrCode,
+                                title = "Also save QR images to this phone",
+                                detail = "Copies the QR codes into your gallery.",
+                                onClick = { saveQrToDevice = !saveQrToDevice }
+                            ) {
+                                Switch(checked = saveQrToDevice, onCheckedChange = { saveQrToDevice = it })
                             }
                         }
-
-                        HorizontalDivider()
-
-                        // ── Advanced (collapsed) ──────────────────────────
-                        AdvancedSection(
-                            busy = busy,
-                            account = account,
-                            hasConfiguredSheet = hasConfiguredSheet,
-                            saveQrToDevice = saveQrToDevice,
-                            onSaveQrChanged = { saveQrToDevice = it },
-                            onPickCsv = {
-                                account ?: return@AdvancedSection
-                                onSpreadsheetChanged(spreadsheetId)
-                                onPickCsv()
-                            },
-                            onCreateFolders = {
-                                val acc = account ?: return@AdvancedSection
-                                onSpreadsheetChanged(spreadsheetId)
-                                syncViewModel.createFolders(acc, saveQrToGallery = saveQrToDevice)
-                            }
-                        )
+                        if (!canSync && syncHint != null) {
+                            InlineHint(
+                                text = syncHint,
+                                onClick = if (!hasBggCredentials) ({ showBggModal = true }) else null
+                            )
+                        }
                     }
                 }
 
@@ -539,43 +542,6 @@ private fun ActionStatusRow(
     }
 }
 
-/** A secondary sync action: what it does, and a chevron. Runs when tapped. */
-@Composable
-private fun SyncActionRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    detail: String,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled, onClick = onClick)
-            .alpha(if (enabled) 1f else 0.45f)
-            .heightIn(min = 64.dp)
-            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-    ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(Dimens.Icon), tint = MaterialTheme.colorScheme.primary)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun StepSectionHeader(step: String, title: String, subtitle: String?) {
-    BoardFlowSectionTitle(title = title, supporting = subtitle)
-}
-
 @Composable
 private fun InlineHint(text: String, onClick: (() -> Unit)? = null) {
     Row(
@@ -596,88 +562,6 @@ private fun InlineHint(text: String, onClick: (() -> Unit)? = null) {
             )
         }
     }
-}
-
-@Composable
-private fun AdvancedSection(
-    busy: Boolean,
-    account: Account?,
-    hasConfiguredSheet: Boolean,
-    saveQrToDevice: Boolean,
-    onSaveQrChanged: (Boolean) -> Unit,
-    onPickCsv: () -> Unit,
-    onCreateFolders: () -> Unit
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .heightIn(min = Dimens.MinTouchTarget),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                "Advanced",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Icon(
-                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Collapse" else "Expand",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        BoardFlowAnimatedVisibility(visible = expanded) {
-            SectionCard {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    AdvancedGroupLabel("Import and export")
-                    BoardFlowSecondaryButton(
-                        onClick = onPickCsv,
-                        enabled = !busy && account != null && hasConfiguredSheet
-                    ) {
-                        Text("Import from CSV")
-                    }
-
-                    AdvancedGroupLabel("Automation")
-                    BoardFlowSecondaryButton(
-                        onClick = onCreateFolders,
-                        enabled = !busy && account != null && hasConfiguredSheet
-                    ) {
-                        Text("Create Drive folders and QR codes")
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Checkbox(checked = saveQrToDevice, onCheckedChange = onSaveQrChanged)
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Also save QR images to this device", style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                "Enable this to copy QR PNG files into local storage.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AdvancedGroupLabel(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.padding(top = 4.dp)
-    )
 }
 
 @Composable

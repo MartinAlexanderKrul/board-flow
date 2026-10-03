@@ -1520,14 +1520,14 @@ private fun PlayHistoryCard(
     ) {
         Column(
             modifier = Modifier.padding(Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                GameCover(name = play.gameName, thumbnailUrl = thumbnailUrl, size = 48.dp)
+                GameCover(name = play.gameName, thumbnailUrl = thumbnailUrl, size = 52.dp)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         play.gameName,
@@ -1558,19 +1558,10 @@ private fun PlayHistoryCard(
                 }
             }
             if (play.players.isNotEmpty()) {
-                // Players on one or two lines, winner first: the full list is in play details.
-                val ordered = remember(play.players) {
-                    play.players.sortedWith(
-                        compareByDescending<PlayerResult> { it.isWinner }
-                            .thenByDescending { it.score.trim().toDoubleOrNull() ?: Double.NEGATIVE_INFINITY }
-                    )
-                }
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    ordered.forEach { player ->
-                        HistoryListPlayerChip(player, resolveDisplayName(player.name, players))
+                // Every player on their own line, as logged.
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    play.players.forEach { player ->
+                        HistoryListPlayerRow(player, resolveDisplayName(player.name, players))
                     }
                 }
             }
@@ -1640,41 +1631,6 @@ private fun playerMetaText(player: PlayerResult): String? {
         if (player.isNew) add("first play")
     }
     return meta.takeIf { it.isNotEmpty() }?.joinToString(" · ")
-}
-
-/** A player in the Journal list: coloured initial, short name, score; the winner leads with a trophy. */
-@Composable
-private fun HistoryListPlayerChip(player: PlayerResult, displayName: String) {
-    val score = player.score.trim().takeUnless { it.isEmpty() || it == "0" || it == "0.0" }
-    val inlineColor = player.color.takeIf { it.isNotBlank() }?.let(::resolvedPlayerColor)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        if (player.isWinner) {
-            Icon(
-                Icons.Default.EmojiEvents,
-                contentDescription = "Winner",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(Dimens.IconSmall)
-            )
-        }
-        PlayerAvatar(displayName, size = 20.dp, color = inlineColor)
-        Text(
-            shortName(displayName),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1
-        )
-        if (score != null) {
-            Text(
-                score,
-                style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
-                color = if (player.isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
 }
 
 @Composable

@@ -361,7 +361,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun selectGame(game: BggGame) {
+    fun selectGame(picked: BggGame) {
+        // Search results and recent games can lack a cover; borrow it from the collection.
+        val game = if (picked.thumbnailUrl.isNullOrBlank()) gameForLogPlay(picked.id, picked.name).copy(yearPublished = picked.yearPublished) else picked
         isBggSearchActive = false
         selectedGame = game
         _logPlayHasUnsavedChanges.value = false
@@ -2827,8 +2829,21 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         return LogPlayPrefill(location = "", durationSuggestion = elapsedMin.toString())
     }
 
+    /**
+     * A game for Log Play from just an id and name (play again, timer, links): the cover comes from
+     * the collection, or the history thumbnail cache for games outside it, so the form shows the
+     * real box art instead of the initial.
+     */
+    private fun gameForLogPlay(gameId: Int, gameName: String, thumbnailUrl: String? = null): BggGame {
+        val known = _allGames.value.firstOrNull { it.id == gameId }
+        val art = thumbnailUrl?.takeIf { it.isNotBlank() }
+            ?: known?.thumbnailUrl?.takeIf { it.isNotBlank() }
+            ?: _historyThumbnailCache.value[gameId]?.takeIf { it.isNotBlank() }
+        return BggGame(gameId, gameName, known?.yearPublished, art)
+    }
+
     fun setupPlayAgain(ctx: SessionContext) {
-        val game = BggGame(ctx.gameId, ctx.gameName, null, null)
+        val game = gameForLogPlay(ctx.gameId, ctx.gameName)
         selectedGame = game
         _editablePlayers.value = ctx.players.map { it.copy(score = "0", isWinner = false) }
         _extractedPlay.value = null
@@ -2845,13 +2860,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun setupPlayAgainFromSession(plays: List<LoggedPlay>) {
         val first = plays.firstOrNull() ?: return
-        val primaryGame = BggGame(first.gameId, first.gameName, null, null)
+        val primaryGame = gameForLogPlay(first.gameId, first.gameName)
         selectedGame = primaryGame
         _editablePlayers.value = first.players.map { it.copy(score = "0", isWinner = false) }
         _extractedPlay.value = null
         _additionalGames.value = plays.drop(1)
             .distinctBy { it.gameId }
-            .map { BggGame(it.gameId, it.gameName, null, null) }
+            .map { gameForLogPlay(it.gameId, it.gameName) }
         _gameRelations.value = findRelatedGames(primaryGame, _allGames.value)
         _logPlayPrefill = LogPlayPrefill(location = first.location)
         _logPlayHasUnsavedChanges.value = false
@@ -2860,7 +2875,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun setupPlayAgainFromPlay(play: LoggedPlay) = setupPlayAgainFromSession(listOf(play))
 
     fun setupLogPlayById(gameId: Int, gameName: String, thumbnailUrl: String?) {
-        val game = BggGame(gameId, gameName, null, thumbnailUrl)
+        val game = gameForLogPlay(gameId, gameName, thumbnailUrl)
         selectedGame = game
         _editablePlayers.value = emptyList()
         _extractedPlay.value = null

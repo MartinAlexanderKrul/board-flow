@@ -294,7 +294,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
   searchable in Log Play (`AppViewModel.logPlayPool`), and resolve as game info from a play.
   Sleeve surfaces filter on `isOwned`, so they ignore played-only games.
 - game detail dialog is a major cross-link hub into History and Players
-- the detail dialog's bottom row is `Open BGG` / `Rules` / `Drive`; `Rules` appears when `RulebookLinks` (bundled `assets/rulebooks.json`, BGG id -> path in the public `boardgame-rulebooks` GitHub repo) has the game's id, and opens the PDF (or the folder when the game has several files) in the browser; entries that are full URLs (temporary RulesPal links for games with no PDF yet) are opened as-is; regenerate the JSON when rulebooks are added to that repo
+- the detail dialog's header buttons `Log play` / `Setup` / `History` are all the same solid amber pill (`DialogPrimaryActionButton`); its bottom row `Open BGG` / `Rules` / `Drive` is centred `BoardFlowSecondaryButton`s; `Rules` appears when `RulebookLinks` (bundled `assets/rulebooks.json`, BGG id -> path in the public `boardgame-rulebooks` GitHub repo) has the game's id, and opens the PDF (or the folder when the game has several files) in the browser; entries that are full URLs (temporary RulesPal links for games with no PDF yet) are opened as-is; regenerate the JSON when rulebooks are added to that repo
 - sleeve display respects per-game exclusion toggles
 
 ### Sync
@@ -512,11 +512,11 @@ Settings > Scan shows the count of saved player hints and a "Clear player recogn
 
 ## UI Conventions
 
-- build screens from the shared kit in `ui/common/BoardFlowKit.kt` (`BoardFlowCard`, `BoardFlowSectionTitle`, `GameListRow`, `GameCover`, `BoardFlowFormGroup` / `BoardFlowFormRow` / `BoardFlowInlineField`, `BoardFlowTextField`, `BoardFlowInfoPill`, `BoardFlowEmptyState`, `BoardFlowErrorBanner`) and the buttons, sheets and dialogs in `BoardFlowUi.kt`; do not style private surfaces, fields or rows per screen
+- build screens from the shared kit in `ui/common/BoardFlowKit.kt` (`BoardFlowCard`, `BoardFlowSectionTitle`, `GameListRow`, `GameCover`, `BoardFlowFormGroup` / `BoardFlowFormRow` / `BoardFlowInlineField`, `BoardFlowSettingRow` / `BoardFlowSettingValue`, `BoardFlowTextField`, `BoardFlowInfoPill`, `BoardFlowEmptyState`, `BoardFlowErrorBanner`) and the buttons, sheets and dialogs in `BoardFlowUi.kt`; do not style private surfaces, fields or rows per screen
 - forms are grouped rows on a tonal surface (icon, label, value), not one outlined box per field; surfaces separate by tone, not by borders
 - buttons are pills that hug their label (never `fillMaxWidth`), all in `BoardFlowUi.kt`:
   - primary (`BoardFlowButton`): solid amber, 40dp. One per view: the action that moves the task forward (Save, Log play, Start game, Play again)
-  - secondary (`BoardFlowSecondaryButton`): amber outline and label on a transparent fill, same 40dp height. Alternatives next to the primary (Setup, History, Scan, New player, Export / Import data, Retake). On game art the outline sits on a light dark wash (`GameDetailDialog.DialogSecondaryActionButton`)
+  - secondary (`BoardFlowSecondaryButton`): amber outline and label on a transparent fill, same 40dp height. Alternatives next to the primary (Scan, Add player, Retake, the game detail links)
   - cancel: white text (`BoardFlowInlineAction(neutral = true)`), left of the save button; `large = true` beside a 40dp button
   - destructive (`BoardFlowDestructiveButton`): outlined red, 40dp (Remove, Clear rating, Clear collection cache). The action in `BoardFlowConfirmationDialog` is a solid red pill with a white Cancel. Red means data loss only
   - a main Edit action is an amber pen icon next to the red delete icon on the left of the action row, with the primary pill alone on the right; a minor edit is amber "Edit" text
@@ -535,6 +535,9 @@ Settings > Scan shows the count of saved player hints and a "Clear player recogn
 - an editable value in a read-only grid keeps its white value and gets a grey chevron (`DetailCell` in `GameDetailDialog`)
 - text input outside a form group is `BoardFlowTextField` (tonal fill, label inside); inside a form group it is `BoardFlowInlineField`
 - labels are sentence case ("Refresh collection", not "Refresh Collection")
+- Settings and Sync are lists of sections: a `BoardFlowSectionTitle` (with an optional one-line `supporting`) over one `BoardFlowFormGroup` of `BoardFlowSettingRow`s (amber icon, title, grey detail, then a `BoardFlowSettingValue`, a switch or a chevron). Every action is a row, not a button; clear / delete rows are `destructive = true` (red). Text entry (Gemini key, backup keys) opens a dialog from its row. Results are snackbars
+- Journal play rows list every player on their own line (`HistoryListPlayerRow`)
+- Log Play hides its tabs, search field and "Playing" row while the list scrolls down and brings them back on the way up; it follows the drag direction (`NestedScrollConnection`), not the list position, so a short list does not flicker
 
 - preserve the current screen hierarchy and tab layout
 - prefer extracting small reusable helpers when a screen starts carrying duplicated framework glue

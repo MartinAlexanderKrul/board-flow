@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowActionTokens
 import cz.nicolsburg.boardflow.ui.theme.Dimens
@@ -356,12 +357,13 @@ fun GameDetailsDialog(
 
                 if (bggUrl != null || rulesUrl != null || driveUrl != null) {
                     item {
+                        // Links out of the app: secondary buttons, centred under the content.
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
                         ) {
                             if (bggUrl != null) {
-                                DialogUtilityActionButton(
+                                BoardFlowSecondaryButton(
                                     onClick = { open(bggUrl) }
                                 ) {
                                     Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -370,7 +372,7 @@ fun GameDetailsDialog(
                                 }
                             }
                             if (rulesUrl != null) {
-                                DialogUtilityActionButton(
+                                BoardFlowSecondaryButton(
                                     onClick = { open(rulesUrl) }
                                 ) {
                                     Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -379,7 +381,7 @@ fun GameDetailsDialog(
                                 }
                             }
                             if (driveUrl != null) {
-                                DialogUtilityActionButton(
+                                BoardFlowSecondaryButton(
                                     onClick = { open(driveUrl) }
                                 ) {
                                     Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -795,7 +797,7 @@ private fun HeaderSection(
                         Text("Log play", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false)
                     }
                     if (hasQuickSetup) {
-                        DialogSecondaryActionButton(onClick = onOpenQuickSetup) {
+                        DialogPrimaryActionButton(onClick = onOpenQuickSetup) {
                             Icon(
                                 Icons.Default.Checklist,
                                 contentDescription = null,
@@ -806,7 +808,7 @@ private fun HeaderSection(
                         }
                     }
                     if (hasHistory) {
-                        DialogSecondaryActionButton(onClick = { onViewHistory(gameObjectId) }) {
+                        DialogPrimaryActionButton(onClick = { onViewHistory(gameObjectId) }) {
                             Icon(
                                 Icons.Default.History,
                                 contentDescription = null,
@@ -1916,56 +1918,6 @@ private fun DialogPrimaryActionButton(
             contentColor = MaterialTheme.colorScheme.onPrimary
         ),
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            content = content
-        )
-    }
-}
-
-/** Amber outline like the app's secondary button; a light dark wash keeps it readable on game art. */
-@Composable
-private fun DialogSecondaryActionButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.heightIn(min = 32.dp),
-        shape = BoardFlowShape.Pill,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Black.copy(alpha = 0.35f),
-            contentColor = MaterialTheme.colorScheme.primary
-        ),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            content = content
-        )
-    }
-}
-
-@Composable
-private fun DialogUtilityActionButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.heightIn(min = 40.dp),
-        shape = BoardFlowShape.Pill,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = BoardFlowActionTokens.SecondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,

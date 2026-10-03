@@ -1,5 +1,12 @@
 ﻿package cz.nicolsburg.boardflow.ui.settings
 
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.Key
+import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSettingValue
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSettingRow
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import androidx.compose.material3.IconButtonDefaults
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
@@ -149,6 +156,7 @@ fun SettingsScreen(
 ) {
     val prefs = viewModel.prefs
     val context = LocalContext.current
+    val messenger = LocalBoardFlowMessenger.current
 
     var username by remember { mutableStateOf(prefs.bggUsername) }
     var password by remember { mutableStateOf(prefs.bggPassword) }
@@ -170,7 +178,6 @@ fun SettingsScreen(
     val cachedCollection by syncViewModel.collectionGames.collectAsState()
 
     var showSheetModal by remember { mutableStateOf(false) }
-    var importExportStatus by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var showImportConfirm by remember { mutableStateOf<String?>(null) }
     var includeSensitiveBackup by remember { mutableStateOf(false) }
     var modelListLoading by remember { mutableStateOf(false) }
@@ -182,11 +189,9 @@ fun SettingsScreen(
     var showClearCollectionConfirm by remember { mutableStateOf(false) }
     var templateCount by remember { mutableStateOf(viewModel.getGameRecognitionHints().size) }
     var showClearTemplatesConfirm by remember { mutableStateOf(false) }
-    var clearTemplatesStatus by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var showTemplatesDialog by remember { mutableStateOf(false) }
     var playerHintCount by remember { mutableStateOf(viewModel.getPlayerRecognitionHintCount()) }
     var showClearPlayerHintsConfirm by remember { mutableStateOf(false) }
-    var clearPlayerHintsStatus by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     val customMoods by viewModel.customMoods.collectAsState()
     var showCustomMoodsDialog by remember { mutableStateOf(false) }
     val hasCollection = cachedCollection.isNotEmpty()
@@ -201,9 +206,9 @@ fun SettingsScreen(
                 context.contentResolver.openOutputStream(uri)?.use {
                     it.write(viewModel.exportData(includeSensitiveBackup).toByteArray())
                 }
-                importExportStatus = true to "Data exported successfully"
+                messenger.show("Data exported successfully")
             } catch (e: Exception) {
-                importExportStatus = false to "Export failed: ${e.message}"
+                messenger.show("Export failed: ${e.message}")
             }
         }
     }
@@ -214,7 +219,7 @@ fun SettingsScreen(
                     ?: throw Exception("Could not read file!")
                 showImportConfirm = json
             } catch (e: Exception) {
-                importExportStatus = false to "Import failed: ${e.message}"
+                messenger.show("Import failed: ${e.message}")
             }
         }
     }
@@ -235,9 +240,9 @@ fun SettingsScreen(
                     modelEndpoint = prefs.geminiModelEndpoint
                     syncViewModel.reloadLocalSyncPreferences()
                     syncViewModel.loadCachedCollection()
-                    importExportStatus = true to "Data imported successfully"
+                    messenger.show("Data imported successfully")
                 } catch (e: Exception) {
-                    importExportStatus = false to "Import failed: ${e.message}"
+                    messenger.show("Import failed: ${e.message}")
                 }
                 showImportConfirm = null
             },
@@ -286,7 +291,7 @@ fun SettingsScreen(
                 showClearTemplatesConfirm = false
                 viewModel.clearGameRecognitionHints()
                 templateCount = 0
-                clearTemplatesStatus = true to "Recognition templates cleared."
+                messenger.show("Recognition templates cleared.")
             },
             onDismiss = { showClearTemplatesConfirm = false }
         )
@@ -303,7 +308,7 @@ fun SettingsScreen(
                 showClearPlayerHintsConfirm = false
                 viewModel.clearPlayerRecognitionHints()
                 playerHintCount = 0
-                clearPlayerHintsStatus = true to "Player recognition hints cleared."
+                messenger.show("Player recognition hints cleared.")
             },
             onDismiss = { showClearPlayerHintsConfirm = false }
         )
@@ -400,29 +405,25 @@ fun SettingsScreen(
             ) {
 
             if (selectedSection == SettingsSection.PREFERENCES) {
-                item {
-                    SectionHeader(
-                        title = "Preferences",
-                        subtitle = "How BoardFlow behaves."
-                    )
-                }
-
-                // One grouped list: each setting is a row with its value or switch on the right.
+                // Sections of rows, like Sync: a title, then one group.
+                item { BoardFlowSectionTitle(title = "Stats") }
                 item {
                     BoardFlowFormGroup {
-                        PreferenceRow(
+                        BoardFlowSettingRow(
                             icon = Icons.Default.BarChart,
                             title = "Stats source",
-                            description = currentStatsPlayScope.description,
+                            detail = currentStatsPlayScope.description,
                             onClick = { statsScopeExpanded = true }
-                        ) {
-                            PreferenceValue(currentStatsPlayScope.label)
-                        }
-                        BoardFlowFormDivider()
-                        PreferenceRow(
+                        ) { BoardFlowSettingValue(currentStatsPlayScope.label) }
+                    }
+                }
+                item { BoardFlowSectionTitle(title = "Logging plays") }
+                item {
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
                             icon = Icons.Default.Lightbulb,
                             title = "Recommendations",
-                            description = "Suggest what to play next after you log a play",
+                            detail = "Suggest what to play next after you log a play",
                             onClick = { viewModel.setRecommendationsEnabled(!recommendationsEnabled) }
                         ) {
                             androidx.compose.material3.Switch(
@@ -431,10 +432,10 @@ fun SettingsScreen(
                             )
                         }
                         BoardFlowFormDivider()
-                        PreferenceRow(
+                        BoardFlowSettingRow(
                             icon = Icons.Default.AutoStories,
                             title = "Chronicles",
-                            description = "A story line for each session, written by AI",
+                            detail = "A story line for each session, written by AI",
                             onClick = { viewModel.setChronicleEnabled(!chronicleEnabled) }
                         ) {
                             androidx.compose.material3.Switch(
@@ -443,34 +444,38 @@ fun SettingsScreen(
                             )
                         }
                         BoardFlowFormDivider()
-                        PreferenceRow(
-                            icon = BoardFlowIcons.Sleeves,
-                            title = "Sleeve brand",
-                            description = "Shown first in sleeve recommendations",
-                            onClick = { manufacturerExpanded = true }
-                        ) {
-                            PreferenceValue(currentManufacturer.label)
-                        }
-                        BoardFlowFormDivider()
-                        PreferenceRow(
-                            icon = Icons.Default.Info,
-                            title = "Setup guide",
-                            description = "How to connect BGG, Google and Gemini",
-                            onClick = { showSetupGuide = true }
-                        ) {
-                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        BoardFlowFormDivider()
                         val moodCount = customMoods.size
-                        PreferenceRow(
+                        BoardFlowSettingRow(
                             icon = Icons.Default.Bookmark,
                             title = "Mood templates",
-                            description = if (moodCount == 0) "Moods you add to a session appear here"
-                                          else "$moodCount custom mood${if (moodCount == 1) "" else "s"}",
+                            detail = if (moodCount == 0) "Moods you add to a session appear here"
+                                     else "$moodCount custom mood${if (moodCount == 1) "" else "s"}",
                             onClick = if (moodCount > 0) ({ showCustomMoodsDialog = true }) else null
                         ) {
-                            if (moodCount > 0) PreferenceValue("Manage")
+                            if (moodCount > 0) BoardFlowSettingValue("Manage")
                         }
+                    }
+                }
+                item { BoardFlowSectionTitle(title = "Collection") }
+                item {
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
+                            icon = BoardFlowIcons.Sleeves,
+                            title = "Sleeve brand",
+                            detail = "Shown first in sleeve recommendations",
+                            onClick = { manufacturerExpanded = true }
+                        ) { BoardFlowSettingValue(currentManufacturer.label) }
+                    }
+                }
+                item { BoardFlowSectionTitle(title = "Help") }
+                item {
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Info,
+                            title = "Setup guide",
+                            detail = "How to connect BGG, Google and Gemini",
+                            onClick = { showSetupGuide = true }
+                        )
                     }
                     if (statsScopeExpanded) {
                         BoardFlowPickerSheet(
@@ -508,418 +513,194 @@ fun SettingsScreen(
             }
 
             if (selectedSection == SettingsSection.SCAN) {
+                item { BoardFlowSectionTitle(title = "Gemini", supporting = "Optional. Reads scoresheet photos and writes chronicles.") }
                 item {
-                    SectionHeader(
-                        title = "Scan",
-                        subtitle = "Set your Gemini API key, choose a model, and manage learned scan data."
-                    )
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.AutoAwesome,
-                        title = "Google AI Studio",
-                        subtitle = "Optional. Used for scoresheet scanning and chronicles."
-                    ) {
-                        var showApiHelp by remember { mutableStateOf(false) }
-                        BoardFlowTextField(
-                            value = apiKey,
-                            onValueChange = {
-                                apiKey = it
-                                prefs.geminiApiKey = it.trim()
-                            },
-                            label = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Gemini API key")
-                                    Spacer(Modifier.width(8.dp))
-                                    IconButton(
-                                        onClick = { showApiHelp = true },
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .focusable()
-                                            .semantics {
-                                                contentDescription = "How to get API key"
-                                                role = androidx.compose.ui.semantics.Role.Button
-                                            }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Info,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            },
-                            singleLine = true,
-                            visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                IconButton(onClick = { showKey = !showKey }) {
-                                    Icon(
-                                        if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "Toggle key"
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        if (showApiHelp) {
-                            AnimatedDialog(onDismissRequest = { showApiHelp = false }) {
-                                val uriHandler = LocalUriHandler.current
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    item {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Text(
-                                                "How to get a Gemini API key",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                        }
-                                    }
-                                    item { HorizontalDivider() }
-                                    item {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text("1. Visit ", style = MaterialTheme.typography.bodyMedium)
-                                            TextButton(
-                                                onClick = { uriHandler.openUri("https://aistudio.google.com") },
-                                                contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
-                                            ) {
-                                                Text("aistudio.google.com", style = MaterialTheme.typography.bodyMedium)
-                                            }
-                                        }
-                                    }
-                                    item {
-                                        Text("2. Sign in and open your profile > API Keys.", style = MaterialTheme.typography.bodyMedium)
-                                    }
-                                    item {
-                                        Text("3. Create a key and paste it here.", style = MaterialTheme.typography.bodyMedium)
-                                    }
-                                }
-                            }
-                        }
-                        var extraKeys by remember { mutableStateOf(prefs.getGeminiExtraApiKeys()) }
-                        var newExtraKey by remember { mutableStateOf("") }
-                        var showExtraKeyMap by remember { mutableStateOf(mapOf<Int, Boolean>()) }
-                        var showNewExtraKey by remember { mutableStateOf(false) }
-                        if (extraKeys.isNotEmpty() || apiKey.isNotBlank()) {
-                            Text(
-                                "Backup API keys",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
-                            )
-                            Text(
-                                "If the primary key hits a rate limit and all models are exhausted, the app rotates to the next key.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            extraKeys.forEachIndexed { index, key ->
-                                val showThisKey = showExtraKeyMap[index] == true
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    BoardFlowTextField(
-                                        value = key,
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        singleLine = true,
-                                        visualTransformation = if (showThisKey) VisualTransformation.None else PasswordVisualTransformation(),
-                                        trailingIcon = {
-                                            IconButton(onClick = { showExtraKeyMap = showExtraKeyMap + (index to !showThisKey) }) {
-                                                Icon(
-                                                    if (showThisKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                                    contentDescription = "Toggle key"
-                                                )
-                                            }
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        label = { Text("Backup key ${index + 1}") }
-                                    )
-                                    IconButton(onClick = {
-                                        val updated = extraKeys.toMutableList().also { it.removeAt(index) }
-                                        extraKeys = updated
-                                        prefs.saveGeminiExtraApiKeys(updated)
-                                    }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Remove backup key")
-                                    }
-                                }
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                BoardFlowTextField(
-                                    value = newExtraKey,
-                                    onValueChange = { newExtraKey = it },
-                                    singleLine = true,
-                                    label = { Text("Add backup key") },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                    visualTransformation = if (showNewExtraKey) VisualTransformation.None else PasswordVisualTransformation(),
-                                    trailingIcon = {
-                                        IconButton(onClick = { showNewExtraKey = !showNewExtraKey }) {
-                                            Icon(
-                                                if (showNewExtraKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                                contentDescription = "Toggle key"
-                                            )
-                                        }
-                                    },
-                                    modifier = Modifier.weight(1f)
-                                )
-                                IconButton(
-                                    onClick = {
-                                        val trimmed = newExtraKey.trim()
-                                        if (trimmed.isNotBlank()) {
-                                            val updated = extraKeys + trimmed
-                                            extraKeys = updated
-                                            prefs.saveGeminiExtraApiKeys(updated)
-                                            newExtraKey = ""
-                                        }
-                                    },
-                                    enabled = newExtraKey.isNotBlank()
-                                ) {
-                                    Icon(Icons.Default.Add, contentDescription = "Add backup key")
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.Tune,
-                        title = "Gemini model",
-                        subtitle = "Automatic uses the newest Flash model and falls back when one is busy or retired. Pick a model only if you want to force one."
-                    ) {
-                        var modelPickerOpen by remember { mutableStateOf(false) }
-                        val autoLabel = "Automatic (recommended)"
-                        if (availableModels?.isNotEmpty() == true) {
-                            BoardFlowPickerField(
-                                label = "Gemini model",
-                                value = modelEndpoint.ifBlank { autoLabel },
-                                expanded = modelPickerOpen,
-                                onClick = { modelPickerOpen = true }
-                            )
-                            if (modelPickerOpen) {
-                                BoardFlowPickerSheet(
-                                    title = "Choose Gemini model",
-                                    options = listOf(GeminiModels.AUTO) + (availableModels ?: emptyList()),
-                                    selectedOption = modelEndpoint,
-                                    optionLabel = { it.ifBlank { autoLabel } },
-                                    onSelect = { model ->
-                                        modelEndpoint = model
-                                        prefs.geminiModelEndpoint = model.trim()
-                                        modelPickerOpen = false
-                                    },
-                                    onDismiss = { modelPickerOpen = false }
-                                )
-                            }
-                        } else {
-                            BoardFlowTextField(
-                                value = modelEndpoint,
-                                onValueChange = {
-                                    modelEndpoint = it
-                                    prefs.geminiModelEndpoint = it.trim()
-                                },
-                                label = { Text("Gemini model") },
-                                placeholder = { Text("Automatic - leave empty") },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        BoardFlowButton(
+                    var showKeyDialog by remember { mutableStateOf(false) }
+                    var showBackupKeysDialog by remember { mutableStateOf(false) }
+                    var modelPickerOpen by remember { mutableStateOf(false) }
+                    var extraKeys by remember { mutableStateOf(prefs.getGeminiExtraApiKeys()) }
+                    val autoLabel = "Automatic"
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Key,
+                            title = "API key",
+                            detail = "From Google AI Studio",
+                            onClick = { showKeyDialog = true }
+                        ) { BoardFlowSettingValue(if (apiKey.isBlank()) "Not set" else "Saved") }
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.VpnKey,
+                            title = "Backup keys",
+                            detail = "Used when the main key hits its limit",
+                            enabled = apiKey.isNotBlank() || extraKeys.isNotEmpty(),
+                            onClick = { showBackupKeysDialog = true }
+                        ) { BoardFlowSettingValue(if (extraKeys.isEmpty()) "None" else extraKeys.size.toString()) }
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Tune,
+                            title = "Model",
+                            detail = "Automatic picks the newest Flash model",
+                            onClick = { modelPickerOpen = true }
+                        ) { BoardFlowSettingValue(modelEndpoint.ifBlank { autoLabel }) }
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Refresh,
+                            title = "Refresh available models",
+                            detail = "Ask Google which models your key can use",
+                            enabled = apiKey.isNotBlank() && !modelListLoading,
                             onClick = {
                                 modelListLoading = true
                                 viewModel.checkAvailableModels { models ->
                                     availableModels = models
                                     modelListLoading = false
+                                    messenger.show(
+                                        if (models.isEmpty()) "No models found. Check your API key."
+                                        else "${models.size} model${if (models.size == 1) "" else "s"} available"
+                                    )
                                 }
-                            },
-                            enabled = apiKey.isNotBlank() && !modelListLoading
+                            }
                         ) {
                             if (modelListLoading) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                                Text("  Checking models")
+                                CircularProgressIndicator(modifier = Modifier.size(Dimens.Icon), strokeWidth = 2.dp)
                             } else {
-                                Text("Refresh available models")
-                            }
-                        }
-                        availableModels?.let { models ->
-                            if (models.isEmpty()) {
-                                Text(
-                                    "No models found. Check your API key above.",
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.DocumentScanner,
-                        title = "Recognition templates",
-                        subtitle = "Saved scoring layouts that improve game detection from photos."
-                    ) {
-                        Text(
-                            if (templateCount == 0) "No templates saved yet."
-                            else "$templateCount game template${if (templateCount == 1) "" else "s"} saved.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (showKeyDialog) {
+                        GeminiKeyDialog(
+                            initial = apiKey,
+                            onSave = { key ->
+                                apiKey = key
+                                prefs.geminiApiKey = key
+                                showKeyDialog = false
+                                messenger.show(if (key.isBlank()) "API key removed" else "API key saved")
+                            },
+                            onDismiss = { showKeyDialog = false }
                         )
-                        if (templateCount > 0) {
-                            BoardFlowButton(
-                                onClick = { showTemplatesDialog = true }
-                            ) {
-                                Text("View templates")
-                            }
-                        }
-                        BoardFlowButton(
-                            onClick = { showClearTemplatesConfirm = true },
-                            enabled = templateCount > 0
-                        ) {
-                            Text("Clear recognition templates")
-                        }
-                        clearTemplatesStatus?.let { (success, message) ->
-                            Text(
-                                message,
-                                color = if (success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        if (showTemplatesDialog) {
-                            RecognitionTemplatesDialog(
-                                viewModel = viewModel,
-                                onDismiss = { showTemplatesDialog = false },
-                                onTemplatesChanged = { newCount -> templateCount = newCount }
-                            )
-                        }
+                    }
+                    if (showBackupKeysDialog) {
+                        BackupKeysDialog(
+                            keys = extraKeys,
+                            onChange = { updated ->
+                                extraKeys = updated
+                                prefs.saveGeminiExtraApiKeys(updated)
+                            },
+                            onDismiss = { showBackupKeysDialog = false }
+                        )
+                    }
+                    if (modelPickerOpen) {
+                        BoardFlowPickerSheet(
+                            title = "Choose Gemini model",
+                            options = listOf(GeminiModels.AUTO) + (availableModels ?: emptyList()),
+                            selectedOption = modelEndpoint,
+                            optionLabel = { it.ifBlank { "$autoLabel (recommended)" } },
+                            onSelect = { model ->
+                                modelEndpoint = model
+                                prefs.geminiModelEndpoint = model.trim()
+                                modelPickerOpen = false
+                            },
+                            onDismiss = { modelPickerOpen = false }
+                        )
                     }
                 }
 
+                item { BoardFlowSectionTitle(title = "Learned from scans", supporting = "Built up from the scans you confirm.") }
                 item {
-                    SettingsCard(
-                        icon = Icons.Default.Person,
-                        title = "Player recognition hints",
-                        subtitle = "Learned scan-name-to-player mappings that pre-fill roster players from scan output."
-                    ) {
-                        Text(
-                            if (playerHintCount == 0) "No hints saved yet."
-                            else "$playerHintCount player hint${if (playerHintCount == 1) "" else "s"} saved.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        BoardFlowButton(
-                            onClick = { showClearPlayerHintsConfirm = true },
-                            enabled = playerHintCount > 0
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.DocumentScanner,
+                            title = "Recognition templates",
+                            detail = "Scoring layouts that help recognise the game",
+                            onClick = if (templateCount > 0) ({ showTemplatesDialog = true }) else null
                         ) {
-                            Text("Clear player recognition hints")
-                        }
-                        clearPlayerHintsStatus?.let { (success, message) ->
-                            Text(
-                                message,
-                                color = if (success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
+                            BoardFlowSettingValue(
+                                if (templateCount == 0) "None" else "$templateCount saved",
+                                chevron = templateCount > 0
                             )
                         }
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Person,
+                            title = "Player recognition hints",
+                            detail = "Scanned names matched to your players"
+                        ) {
+                            BoardFlowSettingValue(if (playerHintCount == 0) "None" else "$playerHintCount saved", chevron = false)
+                        }
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Delete,
+                            title = "Clear recognition templates",
+                            detail = "Scans start learning game layouts again",
+                            destructive = true,
+                            enabled = templateCount > 0,
+                            onClick = { showClearTemplatesConfirm = true }
+                        )
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Delete,
+                            title = "Clear player recognition hints",
+                            detail = "Scans go back to names and aliases only",
+                            destructive = true,
+                            enabled = playerHintCount > 0,
+                            onClick = { showClearPlayerHintsConfirm = true }
+                        )
+                    }
+                    if (showTemplatesDialog) {
+                        RecognitionTemplatesDialog(
+                            viewModel = viewModel,
+                            onDismiss = { showTemplatesDialog = false },
+                            onTemplatesChanged = { newCount -> templateCount = newCount }
+                        )
                     }
                 }
             }
 
             if (selectedSection == SettingsSection.DATA) {
+                item { BoardFlowSectionTitle(title = "Backup and restore", supporting = "Move everything to a new phone: players, plays, challenges and settings.") }
                 item {
-                    SectionHeader(
-                        title = "Data",
-                        subtitle = "Manage cached data, or back up and restore the app on a new device."
-                    )
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.Storage,
-                        title = "Collection cache",
-                        subtitle = if (hasCollection) "$collectionSize games cached locally" else "No collection cached"
-                    ) {
-                        BoardFlowDestructiveButton(
-                            onClick = { showClearCollectionConfirm = true },
-                            enabled = hasCollection
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Key,
+                            title = "Include passwords and API keys",
+                            detail = "Adds your BGG password and Gemini keys to the backup",
+                            onClick = { includeSensitiveBackup = !includeSensitiveBackup }
                         ) {
-                            Text("Clear collection cache")
-                        }
-                    }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.Backup,
-                        title = "Backup and restore",
-                        subtitle = "Export and restore full app state for moving to a new phone."
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Checkbox(
+                            androidx.compose.material3.Switch(
                                 checked = includeSensitiveBackup,
                                 onCheckedChange = { includeSensitiveBackup = it }
                             )
-                            Column {
-                                Text(
-                                    "Include passwords and API keys",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    "Turn this on only if you want the backup file to restore your BGG password and Gemini API key too.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BoardFlowSecondaryButton(
-                                onClick = {
-                                    importExportStatus = null
-                                    exportLauncher.launch("boardflow-backup-${LocalDate.now()}.json")
-                                }
-                            ) {
-                                Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Text("  Export data")
-                            }
-                            BoardFlowSecondaryButton(
-                                onClick = {
-                                    importExportStatus = null
-                                    importLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
-                                }
-                            ) {
-                                Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Text("  Import data")
-                            }
-                        }
-                        importExportStatus?.let { (success, message) ->
-                            Text(
-                                message,
-                                color = if (success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        Text(
-                            "Backups include players, history, recent games, cached collection data, sync settings, theme, and local app state.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.FileUpload,
+                            title = "Export data",
+                            detail = "Save a backup file",
+                            onClick = { exportLauncher.launch("boardflow-backup-${LocalDate.now()}.json") }
+                        )
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.FileDownload,
+                            title = "Import data",
+                            detail = "Replace this phone's data with a backup",
+                            onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }
                         )
                     }
                 }
-
+                item { BoardFlowSectionTitle(title = "Storage") }
+                item {
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Storage,
+                            title = "Clear collection cache",
+                            detail = if (hasCollection) "$collectionSize games cached. The next refresh downloads them again."
+                                     else "No collection cached",
+                            destructive = true,
+                            enabled = hasCollection,
+                            onClick = { showClearCollectionConfirm = true }
+                        )
+                    }
+                }
             }
 
             item {
@@ -1233,90 +1014,125 @@ private fun CategoryTag(label: String) {
     }
 }
 
-/** A setting as one row: icon, title with a one-line description, and its value or switch. */
+/** Edits the main Gemini key. A blank key turns scanning and chronicles off. */
 @Composable
-private fun PreferenceRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    description: String,
-    onClick: (() -> Unit)?,
-    trailing: @Composable RowScope.() -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .heightIn(min = 64.dp)
-            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-    ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(Dimens.Icon), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun GeminiKeyDialog(initial: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
+    var value by remember { mutableStateOf(initial) }
+    var visible by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+            SettingsDialogHeader(
+                "Gemini API key",
+                "Create a key in Google AI Studio (your profile, API keys) and paste it here."
+            )
+            BoardFlowTextField(
+                value = value,
+                onValueChange = { value = it },
+                label = { Text("API key") },
+                singleLine = true,
+                visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    IconButton(onClick = { visible = !visible }) {
+                        Icon(
+                            if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (visible) "Hide key" else "Show key"
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                BoardFlowInlineAction(onClick = { uriHandler.openUri("https://aistudio.google.com") }) {
+                    Text("Open AI Studio")
+                }
+                Spacer(Modifier.weight(1f))
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
+                Spacer(Modifier.width(Spacing.sm))
+                BoardFlowButton(onClick = { onSave(value.trim()) }) { Text("Save") }
+            }
         }
-        trailing()
     }
 }
 
+/** Backup Gemini keys: the app moves to the next one when a key hits its limit. */
 @Composable
-private fun PreferenceValue(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        maxLines = 1,
-        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-        modifier = Modifier.widthIn(max = 140.dp)
-    )
-    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-}
-
-@Composable
-private fun SettingsCard(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    subtitle: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    SectionCard {
+private fun BackupKeysDialog(keys: List<String>, onChange: (List<String>) -> Unit, onDismiss: () -> Unit) {
+    var newKey by remember { mutableStateOf("") }
+    AnimatedDialog(onDismissRequest = onDismiss) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
-                Column {
-                    Text(title, style = MaterialTheme.typography.titleMedium)
-                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            SettingsDialogHeader(
+                "Backup keys",
+                "When the main key hits its limit and every model is busy, the app moves to the next key."
+            )
+            if (keys.isNotEmpty()) {
+                BoardFlowFormGroup(raised = true) {
+                    keys.forEachIndexed { index, key ->
+                        if (index > 0) BoardFlowFormDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 56.dp)
+                                .padding(start = Spacing.lg, end = Spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Key ${index + 1}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.width(72.dp)
+                            )
+                            Text(
+                                "\u2022\u2022\u2022\u2022 " + key.takeLast(4),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            BoardFlowIconButton(
+                                onClick = { onChange(keys.filterIndexed { i, _ -> i != index }) },
+                                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Remove key ${index + 1}", modifier = Modifier.size(Dimens.Icon))
+                            }
+                        }
+                    }
                 }
             }
-            HorizontalDivider(
-                thickness = Dimens.Hairline,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            BoardFlowTextField(
+                value = newKey,
+                onValueChange = { newKey = it },
+                label = { Text("Add a backup key") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier.fillMaxWidth()
             )
-            content()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Close") }
+                Spacer(Modifier.width(Spacing.sm))
+                BoardFlowButton(
+                    onClick = {
+                        onChange(keys + newKey.trim())
+                        newKey = ""
+                    },
+                    enabled = newKey.isNotBlank()
+                ) { Text("Add key") }
+            }
         }
     }
-}
-
-@Composable
-private fun SettingsSectionLabel(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = Spacing.sm, start = Spacing.xs)
-    )
 }

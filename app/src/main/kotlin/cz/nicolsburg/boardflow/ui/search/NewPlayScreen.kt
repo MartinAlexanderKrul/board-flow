@@ -1,5 +1,10 @@
 ﻿package cz.nicolsburg.boardflow.ui.search
 
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.runtime.snapshotFlow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import androidx.compose.runtime.LaunchedEffect
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
@@ -141,6 +146,25 @@ fun NewPlayScreen(
 
     LaunchedEffect(Unit) { viewModel.loadLogPlayGames() }
 
+    // Tabs and search slide away while scrolling down and come back on the way up (as in Collection).
+    val listState = rememberLazyListState()
+    var controlsVisible by remember { mutableStateOf(true) }
+    // Follows the finger, not the list position: hiding the controls makes the list taller, and a
+    // position check would read that as scrolling back up and bring them straight back.
+    val hideOnScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y < -4f) controlsVisible = false
+                else if (available.y > 4f) controlsVisible = true
+                return Offset.Zero
+            }
+        }
+    }
+    LaunchedEffect(selectedTab, showAllGuides) {
+        controlsVisible = true
+        listState.scrollToItem(0)
+    }
+
     LaunchedEffect(setupTab) { onActiveTabChange(if (setupTab) NewPlayTab.QUICK_SETUP.label else null) }
 
     LaunchedEffect(query) {
@@ -149,7 +173,7 @@ fun NewPlayScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        if (!correctionMode) {
+        BoardFlowAnimatedVisibility(visible = controlsVisible && !correctionMode) {
             ScreenTabRow(
                 tabs = NewPlayTab.entries.map { it.label },
                 selectedIndex = selectedTab.ordinal,
@@ -220,8 +244,11 @@ fun NewPlayScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .nestedScroll(hideOnScroll)
                 .padding(horizontal = 16.dp)
         ) {
+            BoardFlowAnimatedVisibility(visible = controlsVisible) {
+            Column {
             Spacer(Modifier.height(8.dp))
 
             GameSearchField(
@@ -267,6 +294,8 @@ fun NewPlayScreen(
                     onRemove = viewModel::removePendingPlayer
                 )
             }
+            }
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -283,6 +312,7 @@ fun NewPlayScreen(
                         )
                     } else {
                         LazyColumn(
+                            state = listState,
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(bottom = 8.dp)
                         ) {
@@ -345,7 +375,6 @@ fun NewPlayScreen(
                 }
 
                 else -> {
-                    val listState = rememberLazyListState()
                     val scope = rememberCoroutineScope()
                     val showScrollBar = results.size > 20
                     var dragState by remember { mutableStateOf<ScrollDragState?>(null) }

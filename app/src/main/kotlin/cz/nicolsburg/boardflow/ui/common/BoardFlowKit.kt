@@ -1,5 +1,9 @@
 package cz.nicolsburg.boardflow.ui.common
 
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.draw.alpha
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
 import androidx.compose.ui.graphics.Color
 import cz.nicolsburg.boardflow.util.toFlexibleLocalDateOrNull
@@ -132,6 +136,71 @@ fun BoardFlowSectionTitle(
             }
         }
         trailing?.invoke(this)
+    }
+}
+
+/**
+ * One row of a settings or actions list (Settings, Sync): icon, title with a one-line detail, then
+ * a value, a switch or a chevron. [destructive] rows (clear, delete) are red. Rows sit in a
+ * [BoardFlowFormGroup], under a [BoardFlowSectionTitle].
+ */
+@Composable
+fun BoardFlowSettingRow(
+    icon: ImageVector,
+    title: String,
+    detail: String? = null,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    enabled: Boolean = true,
+    destructive: Boolean = false,
+    trailing: (@Composable RowScope.() -> Unit)? = null
+) {
+    val accent = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier)
+            .alpha(if (enabled) 1f else 0.45f)
+            .heightIn(min = 64.dp)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(Dimens.Icon), tint = accent)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+            )
+            if (!detail.isNullOrBlank()) {
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        when {
+            trailing != null -> trailing()
+            onClick != null -> Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** The current value at the end of a [BoardFlowSettingRow]; [chevron] when tapping changes it. */
+@Composable
+fun BoardFlowSettingValue(text: String, chevron: Boolean = true) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.widthIn(max = 140.dp)
+    )
+    if (chevron) {
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
