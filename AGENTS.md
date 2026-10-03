@@ -73,7 +73,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
 - `ui/app/AppShell.kt`
   - app scaffold
   - header
-  - bottom nav (5 tabs: NewPlay, History, Collection, Sync, Settings)
+  - bottom nav (4 tabs: NewPlay, History, Collection, Settings); Settings tabs are Sync, Preferences, Scan, Data. Sync is the first (`SettingsScreen(syncContent = { SyncScreen(...) })`) and also covers the accounts: its status rows sign in to Google, edit the BGG account and connect the sheet. The setup guide link is in Preferences
   - screen routing
   - cross-screen deep-link style callbacks between Collection, History, Players, and Log Play
   - consumes `pendingHistoryNavigation` requests from `AppViewModel`
@@ -299,7 +299,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 
 ### Sync
 
-- Sync screen is the user-facing operational hub for:
+- Sync (Settings, first tab) is the user-facing operational hub for:
   - BGG readiness
   - Google readiness
   - sheet connection
@@ -526,7 +526,7 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - the winner row is a translucent amber fill with no outline; session and chronicle cards are translucent grey (`Color.White` at 10%) with no outline
 - every tappable element is at least 48dp (`Dimens.MinTouchTarget`); dates shown to the user read `Oct 1, 2026`
 - every create, update and delete gets a snackbar via `LocalBoardFlowMessenger.current.show(message, actionLabel, onAction)` (hosted by `AppShell`); reversible local deletes (local plays, players, challenges, pause, archive) offer Undo instead of a confirmation dialog. Confirmations stay for BGG writes and irreversible actions. Explicit refreshes run without a "refresh again?" prompt
-- the top bar shows the destination (Log Play, Journal, Collection, Sync, Settings); the tab row shows the sub-location
+- the top bar shows the destination (Log Play, Journal, Collection, Settings); the tab row shows the sub-location
 - the top bar shows the screen title, with a back arrow on pushed screens (scan, log play, quick setup, QR import); the bottom bar is a Material `NavigationBar`
 - every screen uses the kit. Two treatments, by purpose:
   - forms and editors (Log Play, edit play, create challenge, player edit, sleeve inventory, account dialogs): a headline, grouped rows, and red Cancel text plus the save pill at the bottom right

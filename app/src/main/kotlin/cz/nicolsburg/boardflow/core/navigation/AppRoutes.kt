@@ -7,7 +7,6 @@ object AppRoutes {
     const val NEW_PLAY = "new_play"
     const val HISTORY = "history"
     const val COLLECTION = "collection"
-    const val SYNC = "sync"
     const val SCAN = "scan/{gameId}/{gameName}"
     const val QR_IMPORT = "qr_import"
     const val PLAY_IMPORT = "play_import?data={data}"

@@ -720,10 +720,10 @@ private fun EmptyState(
                         "No cached collection is available on this device yet. Refresh from BGG in the Sync tab to cache it here."
 
                     !accountReady ->
-                        "Use the Sync tab to refresh your collection from BGG and cache it on this device."
+                        "Refresh your collection from BGG in Settings, Sync."
 
                     !spreadsheetReady ->
-                        "Connect a spreadsheet in the Sync tab."
+                        "Connect a spreadsheet in Settings, Sync."
 
                     else ->
                         "Tap refresh to load your collection."

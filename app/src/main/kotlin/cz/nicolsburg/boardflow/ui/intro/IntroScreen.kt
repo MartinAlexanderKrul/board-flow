@@ -154,7 +154,7 @@ private fun IntroSetupSteps() {
         SetupStep(
             number = 2,
             title = "Sync your collection",
-            description = "Open the Sync tab and tap Refresh to pull in your owned games and wishlists from BGG.",
+            description = "Open Settings, Sync and tap Refresh collection to pull in your owned games and wishlists from BGG.",
             optional = false
         )
         SetupStep(
@@ -342,7 +342,7 @@ private fun IntroSettingsOverview() {
         SettingItem(
             icon = Icons.Default.Storage,
             title = "Collection cache",
-            description = "Locally cached BGG collection. Clear it to force a full re-sync on the next Sync tab refresh."
+            description = "Locally cached BGG collection. Clear it to force a full re-sync on the next refresh."
         )
         SettingItem(
             icon = Icons.Default.Backup,

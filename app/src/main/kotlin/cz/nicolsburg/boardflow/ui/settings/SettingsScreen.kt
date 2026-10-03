@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.settings
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.foundation.clickable
@@ -126,7 +127,7 @@ import cz.nicolsburg.boardflow.model.StatsPlayScope
 import java.time.LocalDate
 
 private enum class SettingsSection(val title: String) {
-    ACCOUNTS("Accounts"),
+    SYNC("Sync"),
     PREFERENCES("Preferences"),
     SCAN("Scan"),
     DATA("Data")
@@ -139,7 +140,9 @@ fun SettingsScreen(
     syncViewModel: SyncViewModel,
     onSignIn: () -> Unit,
     onSignOut: () -> Unit,
-    onActiveTabChange: (String?) -> Unit = {}
+    onActiveTabChange: (String?) -> Unit = {},
+    // Sync lives here as the first tab; the shell passes the Sync screen in.
+    syncContent: @Composable () -> Unit = {}
 ) {
     val prefs = viewModel.prefs
     val context = LocalContext.current
@@ -152,7 +155,7 @@ fun SettingsScreen(
     var showKey by remember { mutableStateOf(false) }
     var manufacturerExpanded by remember { mutableStateOf(false) }
     var statsScopeExpanded by remember { mutableStateOf(false) }
-    var selectedSection by remember { mutableStateOf(SettingsSection.ACCOUNTS) }
+    var selectedSection by rememberSaveable { mutableStateOf(SettingsSection.SYNC) }
 
     val currentManufacturer by viewModel.sleevePreferredManufacturer.collectAsState()
     val currentStatsPlayScope by viewModel.statsPlayScope.collectAsState()
@@ -378,7 +381,9 @@ fun SettingsScreen(
                     onTabSelected = { selectedSection = SettingsSection.entries[it] }
                 )
             }
-            LazyColumn(
+            if (selectedSection == SettingsSection.SYNC) {
+                syncContent()
+            } else LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
@@ -390,145 +395,6 @@ fun SettingsScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-            if (selectedSection == SettingsSection.ACCOUNTS) {
-                item {
-                    SectionHeader(
-                        title = "Accounts",
-                        subtitle = "Sign in to Google for Sheets sync, then add your BGG account."
-                    )
-                }
-
-                item {
-                    SectionCard {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickableRow { showSetupGuide = true }
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.Info,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                "Setup guide",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                "View",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-
-                item { SettingsSectionLabel("Connections") }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.CloudDone,
-                        title = "Google",
-                        subtitle = "Required for Sheets sync and Drive folders."
-                    ) {
-                        if (googleAccount != null) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    googleAccount?.name.orEmpty(),
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                BoardFlowButton(onClick = { showGoogleSignOutConfirm = true }) { Text("Sign out") }
-                            }
-                            HorizontalDivider()
-                            // Google Sheets sub-section
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.GridOn,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Google Sheets", style = MaterialTheme.typography.labelLarge)
-                                    Text(
-                                        if (spreadsheetId.isNotBlank())
-                                            spreadsheetTitle.ifBlank { "…${spreadsheetId.takeLast(8)}" }
-                                        else "No sheet selected",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                BoardFlowInlineAction(onClick = { showSheetModal = true }) {
-                                    Text(
-                                        if (spreadsheetId.isNotBlank()) "Change" else "Connect",
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                        } else {
-                            BoardFlowButton(onClick = onSignIn) {
-                                Text("Sign in with Google")
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.Casino,
-                        title = "BoardGameGeek",
-                        subtitle = "Used for BGG collection refresh and play sync."
-                    ) {
-                        BoardFlowTextField(
-                            value = username,
-                            onValueChange = {
-                                username = it
-                                prefs.bggUsername = it.trim()
-                            },
-                            label = { Text("BGG username") },
-                            placeholder = { Text("e.g. boardgamer42") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        BoardFlowTextField(
-                            value = password,
-                            onValueChange = {
-                                password = it
-                                prefs.bggPassword = it.trim()
-                            },
-                            label = { Text("BGG password") },
-                            singleLine = true,
-                            visualTransformation = if (showPwd) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                IconButton(onClick = { showPwd = !showPwd }) {
-                                    Icon(
-                                        if (showPwd) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "Toggle password"
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-            }
 
             if (selectedSection == SettingsSection.PREFERENCES) {
                 item {
@@ -581,6 +447,15 @@ fun SettingsScreen(
                             onClick = { manufacturerExpanded = true }
                         ) {
                             PreferenceValue(currentManufacturer.label)
+                        }
+                        BoardFlowFormDivider()
+                        PreferenceRow(
+                            icon = Icons.Default.Info,
+                            title = "Setup guide",
+                            description = "How to connect BGG, Google and Gemini",
+                            onClick = { showSetupGuide = true }
+                        ) {
+                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         BoardFlowFormDivider()
                         val moodCount = customMoods.size

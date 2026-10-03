@@ -152,7 +152,7 @@ fun CollectionStatsTab(
     if (stats.totalOwned == 0) {
         Box(Modifier.fillMaxSize().padding(Spacing.xxl), contentAlignment = Alignment.Center) {
             Text(
-                "No owned games yet. Refresh your collection on the Sync tab.",
+                "No owned games yet. Refresh your collection in Settings, Sync.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

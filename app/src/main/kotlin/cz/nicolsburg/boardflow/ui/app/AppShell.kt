@@ -294,7 +294,6 @@ fun BoardFlowApp(
         BottomNavTab(AppRoutes.NEW_PLAY, "Log Play", Icons.AutoMirrored.Filled.NoteAdd),
         BottomNavTab(AppRoutes.HISTORY, "Journal", BoardFlowIcons.History),
         BottomNavTab(AppRoutes.COLLECTION, "Collection", BoardFlowIcons.Collection),
-        BottomNavTab(AppRoutes.SYNC, "Sync", BoardFlowIcons.Sync),
         BottomNavTab(AppRoutes.SETTINGS, "Settings", BoardFlowIcons.Settings)
     )
 
@@ -309,7 +308,6 @@ fun BoardFlowApp(
         currentRoute == AppRoutes.HISTORY -> "Journal"
         isQrImport -> "Import play"
         currentRoute == AppRoutes.COLLECTION -> "Collection"
-        currentRoute == AppRoutes.SYNC -> "Sync"
         currentRoute == AppRoutes.SETTINGS -> "Settings"
         isQuickSetup -> "Quick setup"
         isScan -> "Scan scores"
@@ -341,6 +339,14 @@ fun BoardFlowApp(
                 postedToBgg = false,
             )
         )
+    }
+
+    // Opens Log Play for the game being timed; the form prefills the elapsed time.
+    fun logTimedPlay() {
+        val timer = appViewModel.activeTimer.value ?: return
+        appViewModel.setupLogPlayById(timer.gameId ?: 0, timer.gameName, null)
+        appViewModel.setExtractedPlayManual()
+        navController.navigate(AppRoutes.LOG_PLAY) { launchSingleTop = true }
     }
 
     fun leaveLogPlay() {
@@ -452,14 +458,7 @@ fun BoardFlowApp(
                 showDivider = showHeaderDivider,
                 actionContent = headerAction,
                 activeTimer = activeTimer,
-                onTimerClick = {
-                    val timer = appViewModel.activeTimer.value
-                    if (timer != null) {
-                        appViewModel.setupLogPlayById(timer.gameId ?: 0, timer.gameName, null)
-                        appViewModel.setExtractedPlayManual()
-                        navController.navigate(AppRoutes.LOG_PLAY) { launchSingleTop = true }
-                    }
-                },
+                onTimerClick = ::logTimedPlay,
                 onTimerLongClick = { showStopTimerConfirm = true },
             )
         },
@@ -558,7 +557,8 @@ fun BoardFlowApp(
                     setupGuideAvailability = setupGuideAvailability,
                     allSetupGuides = allSetupGuides,
                     onOpenQuickSetup = ::openQuickSetup,
-                    onActiveTabChange = { activeTabLabel = it }
+                    onActiveTabChange = { activeTabLabel = it },
+                    onLogTimedPlay = ::logTimedPlay
                 )
             }
 
@@ -661,30 +661,29 @@ fun BoardFlowApp(
                 )
             }
 
-            composable(AppRoutes.SYNC) {
-                SyncScreen(
-                    syncViewModel = syncViewModel,
-                    onPickCsv = onRequestCsvPick,
-                    onSpreadsheetChanged = syncViewModel::setSpreadsheetId,
-                    onSignIn = onRequestSignIn,
-                    onSignOut = onRequestSignOut,
-                    bggUsername = appViewModel.prefs.bggUsername,
-                    bggPassword = appViewModel.prefs.bggPassword,
-                    onSaveBggCredentials = { username, password ->
-                        appViewModel.prefs.bggUsername = username
-                        appViewModel.prefs.bggPassword = password
-                        syncViewModel.refreshCredentialState()
-                    }
-                )
-            }
-
             composable(AppRoutes.SETTINGS) {
                 SettingsScreen(
                     viewModel = appViewModel,
                     syncViewModel = syncViewModel,
                     onSignIn = onRequestSignIn,
                     onSignOut = onRequestSignOut,
-                    onActiveTabChange = { activeTabLabel = it }
+                    onActiveTabChange = { activeTabLabel = it },
+                    syncContent = {
+                        SyncScreen(
+                            syncViewModel = syncViewModel,
+                            onPickCsv = onRequestCsvPick,
+                            onSpreadsheetChanged = syncViewModel::setSpreadsheetId,
+                            onSignIn = onRequestSignIn,
+                            onSignOut = onRequestSignOut,
+                            bggUsername = appViewModel.prefs.bggUsername,
+                            bggPassword = appViewModel.prefs.bggPassword,
+                            onSaveBggCredentials = { username, password ->
+                                appViewModel.prefs.bggUsername = username
+                                appViewModel.prefs.bggPassword = password
+                                syncViewModel.refreshCredentialState()
+                            }
+                        )
+                    }
                 )
             }
 
@@ -771,7 +770,10 @@ fun BoardFlowApp(
                     thumbnailFor = { id -> setupCollection.firstOrNull { it.id == id }?.thumbnailUrl },
                     onStartGame = { gameId, gameName ->
                         appViewModel.startPlayTimer(gameId, gameName)
-                        navController.popBackStack()
+                        navController.navigate(AppRoutes.NEW_PLAY) {
+                            popUpTo(AppRoutes.NEW_PLAY) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     },
                     onClose = { navController.popBackStack() }
                 )

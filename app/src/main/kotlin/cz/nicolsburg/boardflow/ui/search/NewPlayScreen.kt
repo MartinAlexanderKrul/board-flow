@@ -1,5 +1,7 @@
 ﻿package cz.nicolsburg.boardflow.ui.search
 
+import androidx.compose.runtime.LaunchedEffect
+import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import androidx.compose.foundation.layout.heightIn
@@ -104,7 +106,8 @@ fun NewPlayScreen(
     setupGuideAvailability: Map<Int, SetupGuideAvailability> = emptyMap(),
     allSetupGuides: List<SetupGuideSummary> = emptyList(),
     onOpenQuickSetup: (gameId: Int) -> Unit = {},
-    onActiveTabChange: (String?) -> Unit = {}
+    onActiveTabChange: (String?) -> Unit = {},
+    onLogTimedPlay: () -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
     var selectedTab by rememberSaveable { mutableStateOf(NewPlayTab.LOG_PLAY) }
@@ -156,6 +159,19 @@ fun NewPlayScreen(
                     query = ""
                 }
             )
+        }
+
+        // A game is being played (timer running): the way back to logging it, above everything else.
+        val playingTimer = activeTimer
+        // On both tabs: Quick Setup's Start game lands on the guides tab.
+        AnimatedVisibility(visible = playingTimer != null) {
+            playingTimer?.let { timer ->
+                PlayingNowBanner(
+                    timer = timer,
+                    thumbnailUrl = timer.gameId?.let { thumbnailsById[it] },
+                    onLogResult = onLogTimedPlay
+                )
+            }
         }
 
         // Continue last session banner
@@ -323,7 +339,7 @@ fun NewPlayScreen(
                         message = if (collectionLoaded) {
                             "Search for a game above."
                         } else {
-                            "Search for a game above, or load your BGG collection in the Sync tab."
+                            "Search for a game above, or load your BGG collection in Settings, Sync."
                         }
                     )
                 }
@@ -762,6 +778,52 @@ private fun FastScrollBar(
                 size = Size(tw, thumbH),
                 cornerRadius = CornerRadius(tw / 2)
             )
+        }
+    }
+}
+
+/** Shown while a play timer runs: the game, the running time, and a way to log the result. */
+@Composable
+private fun PlayingNowBanner(timer: PlayTimer, thumbnailUrl: String?, onLogResult: () -> Unit) {
+    var now by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(timer.startedAt) {
+        while (true) {
+            now = System.currentTimeMillis()
+            kotlinx.coroutines.delay(1_000)
+        }
+    }
+    val elapsed = ((now - timer.startedAt) / 1000).coerceAtLeast(0)
+    val clock = if (elapsed >= 3600) "%d:%02d:%02d".format(elapsed / 3600, elapsed % 3600 / 60, elapsed % 60)
+                else "%d:%02d".format(elapsed / 60, elapsed % 60)
+    Surface(
+        onClick = onLogResult,
+        shape = BoardFlowShape.Card,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
+    ) {
+        Row(
+            modifier = Modifier.padding(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+            GameCover(name = timer.gameName, thumbnailUrl = thumbnailUrl, size = 40.dp)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Playing now · $clock",
+                    style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    timer.gameName.ifBlank { "Your game" },
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            BoardFlowButton(onClick = onLogResult) { Text("Log result") }
         }
     }
 }
