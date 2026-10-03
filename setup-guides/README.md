@@ -9,7 +9,8 @@ This folder does two jobs:
   `assets/setup-guides/`, so these guides work offline from the moment the app is installed.
 - **Remote catalog.** The app reads
   `https://raw.githubusercontent.com/MartinAlexanderKrul/board-flow/master/setup-guides/index.json`
-  (at most once a day) and downloads any guide whose `version` is newer than its local copy.
+  (at most once a day) and downloads every guide whose `version` is newer than its local copy,
+  so guides published after a release also work offline once the app has been online.
   Merging a change to `master` updates every install without an app release.
 
 To add or fix a guide, open a pull request. Every guide must pass
