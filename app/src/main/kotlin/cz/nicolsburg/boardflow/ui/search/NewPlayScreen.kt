@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.search
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -84,9 +85,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.foundation.BorderStroke
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
-import cz.nicolsburg.boardflow.ui.common.BoardFlowTonalButton
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
@@ -306,7 +305,7 @@ fun NewPlayScreen(
                             message
                         }
                     )
-                    BoardFlowOutlinedButton(onClick = { viewModel.loadLogPlayGames() }) {
+                    BoardFlowSecondaryButton(onClick = { viewModel.loadLogPlayGames() }) {
                         Text("Show recent games")
                     }
                 }

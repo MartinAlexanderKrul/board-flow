@@ -2,6 +2,8 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import androidx.compose.material3.ButtonDefaults
+import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import androidx.compose.material.icons.filled.Close
@@ -350,7 +352,7 @@ private fun QrSessionImportReview(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text("Import Session", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Import session", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
                             if (gameNames.size == 1) gameNames.first() else "${gameNames.size} games",
                             style = MaterialTheme.typography.titleLarge,
@@ -420,7 +422,7 @@ private fun QrSessionImportReview(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
-                    BoardFlowInlineAction(onClick = onCancel, destructive = true, large = true) { Text("Cancel") }
+                    BoardFlowInlineAction(onClick = onCancel, neutral = true, large = true) { Text("Cancel") }
                     BoardFlowButton(
                         onClick = onSave
                     ) {
@@ -468,6 +470,8 @@ private fun QrPlayImportReview(
 
     if (showDatePicker) {
         DatePickerDialog(
+            colors = boardFlowDatePickerColors(),
+            tonalElevation = 0.dp,
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
@@ -477,9 +481,9 @@ private fun QrPlayImportReview(
                     showDatePicker = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") } }
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(state = datePickerState, colors = boardFlowDatePickerColors())
         }
     }
 
@@ -510,7 +514,7 @@ private fun QrPlayImportReview(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Import Play", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Import play", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(play.gameName, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                         Surface(
                             shape = RoundedCornerShape(14.dp),
@@ -660,7 +664,7 @@ private fun QrPlayImportReview(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
-                    BoardFlowInlineAction(onClick = onCancel, destructive = true, large = true) { Text("Cancel") }
+                    BoardFlowInlineAction(onClick = onCancel, neutral = true, large = true) { Text("Cancel") }
                     BoardFlowButton(
                         onClick = {
                             val normalizedDate = date.toFlexibleLocalDateOrNull()?.toString() ?: date

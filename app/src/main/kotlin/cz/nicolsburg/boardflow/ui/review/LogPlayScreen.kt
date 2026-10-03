@@ -1,5 +1,8 @@
 package cz.nicolsburg.boardflow.ui.review
 
+import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material3.ButtonDefaults
+import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
 import cz.nicolsburg.boardflow.ui.common.formatDisplayDate
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
@@ -200,6 +203,8 @@ fun LogPlayScreen(
             }.getOrDefault(System.currentTimeMillis())
         )
         DatePickerDialog(
+            colors = boardFlowDatePickerColors(),
+            tonalElevation = 0.dp,
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
@@ -211,10 +216,10 @@ fun LogPlayScreen(
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") }
             }
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(state = datePickerState, colors = boardFlowDatePickerColors())
         }
     }
 
@@ -830,6 +835,17 @@ private fun SessionDetailsCard(
                     }
                 }
             }
+            BoardFlowFormDivider()
+            BoardFlowFormRow(label = "Notes", icon = Icons.AutoMirrored.Filled.Notes) {
+                BoardFlowInlineField(
+                    value = notes,
+                    onValueChange = onNotesChange,
+                    placeholder = "Anything worth remembering",
+                    singleLine = false,
+                    maxLines = 4,
+                    modifier = Modifier.weight(1f).padding(vertical = Spacing.md)
+                )
+            }
         }
 
         BoardFlowFormGroup {
@@ -851,17 +867,6 @@ private fun SessionDetailsCard(
                 exit = shrinkVertically() + fadeOut(tween(150))
             ) {
                 Column {
-                    BoardFlowFormDivider()
-                    BoardFlowFormRow(label = "Notes") {
-                        BoardFlowInlineField(
-                            value = notes,
-                            onValueChange = onNotesChange,
-                            placeholder = "Anything worth remembering",
-                            singleLine = false,
-                            maxLines = 4,
-                            modifier = Modifier.weight(1f).padding(vertical = Spacing.md)
-                        )
-                    }
                     BoardFlowFormDivider()
                     BoardFlowFormRow(label = "Quantity", labelWidth = null) {
                         BoardFlowIconButton(onClick = onQuantityDecrease, enabled = quantity > 1) {
@@ -968,7 +973,7 @@ private fun AddPlayersRow(
         BoardFlowSecondaryButton(onClick = onNewPlayer, modifier = Modifier.align(Alignment.CenterVertically)) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.IconSmall))
             Spacer(Modifier.width(6.dp))
-            Text("New player")
+            Text("Add player")
         }
     }
 }

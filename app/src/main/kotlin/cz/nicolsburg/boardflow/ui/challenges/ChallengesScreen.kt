@@ -1,5 +1,7 @@
 package cz.nicolsburg.boardflow.ui.challenges
 
+import androidx.compose.material3.ButtonDefaults
+import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import androidx.compose.foundation.layout.offset
 import cz.nicolsburg.boardflow.ui.common.GameCover
@@ -119,7 +121,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 import cz.nicolsburg.boardflow.ui.common.SectionHeader
@@ -319,24 +320,8 @@ private fun ChallengeCard(
     onDelete: () -> Unit
 ) {
     val challenge = progress.challenge
-    var showDeleteConfirm by remember { mutableStateOf(false) }
     var showActionsSheet by remember { mutableStateOf(false) }
     var detailsExpanded by rememberSaveable(challenge.id) { mutableStateOf(false) }
-
-    if (showDeleteConfirm) {
-        BoardFlowConfirmationDialog(
-            title = "Delete challenge?",
-            message = "\"${challenge.title}\" will be removed. This cannot be undone.",
-            confirmLabel = "Delete",
-            dismissLabel = "Cancel",
-            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
-            onConfirm = {
-                showDeleteConfirm = false
-                onDelete()
-            },
-            onDismiss = { showDeleteConfirm = false }
-        )
-    }
 
     if (showActionsSheet) {
         BoardFlowModalBottomSheet(
@@ -367,7 +352,7 @@ private fun ChallengeCard(
                 },
                 onDelete = {
                     showActionsSheet = false
-                    showDeleteConfirm = true
+                    onDelete()
                 }
             )
         }
@@ -936,6 +921,8 @@ fun CreateChallengeDialog(
     if (showStartDatePicker) {
         val state = rememberDatePickerState(initialSelectedDateMillis = startDate.toInitialMillis())
         DatePickerDialog(
+            colors = boardFlowDatePickerColors(),
+            tonalElevation = 0.dp,
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
@@ -946,14 +933,16 @@ fun CreateChallengeDialog(
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showStartDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showStartDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") }
             }
-        ) { DatePicker(state = state) }
+        ) { DatePicker(state = state, colors = boardFlowDatePickerColors()) }
     }
 
     if (showEndDatePicker) {
         val state = rememberDatePickerState(initialSelectedDateMillis = endDate.toInitialMillis())
         DatePickerDialog(
+            colors = boardFlowDatePickerColors(),
+            tonalElevation = 0.dp,
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
@@ -964,9 +953,9 @@ fun CreateChallengeDialog(
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showEndDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showEndDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") }
             }
-        ) { DatePicker(state = state) }
+        ) { DatePicker(state = state, colors = boardFlowDatePickerColors()) }
     }
 
     val missingInput = when {
@@ -1246,7 +1235,7 @@ fun CreateChallengeDialog(
                     .padding(horizontal = Spacing.lg, vertical = Spacing.md),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End)
             ) {
-                BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
                 BoardFlowButton(onClick = save, enabled = missingInput == null) {
                     Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
                     Spacer(Modifier.width(Spacing.sm))

@@ -48,7 +48,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraSecondaryAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraPermissionPrompt
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCameraScene
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -175,7 +174,7 @@ fun ScanScreen(
                     BoardFlowButton(onClick = { galleryLauncher.launch("image/*") }) {
                         Text("Try again from gallery")
                     }
-                    BoardFlowOutlinedButton(onClick = onEnterManually) {
+                    BoardFlowSecondaryButton(onClick = onEnterManually) {
                         Text("Enter manually")
                     }
                 }
@@ -262,12 +261,12 @@ fun ScanScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                                         ) {
-                                            BoardFlowOutlinedButton(
+                                            BoardFlowSecondaryButton(
                                                 onClick = { pendingPhoto = null }
                                             ) {
                                                 Text("Retake")
                                             }
-                                            BoardFlowSecondaryButton(
+                                            BoardFlowButton(
                                                 onClick = {
                                                     viewModel.extractScores(file)
                                                     pendingPhoto = null
@@ -286,12 +285,12 @@ fun ScanScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                                         ) {
-                                            BoardFlowOutlinedButton(
+                                            BoardFlowSecondaryButton(
                                                 onClick = { pendingPhoto = null }
                                             ) {
                                                 Text("Retake")
                                             }
-                                            BoardFlowSecondaryButton(
+                                            BoardFlowButton(
                                                 onClick = {
                                                     viewModel.extractScores(file)
                                                     pendingPhoto = null
@@ -426,10 +425,10 @@ fun ScanScreen(
                             BoardFlowButton(onClick = { cameraPermission.launchPermissionRequest() }) {
                                 Text("Allow camera")
                             }
-                            BoardFlowOutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
+                            BoardFlowSecondaryButton(onClick = { galleryLauncher.launch("image/*") }) {
                                 Text("Pick from gallery instead")
                             }
-                            BoardFlowOutlinedButton(onClick = onEnterManually) {
+                            BoardFlowSecondaryButton(onClick = onEnterManually) {
                                 Text("Enter manually")
                             }
                         }

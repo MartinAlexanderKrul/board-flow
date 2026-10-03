@@ -1,5 +1,7 @@
 ﻿package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
@@ -101,7 +103,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
 import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowPressScale
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
@@ -118,8 +119,7 @@ private enum class SortMode(val label: String) {
 
 private enum class TabMode(val label: String) {
     SHELF("My Shelf"),
-    SLEEVES("Sleeves"),
-    STATS("Stats")
+    SLEEVES("Sleeves")
 }
 
 private enum class OwnershipFilter(val label: String) {
@@ -172,12 +172,7 @@ fun CollectionScreen(
     var pendingSyncConfirm by remember { mutableStateOf(false) }
 
     fun triggerSync(action: () -> Unit = { syncViewModel.refreshCollection(forceRefresh = true) }) {
-        val elapsed = System.currentTimeMillis() - lastSyncedAt
-        if (lastSyncedAt > 0L && elapsed < 3_600_000L) {
-            pendingSyncConfirm = true
-        } else {
-            action()
-        }
+        action()
     }
 
     if (pendingSyncConfirm) {
@@ -198,6 +193,7 @@ fun CollectionScreen(
         )
     }
 
+    val messenger = LocalBoardFlowMessenger.current
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(SortMode.RATING) }
     var tabMode by remember { mutableStateOf(TabMode.SHELF) }
@@ -234,7 +230,6 @@ fun CollectionScreen(
     val showHeaderFilterAction =
         !controlsVisible &&
                 tabMode != TabMode.SLEEVES &&
-                tabMode != TabMode.STATS &&
                 allGames.isNotEmpty() &&
                 !loading &&
                 error == null
@@ -281,7 +276,6 @@ fun CollectionScreen(
                 }
             }
             TabMode.SLEEVES -> emptyList()
-            TabMode.STATS -> emptyList()
         }
 
         filterPlayers?.let { players ->
@@ -506,11 +500,12 @@ fun CollectionScreen(
                                 onToggleExclusion = { syncViewModel.toggleSleeveGameExclusion(it) },
                                 onExcludeAll = { syncViewModel.excludeAllSleeveGames(it) },
                                 onIncludeAll = { syncViewModel.includeAllSleeveGames() },
-                                onSetInventoryCount = { name, count -> syncViewModel.setSleeveInventoryCount(name, count) },
+                                onSetInventoryCount = { name, count ->
+                                    syncViewModel.setSleeveInventoryCount(name, count)
+                                    messenger.show(if (count > 0) "Sleeve count saved" else "Sleeve count cleared")
+                                },
                                 initiallyExpandedGroup = sleevesHighlightGroup
                             )
-
-                            tabMode == TabMode.STATS -> CollectionStatsTab(allGames, onMarkAsPlayed, historyPlayCounts)
 
                             else -> {
                                 Column(modifier = Modifier.fillMaxSize()) {
@@ -579,7 +574,7 @@ fun CollectionScreen(
                                                         modifier = Modifier.fillMaxWidth(),
                                                         contentAlignment = Alignment.Center
                                                     ) {
-                                                        BoardFlowOutlinedButton(
+                                                        BoardFlowSecondaryButton(
                                                             onClick = {
                                                                 sortMode = SortMode.RATING
                                                                 filterOwnership = OwnershipFilter.OWNED
@@ -739,7 +734,7 @@ private fun EmptyState(
             )
             if (accountReady && spreadsheetReady && onLoad != null) {
                 BoardFlowButton(onClick = onLoad) {
-                    Text("Load Collection")
+                    Text("Load collection")
                 }
             }
         }
@@ -995,7 +990,7 @@ private fun FilterSheetContent(
         }
 
         BoardFlowFilterSection(
-            label = "Player Counts",
+            label = "Player counts",
             detail = "Games filtered by player count information."
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -1024,7 +1019,7 @@ private fun FilterSheetContent(
     }
 }
 
-// One labelled group inside the merged "Player Counts" card. The label and its definition sit on
+// One labelled group inside the merged "Player counts" card. The label and its definition sit on
 // their own line above the chips, giving the chip row the full card width so all seven chips fit on
 // a single line even on narrow phones. All chips use BoardFlowFilterChip so their selected/
 // unselected styling and interaction match the other filter chips in the sheet.

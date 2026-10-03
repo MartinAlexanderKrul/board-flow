@@ -244,7 +244,7 @@ private fun OverviewCard(stats: CollectionStats) {
 private fun PlayDepthCard(stats: CollectionStats) {
     val max = stats.playDepth.maxOf { it.second }
     SectionCard {
-        CardTitle("Play Depth")
+        CardTitle("Play depth")
         stats.playDepth.forEachIndexed { i, (label, count) ->
             if (i > 0) Spacer(Modifier.height(6.dp))
             StatBarRow(
@@ -279,7 +279,7 @@ private fun ComplexityCard(stats: CollectionStats) {
 @Composable
 private fun SleeveCard(stats: CollectionStats) {
     SectionCard {
-        CardTitle("Sleeve Coverage")
+        CardTitle("Sleeve coverage")
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -303,7 +303,7 @@ private fun SleeveCard(stats: CollectionStats) {
 @Composable
 private fun TopPlayedCard(stats: CollectionStats) {
     SectionCard {
-        CardTitle("Most Played")
+        CardTitle("Most played")
         stats.topPlayed.forEach { game ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -347,7 +347,7 @@ private fun UnplayedShelfCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Unplayed Shelf",
+                    "Unplayed shelf",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

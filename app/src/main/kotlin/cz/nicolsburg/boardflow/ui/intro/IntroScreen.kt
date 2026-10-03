@@ -346,7 +346,7 @@ private fun IntroSettingsOverview() {
         )
         SettingItem(
             icon = Icons.Default.Backup,
-            title = "Backup & Restore",
+            title = "Backup and restore",
             description = "Export your full app state (plays, roster, challenges, settings) to a file. Use Restore on a new device to move everything over."
         )
     }

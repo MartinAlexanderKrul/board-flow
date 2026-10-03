@@ -1,5 +1,7 @@
 ﻿package cz.nicolsburg.boardflow.ui.app
 
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarDuration
 import cz.nicolsburg.boardflow.ui.common.playerColorMap
 import cz.nicolsburg.boardflow.ui.common.LocalPlayerColors
 import cz.nicolsburg.boardflow.ui.theme.Spacing
@@ -301,19 +303,44 @@ fun BoardFlowApp(
     val isQuickSetup = currentRoute == AppRoutes.QUICK_SETUP
     val isQrImport = currentRoute == AppRoutes.QR_IMPORT
 
-    // The top bar names the screen you are on; sub-tabs can override it once they scroll away.
+    // The top bar names the destination; the tab row below it shows the sub-location.
     val headerTitle = when {
-        currentRoute == AppRoutes.NEW_PLAY -> activeTabLabel ?: "Log Play"
-        currentRoute == AppRoutes.HISTORY -> activeTabLabel ?: "Journal"
+        currentRoute == AppRoutes.NEW_PLAY -> "Log Play"
+        currentRoute == AppRoutes.HISTORY -> "Journal"
         isQrImport -> "Import play"
-        currentRoute == AppRoutes.COLLECTION -> activeTabLabel ?: "Collection"
+        currentRoute == AppRoutes.COLLECTION -> "Collection"
         currentRoute == AppRoutes.SYNC -> "Sync"
-        currentRoute == AppRoutes.SETTINGS -> activeTabLabel ?: "Settings"
-        currentRoute == AppRoutes.CHALLENGES -> "Challenges"
+        currentRoute == AppRoutes.SETTINGS -> "Settings"
         isQuickSetup -> "Quick setup"
         isScan -> "Scan scores"
         isReview -> "Log play"
         else -> ""
+    }
+
+    // Logs a placeholder play on Jan 1 of your oldest play year, so an owned game counts as played.
+    fun markGameAsPlayed(gameId: Int, gameName: String) {
+        val oldestYear = historyPlays
+            .mapNotNull { it.date.substringBefore("-").toIntOrNull() }
+            .minOrNull()
+        val date = if (oldestYear != null) "$oldestYear-01-01" else LocalDate.now().toString()
+        val bggUsername = appViewModel.prefs.bggUsername.trim()
+        val selfName = if (bggUsername.isNotBlank()) {
+            players.firstOrNull { it.bggUsername.trim().equals(bggUsername, ignoreCase = true) }
+                ?.displayName ?: bggUsername
+        } else null
+        val playPlayers = if (selfName != null) listOf(PlayerResult(name = selfName, score = "", isWinner = false)) else emptyList()
+        appViewModel.saveImportedPlay(
+            LoggedPlay(
+                id = UUID.randomUUID().toString(),
+                gameId = gameId,
+                gameName = gameName,
+                date = date,
+                players = playPlayers,
+                durationMinutes = 0,
+                location = "",
+                postedToBgg = false,
+            )
+        )
     }
 
     fun leaveLogPlay() {
@@ -395,10 +422,17 @@ fun BoardFlowApp(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val messenger = remember(snackbarHostState, scope) {
-        BoardFlowMessenger { message ->
-            scope.launch {
-                snackbarHostState.currentSnackbarData?.dismiss()
-                snackbarHostState.showSnackbar(message)
+        object : BoardFlowMessenger {
+            override fun show(message: String, actionLabel: String?, onAction: (() -> Unit)?) {
+                scope.launch {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    val result = snackbarHostState.showSnackbar(
+                        message = message,
+                        actionLabel = actionLabel,
+                        duration = if (actionLabel != null) SnackbarDuration.Long else SnackbarDuration.Short
+                    )
+                    if (result == SnackbarResult.ActionPerformed) onAction?.invoke()
+                }
             }
         }
     }
@@ -482,7 +516,7 @@ fun BoardFlowApp(
                 title = "Stop timer?",
                 message = "This will stop tracking time for ${activeTimer?.gameName?.ifBlank { "this game" } ?: "this game"}.",
                 confirmLabel = "Stop",
-                dismissLabel = "Keep Running",
+                dismissLabel = "Keep running",
                 kind = BoardFlowConfirmationKind.DESTRUCTIVE,
                 onConfirm = {
                     showStopTimerConfirm = false
@@ -550,7 +584,8 @@ fun BoardFlowApp(
                         navController.navigate(AppRoutes.QR_IMPORT)
                     },
                     setupGuideAvailability = setupGuideAvailability,
-                    onOpenQuickSetup = ::openQuickSetup
+                    onOpenQuickSetup = ::openQuickSetup,
+                    onMarkAsPlayed = ::markGameAsPlayed
                 )
             }
 
@@ -615,35 +650,14 @@ fun BoardFlowApp(
                     },
                     onSaveCollectionStatus = { gameId, status ->
                         appViewModel.saveCollectionStatus(gameId, status)
+                        messenger.show("Collection status saved")
                     },
                     onRemoveFromCollection = { gameId ->
                         appViewModel.removeFromCollection(gameId)
+                        messenger.show("Removed from your BGG collection")
                     },
                     onClearCollectionStatus = { appViewModel.clearCollectionStatus() },
-                    onMarkAsPlayed = { gameId, gameName ->
-                        val oldestYear = historyPlays
-                            .mapNotNull { it.date.substringBefore("-").toIntOrNull() }
-                            .minOrNull()
-                        val date = if (oldestYear != null) "$oldestYear-01-01" else LocalDate.now().toString()
-                        val bggUsername = appViewModel.prefs.bggUsername.trim()
-                        val selfName = if (bggUsername.isNotBlank()) {
-                            players.firstOrNull { it.bggUsername.trim().equals(bggUsername, ignoreCase = true) }
-                                ?.displayName ?: bggUsername
-                        } else null
-                        val playPlayers = if (selfName != null) listOf(PlayerResult(name = selfName, score = "", isWinner = false)) else emptyList()
-                        appViewModel.saveImportedPlay(
-                            LoggedPlay(
-                                id = UUID.randomUUID().toString(),
-                                gameId = gameId,
-                                gameName = gameName,
-                                date = date,
-                                players = playPlayers,
-                                durationMinutes = 0,
-                                location = "",
-                                postedToBgg = false,
-                            )
-                        )
-                    },
+                    onMarkAsPlayed = ::markGameAsPlayed,
                 )
             }
 

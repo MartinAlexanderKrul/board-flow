@@ -1,5 +1,7 @@
 ﻿package cz.nicolsburg.boardflow.ui.sync
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
@@ -85,7 +87,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.SectionCard
 
 // ── Log summary model ─────────────────────────────────────────────────────────
@@ -184,14 +185,8 @@ fun SyncScreen(
     var showClearLogConfirm by remember { mutableStateOf(false) }
     var pendingSyncAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
-    fun triggerSync(action: () -> Unit) {
-        val elapsed = System.currentTimeMillis() - lastSyncedAt
-        if (lastSyncedAt > 0L && elapsed < 3_600_000L) {
-            pendingSyncAction = action
-        } else {
-            action()
-        }
-    }
+    // Tapping refresh is an explicit request, so it runs without asking again.
+    fun triggerSync(action: () -> Unit) = action()
 
     val listState = rememberLazyListState()
 
@@ -430,7 +425,7 @@ fun SyncScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
                     if (busy) {
-                        BoardFlowOutlinedButton(
+                        BoardFlowSecondaryButton(
                             onClick = { syncViewModel.stopSync() }
                         ) {
                             Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -578,39 +573,7 @@ private fun SyncActionRow(
 
 @Composable
 private fun StepSectionHeader(step: String, title: String, subtitle: String?) {
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        step,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-            Text(
-                title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-        if (subtitle != null) {
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 32.dp)
-            )
-        }
-    }
+    BoardFlowSectionTitle(title = title, supporting = subtitle)
 }
 
 @Composable
@@ -672,7 +635,7 @@ private fun AdvancedSection(
             SectionCard {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     AdvancedGroupLabel("Import and export")
-                    BoardFlowOutlinedButton(
+                    BoardFlowSecondaryButton(
                         onClick = onPickCsv,
                         enabled = !busy && account != null && hasConfiguredSheet
                     ) {
@@ -680,7 +643,7 @@ private fun AdvancedSection(
                     }
 
                     AdvancedGroupLabel("Automation")
-                    BoardFlowOutlinedButton(
+                    BoardFlowSecondaryButton(
                         onClick = onCreateFolders,
                         enabled = !busy && account != null && hasConfiguredSheet
                     ) {
@@ -960,7 +923,7 @@ private fun GoogleManageDialog(
                     }
                     item {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            BoardFlowOutlinedButton(
+                            BoardFlowSecondaryButton(
                                 onClick = { showSignOutConfirm = true }
                             ) {
                                 Text("Sign out")
@@ -1054,7 +1017,7 @@ private fun BggEditDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                     ) {
-                        BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
+                        BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
                         BoardFlowButton(
                             onClick = { onSave(username.trim(), password.trim()) },
                             enabled = username.isNotBlank()

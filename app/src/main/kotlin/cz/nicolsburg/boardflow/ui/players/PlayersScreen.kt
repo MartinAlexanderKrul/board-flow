@@ -133,99 +133,6 @@ internal fun formatPlayDate(yyyyMMdd: String): String = try {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun PlayersScreen(viewModel: AppViewModel) {
-    val players    by viewModel.players.collectAsState()
-    val sourcePlays by viewModel.historyPlays.collectAsState()
-    val sortedPlayers = remember(players, sourcePlays) { players.sortedByRecentActivity(sourcePlays) }
-
-    var showAddDialog  by remember { mutableStateOf(false) }
-    var editingPlayer  by remember { mutableStateOf<Player?>(null) }
-    var viewingPlayer  by remember { mutableStateOf<Player?>(null) }
-
-    LaunchedEffect(Unit) {
-        viewModel.loadPlayers(); viewModel.loadPlayHistory(); viewModel.loadCachedBggPlays()
-    }
-
-    if (showAddDialog) {
-        AddPlayerDialog(
-            onDismiss = { showAddDialog = false },
-            onAdd = { name -> viewModel.addNewPlayer(name); showAddDialog = false }
-        )
-    }
-
-    viewingPlayer?.let { vp ->
-        val livePlayer = players.find { it.id == vp.id }
-        if (livePlayer != null) {
-            val stats = remember(sourcePlays, livePlayer) { sourcePlays.statsForPlayer(livePlayer) }
-            val rivalries = remember(sourcePlays, livePlayer) { sourcePlays.rivalriesForPlayer(livePlayer) }
-            PlayerDetailDialog(
-                player = livePlayer,
-                stats = stats,
-                rivalries = rivalries,
-                onDismiss = { viewingPlayer = null },
-                onEdit = { editingPlayer = livePlayer; viewingPlayer = null }
-            )
-        } else { viewingPlayer = null }
-    }
-
-    editingPlayer?.let { ep ->
-        val livePlayer = players.find { it.id == ep.id }
-        if (livePlayer != null) {
-            EditPlayerDialog(
-                player = livePlayer,
-                onDismiss = { editingPlayer = null },
-                onRenameDisplayName = { viewModel.updatePlayerDisplayName(livePlayer.id, it) },
-                onUpdateBggUsername = { viewModel.updatePlayerBggUsername(livePlayer.id, it) },
-                onAddAlias = { viewModel.addPlayerAlias(livePlayer.id, it) },
-                onRemoveAlias = { viewModel.removePlayerAlias(livePlayer.id, it) },
-                onToggleHidden = { viewModel.updatePlayerHidden(livePlayer.id, it) },
-                onUpdateColor = { viewModel.updatePlayerColor(livePlayer.id, it) },
-                onDelete = { viewModel.deletePlayer(livePlayer.id); editingPlayer = null }
-            )
-        } else {
-            editingPlayer = null
-        }
-    }
-
-    Scaffold(
-        topBar = {},
-        contentWindowInsets = WindowInsets(0),
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add player")
-            }
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (players.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(32.dp)) {
-                        Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(72.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
-                        Text("No players yet", style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Players are added automatically when you log plays.\nTap + to add your first player manually.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                    }
-                }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)) {
-                    items(sortedPlayers, key = { it.id }) { player ->
-                        val stats = remember(sourcePlays, player) { sourcePlays.statsForPlayer(player) }
-                        PlayerListItem(player = player, stats = stats,
-                            onTap = { viewingPlayer = player })
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 internal fun PlayerListItem(player: Player, stats: PlayerStats, onTap: () -> Unit = {}) {
     Surface(
         onClick = onTap,
@@ -330,7 +237,8 @@ internal fun EditPlayerDialog(
     onRemoveAlias: (String) -> Unit,
     onToggleHidden: (Boolean) -> Unit,
     onDelete: () -> Unit,
-    onUpdateColor: (String) -> Unit = {}
+    onUpdateColor: (String) -> Unit = {},
+    onSaved: () -> Unit = {}
 ) {
     var color        by remember { mutableStateOf(player.color) }
     var displayName  by remember { mutableStateOf(player.displayName) }
@@ -338,25 +246,12 @@ internal fun EditPlayerDialog(
     var isHidden     by remember { mutableStateOf(player.isHidden) }
     var localAliases by remember { mutableStateOf(player.aliases) }
     var newAlias     by remember { mutableStateOf("") }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(player.displayName) { displayName = player.displayName }
     LaunchedEffect(player.bggUsername) { bggUsername = player.bggUsername }
     LaunchedEffect(player.isHidden)    { isHidden    = player.isHidden }
     LaunchedEffect(player.color)       { color       = player.color }
 
-    if (showDeleteConfirm) {
-        BoardFlowConfirmationDialog(
-            title = "Delete player?",
-            message = "Delete \"${player.displayName}\" and all aliases? This cannot be undone.",
-            confirmLabel = "Delete",
-            dismissLabel = "Cancel",
-            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
-            onConfirm = onDelete,
-            onDismiss = { showDeleteConfirm = false }
-        )
-        return
-    }
 
     val identityChanged = (displayName.isNotBlank() && displayName != player.displayName)
             || bggUsername.trim() != player.bggUsername
@@ -494,13 +389,13 @@ internal fun EditPlayerDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BoardFlowIconButton(
-                    onClick = { showDeleteConfirm = true },
+                    onClick = onDelete,
                     colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
                     Icon(BoardFlowIcons.Delete, contentDescription = "Delete player", modifier = Modifier.size(Dimens.Icon))
                 }
                 Spacer(Modifier.weight(1f))
-                BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
                 BoardFlowButton(
                     onClick = {
                         if (displayName.isNotBlank() && displayName != player.displayName) onRenameDisplayName(displayName)
@@ -511,6 +406,7 @@ internal fun EditPlayerDialog(
                         val toRemove = player.aliases - localAliases.toSet()
                         toAdd.forEach { onAddAlias(it) }
                         toRemove.forEach { onRemoveAlias(it) }
+                        onSaved()
                         onDismiss()
                     },
                     enabled = identityChanged
@@ -991,7 +887,7 @@ internal fun AddPlayerDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End)
             ) {
-                BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
                 BoardFlowButton(onClick = { onAdd(newName) }, enabled = newName.isNotBlank()) { Text("Add player") }
             }
         }

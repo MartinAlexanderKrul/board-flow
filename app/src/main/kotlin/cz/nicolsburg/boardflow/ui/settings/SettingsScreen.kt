@@ -1,5 +1,20 @@
 ﻿package cz.nicolsburg.boardflow.ui.settings
 
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.RowScope
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Casino
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowDestructiveButton
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
@@ -92,7 +107,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowPickerField
 import cz.nicolsburg.boardflow.ui.common.BoardFlowPickerSheet
 import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
@@ -476,7 +490,7 @@ fun SettingsScreen(
 
                 item {
                     SettingsCard(
-                        icon = Icons.Default.People,
+                        icon = Icons.Default.Casino,
                         title = "BoardGameGeek",
                         subtitle = "Used for BGG collection refresh and play sync."
                     ) {
@@ -524,161 +538,93 @@ fun SettingsScreen(
                     )
                 }
 
+                // One grouped list: each setting is a row with its value or switch on the right.
                 item {
-                    SettingsCard(
-                        icon = Icons.Default.GridOn,
-                        title = "History stats",
-                        subtitle = "Choose which logged plays shape the Stats tab."
-                    ) {
-                        BoardFlowPickerField(
-                            label = "Stats source",
-                            value = currentStatsPlayScope.label,
-                            expanded = statsScopeExpanded,
+                    BoardFlowFormGroup {
+                        PreferenceRow(
+                            icon = Icons.Default.BarChart,
+                            title = "Stats source",
+                            description = currentStatsPlayScope.description,
                             onClick = { statsScopeExpanded = true }
-                        )
-                        Text(
-                            currentStatsPlayScope.description,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                        )
-                        if (statsScopeExpanded) {
-                            BoardFlowPickerSheet(
-                                title = "Choose stats source",
-                                options = StatsPlayScope.entries,
-                                selectedOption = currentStatsPlayScope,
-                                optionLabel = { it.label },
-                                onSelect = { scope ->
-                                    viewModel.setStatsPlayScope(scope)
-                                    statsScopeExpanded = false
-                                },
-                                onDismiss = { statsScopeExpanded = false }
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.People,
-                        title = "Recommendations",
-                        subtitle = "Show follow-up game suggestions on the Log Play screen."
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
-                                modifier = Modifier.weight(1f).padding(end = 12.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    if (recommendationsEnabled) "Recommendations enabled" else "Recommendations disabled",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    "When off, BoardFlow hides the \"Try next\" suggestions after logging a play.",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                                )
-                            }
+                            PreferenceValue(currentStatsPlayScope.label)
+                        }
+                        BoardFlowFormDivider()
+                        PreferenceRow(
+                            icon = Icons.Default.Lightbulb,
+                            title = "Recommendations",
+                            description = "Suggest what to play next after you log a play",
+                            onClick = { viewModel.setRecommendationsEnabled(!recommendationsEnabled) }
+                        ) {
                             androidx.compose.material3.Switch(
                                 checked = recommendationsEnabled,
                                 onCheckedChange = { viewModel.setRecommendationsEnabled(it) }
                             )
                         }
-                    }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.AutoStories,
-                        title = "Chronicles",
-                        subtitle = "Generate and show session memory lines."
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        BoardFlowFormDivider()
+                        PreferenceRow(
+                            icon = Icons.Default.AutoStories,
+                            title = "Chronicles",
+                            description = "A story line for each session, written by AI",
+                            onClick = { viewModel.setChronicleEnabled(!chronicleEnabled) }
                         ) {
-                            Column(
-                                modifier = Modifier.weight(1f).padding(end = 12.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    if (chronicleEnabled) "Chronicles enabled" else "Chronicles disabled",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    "When off, BoardFlow will neither generate nor show chronicles.",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                                )
-                            }
                             androidx.compose.material3.Switch(
                                 checked = chronicleEnabled,
                                 onCheckedChange = { viewModel.setChronicleEnabled(it) }
                             )
                         }
-                    }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.GridOn,
-                        title = "Sleeve manufacturer",
-                        subtitle = "Priority brand shown for sleeve recommendations."
-                    ) {
-                        BoardFlowPickerField(
-                            label = "Manufacturer",
-                            value = currentManufacturer.label,
-                            expanded = manufacturerExpanded,
+                        BoardFlowFormDivider()
+                        PreferenceRow(
+                            icon = BoardFlowIcons.Sleeves,
+                            title = "Sleeve brand",
+                            description = "Shown first in sleeve recommendations",
                             onClick = { manufacturerExpanded = true }
-                        )
-                        if (manufacturerExpanded) {
-                            BoardFlowPickerSheet(
-                                title = "Choose sleeve manufacturer",
-                                options = SleeveManufacturer.entries,
-                                selectedOption = currentManufacturer,
-                                optionLabel = { it.label },
-                                onSelect = { manufacturer ->
-                                    viewModel.setSleevePreferredManufacturer(manufacturer)
-                                    manufacturerExpanded = false
-                                },
-                                onDismiss = { manufacturerExpanded = false }
-                            )
+                        ) {
+                            PreferenceValue(currentManufacturer.label)
+                        }
+                        BoardFlowFormDivider()
+                        val moodCount = customMoods.size
+                        PreferenceRow(
+                            icon = Icons.Default.Bookmark,
+                            title = "Mood templates",
+                            description = if (moodCount == 0) "Moods you add to a session appear here"
+                                          else "$moodCount custom mood${if (moodCount == 1) "" else "s"}",
+                            onClick = if (moodCount > 0) ({ showCustomMoodsDialog = true }) else null
+                        ) {
+                            if (moodCount > 0) PreferenceValue("Manage")
                         }
                     }
-                }
-
-                item {
-                    SettingsCard(
-                        icon = Icons.Default.Bookmark,
-                        title = "Mood Templates",
-                        subtitle = "Custom moods available when capturing session memories."
-                    ) {
-                        val moodCount = customMoods.size
-                        Text(
-                            if (moodCount == 0) "No custom moods added yet."
-                            else "$moodCount custom mood${if (moodCount == 1) "" else "s"} saved.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (statsScopeExpanded) {
+                        BoardFlowPickerSheet(
+                            title = "Choose stats source",
+                            options = StatsPlayScope.entries,
+                            selectedOption = currentStatsPlayScope,
+                            optionLabel = { it.label },
+                            onSelect = { scope ->
+                                viewModel.setStatsPlayScope(scope)
+                                statsScopeExpanded = false
+                            },
+                            onDismiss = { statsScopeExpanded = false }
                         )
-                        if (moodCount > 0) {
-                            BoardFlowButton(
-                                onClick = { showCustomMoodsDialog = true }
-                            ) {
-                                Text("Manage moods")
-                            }
-                        }
-                        if (showCustomMoodsDialog) {
-                            CustomMoodsDialog(
-                                viewModel = viewModel,
-                                onDismiss = { showCustomMoodsDialog = false }
-                            )
-                        }
+                    }
+                    if (manufacturerExpanded) {
+                        BoardFlowPickerSheet(
+                            title = "Choose sleeve brand",
+                            options = SleeveManufacturer.entries,
+                            selectedOption = currentManufacturer,
+                            optionLabel = { it.label },
+                            onSelect = { manufacturer ->
+                                viewModel.setSleevePreferredManufacturer(manufacturer)
+                                manufacturerExpanded = false
+                            },
+                            onDismiss = { manufacturerExpanded = false }
+                        )
+                    }
+                    if (showCustomMoodsDialog) {
+                        CustomMoodsDialog(
+                            viewModel = viewModel,
+                            onDismiss = { showCustomMoodsDialog = false }
+                        )
                     }
                 }
             }
@@ -871,8 +817,8 @@ fun SettingsScreen(
 
                 item {
                     SettingsCard(
-                        icon = Icons.Default.AutoAwesome,
-                        title = "Gemini Model",
+                        icon = Icons.Default.Tune,
+                        title = "Gemini model",
                         subtitle = "Automatic uses the newest Flash model and falls back when one is busy or retired. Pick a model only if you want to force one."
                     ) {
                         var modelPickerOpen by remember { mutableStateOf(false) }
@@ -942,8 +888,8 @@ fun SettingsScreen(
 
                 item {
                     SettingsCard(
-                        icon = Icons.Default.Layers,
-                        title = "Recognition Templates",
+                        icon = Icons.Default.DocumentScanner,
+                        title = "Recognition templates",
                         subtitle = "Saved scoring layouts that improve game detection from photos."
                     ) {
                         Text(
@@ -985,7 +931,7 @@ fun SettingsScreen(
                 item {
                     SettingsCard(
                         icon = Icons.Default.Person,
-                        title = "Player Recognition Hints",
+                        title = "Player recognition hints",
                         subtitle = "Learned scan-name-to-player mappings that pre-fill roster players from scan output."
                     ) {
                         Text(
@@ -1022,10 +968,10 @@ fun SettingsScreen(
                 item {
                     SettingsCard(
                         icon = Icons.Default.Storage,
-                        title = "Collection Cache",
+                        title = "Collection cache",
                         subtitle = if (hasCollection) "$collectionSize games cached locally" else "No collection cached"
                     ) {
-                        BoardFlowButton(
+                        BoardFlowDestructiveButton(
                             onClick = { showClearCollectionConfirm = true },
                             enabled = hasCollection
                         ) {
@@ -1037,7 +983,7 @@ fun SettingsScreen(
                 item {
                     SettingsCard(
                         icon = Icons.Default.Backup,
-                        title = "Backup & Restore",
+                        title = "Backup and restore",
                         subtitle = "Export and restore full app state for moving to a new phone."
                     ) {
                         Row(
@@ -1062,7 +1008,7 @@ fun SettingsScreen(
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BoardFlowButton(
+                            BoardFlowSecondaryButton(
                                 onClick = {
                                     importExportStatus = null
                                     exportLauncher.launch("boardflow-backup-${LocalDate.now()}.json")
@@ -1071,7 +1017,7 @@ fun SettingsScreen(
                                 Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Text("  Export data")
                             }
-                            BoardFlowButton(
+                            BoardFlowSecondaryButton(
                                 onClick = {
                                     importExportStatus = null
                                     importLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
@@ -1141,7 +1087,7 @@ private fun RecognitionTemplatesDialog(
         ) {
             item {
                 Text(
-                    "Recognition Templates",
+                    "Recognition templates",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1355,7 +1301,7 @@ private fun EditTemplateDialog(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
                 Spacer(Modifier.width(8.dp))
                 BoardFlowButton(
                     onClick = { onSave(hint.copy(normalizedCategories = categories.toList())) }
@@ -1396,7 +1342,7 @@ private fun CustomMoodsDialog(
         ) {
             item {
                 Text(
-                    "Mood Templates",
+                    "Mood templates",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1459,6 +1405,46 @@ private fun CustomMoodsDialog(
 
 }
 
+
+/** A setting as one row: icon, title with a one-line description, and its value or switch. */
+@Composable
+private fun PreferenceRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    description: String,
+    onClick: (() -> Unit)?,
+    trailing: @Composable RowScope.() -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .heightIn(min = 64.dp)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(Dimens.Icon), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        trailing()
+    }
+}
+
+@Composable
+private fun PreferenceValue(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        modifier = Modifier.widthIn(max = 140.dp)
+    )
+    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+}
 
 @Composable
 private fun SettingsCard(

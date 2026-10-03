@@ -264,7 +264,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - History includes:
   - `Plays`
   - `Challenges`
-  - `Stats` -- includes per-player stat profiles and a `HeadToHeadSection` with `BoardFlowPickerField` player selectors
+  - `Stats` -- a `Plays | Collection` switch; Plays includes per-player stat profiles and a `HeadToHeadSection` with `BoardFlowPickerField` player selectors
   - `Players`
 - the Plays tab also acts as the outbox surface for unposted local plays
 
@@ -280,7 +280,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 ### Collection
 
 - collection data is loaded through sync and propagated from the canonical Room snapshot
-- tabs are `My Shelf`, `Sleeves`, and `Stats`. Membership (owned / wishlist / played) is no
+- tabs are `My Shelf` and `Sleeves`; collection stats live in Journal → Stats behind a `Plays | Collection` switch (`HistoryScreen`, `CollectionStatsTab`). Membership (owned / wishlist / played) is no
   longer separate tabs — it lives in the `My Shelf` filter sheet as two single-select
   dimensions:
   - **Show** (`OwnershipFilter`): `Owned` (default) / `Wishlist` / `Played, not owned` / `Any`
@@ -515,17 +515,18 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - build screens from the shared kit in `ui/common/BoardFlowKit.kt` (`BoardFlowCard`, `BoardFlowSectionTitle`, `GameListRow`, `GameCover`, `BoardFlowFormGroup` / `BoardFlowFormRow` / `BoardFlowInlineField`, `BoardFlowTextField`, `BoardFlowInfoPill`, `BoardFlowEmptyState`, `BoardFlowErrorBanner`) and the buttons, sheets and dialogs in `BoardFlowUi.kt`; do not style private surfaces, fields or rows per screen
 - forms are grouped rows on a tonal surface (icon, label, value), not one outlined box per field; surfaces separate by tone, not by borders
 - buttons are pills that hug their label (never `fillMaxWidth`), all in `BoardFlowUi.kt`:
-  - primary (`BoardFlowButton`): solid amber, 40dp. The main action of a screen or dialog, and every button in Settings
-  - secondary (`BoardFlowSecondaryButton`): solid amber too, one size smaller (32dp, `labelMedium`) - "Scan", "New player", "Save highlights"
-  - cancel: red text (`BoardFlowInlineAction(destructive = true)`), left of the save button; pass `large = true` when that button is a primary one
-  - destructive (`BoardFlowDestructiveButton`): outlined red, primary size. The action in `BoardFlowConfirmationDialog` is a small solid red pill with the way out as plain white text
-  - two controls that sit next to each other have the same height and label size
+  - primary (`BoardFlowButton`): solid amber, 40dp. One per view: the action that moves the task forward (Save, Log play, Start game, Play again)
+  - secondary (`BoardFlowSecondaryButton`): amber outline and label on a transparent fill, same 40dp height. Alternatives next to the primary (Setup, History, Scan, New player, Export / Import data, Retake). On game art the outline sits on a light dark wash (`GameDetailDialog.DialogSecondaryActionButton`)
+  - cancel: white text (`BoardFlowInlineAction(neutral = true)`), left of the save button; `large = true` beside a 40dp button
+  - destructive (`BoardFlowDestructiveButton`): outlined red, 40dp (Remove, Clear rating, Clear collection cache). The action in `BoardFlowConfirmationDialog` is a solid red pill with a white Cancel. Red means data loss only
   - a main Edit action is an amber pen icon next to the red delete icon on the left of the action row, with the primary pill alone on the right; a minor edit is amber "Edit" text
+  - two controls that sit next to each other have the same height and label size
 - amber (`colorScheme.primary`) is for emphasis, not for everything tappable: titles (game names), key numbers, the buttons above, text actions and the selected state. Chevrons, expanders, share and overflow icons, row icons and values are grey or white. Do not enlarge type or controls beyond the Material defaults: the original density is part of the look
 - on game art or the camera, pills are `Color.Black` at 50% with white labels; the one amber control on the camera is the shutter
 - the winner row is a translucent amber fill with no outline; session and chronicle cards are translucent grey (`Color.White` at 10%) with no outline
 - every tappable element is at least 48dp (`Dimens.MinTouchTarget`); dates shown to the user read `Oct 1, 2026`
-- confirm quiet actions with `LocalBoardFlowMessenger.current.show(...)` (snackbar hosted by `AppShell`)
+- every create, update and delete gets a snackbar via `LocalBoardFlowMessenger.current.show(message, actionLabel, onAction)` (hosted by `AppShell`); reversible local deletes (local plays, players, challenges, pause, archive) offer Undo instead of a confirmation dialog. Confirmations stay for BGG writes and irreversible actions. Explicit refreshes run without a "refresh again?" prompt
+- the top bar shows the destination (Log Play, Journal, Collection, Sync, Settings); the tab row shows the sub-location
 - the top bar shows the screen title, with a back arrow on pushed screens (scan, log play, quick setup, QR import); the bottom bar is a Material `NavigationBar`
 - every screen uses the kit. Two treatments, by purpose:
   - forms and editors (Log Play, edit play, create challenge, player edit, sleeve inventory, account dialogs): a headline, grouped rows, and red Cancel text plus the save pill at the bottom right

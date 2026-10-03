@@ -110,8 +110,7 @@ private fun InsightStripCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape    = MaterialTheme.shapes.medium,
-        color    = MaterialTheme.colorScheme.primaryContainer.copy(alpha = bgAlpha),
-        border   = BorderStroke(0.5.dp, borderColor.copy(alpha = borderAlpha))
+        color    = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
     ) {
         Row(
             modifier            = Modifier.padding(horizontal = 12.dp, vertical = if (ambient) 5.dp else 7.dp),

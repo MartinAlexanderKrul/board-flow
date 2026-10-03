@@ -1,5 +1,7 @@
 ﻿package cz.nicolsburg.boardflow.ui.common
 
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerColors
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -540,7 +542,7 @@ fun BoardFlowConfirmationDialog(
 }
 
 @Composable
-fun BoardFlowPrimaryButton(
+fun BoardFlowButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -565,8 +567,8 @@ fun BoardFlowPrimaryButton(
 }
 
 /**
- * The secondary button: solid amber like the primary one, a size smaller (32dp, small label).
- * Pair it with a red text Cancel ([BoardFlowInlineAction] with destructive = true).
+ * The secondary button: amber outline and label on a transparent fill, the same height as the
+ * primary. Use for alternatives next to the one filled action of a view.
  */
 @Composable
 fun BoardFlowSecondaryButton(
@@ -574,8 +576,10 @@ fun BoardFlowSecondaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: ButtonColors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.primary,
+        disabledContainerColor = Color.Transparent,
+        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
     ),
     content: @Composable RowScope.() -> Unit
 ) {
@@ -585,16 +589,20 @@ fun BoardFlowSecondaryButton(
     Button(
         onClick = onClick,
         modifier = modifier
-            .defaultMinSize(minHeight = BoardFlowActionTokens.SecondaryButtonMinHeight)
+            .defaultMinSize(minHeight = BoardFlowActionTokens.ButtonMinHeight)
             .scale(scale),
         enabled = enabled,
         colors = colors,
+        border = BorderStroke(
+            1.dp,
+            if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+        ),
         shape = BoardFlowActionTokens.ButtonShape,
-        contentPadding = BoardFlowActionTokens.SecondaryButtonContentPadding,
-        interactionSource = interactionSource
-    ) {
-        ProvideTextStyle(MaterialTheme.typography.labelMedium) { content() }
-    }
+        contentPadding = BoardFlowActionTokens.ButtonContentPadding,
+        interactionSource = interactionSource,
+        content = content
+    )
 }
 
 @Composable
@@ -636,9 +644,15 @@ fun BoardFlowInlineAction(
     destructive: Boolean = false,
     // True when it sits next to a full-size button: neighbours share one size.
     large: Boolean = false,
+    // Plain white text, for Cancel and Close: leaving loses nothing, so it is neither amber nor red.
+    neutral: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
-    val tint = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val tint = when {
+        neutral -> MaterialTheme.colorScheme.onSurface
+        destructive -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.primary
+    }
     TextButton(
         onClick = onClick,
         modifier = if (large) modifier.defaultMinSize(minHeight = BoardFlowActionTokens.ButtonMinHeight) else modifier,
@@ -686,35 +700,6 @@ fun BoardFlowIconButton(
         content()
     }
 }
-
-@Composable
-fun BoardFlowButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    colors: ButtonColors = ButtonDefaults.buttonColors(),
-    content: @Composable RowScope.() -> Unit
-) = BoardFlowPrimaryButton(
-    onClick = onClick,
-    modifier = modifier,
-    enabled = enabled,
-    colors = colors,
-    content = content
-)
-
-/** Older name for [BoardFlowSecondaryButton]; same tonal look. */
-@Composable
-fun BoardFlowOutlinedButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
-) = BoardFlowSecondaryButton(
-    onClick = onClick,
-    modifier = modifier,
-    enabled = enabled,
-    content = content
-)
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -918,36 +903,6 @@ fun <T> BoardFlowPickerSheet(
     }
 }
 
-@Composable
-fun BoardFlowTonalButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-    content: @Composable RowScope.() -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale = rememberBoardFlowPressScale(isPressed = isPressed, label = "tonalBtnScale")
-    FilledTonalButton(
-        onClick = onClick,
-        modifier = modifier
-            .height(42.dp)
-            .scale(scale),
-        enabled = enabled,
-        shape = BoardFlowActionTokens.ButtonShape,
-        contentPadding = contentPadding,
-        colors = ButtonDefaults.filledTonalButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.24f),
-            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
-        ),
-        interactionSource = interactionSource,
-        content = content
-    )
-}
-
 // ---------------------------------------------------------------------------
 // Shared player avatar — consistent across Players list, Rivalries, Log Play
 // ---------------------------------------------------------------------------
@@ -1036,3 +991,12 @@ fun PlayerAvatar(name: String, size: Dp = 46.dp, modifier: Modifier = Modifier, 
         }
     }
 }
+
+/** Colours for every date picker: the app's surface, not Material's tinted container. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun boardFlowDatePickerColors(): DatePickerColors = DatePickerDefaults.colors(
+    containerColor = MaterialTheme.colorScheme.surface,
+    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    headlineContentColor = MaterialTheme.colorScheme.onSurface
+)

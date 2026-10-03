@@ -7,7 +7,6 @@ import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInfoPill
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
-import cz.nicolsburg.boardflow.ui.common.BoardFlowStatTile
 import cz.nicolsburg.boardflow.ui.common.BoardFlowMoodChip
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
@@ -74,7 +73,6 @@ import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.SessionHub
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
-import cz.nicolsburg.boardflow.ui.common.BoardFlowTonalButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -177,7 +175,7 @@ fun SessionHubDialog(
                                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                BoardFlowInlineAction(destructive = true, onClick = {
+                                BoardFlowInlineAction(neutral = true, onClick = {
                                     isEditingTitle = false
                                     draftTitle = session.title.orEmpty()
                                 }) { Text("Cancel") }

@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowActionTokens
 import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
@@ -108,7 +109,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowDestructiveButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
-import cz.nicolsburg.boardflow.ui.common.BoardFlowPrimaryButton
 import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import cz.nicolsburg.boardflow.ui.history.ContextualInsightStrip
@@ -648,7 +648,7 @@ private fun CollectionStatusEditorDialog(
                             enabled = !busy
                         ) { Text("Remove") }
                     }
-                    BoardFlowPrimaryButton(
+                    BoardFlowButton(
                         // The write runs in the background; the row behind shows the new status at once.
                         onClick = { onSave(draft); onDismiss() },
                         enabled = !busy
@@ -792,7 +792,7 @@ private fun HeaderSection(
                         Text("Log play", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false)
                     }
                     if (hasQuickSetup) {
-                        DialogPrimaryActionButton(onClick = onOpenQuickSetup) {
+                        DialogSecondaryActionButton(onClick = onOpenQuickSetup) {
                             Icon(
                                 Icons.Default.Checklist,
                                 contentDescription = null,
@@ -803,7 +803,7 @@ private fun HeaderSection(
                         }
                     }
                     if (hasHistory) {
-                        DialogPrimaryActionButton(onClick = { onViewHistory(gameObjectId) }) {
+                        DialogSecondaryActionButton(onClick = { onViewHistory(gameObjectId) }) {
                             Icon(
                                 Icons.Default.History,
                                 contentDescription = null,
@@ -834,9 +834,8 @@ private fun YourStatsCard(
     val outlineVariant   = MaterialTheme.colorScheme.outlineVariant
 
     Surface(
-        color = primary.copy(alpha = 0.08f),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
         shape = GameDetailTokens.CardCorner,
-        border = BorderStroke(1.dp, outlineVariant.copy(alpha = 0.20f)),
         tonalElevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -856,7 +855,7 @@ private fun YourStatsCard(
                     tint = primary.copy(alpha = 0.72f)
                 )
                 Text(
-                    text = "Your Stats",
+                    text = "Your stats",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = primary.copy(alpha = 0.72f)
@@ -1077,9 +1076,9 @@ private fun YourStatsCard(
 @Composable
 private fun InfoGroupBlock(sections: List<InfoSection>) {
     Surface(
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
         shape = GameDetailTokens.CardCorner,
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f)),
+
         tonalElevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1373,8 +1372,7 @@ private fun MasteryStrip(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape    = MaterialTheme.shapes.medium,
-        color    = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
-        border   = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
+        color    = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
     ) {
         Row(
             modifier              = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
@@ -1927,7 +1925,7 @@ private fun DialogPrimaryActionButton(
     }
 }
 
-/** Sits on the game art, so it carries its own dark fill. */
+/** Amber outline like the app's secondary button; a light dark wash keeps it readable on game art. */
 @Composable
 private fun DialogSecondaryActionButton(
     onClick: () -> Unit,
@@ -1936,13 +1934,14 @@ private fun DialogSecondaryActionButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 36.dp),
+        modifier = modifier.heightIn(min = 32.dp),
         shape = BoardFlowShape.Pill,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Black.copy(alpha = 0.5f),
-            contentColor = Color.White
+            containerColor = Color.Black.copy(alpha = 0.35f),
+            contentColor = MaterialTheme.colorScheme.primary
         ),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,

@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.sync
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +26,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.text.style.TextAlign
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
-import cz.nicolsburg.boardflow.ui.common.BoardFlowOutlinedButton
 
 @Composable
 fun SpreadsheetConnectDialog(
@@ -83,7 +83,7 @@ fun SpreadsheetConnectDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                     ) {
-                        BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
+                        BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
                         BoardFlowButton(
                             onClick = { onConnect(input.trim()) },
                             enabled = input.isNotBlank()
@@ -110,7 +110,7 @@ fun SpreadsheetConnectDialog(
                     }
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BoardFlowOutlinedButton(
+                            BoardFlowSecondaryButton(
                                 onClick = onCreateNew
                             ) {
                                 Text("Create new sheet from BGG")

@@ -98,7 +98,7 @@ class StatsGlanceWidget : SessionGlanceWidget() {
 
             val snapshot = WidgetSnapshot(
                 id = "stats_$monthStart",
-                header = "This Month",
+                header = "This month",
                 primaryText = primaryText,
                 subtitleText = subtitleText,
                 detailText = detailText,
@@ -108,7 +108,7 @@ class StatsGlanceWidget : SessionGlanceWidget() {
             snapshot to listOf(snapshot)
         }.getOrElse {
             val fb = WidgetSnapshot(
-                header = "This Month",
+                header = "This month",
                 primaryText = "Log your first play!",
                 accentColor = BLUE,
             )

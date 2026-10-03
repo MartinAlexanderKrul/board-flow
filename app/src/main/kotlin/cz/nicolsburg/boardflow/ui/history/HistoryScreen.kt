@@ -2,6 +2,9 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.collection.CollectionStatsTab
+import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
+import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
 import androidx.compose.material3.Button
 import androidx.compose.ui.graphics.compositeOver
 import cz.nicolsburg.boardflow.ui.common.BoardFlowErrorBanner
@@ -140,7 +143,6 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowDestructiveButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
-import cz.nicolsburg.boardflow.ui.common.BoardFlowTonalButton
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.Challenge
 import cz.nicolsburg.boardflow.model.Player
@@ -250,7 +252,8 @@ fun HistoryScreen(
     onPlayAgainSession: (cz.nicolsburg.boardflow.model.SessionHub) -> Unit = {},
     onImportQr: () -> Unit = {},
     setupGuideAvailability: Map<Int, SetupGuideAvailability> = emptyMap(),
-    onOpenQuickSetup: (gameId: Int) -> Unit = {}
+    onOpenQuickSetup: (gameId: Int) -> Unit = {},
+    onMarkAsPlayed: (gameId: Int, gameName: String) -> Unit = { _, _ -> }
 ) {
     val historyPlays by viewModel.historyPlays.collectAsState()
     val collection by viewModel.collection.collectAsState()
@@ -283,31 +286,11 @@ fun HistoryScreen(
     var showCreateChallengeDialog by rememberSaveable { mutableStateOf(false) }
     var editingChallenge by remember { mutableStateOf<Challenge?>(null) }
 
-    var showBggPlaysRefreshConfirm by remember { mutableStateOf(false) }
+    val messenger = LocalBoardFlowMessenger.current
 
-    if (showBggPlaysRefreshConfirm) {
-        val minutes = bggPlaysCacheAgeMinutes
-        val timeText = if (minutes < 1L) "less than a minute ago" else "$minutes minute${if (minutes == 1L) "" else "s"} ago"
-        BoardFlowConfirmationDialog(
-            title = "Refresh again?",
-            message = "Play history was last synced $timeText. Do you want to refresh again?",
-            confirmLabel = "Refresh",
-            dismissLabel = "Cancel",
-            kind = BoardFlowConfirmationKind.NEUTRAL,
-            onConfirm = {
-                showBggPlaysRefreshConfirm = false
-                viewModel.fetchBggPlays()
-            },
-            onDismiss = { showBggPlaysRefreshConfirm = false }
-        )
-    }
-
+    // Pulling to refresh is an explicit request, so it refreshes without asking again.
     fun triggerBggPlaysRefresh() {
-        if (bggPlaysCacheAgeMinutes < 60L) {
-            showBggPlaysRefreshConfirm = true
-        } else {
-            viewModel.fetchBggPlays()
-        }
+        viewModel.fetchBggPlays()
     }
     val syncingUnpostedPlays by viewModel.syncingUnpostedPlays.collectAsState()
     val pendingHistoryNavigation by viewModel.pendingHistoryNavigation.collectAsState()
@@ -364,6 +347,11 @@ fun HistoryScreen(
     var controlsVisible by controlsVisibleState
     val playsListState = rememberLazyListState()
     val statsListState = rememberLazyListState()
+    // Stats has two sources: your plays and your collection. One tab, one switch.
+    var statsShowsCollection by rememberSaveable { mutableStateOf(false) }
+    val historyPlayCounts = remember(historyPlays) {
+        historyPlays.groupBy { it.gameId }.mapValues { (_, plays) -> plays.sumOf { it.quantity.coerceAtLeast(1) } }
+    }
     val playersListState = rememberLazyListState()
     val challengesListState = rememberLazyListState()
 
@@ -570,6 +558,7 @@ fun HistoryScreen(
                             selectedPlay = null
                             playToDelete = null
                             deleteError = null
+                            messenger.show("Play deleted from BGG")
                         },
                         onError = { message ->
                             deleteError = message
@@ -605,7 +594,20 @@ fun HistoryScreen(
             isDeleting = deletingPlayId == play.id,
             onDismiss = { selectedPlay = null },
             onEdit = { editingPlay = play; selectedPlay = null },
-            onDeletePlay = { playToDelete = play },
+            onDeletePlay = {
+                if (play.postedToBgg) {
+                    playToDelete = play
+                } else {
+                    viewModel.deleteLocalPlay(
+                        playId = play.id,
+                        onSuccess = {
+                            selectedPlay = null
+                            messenger.show("Play deleted", "Undo") { viewModel.restoreLocalPlay(play) }
+                        },
+                        onError = { deleteError = it }
+                    )
+                }
+            },
             onShareQr = { playToShare = play },
             onPlayAgain = { selectedPlay = null; onPlayAgain(play) },
             onOpenSessionHub = {
@@ -629,6 +631,7 @@ fun HistoryScreen(
                     selectedPlay = selectedPlay?.takeIf { it.id == play.id }?.copy(memory = savedMemory)
                 }
                 selectedPlay = selectedPlay?.copy(memory = memory) ?: play.copy(memory = memory)
+                messenger.show("Highlights saved")
             }
         )
     }
@@ -770,6 +773,7 @@ fun HistoryScreen(
                     onSuccess = {
                         editError = null
                         editingPlay = null
+                        messenger.show("Play updated")
                     },
                     onError = { editError = it }
                 )
@@ -780,7 +784,10 @@ fun HistoryScreen(
     if (showAddPlayerDialog) {
         AddPlayerDialog(
             onDismiss = { showAddPlayerDialog = false },
-            onAdd = { name -> viewModel.addNewPlayer(name); showAddPlayerDialog = false }
+            onAdd = { name ->
+                viewModel.addNewPlayer(name); showAddPlayerDialog = false
+                messenger.show("Player added")
+            }
         )
     }
 
@@ -832,7 +839,11 @@ fun HistoryScreen(
                 onRemoveAlias = { viewModel.removePlayerAlias(livePlayer.id, it) },
                 onToggleHidden = { viewModel.updatePlayerHidden(livePlayer.id, it) },
                 onUpdateColor = { viewModel.updatePlayerColor(livePlayer.id, it) },
-                onDelete = { viewModel.deletePlayer(livePlayer.id); editingPlayer = null }
+                onSaved = { messenger.show("Player updated") },
+                onDelete = {
+                    viewModel.deletePlayer(livePlayer.id); editingPlayer = null
+                    messenger.show("Player deleted", "Undo") { viewModel.restorePlayer(livePlayer) }
+                }
             )
         } else {
             editingPlayer = null
@@ -1076,7 +1087,25 @@ fun HistoryScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-                HistoryTab.STATS -> StatsContent(
+                HistoryTab.STATS -> Column(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                ) {
+                    BoardFlowFilterChip(
+                        selected = !statsShowsCollection,
+                        onClick = { statsShowsCollection = false },
+                        label = { Text("Plays") }
+                    )
+                    BoardFlowFilterChip(
+                        selected = statsShowsCollection,
+                        onClick = { statsShowsCollection = true },
+                        label = { Text("Collection") }
+                    )
+                }
+                if (statsShowsCollection) {
+                    CollectionStatsTab(collectionItems, onMarkAsPlayed, historyPlayCounts)
+                } else StatsContent(
                     stats = playStats,
                     statsTimeRange = statsTimeRange,
                     onTimeRangeChange = viewModel::setStatsTimeRange,
@@ -1124,6 +1153,7 @@ fun HistoryScreen(
                         searchQuery = ""
                     }
                 )
+                }
                 HistoryTab.PLAYERS -> PlayersTabContent(
                     players = players,
                     sourcePlays = historyPlays,
@@ -1149,11 +1179,21 @@ fun HistoryScreen(
                 HistoryTab.CHALLENGES -> ChallengesTabContent(
                     progressList = challengeProgressList,
                     onEdit = { editingChallenge = it },
-                    onPause = { viewModel.pauseChallenge(it) },
-                    onResume = { viewModel.resumeChallenge(it) },
-                    onArchive = { viewModel.archiveChallenge(it) },
-                    onRestore = { viewModel.restoreChallenge(it) },
-                    onDelete = { viewModel.deleteChallenge(it) },
+                    onPause = { id ->
+                        viewModel.pauseChallenge(id)
+                        messenger.show("Challenge paused", "Undo") { viewModel.resumeChallenge(id) }
+                    },
+                    onResume = { viewModel.resumeChallenge(it); messenger.show("Challenge resumed") },
+                    onArchive = { id ->
+                        viewModel.archiveChallenge(id)
+                        messenger.show("Challenge archived", "Undo") { viewModel.restoreChallenge(id) }
+                    },
+                    onRestore = { viewModel.restoreChallenge(it); messenger.show("Challenge restored") },
+                    onDelete = { id ->
+                        val removed = challenges.firstOrNull { it.id == id }
+                        viewModel.deleteChallenge(id)
+                        messenger.show("Challenge deleted", "Undo") { removed?.let(viewModel::addChallenge) }
+                    },
                     listState = challengesListState,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -1167,6 +1207,7 @@ fun HistoryScreen(
                     onSave = { challenge ->
                         viewModel.addChallenge(challenge)
                         showCreateChallengeDialog = false
+                        messenger.show("Challenge created")
                     }
                 )
             }
@@ -1180,6 +1221,7 @@ fun HistoryScreen(
                     onSave = { updated ->
                         viewModel.updateChallenge(updated)
                         editingChallenge = null
+                        messenger.show("Challenge updated")
                     }
                 )
             }
@@ -1477,14 +1519,14 @@ private fun PlayHistoryCard(
     ) {
         Column(
             modifier = Modifier.padding(Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                GameCover(name = play.gameName, thumbnailUrl = thumbnailUrl, size = 52.dp)
+                GameCover(name = play.gameName, thumbnailUrl = thumbnailUrl, size = 48.dp)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         play.gameName,
@@ -1515,9 +1557,19 @@ private fun PlayHistoryCard(
                 }
             }
             if (play.players.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                    play.players.forEach { player ->
-                        HistoryListPlayerRow(player, resolveDisplayName(player.name, players))
+                // Players on one or two lines, winner first: the full list is in play details.
+                val ordered = remember(play.players) {
+                    play.players.sortedWith(
+                        compareByDescending<PlayerResult> { it.isWinner }
+                            .thenByDescending { it.score.trim().toDoubleOrNull() ?: Double.NEGATIVE_INFINITY }
+                    )
+                }
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    ordered.forEach { player ->
+                        HistoryListPlayerChip(player, resolveDisplayName(player.name, players))
                     }
                 }
             }
@@ -1597,6 +1649,41 @@ private fun playerMetaText(player: PlayerResult): String? {
         if (player.isNew) add("first play")
     }
     return meta.takeIf { it.isNotEmpty() }?.joinToString(" · ")
+}
+
+/** A player in the Journal list: coloured initial, short name, score; the winner leads with a trophy. */
+@Composable
+private fun HistoryListPlayerChip(player: PlayerResult, displayName: String) {
+    val score = player.score.trim().takeUnless { it.isEmpty() || it == "0" || it == "0.0" }
+    val inlineColor = player.color.takeIf { it.isNotBlank() }?.let(::resolvedPlayerColor)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        if (player.isWinner) {
+            Icon(
+                Icons.Default.EmojiEvents,
+                contentDescription = "Winner",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(Dimens.IconSmall)
+            )
+        }
+        PlayerAvatar(displayName, size = 20.dp, color = inlineColor)
+        Text(
+            shortName(displayName),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (player.isWinner) FontWeight.SemiBold else FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
+        )
+        if (score != null) {
+            Text(
+                score,
+                style = MaterialTheme.typography.bodyMedium.withTabularNumbers(),
+                color = if (player.isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
 @Composable
@@ -2175,6 +2262,8 @@ private fun EditPlayDialog(
             }.getOrDefault(System.currentTimeMillis())
         )
         DatePickerDialog(
+            colors = boardFlowDatePickerColors(),
+            tonalElevation = 0.dp,
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
@@ -2184,8 +2273,8 @@ private fun EditPlayDialog(
                     showDatePicker = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancel") } }
-        ) { DatePicker(state = datePickerState) }
+            dismissButton = { TextButton(onClick = { showDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") } }
+        ) { DatePicker(state = datePickerState, colors = boardFlowDatePickerColors()) }
     }
 
     val addPlayer = {
@@ -2333,7 +2422,7 @@ private fun EditPlayDialog(
                     BoardFlowSecondaryButton(onClick = addPlayer) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
                         Spacer(Modifier.width(Spacing.sm))
-                        Text("New player")
+                        Text("Add player")
                     }
                 }
             }
@@ -2347,7 +2436,7 @@ private fun EditPlayDialog(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BoardFlowInlineAction(onClick = onDismiss, enabled = !isLoading, destructive = true, large = true) { Text("Cancel") }
+                BoardFlowInlineAction(onClick = onDismiss, enabled = !isLoading, neutral = true, large = true) { Text("Cancel") }
                 BoardFlowButton(
                     onClick = {
                         onSave(date, duration.toIntOrNull() ?: 0, location, comments, editPlayers.toList())
@@ -2690,7 +2779,7 @@ private fun MemoryEditor(
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BoardFlowInlineAction(onClick = onCancel, destructive = true) { Text("Cancel") }
+            BoardFlowInlineAction(onClick = onCancel, neutral = true) { Text("Cancel") }
             BoardFlowSecondaryButton(onClick = onSave) {
                 Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.IconSmall))
                 Spacer(Modifier.width(6.dp))

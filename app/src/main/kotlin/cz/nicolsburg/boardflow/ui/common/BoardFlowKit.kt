@@ -449,12 +449,19 @@ fun BoardFlowErrorBanner(
     }
 }
 
-/** Short confirmation after an action ("Timer started for Catan"). Provided by the app shell. */
-fun interface BoardFlowMessenger {
-    fun show(message: String)
+/**
+ * Short confirmation after an action ("Play updated"). Provided by the app shell. Pass an
+ * [actionLabel] and [onAction] for an Undo; the snackbar then stays a little longer.
+ */
+interface BoardFlowMessenger {
+    fun show(message: String, actionLabel: String? = null, onAction: (() -> Unit)? = null)
 }
 
-val LocalBoardFlowMessenger = staticCompositionLocalOf { BoardFlowMessenger { } }
+val LocalBoardFlowMessenger = staticCompositionLocalOf<BoardFlowMessenger> {
+    object : BoardFlowMessenger {
+        override fun show(message: String, actionLabel: String?, onAction: (() -> Unit)?) = Unit
+    }
+}
 
 @Composable
 fun BoardFlowSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier) {
@@ -507,36 +514,6 @@ fun BoardFlowInfoPill(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-/** A headline number with its label underneath. Use a row of these for a summary. */
-@Composable
-fun BoardFlowStatTile(
-    value: String,
-    label: String,
-    modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh
-) {
-    Surface(modifier = modifier, shape = BoardFlowShape.Card, color = containerColor) {
-        Column(
-            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.lg),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                value,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
-            )
-            Text(
-                label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
             )
         }
     }

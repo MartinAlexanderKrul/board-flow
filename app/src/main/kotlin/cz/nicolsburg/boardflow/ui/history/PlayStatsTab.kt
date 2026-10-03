@@ -226,7 +226,7 @@ internal fun StatsContent(
             // ── Hero rotating observation — THE centrepiece, always first ──────
             if (stats.activeObservations.isNotEmpty()) {
                 val insightLabel = when (timeRange) {
-                    StatsTimeRange.ALL        -> "Your Chronicle"
+                    StatsTimeRange.ALL        -> "Your chronicle"
                     StatsTimeRange.THIS_YEAR  -> "${LocalDate.now().year} So Far"
                     StatsTimeRange.THIS_MONTH -> "${LocalDate.now().month.name.lowercase().replaceFirstChar { it.uppercase() }}'s Table"
                     StatsTimeRange.LAST_30    -> "Recent Run"
@@ -716,7 +716,7 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
     val dayLabels = listOf("M", "", "W", "", "F", "", "S")
 
     SectionCard {
-        StatsCardHeader(title = "Play History", subtitle = "Last 52 weeks")
+        StatsCardHeader(title = "Play history", subtitle = "Last 52 weeks")
 
         Row(modifier = Modifier.fillMaxWidth()) {
             // Fixed day-of-week labels
@@ -929,7 +929,7 @@ private fun TopGamesSection(
     thumbnailFor: (Int) -> String? = { null }
 ) {
     SectionCard {
-        StatsCardHeader(title = "Top Games", subtitle = rangeLabel)
+        StatsCardHeader(title = "Top games", subtitle = rangeLabel)
         val maxPlays = games.firstOrNull()?.plays ?: 1
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             games.forEachIndexed { i, game ->
@@ -1038,7 +1038,7 @@ private fun HeadToHeadSection(players: List<Player>, sourcePlays: List<LoggedPla
     }
 
     SectionCard {
-        StatsCardHeader(title = "Head to Head", subtitle = "Pick two players")
+        StatsCardHeader(title = "Head to head", subtitle = "Pick two players")
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1192,7 +1192,7 @@ private fun HeadToHeadSection(players: List<Player>, sourcePlays: List<LoggedPla
 @Composable
 private fun RivalryPairsSection(pairs: List<RivalryPair>) {
     SectionCard {
-        StatsCardHeader(title = "Great Rivalries", subtitle = "At your table")
+        StatsCardHeader(title = "Great rivalries", subtitle = "At your table")
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             pairs.forEach { pair -> RivalryPairRow(pair) }
         }
@@ -1294,7 +1294,7 @@ private fun TopPlayersSection(
     onPlayerTapped: (String) -> Unit = {}
 ) {
     SectionCard {
-        StatsCardHeader(title = "Top Players", subtitle = rangeLabel)
+        StatsCardHeader(title = "Top players", subtitle = rangeLabel)
         val maxPlays = topPlayers.firstOrNull()?.plays ?: 1
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             topPlayers.forEachIndexed { i, player ->
@@ -1373,7 +1373,7 @@ private fun OnThisDaySection(
     onGameTapped: (gameId: Int, gameName: String) -> Unit = { _, _ -> }
 ) {
     SectionCard {
-        StatsCardHeader(title = "On This Day")
+        StatsCardHeader(title = "On this day")
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             entries.forEach { entry ->
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

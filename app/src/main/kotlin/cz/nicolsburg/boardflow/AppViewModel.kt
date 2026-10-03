@@ -980,6 +980,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _players.value = list.toList(); persistPlayers(_players.value)
     }
 
+    /** Puts back a player removed with [deletePlayer] (Undo). */
+    fun restorePlayer(player: Player) {
+        if (_players.value.any { it.id == player.id }) return
+        val list = (_players.value + player).sortedBy { it.displayName.lowercase() }
+        _players.value = list; persistPlayers(list)
+    }
+
     fun deletePlayer(id: String) { _players.value = _players.value.filter { it.id != id }; persistPlayers(_players.value) }
 
     // --- Challenges ---
@@ -1951,6 +1958,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 clearActiveSessionIfMatchingPlay(deletedPlay)
             }.onSuccess { onSuccess() }
                 .onFailure { onError(it.message ?: "Failed to delete local play") }
+        }
+    }
+
+    /** Puts back a local play removed with [deleteLocalPlay] (Undo). */
+    fun restoreLocalPlay(play: LoggedPlay) {
+        viewModelScope.launch {
+            runCatching {
+                container.canonicalCollectionStore.saveLoggedPlay(play)
+                _playHistory.value = container.canonicalCollectionStore.getLoggedPlays()
+            }
         }
     }
 
@@ -3013,7 +3030,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("best_tonight", "Best For Tonight", "$playerCount players at the table", picks)
+        return RecommendationLane("best_tonight", "Best for tonight", "$playerCount players at the table", picks)
     }
 
     private fun buildGroupFavoritesLane(
@@ -3028,7 +3045,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("group_favorites", "Great With This Group", "Based on your shared history", picks)
+        return RecommendationLane("group_favorites", "Great with this group", "Based on your shared history", picks)
     }
 
     private fun buildNeglectedFavoritesLane(
@@ -3054,7 +3071,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("neglected_favorites", "Neglected Favorites", "Loved before, due for a return", picks)
+        return RecommendationLane("neglected_favorites", "Neglected favorites", "Loved before, due for a return", picks)
     }
 
     private fun buildQuickOptionLane(
@@ -3074,7 +3091,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
-        return RecommendationLane("quick_option", "Quick To Table", "Shorter picks for this group size", picks)
+        return RecommendationLane("quick_option", "Quick to table", "Shorter picks for this group size", picks)
     }
 
     private fun scoreGamesForGroup(

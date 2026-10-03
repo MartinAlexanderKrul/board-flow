@@ -1,5 +1,7 @@
 package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
@@ -326,12 +328,21 @@ internal fun SleevesContent(
                         modifier = Modifier.padding(vertical = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            "Included in sleeve count",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 2.dp)
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Included in sleeve count",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            BoardFlowInlineAction(onClick = onIncludeAll) { Text("All") }
+                            BoardFlowInlineAction(
+                                onClick = { onExcludeAll(allGamesToSleeve.map { it.objectId }.toSet()) }
+                            ) { Text("None") }
+                        }
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
                         )
@@ -530,6 +541,18 @@ private fun SleeveSummaryHeader(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            BoardFlowFilterChip(
+                selected = !showAllGames,
+                onClick = { if (showAllGames) onLongPress() },
+                label = { Text("To sleeve") }
+            )
+            BoardFlowFilterChip(
+                selected = showAllGames,
+                onClick = { if (!showAllGames) onLongPress() },
+                label = { Text("All owned") }
+            )
         }
     }
 }
@@ -885,7 +908,7 @@ private fun SleeveInventorySheetContent(
                 Box(modifier = Modifier.size(1.dp))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BoardFlowInlineAction(onClick = onDismiss, destructive = true, large = true) { Text("Cancel") }
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
                 BoardFlowButton(onClick = { onSetCount(parsedCount) }) { Text("Save") }
             }
         }
