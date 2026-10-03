@@ -104,7 +104,13 @@ class SetupGuideRepository(
         }
     }
 
-    /** Refreshes the cached remote index at most once per [CATALOG_MAX_AGE_MS] unless [force]d. */
+    /**
+     * Refreshes the cached remote index at most once per [CATALOG_MAX_AGE_MS] unless [force]d,
+     * then downloads every catalog guide that is newer than the local copy, so guides published
+     * after this APK was built work offline too. Guides are small (a few KB each), and only
+     * guides whose catalog version beats the bundled or downloaded one are fetched; a failed
+     * download is retried on the next call.
+     */
     suspend fun refreshCatalogIfStale(isOnline: Boolean, force: Boolean = false) {
         if (isOnline) {
             mutex.withLock {
@@ -113,16 +119,11 @@ class SetupGuideRepository(
                     catalog.fetchIndex()?.let { store.replaceSetupGuideCatalog(it) }
                 }
             }
+            store.getSetupGuideCatalog()
+                .filter { it.isSupported() }
+                .forEach { downloadIfNewer(it.gameId) }
         }
         refreshAvailability()
-    }
-
-    /** Makes catalog guides for these (e.g. owned) games available offline. */
-    suspend fun prefetch(gameIds: Collection<Int>, isOnline: Boolean) {
-        if (!isOnline || gameIds.isEmpty()) return
-        val baseIds = gameIds.mapNotNull { _availability.value[it]?.baseGameId }.toSet()
-        baseIds.forEach { downloadIfNewer(it) }
-        if (baseIds.isNotEmpty()) refreshAvailability()
     }
 
     private suspend fun downloadIfNewer(baseId: Int) = mutex.withLock {

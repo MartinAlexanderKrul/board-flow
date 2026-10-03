@@ -204,15 +204,6 @@ fun BoardFlowApp(
         appViewModel.collectionStatusUpdates.collect(syncViewModel::applyCollectionStatusUpdate)
     }
 
-    // Keep setup guides for owned games available offline once the catalog knows about them.
-    LaunchedEffect(collectionGames, setupGuideAvailability.keys) {
-        val ownedIds = collectionGames.filter { it.isOwned }.mapNotNull { it.objectId.toIntOrNull() }
-        setupGuideRepository.prefetch(ownedIds.filter { it in setupGuideAvailability }, appViewModel.isOnline())
-    }
-
-    fun openQuickSetup(gameId: Int) {
-        navController.navigate(AppRoutes.quickSetup(gameId)) { launchSingleTop = true }
-    }
 
     // Reload play data after any sync completes so historyPlays (and Stats) reflect
     // fresh data. SyncViewModel writes to Room via its own store; AppViewModel's _bggPlays
@@ -441,6 +432,17 @@ fun BoardFlowApp(
                 }
             }
         }
+    }
+
+    // A guide that only exists in the remote catalog and was not downloaded yet cannot open
+    // offline; say so instead of opening an empty screen. Everything bundled or downloaded opens.
+    fun openQuickSetup(gameId: Int) {
+        val availability = setupGuideAvailability[gameId]
+        if (availability != null && !availability.offlineReady && !appViewModel.isOnline()) {
+            messenger.show("This guide is available when you're online")
+            return
+        }
+        navController.navigate(AppRoutes.quickSetup(gameId)) { launchSingleTop = true }
     }
 
     val playerColors = remember(players) { playerColorMap(players) }
