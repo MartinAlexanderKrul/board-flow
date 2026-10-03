@@ -364,29 +364,32 @@ fun GameDetailsDialog(
                         ) {
                             if (bggUrl != null) {
                                 BoardFlowSecondaryButton(
-                                    onClick = { open(bggUrl) }
+                                    onClick = { open(bggUrl) },
+                                    compact = true
                                 ) {
-                                    Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Open BGG")
+                                    Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("BGG", style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                             if (rulesUrl != null) {
                                 BoardFlowSecondaryButton(
-                                    onClick = { open(rulesUrl) }
+                                    onClick = { open(rulesUrl) },
+                                    compact = true
                                 ) {
-                                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Rules")
+                                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Rules", style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                             if (driveUrl != null) {
                                 BoardFlowSecondaryButton(
-                                    onClick = { open(driveUrl) }
+                                    onClick = { open(driveUrl) },
+                                    compact = true
                                 ) {
-                                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Drive")
+                                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Drive", style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                         }
@@ -1911,13 +1914,13 @@ private fun DialogPrimaryActionButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 32.dp),
+        modifier = modifier.heightIn(min = BoardFlowActionTokens.SecondaryButtonMinHeight),
         shape = BoardFlowShape.Pill,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
         ),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+        contentPadding = BoardFlowActionTokens.SecondaryButtonContentPadding
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,

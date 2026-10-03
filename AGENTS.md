@@ -294,7 +294,7 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
   searchable in Log Play (`AppViewModel.logPlayPool`), and resolve as game info from a play.
   Sleeve surfaces filter on `isOwned`, so they ignore played-only games.
 - game detail dialog is a major cross-link hub into History and Players
-- the detail dialog's header buttons `Log play` / `Setup` / `History` are all the same solid amber pill (`DialogPrimaryActionButton`); its bottom row `Open BGG` / `Rules` / `Drive` is centred `BoardFlowSecondaryButton`s; `Rules` appears when `RulebookLinks` (bundled `assets/rulebooks.json`, BGG id -> path in the public `boardgame-rulebooks` GitHub repo) has the game's id, and opens the PDF (or the folder when the game has several files) in the browser; entries that are full URLs (temporary RulesPal links for games with no PDF yet) are opened as-is; regenerate the JSON when rulebooks are added to that repo
+- the detail dialog's header buttons `Log play` / `Setup` / `History` are all the same solid amber pill (`DialogPrimaryActionButton`); its bottom row `BGG` / `Rules` / `Drive` is centred `BoardFlowSecondaryButton(compact = true)`s, the same 32dp size as the header buttons (`BoardFlowActionTokens.SecondaryButtonMinHeight` / `SecondaryButtonContentPadding`); `Rules` appears when `RulebookLinks` (bundled `assets/rulebooks.json`, BGG id -> path in the public `boardgame-rulebooks` GitHub repo) has the game's id, and opens the PDF (or the folder when the game has several files) in the browser; entries that are full URLs (temporary RulesPal links for games with no PDF yet) are opened as-is; regenerate the JSON when rulebooks are added to that repo
 - sleeve display respects per-game exclusion toggles
 
 ### Sync

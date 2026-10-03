@@ -426,7 +426,8 @@ object BoardFlowActionTokens {
     val ButtonContentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
     val InlineActionContentPadding = ButtonDefaults.TextButtonContentPadding
     val SecondaryButtonMinHeight = 32.dp
-    val SecondaryButtonContentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
+    // Compact pills (32dp): the game detail header buttons and its BGG / Rules / Drive links.
+    val SecondaryButtonContentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
     val IconButtonSize = Dimens.MinTouchTarget
     // Translucent black: always a step darker than the card, dialog or page underneath.
     val SecondaryContainer = Color.Black.copy(alpha = 0.34f)
@@ -582,6 +583,8 @@ fun BoardFlowSecondaryButton(
         disabledContainerColor = Color.Transparent,
         disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
     ),
+    // 32dp instead of 40dp, for a row of small links (game detail: BGG, Rules, Drive).
+    compact: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -590,7 +593,7 @@ fun BoardFlowSecondaryButton(
     Button(
         onClick = onClick,
         modifier = modifier
-            .defaultMinSize(minHeight = BoardFlowActionTokens.ButtonMinHeight)
+            .heightIn(min = if (compact) BoardFlowActionTokens.SecondaryButtonMinHeight else BoardFlowActionTokens.ButtonMinHeight)
             .scale(scale),
         enabled = enabled,
         colors = colors,
@@ -600,7 +603,7 @@ fun BoardFlowSecondaryButton(
             else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
         ),
         shape = BoardFlowActionTokens.ButtonShape,
-        contentPadding = BoardFlowActionTokens.ButtonContentPadding,
+        contentPadding = if (compact) BoardFlowActionTokens.SecondaryButtonContentPadding else BoardFlowActionTokens.ButtonContentPadding,
         interactionSource = interactionSource,
         content = content
     )
