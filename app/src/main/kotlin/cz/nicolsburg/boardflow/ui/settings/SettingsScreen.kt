@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.settings
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Key
@@ -196,7 +197,9 @@ fun SettingsScreen(
     var showCustomMoodsDialog by remember { mutableStateOf(false) }
     val hasCollection = cachedCollection.isNotEmpty()
 
-    val listState = rememberLazyListState()
+    // One list state per tab: during the tab slide both tabs are on screen.
+    val listStates = SettingsSection.entries.associateWith { rememberLazyListState() }
+    val listState = listStates.getValue(selectedSection)
     var controlsVisible by remember { mutableStateOf(true) }
     val collectionSize = cachedCollection.size
 
@@ -363,7 +366,6 @@ fun SettingsScreen(
 
     LaunchedEffect(selectedSection) {
         controlsVisible = true
-        listState.scrollToItem(0)
     }
 
     LaunchedEffect(controlsVisible, selectedSection) {
@@ -389,10 +391,15 @@ fun SettingsScreen(
                     onTabSelected = { selectedSection = SettingsSection.entries[it] }
                 )
             }
-            if (selectedSection == SettingsSection.SYNC) {
+            BoardFlowTabContent(
+                target = selectedSection,
+                order = { it.ordinal },
+                modifier = Modifier.fillMaxSize()
+            ) { section ->
+            if (section == SettingsSection.SYNC) {
                 syncContent()
             } else LazyColumn(
-                state = listState,
+                state = listStates.getValue(section),
                 modifier = Modifier
                     .fillMaxSize()
                     .swipeToNavigateTabs(
@@ -404,7 +411,7 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
-            if (selectedSection == SettingsSection.PREFERENCES) {
+            if (section == SettingsSection.PREFERENCES) {
                 // Sections of rows, like Sync: a title, then one group.
                 item { BoardFlowSectionTitle(title = "Stats") }
                 item {
@@ -512,7 +519,7 @@ fun SettingsScreen(
                 }
             }
 
-            if (selectedSection == SettingsSection.SCAN) {
+            if (section == SettingsSection.SCAN) {
                 item { BoardFlowSectionTitle(title = "Gemini", supporting = "Optional. Reads scoresheet photos and writes chronicles.") }
                 item {
                     var showKeyDialog by remember { mutableStateOf(false) }
@@ -656,7 +663,7 @@ fun SettingsScreen(
                 }
             }
 
-            if (selectedSection == SettingsSection.DATA) {
+            if (section == SettingsSection.DATA) {
                 item { BoardFlowSectionTitle(title = "Backup and restore", supporting = "Move everything to a new phone: players, plays, challenges and settings.") }
                 item {
                     BoardFlowFormGroup {
@@ -722,6 +729,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
                 }
+            }
             }
             }
         }

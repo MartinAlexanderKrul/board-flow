@@ -2,6 +2,7 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
 import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import cz.nicolsburg.boardflow.ui.collection.CollectionStatsTab
 import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
@@ -882,26 +883,23 @@ fun HistoryScreen(
                     onNavigate = { activeTab = visibleTabs[it] }
                 )
         ) {
-            if (activeTab != HistoryTab.PLAYS) {
-                BoardFlowAnimatedVisibility(visible = controlsVisible) {
-                    ScreenTabRow(
-                        tabs = visibleTabs.map { it.label },
-                        selectedIndex = visibleTabs.indexOf(activeTab).coerceAtLeast(0),
-                        onTabSelected = { navHistory = emptyList(); activeTab = visibleTabs[it] }
-                    )
-                }
+            BoardFlowAnimatedVisibility(visible = controlsVisible) {
+                ScreenTabRow(
+                    tabs = visibleTabs.map { it.label },
+                    selectedIndex = visibleTabs.indexOf(activeTab).coerceAtLeast(0),
+                    onTabSelected = { navHistory = emptyList(); activeTab = visibleTabs[it] }
+                )
             }
 
-            when (activeTab) {
+            BoardFlowTabContent(
+                target = activeTab,
+                order = { visibleTabs.indexOf(it) },
+                modifier = Modifier.fillMaxSize()
+            ) { tab ->
+            when (tab) {
                 HistoryTab.PLAYS -> Column(modifier = Modifier.fillMaxSize()) {
                     BoardFlowAnimatedVisibility(visible = controlsVisible) {
                         Column {
-                            ScreenTabRow(
-                                tabs = visibleTabs.map { it.label },
-                                selectedIndex = visibleTabs.indexOf(activeTab).coerceAtLeast(0),
-                                onTabSelected = { navHistory = emptyList(); activeTab = visibleTabs[it] }
-                            )
-
                             GameSearchField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
@@ -1198,6 +1196,7 @@ fun HistoryScreen(
                     listState = challengesListState,
                     modifier = Modifier.fillMaxSize()
                 )
+            }
             }
 
             if (showCreateChallengeDialog) {

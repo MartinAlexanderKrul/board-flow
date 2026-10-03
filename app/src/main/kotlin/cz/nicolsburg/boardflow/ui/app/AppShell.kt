@@ -530,7 +530,11 @@ fun BoardFlowApp(
             startDestination = AppRoutes.NEW_PLAY,
             modifier = Modifier
                 .padding(innerPadding)
-                .nestedScroll(nestedScrollConnection)
+                .nestedScroll(nestedScrollConnection),
+            enterTransition = NavTransitions.enter,
+            exitTransition = NavTransitions.exit,
+            popEnterTransition = NavTransitions.popEnter,
+            popExitTransition = NavTransitions.popExit
         ) {
             composable(AppRoutes.NEW_PLAY) {
                 NewPlayScreen(

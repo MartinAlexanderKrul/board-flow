@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.collection
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
 import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.theme.Spacing
@@ -492,7 +493,12 @@ fun CollectionScreen(
                                 onLoad = if (hasBggCredentials) ({ triggerSync() }) else null
                             )
 
-                            tabMode == TabMode.SLEEVES -> SleevesContent(
+                            else -> BoardFlowTabContent(
+                                target = tabMode,
+                                order = { it.ordinal },
+                                modifier = Modifier.fillMaxSize()
+                            ) { mode ->
+                            if (mode == TabMode.SLEEVES) SleevesContent(
                                 allGames = allGames,
                                 listState = sleeveListState,
                                 excludedGameIds = sleevesExcludedGameIds,
@@ -505,9 +511,7 @@ fun CollectionScreen(
                                     messenger.show(if (count > 0) "Sleeve count saved" else "Sleeve count cleared")
                                 },
                                 initiallyExpandedGroup = sleevesHighlightGroup
-                            )
-
-                            else -> {
+                            ) else {
                                 Column(modifier = Modifier.fillMaxSize()) {
                                     BoardFlowAnimatedVisibility(visible = controlsVisible) {
                                         GameSearchField(
@@ -592,6 +596,7 @@ fun CollectionScreen(
                                         }
                                     }
                                 }
+                            }
                             }
                         }
                     }

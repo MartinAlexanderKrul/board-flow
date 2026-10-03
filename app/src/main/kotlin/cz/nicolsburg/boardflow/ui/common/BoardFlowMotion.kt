@@ -1,5 +1,12 @@
 package cz.nicolsburg.boardflow.ui.common
 
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterTransition
@@ -221,4 +228,37 @@ fun BoardFlowPullRefreshContainer(
             }
         }
     }
+}
+
+/**
+ * The content under a tab row. A new tab slides in from the side it sits on (from the right when
+ * moving to a later tab) while the old one slides the other way and fades, so a tap or a swipe on
+ * the tabs moves the page with it.
+ *
+ * Both tabs are on screen during the slide: give each tab its own list state, and draw the tab
+ * from the lambda's argument, not from the screen's current tab.
+ */
+@Composable
+fun <T> BoardFlowTabContent(
+    target: T,
+    order: (T) -> Int,
+    modifier: Modifier = Modifier,
+    content: @Composable (T) -> Unit
+) {
+    AnimatedContent(
+        targetState = target,
+        modifier = modifier,
+        contentAlignment = Alignment.TopStart,
+        transitionSpec = {
+            val direction = if (order(targetState) >= order(initialState)) 1 else -1
+            (slideInHorizontally(tween(260, easing = FastOutSlowInEasing)) { width -> direction * width / 10 } +
+                fadeIn(tween(200, delayMillis = 60, easing = LinearOutSlowInEasing)))
+                .togetherWith(
+                    slideOutHorizontally(tween(260, easing = FastOutSlowInEasing)) { width -> -direction * width / 10 } +
+                        fadeOut(tween(90, easing = FastOutLinearInEasing))
+                )
+                .using(SizeTransform(clip = false))
+        },
+        label = "tabContent"
+    ) { tab -> content(tab) }
 }

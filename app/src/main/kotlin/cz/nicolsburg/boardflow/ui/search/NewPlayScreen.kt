@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.search
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
 import cz.nicolsburg.boardflow.ui.common.swipeToNavigateTabs
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -148,7 +149,9 @@ fun NewPlayScreen(
     LaunchedEffect(Unit) { viewModel.loadLogPlayGames() }
 
     // Tabs and search slide away while scrolling down and come back on the way up (as in Collection).
-    val listState = rememberLazyListState()
+    // One list per tab: during the tab slide both are on screen.
+    val logListState = rememberLazyListState()
+    val guidesListState = rememberLazyListState()
     var controlsVisible by remember { mutableStateOf(true) }
     // Follows the finger, not the list position: hiding the controls makes the list taller, and a
     // position check would read that as scrolling back up and bring them straight back.
@@ -163,7 +166,7 @@ fun NewPlayScreen(
     }
     LaunchedEffect(selectedTab, showAllGuides) {
         controlsVisible = true
-        listState.scrollToItem(0)
+        if (selectedTab == NewPlayTab.QUICK_SETUP) guidesListState.scrollToItem(0)
     }
 
     LaunchedEffect(setupTab) { onActiveTabChange(if (setupTab) NewPlayTab.QUICK_SETUP.label else null) }
@@ -312,6 +315,13 @@ fun NewPlayScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            BoardFlowTabContent(
+                target = selectedTab,
+                order = { it.ordinal },
+                modifier = Modifier.fillMaxSize()
+            ) { tab ->
+            val setupTab = tab == NewPlayTab.QUICK_SETUP && !correctionMode
+            val listState = if (tab == NewPlayTab.QUICK_SETUP) guidesListState else logListState
             when {
                 setupTab && showAllGuides -> {
                     val matches = remember(allSetupGuides, query) {
@@ -481,6 +491,7 @@ fun NewPlayScreen(
                         }
                     }
                 }
+            }
             }
         }
     }
