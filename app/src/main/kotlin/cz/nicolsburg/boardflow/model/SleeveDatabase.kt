@@ -533,7 +533,24 @@ object SleeveDatabase {
      * closest match (minimum Manhattan distance) so list order does not determine results.
      * Also tries swapped dimensions to handle landscape vs portrait variants.
      */
+    // Sizes repeat across a collection, and the sleeves screen asks for every card set of every
+    // game: remember each answer (a miss too) so the table is scanned once per distinct size.
+    private object NoMatch
+    private val sizeCache = java.util.concurrent.ConcurrentHashMap<String, Any>()
+
+    // The table's own sizes, parsed once.
+    private val parsedEntries: List<Pair<SleeveEntry, List<Pair<Float, Float>>>> by lazy {
+        entries.map { entry ->
+            entry to (listOf(entry.recommendedSize) + entry.originalSizes).mapNotNull { parseDimensions(it) }
+        }
+    }
+
     fun findBySize(size: String): SleeveEntry? {
+        val cached = sizeCache.getOrPut(size) { findBySizeUncached(size) ?: NoMatch }
+        return cached as? SleeveEntry
+    }
+
+    private fun findBySizeUncached(size: String): SleeveEntry? {
         val query = parseDimensions(size) ?: return null
         val normal  = closestMatch(query)
         val rotated = closestMatch(query.second to query.first)
@@ -547,9 +564,8 @@ object SleeveDatabase {
     private fun closestMatch(q: Pair<Float, Float>): Pair<SleeveEntry, Float>? {
         var best: SleeveEntry? = null
         var bestDist = Float.MAX_VALUE
-        for (entry in entries) {
-            for (sizeStr in listOf(entry.recommendedSize) + entry.originalSizes) {
-                val d = parseDimensions(sizeStr) ?: continue
+        for ((entry, sizes) in parsedEntries) {
+            for (d in sizes) {
                 val dw = abs(d.first  - q.first)
                 val dh = abs(d.second - q.second)
                 if (dw < 0.6f && dh < 0.6f) {

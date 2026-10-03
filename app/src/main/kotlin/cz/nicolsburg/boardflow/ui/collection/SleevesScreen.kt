@@ -1,5 +1,8 @@
 package cz.nicolsburg.boardflow.ui.collection
 
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.produceState
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
@@ -250,9 +253,17 @@ internal fun SleevesContent(
             .sortedBy { it.name.lowercase() }
     }
 
-    val groups = remember(allGames, excludedGameIds, showAllGames) {
-        computeSleeveSummary(allGames, excludedGameIds, showAll = showAllGames)
+    // Both views are worked out once, off the main thread, so To sleeve / All owned switch at once.
+    val summaries by produceState(
+        initialValue = null as Pair<List<SleeveSizeGroup>, List<SleeveSizeGroup>>?,
+        allGames, excludedGameIds
+    ) {
+        value = withContext(Dispatchers.Default) {
+            computeSleeveSummary(allGames, excludedGameIds, showAll = false) to
+                computeSleeveSummary(allGames, excludedGameIds, showAll = true)
+        }
     }
+    val groups = summaries?.let { if (showAllGames) it.second else it.first } ?: emptyList()
 
     LaunchedEffect(initiallyExpandedGroup, groups) {
         if (initiallyExpandedGroup != null) {
