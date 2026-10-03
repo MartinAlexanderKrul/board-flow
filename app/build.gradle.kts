@@ -21,14 +21,14 @@ fun localProperty(name: String): String =
 
 android {
     namespace = "cz.nicolsburg.boardflow"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "cz.nicolsburg.boardflow"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 600
-        versionName = "6.0.0"
+        targetSdk = 36
+        versionCode = 601
+        versionName = "6.0.1"
 
         buildConfigField(
             "String",
