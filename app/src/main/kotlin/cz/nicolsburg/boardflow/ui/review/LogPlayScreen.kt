@@ -960,6 +960,15 @@ private fun AddPlayersRow(
     onNewPlayer: () -> Unit
 ) {
     val suggestions = (frequentPlayers + recentPlayers).distinctBy { it.id }
+    // Says what the pills are, so "No players yet" below never reads as a contradiction.
+    if (suggestions.isNotEmpty()) {
+        Text(
+            "Suggested",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = Spacing.xs)
+        )
+    }
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -1267,8 +1276,7 @@ private fun PostSaveCard(
                         Spacer(Modifier.height(16.dp))
                         Surface(
                             shape = BoardFlowShape.Control,
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)),
+                            color = Color.White.copy(alpha = 0.06f),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(
@@ -1283,14 +1291,11 @@ private fun PostSaveCard(
                                 )
 
                                 // Completed advances — prominent accent cards
-                                val pc  = MaterialTheme.colorScheme.primaryContainer
-                                val opc = MaterialTheme.colorScheme.onPrimaryContainer
                                 val pri = MaterialTheme.colorScheme.primary
                                 challengeAdvances.filter { it.isNewlyComplete }.forEach { advance ->
                                     Surface(
                                         shape = BoardFlowShape.Control,
-                                        color = pc.copy(alpha = 0.65f),
-                                        border = BorderStroke(1.dp, pri.copy(alpha = 0.35f)),
+                                        color = BoardFlowColors.Success.copy(alpha = 0.14f),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(
@@ -1301,14 +1306,14 @@ private fun PostSaveCard(
                                             Box(
                                                 modifier = Modifier
                                                     .size(32.dp)
-                                                    .background(pri.copy(alpha = 0.22f), CircleShape),
+                                                    .background(BoardFlowColors.Success.copy(alpha = 0.22f), CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     Icons.Default.EmojiEvents,
                                                     contentDescription = null,
                                                     modifier = Modifier.size(16.dp),
-                                                    tint = pri
+                                                    tint = BoardFlowColors.Success
                                                 )
                                             }
                                             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -1316,14 +1321,14 @@ private fun PostSaveCard(
                                                     advance.challenge.title,
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.SemiBold,
-                                                    color = opc,
+                                                    color = MaterialTheme.colorScheme.onSurface,
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis
                                                 )
                                                 Text(
                                                     "Complete!",
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = pri
+                                                    color = BoardFlowColors.Success
                                                 )
                                             }
                                         }
@@ -1334,8 +1339,7 @@ private fun PostSaveCard(
                                 challengeAdvances.filter { !it.isNewlyComplete }.take(2).forEach { advance ->
                                     Surface(
                                         shape = BoardFlowShape.Control,
-                                        color = pc.copy(alpha = 0.30f),
-                                        border = BorderStroke(1.dp, pri.copy(alpha = 0.20f)),
+                                        color = Color.White.copy(alpha = 0.06f),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Column(
@@ -1371,14 +1375,14 @@ private fun PostSaveCard(
                                                 )
                                                 Surface(
                                                     shape = BoardFlowShape.Pill,
-                                                    color = pc.copy(alpha = 0.80f)
+                                                    color = Color.White.copy(alpha = 0.08f)
                                                 ) {
                                                     Text(
                                                         "${advance.to} / ${advance.goal}",
                                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = opc
+                                                        color = pri
                                                     )
                                                 }
                                             }
@@ -1389,7 +1393,7 @@ private fun PostSaveCard(
                                                     .height(6.dp)
                                                     .clip(BoardFlowShape.Pill),
                                                 color = pri,
-                                                trackColor = pc.copy(alpha = 0.50f)
+                                                trackColor = Color.White.copy(alpha = 0.10f)
                                             )
                                         }
                                     }
@@ -1493,7 +1497,7 @@ private fun PostSaveCard(
                                 Text(
                                     "Try next",
                                     style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Icon(
                                     if (recommendationsExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -1507,8 +1511,7 @@ private fun PostSaveCard(
                                     nextRecommendations.take(2).forEach { pick ->
                                         Surface(
                                             shape = BoardFlowShape.Control,
-                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
-                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
+                                            color = Color.White.copy(alpha = 0.06f),
                                             modifier = Modifier.clickable { onPickRecommendation(pick.game) }
                                         ) {
                                             Row(
@@ -1564,32 +1567,18 @@ private fun VictoryPlayerRow(player: PlayerResult) {
     val primary  = MaterialTheme.colorScheme.primary
     Surface(
         shape  = BoardFlowShape.Control,
-        color  = if (isWinner) primary.copy(alpha = 0.20f)
-                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
-        border = if (isWinner) BorderStroke(1.dp, primary.copy(alpha = 0.55f)) else null
+        color  = if (isWinner) primary.copy(alpha = 0.16f)
+                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
     ) {
         Row(
             modifier          = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left accent strip for winner
-            if (isWinner) {
-                Box(
-                    modifier = Modifier
-                        .width(3.dp)
-                        .fillMaxHeight()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                listOf(primary, primary.copy(alpha = 0.55f))
-                            )
-                        )
-                )
-            }
             Row(
                 modifier = Modifier
                     .weight(1f)
                     .padding(
-                        start  = if (isWinner) 10.dp else 12.dp,
+                        start  = 12.dp,
                         end    = 12.dp,
                         top    = 11.dp,
                         bottom = 11.dp

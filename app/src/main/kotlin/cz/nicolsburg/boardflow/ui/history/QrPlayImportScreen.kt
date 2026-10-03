@@ -2,6 +2,21 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowErrorBanner
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.Switch
+import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.ChevronRight
+import cz.nicolsburg.boardflow.ui.theme.Spacing
+import cz.nicolsburg.boardflow.ui.common.formatDisplayDate
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import androidx.compose.material3.ButtonDefaults
 import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
@@ -344,33 +359,50 @@ private fun QrSessionImportReview(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Surface(
-                    shape = BoardFlowShape.Sheet,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
+                Column(
+                    modifier = Modifier.padding(top = Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text("Import session", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        if (gameNames.size == 1) gameNames.first() else "${gameNames.size} games",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        listOfNotNull(
+                            "$totalPlays play${if (totalPlays != 1) "s" else ""}",
+                            date.takeIf { it.isNotBlank() }?.let { formatDisplayDate(it) },
+                            location
+                        ).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (allPlayerNames.isNotEmpty()) {
                         Text(
-                            if (gameNames.size == 1) gameNames.first() else "${gameNames.size} games",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            buildString {
-                                append("$totalPlays play${if (totalPlays != 1) "s" else ""}")
-                                if (date.isNotBlank()) append("  •  $date")
-                                if (location != null) append("  •  $location")
-                            },
+                            allPlayerNames.joinToString(", "),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        if (allPlayerNames.isNotEmpty()) {
+                    }
+                }
+            }
+
+            item {
+                BoardFlowFormGroup {
+                    plays.forEachIndexed { index, play ->
+                        if (index > 0) BoardFlowFormDivider()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(play.gameName, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
                             Text(
-                                allPlayerNames.joinToString(", "),
+                                listOfNotNull(
+                                    "${play.players.size} players",
+                                    play.durationMinutes.takeIf { it > 0 }?.let { "$it min" }
+                                ).joinToString(" · "),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -379,43 +411,8 @@ private fun QrSessionImportReview(
                 }
             }
 
-            items(plays, key = { it.id }) { play ->
-                Surface(
-                    shape = BoardFlowShape.Card,
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(play.gameName, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                        Text(
-                            buildString {
-                                append("${play.players.size} players")
-                                if (play.durationMinutes > 0) append("  •  ${play.durationMinutes} min")
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
             errorMessage?.let { message ->
-                item {
-                    Surface(
-                        shape = BoardFlowShape.Card,
-                        color = MaterialTheme.colorScheme.errorContainer
-                    ) {
-                        Text(
-                            message,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                        )
-                    }
-                }
+                item { BoardFlowErrorBanner(message = message) }
             }
 
             item {
@@ -505,103 +502,92 @@ private fun QrPlayImportReview(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Same form as Log Play: the game, then grouped rows.
             item {
-                Surface(
-                    shape = BoardFlowShape.Sheet,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f))
+                Column(
+                    modifier = Modifier.padding(top = Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text("Import play", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(play.gameName, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                        Surface(
-                            shape = BoardFlowShape.Control,
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.42f)
-                        ) {
-                            Text(
-                                matchedGameName?.let { "Matched to collection: $it" } ?: "Not currently matched to a collection game. This will still save locally.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
-                            )
+                    Text(play.gameName, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        matchedGameName?.let { "Matched to your collection" } ?: "Not in your collection. It will still be saved on this device.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            item {
+                BoardFlowFormGroup {
+                    BoardFlowFormRow(label = "Date", icon = Icons.Default.CalendarMonth, onClick = { showDatePicker = true }) {
+                        Text(
+                            formatDisplayDate(date),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(Icons.Default.ChevronRight, contentDescription = "Pick date", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Duration", icon = Icons.Default.Schedule) {
+                        BoardFlowInlineField(
+                            value = duration,
+                            onValueChange = { duration = it.filter(Char::isDigit) },
+                            placeholder = "Minutes",
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (duration.isNotBlank()) {
+                            Text("min", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            ImportField(
-                                value = date,
-                                onValueChange = {},
-                                label = "Date",
-                                readOnly = true,
-                                modifier = Modifier.weight(1.3f),
-                                trailingIcon = {
-                                    IconButton(onClick = { showDatePicker = true }) {
-                                        Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date", modifier = Modifier.size(18.dp))
-                                    }
-                                }
-                            )
-                            ImportField(
-                                value = duration,
-                                onValueChange = { duration = it.filter(Char::isDigit) },
-                                label = "Duration",
-                                modifier = Modifier.weight(0.7f),
-                                keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
-                            )
+                    }
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Location", icon = Icons.Default.Place) {
+                        BoardFlowInlineField(
+                            value = location,
+                            onValueChange = { location = it },
+                            placeholder = "Where did you play?",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Notes", icon = Icons.AutoMirrored.Filled.Notes) {
+                        BoardFlowInlineField(
+                            value = comments,
+                            onValueChange = { comments = it },
+                            placeholder = "Anything worth remembering",
+                            singleLine = false,
+                            maxLines = 4,
+                            modifier = Modifier.weight(1f).padding(vertical = Spacing.md)
+                        )
+                    }
+                }
+            }
+
+            item {
+                val count = quantity.toIntOrNull()?.coerceAtLeast(1) ?: 1
+                BoardFlowFormGroup {
+                    BoardFlowFormRow(label = "Quantity", labelWidth = null) {
+                        BoardFlowIconButton(onClick = { quantity = (count - 1).toString() }, enabled = count > 1) {
+                            Icon(Icons.Default.Remove, contentDescription = "Decrease")
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            ImportField(
-                                value = quantity,
-                                onValueChange = { quantity = it.filter(Char::isDigit) },
-                                label = "Quantity",
-                                modifier = Modifier.width(120.dp),
-                                keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
-                            )
-                            ImportField(
-                                value = location,
-                                onValueChange = { location = it },
-                                label = "Location",
-                                modifier = Modifier.weight(1f)
-                            )
+                        Text(
+                            count.toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.width(24.dp),
+                            textAlign = TextAlign.Center
+                        )
+                        BoardFlowIconButton(onClick = { quantity = (count + 1).toString() }) {
+                            Icon(Icons.Default.Add, contentDescription = "Increase")
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            SmallToggleCard(
-                                label = "Incomplete",
-                                selected = incomplete,
-                                onClick = { incomplete = !incomplete },
-                                modifier = Modifier.weight(1f)
-                            )
-                            SmallToggleCard(
-                                label = "Count in stats",
-                                selected = nowInStats,
-                                onClick = { nowInStats = !nowInStats },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        if (showNotes || comments.isNotBlank()) {
-                            ImportField(
-                                value = comments,
-                                onValueChange = { comments = it },
-                                label = "Notes",
-                                singleLine = false,
-                                minLines = 3,
-                                maxLines = 4,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        } else {
-                            TextButton(onClick = { showNotes = true }, contentPadding = PaddingValues(0.dp)) {
-                                Text("+ Add notes")
-                            }
-                        }
+                    }
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Incomplete play", labelWidth = null) {
+                        Switch(checked = incomplete, onCheckedChange = { incomplete = it })
+                    }
+                    BoardFlowFormDivider()
+                    BoardFlowFormRow(label = "Count in BGG stats", labelWidth = null) {
+                        Switch(checked = nowInStats, onCheckedChange = { nowInStats = it })
                     }
                 }
             }
@@ -622,7 +608,7 @@ private fun QrPlayImportReview(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Add")
+                        Text("Add player")
                     }
                 }
             }
@@ -645,19 +631,7 @@ private fun QrPlayImportReview(
             }
 
             errorMessage?.let { message ->
-                item {
-                    Surface(
-                        shape = BoardFlowShape.Card,
-                        color = MaterialTheme.colorScheme.errorContainer
-                    ) {
-                        Text(
-                            message,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                        )
-                    }
-                }
+                item { BoardFlowErrorBanner(message = message) }
             }
 
             item {
@@ -688,65 +662,6 @@ private fun QrPlayImportReview(
 
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ImportField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    modifier: Modifier = Modifier,
-    readOnly: Boolean = false,
-    singleLine: Boolean = true,
-    minLines: Int = 1,
-    maxLines: Int = 1,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    trailingIcon: @Composable (() -> Unit)? = null
-) {
-    BoardFlowTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier,
-        label = { Text(label) },
-        readOnly = readOnly,
-        singleLine = singleLine,
-        minLines = minLines,
-        maxLines = maxLines,
-        keyboardOptions = keyboardOptions,
-        trailingIcon = trailingIcon
-    )
-}
-
-@Composable
-private fun SmallToggleCard(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        onClick = onClick,
-        shape = BoardFlowShape.Control,
-        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-        else MaterialTheme.colorScheme.surface.copy(alpha = 0.42f),
-        border = BorderStroke(
-            1.dp,
-            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)
-        )
-    ) {
-        Box(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                label,
-                style = MaterialTheme.typography.labelLarge,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

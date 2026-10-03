@@ -958,7 +958,8 @@ fun BoardFlowCloseGlyph(
     Icon(
         imageVector = Icons.Default.Close,
         contentDescription = contentDescription,
-        tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+        // Close is navigation, not emphasis: grey like the other utility icons.
+        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
         modifier = modifier.size(iconSize)
     )
 }

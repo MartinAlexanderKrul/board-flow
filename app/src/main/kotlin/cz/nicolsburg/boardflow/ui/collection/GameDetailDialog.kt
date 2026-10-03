@@ -254,7 +254,8 @@ fun GameDetailsDialog(
         }
     }
     val compactHeaderAlpha by remember {
-        derivedStateOf { ((headerCollapse - 0.12f) / 0.88f).coerceIn(0f, 1f) }
+        // The compact bar takes over only once the full header has faded, so the two never overlap.
+        derivedStateOf { ((headerCollapse - 0.45f) / 0.3f).coerceIn(0f, 1f) }
     }
 
     val rulesUrl = remember(gameObjectId) { RulebookLinks.urlFor(context, gameObjectId) }
@@ -704,6 +705,8 @@ private fun HeaderSection(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            // Fades out as it scrolls under the compact bar.
+            .alpha((1f - collapse / 0.5f).coerceIn(0f, 1f))
             .padding(top = 10.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top
@@ -1853,9 +1856,8 @@ private fun CompactStickyHeader(
 ) {
     if (alpha <= 0f) return
     Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f * alpha),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = BoardFlowShape.Card,
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.08f * alpha)),
         modifier = modifier.alpha(alpha)
     ) {
         Row(

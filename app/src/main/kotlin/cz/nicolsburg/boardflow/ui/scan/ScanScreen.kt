@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.scan
 
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import androidx.compose.foundation.layout.Box
@@ -236,13 +237,13 @@ fun ScanScreen(
                                             Icon(
                                                 Icons.Default.Warning,
                                                 contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.error,
+                                                tint = BoardFlowColors.Warning,
                                                 modifier = Modifier.size(18.dp)
                                             )
                                             Text(
                                                 "This scan may be hard to read.",
                                                 style = MaterialTheme.typography.titleSmall,
-                                                color = MaterialTheme.colorScheme.error
+                                                color = BoardFlowColors.Warning
                                             )
                                         }
                                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -261,18 +262,19 @@ fun ScanScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                                         ) {
+                                            // A poor photo: retaking is the recommended way on.
                                             BoardFlowSecondaryButton(
-                                                onClick = { pendingPhoto = null }
-                                            ) {
-                                                Text("Retake")
-                                            }
-                                            BoardFlowButton(
                                                 onClick = {
                                                     viewModel.extractScores(file)
                                                     pendingPhoto = null
                                                 }
                                             ) {
                                                 Text("Use anyway")
+                                            }
+                                            BoardFlowButton(
+                                                onClick = { pendingPhoto = null }
+                                            ) {
+                                                Text("Retake")
                                             }
                                         }
                                     } else {

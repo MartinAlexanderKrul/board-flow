@@ -1,12 +1,13 @@
 package cz.nicolsburg.boardflow.ui.history
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
 import cz.nicolsburg.boardflow.ui.theme.InsightRarityColors
 import androidx.compose.ui.graphics.compositeOver
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import cz.nicolsburg.boardflow.ui.common.GameCover
-import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.widthIn
@@ -154,27 +155,23 @@ internal fun StatsContent(
         // ── Time range filter ──────────────────────────────────────────────────
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                // Text options, quieter than the Plays / Collection switch above them.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     val today = LocalDate.now()
                     StatsTimeRange.entries.forEach { range ->
-                        BoardFlowFilterChip(
+                        RangeOption(
+                            label = when (range) {
+                                StatsTimeRange.ALL -> "All time"
+                                StatsTimeRange.THIS_YEAR -> today.year.toString()
+                                StatsTimeRange.THIS_MONTH ->
+                                    today.month.name.lowercase().replaceFirstChar { it.uppercase() }
+                                StatsTimeRange.LAST_30 -> "30 days"
+                            },
                             selected = timeRange == range,
-                            onClick = { onTimeRangeChange(range) },
-                            label = {
-                                Text(
-                                    when (range) {
-                                        StatsTimeRange.ALL -> "All time"
-                                        StatsTimeRange.THIS_YEAR -> today.year.toString()
-                                        StatsTimeRange.THIS_MONTH ->
-                                            today.month.name.lowercase().replaceFirstChar { it.uppercase() }
-                                        StatsTimeRange.LAST_30 -> "30 days"
-                                    },
-                                    maxLines = 1
-                                )
-                            }
+                            onClick = { onTimeRangeChange(range) }
                         )
                     }
                 }
@@ -1541,6 +1538,37 @@ private fun StatsCardHeader(title: String, subtitle: String? = null) {
         Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
         if (subtitle != null) {
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/** One time range: amber and underlined when selected, grey otherwise. */
+@Composable
+private fun RangeOption(label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .heightIn(min = Dimens.MinTouchTarget)
+            .clip(BoardFlowShape.Control)
+            .selectable(selected = selected, onClick = onClick, role = Role.Tab)
+            .padding(horizontal = Spacing.sm),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+            Box(
+                Modifier
+                    .padding(top = 2.dp)
+                    .width(16.dp)
+                    .height(2.dp)
+                    .clip(BoardFlowShape.Pill)
+                    .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
+            )
         }
     }
 }

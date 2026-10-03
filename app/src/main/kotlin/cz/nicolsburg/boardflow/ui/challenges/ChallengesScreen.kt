@@ -198,7 +198,8 @@ fun ChallengesTabContent(
             } else {
                 item {
                     Text(
-                        "No active challenges. Everything is wrapped up.",
+                        if (pausedProgress.isNotEmpty()) "No active challenges. Resume a paused one below, or start a new one."
+                        else "No active challenges. Everything is wrapped up.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -412,13 +413,17 @@ private fun ChallengeCard(
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
-                        challengeDescription(challenge),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    // The goal, unless the title already says it.
+                    val description = challengeDescription(challenge)
+                    if (!description.equals(challenge.title.trim(), ignoreCase = true)) {
+                        Text(
+                            description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
                 // The visible way to edit, pause, archive or delete.
                 BoardFlowIconButton(onClick = { showActionsSheet = true }) {

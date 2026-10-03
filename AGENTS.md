@@ -22,12 +22,12 @@ BoardFlow currently supports all of the following:
 - saved player roster with aliases, optional BGG usernames, and Levenshtein fuzzy matching
 - collection browsing on a single My Shelf tab with owned / wishlist / played filter dimensions, plus sleeves
 - per-game sleeve exclusion (toggle individual games out of sleeve display)
-- configurable sleeve manufacturer priority (Appearance settings)
+- configurable sleeve manufacturer priority (Settings > Preferences)
 - game detail drill-ins with history and player links
 - expansion / sibling title detection and display in log flow; `RelatedGamesBanner` is a single scrolling row of chips under the play details
 - record moment detection after logging (first win, new high score, win streak)
 - session memory: per-play mood chips (multi-select, preset + custom) and quote capture from `PlayDetailsDialog`
-- chronicle generation: AI-generated single atmospheric sentence per session using Gemini, with deterministic offline fallback; stored in `play_memories` Room table; persists independently of BGG sync; togglable via Settings > AI
+- chronicle generation: AI-generated single atmospheric sentence per session using Gemini, with deterministic offline fallback; stored in `play_memories` Room table; persists independently of BGG sync; togglable via Settings > Preferences
 - history tabs for plays, stats, and players
 - signature-based deduplication of local and BGG plays
 - QR code play sharing and import
@@ -101,7 +101,7 @@ Prefer targeted inspection of those files over broad exploration unless the issu
   - play post/edit/delete flows (local and BGG)
   - local outbox posting for unposted plays (per-play and bulk)
   - record moment detection (first win, new high score, win streak)
-  - session memory and chronicle: `savePlayMemory()` persists moods/quote to `play_memories` and triggers chronicle generation; `ensureChronicleForPlay()` auto-generates when opening a play with memory but no chronicle; concurrency managed via `chronicleJobs`, `chronicleInFlightSourceKeys`, `chronicleGenerationLock`; `chroniclePendingPlayIds: StateFlow<Set<String>>` drives the `...` placeholder; `chronicleEnabled: StateFlow<Boolean>` gates all generation and display; custom mood management: `addCustomMoodIfNew`, `deleteCustomMood`, `renameCustomMood`
+  - session memory and chronicle: `savePlayMemory()` persists moods/quote to `play_memories` and triggers chronicle generation; `ensureChronicleForPlay()` auto-generates when opening a play with memory but no chronicle; concurrency managed via `chronicleJobs`, `chronicleInFlightSourceKeys`, `chronicleGenerationLock`; `chroniclePendingPlayIds: StateFlow<Set<String>>` drives the `...` placeholder; `chronicleEnabled: StateFlow<Boolean>` gates all generation and display; custom mood management: `addCustomMoodIfNew`, `deleteCustomMood`
   - expansion / sibling title detection (`GameRelations`); `findRelatedGames` uses `isExpansionOf()` helper supporting both separator-based (`"Root: Sub"`) and space-prefix-based (`"Root Sub"`) expansion names; detects when the selected game is itself a space-separated expansion and treats its prefix as the base
   - cross-tab navigation requests (`pendingHistoryNavigation`)
   - import/export and backup restore
@@ -320,9 +320,9 @@ If the user presses back from `NewPlayScreen` while in correction mode, `exitQui
 - manages sleeve manufacturer priority (`SleeveManufacturer`; persisted in `SecurePreferences`, exposed via `AppViewModel.sleevePreferredManufacturer`; used in `GameDetailDialog` via `SleeveEntry.preferredFor()`)
 - manages import/export (backup includes recognition templates since format v3)
 - can clear cached collection
-- AI section: view / edit / delete individual recognition templates; bulk-clear all templates with confirmation
-- AI section: Chronicles toggle (on by default); turning it off cancels all in-flight generation jobs and hides chronicle cards throughout the app
-- AI section: Mood Templates manager (`CustomMoodsDialog`) — view, rename (`EditMoodDialog`), and delete custom moods saved during session memory entry
+- Scan tab: view / edit / delete individual recognition templates (`RecognitionTemplatesDialog`); bulk-clear all templates with confirmation
+- Preferences tab: Chronicles toggle (on by default); turning it off cancels all in-flight generation jobs and hides chronicle cards throughout the app
+- Preferences: Mood templates (`CustomMoodsDialog`) - view and delete custom moods saved during session memory entry (delete asks first: it also removes the mood from every play)
 
 ### AI Game Recognition
 
@@ -400,7 +400,7 @@ Good images continue to Gemini immediately. Poor images show a warning in `ScanS
 - `replaceGameRecognitionHint()` does a full replace without merging (used by the Settings edit dialog)
 - `deleteGameRecognitionHint(gameObjectId)` removes one entry; `clearGameRecognitionHints()` removes all
 - Hints are included in backup export/import (format v3 `recognitionHints` array; import bulk-replaces)
-- Settings > AI shows the hint count, allows viewing (tap), editing categories or deleting (long press), and bulk clearing with confirmation
+- Settings > Scan shows the hint count; the templates dialog has an amber pen (edit categories) and a red trash per template, plus bulk clearing with confirmation
 
 ### AI Player Recognition (`data/PlayerRecognitionEngine.kt`)
 
@@ -416,7 +416,7 @@ Good images continue to Gemini immediately. Poor images show a warning in `ScanS
 
 `SecurePreferences.savePlayerRecognitionHint()` upserts by `(scannedNameNormalized, confirmedRosterPlayerId)` pair, incrementing `timesConfirmed` on collision.
 
-Settings > AI section shows the count of saved player hints and a "Clear player recognition hints" action.
+Settings > Scan shows the count of saved player hints and a "Clear player recognition hints" action.
 
 ### QR Play Sharing
 
@@ -529,7 +529,7 @@ Settings > AI section shows the count of saved player hints and a "Clear player 
 - the top bar shows the destination (Log Play, Journal, Collection, Settings); the tab row shows the sub-location
 - the top bar shows the screen title, with a back arrow on pushed screens (scan, log play, quick setup, QR import); the bottom bar is a Material `NavigationBar`
 - every screen uses the kit. Two treatments, by purpose:
-  - forms and editors (Log Play, edit play, create challenge, player edit, sleeve inventory, account dialogs): a headline, grouped rows, and red Cancel text plus the save pill at the bottom right
+  - forms and editors (Log Play, edit play, create challenge, player edit, sleeve inventory, account dialogs): a headline, grouped rows, and white Cancel text plus the save pill at the bottom right
   - display screens (Challenges, Stats, game detail, Sleeves, Quick Setup): keep the content the screen always showed, on plain tonal cards with no outline and no colour tint; on one card only the key number, a status badge and real actions carry colour, secondary toggles ("Show 2 counted games") are white
 - status colours come from `BoardFlowColors` (`Success` done, `Warning` paused, `colorScheme.error` missed); do not composite amber over a surface, it turns brown
 - an editable value in a read-only grid keeps its white value and gets a grey chevron (`DetailCell` in `GameDetailDialog`)

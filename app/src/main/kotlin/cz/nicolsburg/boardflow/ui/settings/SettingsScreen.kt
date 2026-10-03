@@ -1,5 +1,8 @@
 ﻿package cz.nicolsburg.boardflow.ui.settings
 
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import androidx.compose.material3.IconButtonDefaults
+import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.filled.ChevronRight
@@ -957,117 +960,65 @@ private fun RecognitionTemplatesDialog(
     AnimatedDialog(onDismissRequest = onDismiss) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            item {
-                Text(
-                    "Recognition templates",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 8.dp)
-                )
-            }
-            item {
-                Text(
-                    "Edit or delete saved recognition templates.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-            }
-            item { HorizontalDivider() }
+            item { SettingsDialogHeader("Recognition templates", "What a scan of each game looked like. Edit the categories or delete a template.") }
             if (templates.isEmpty()) {
-                item {
-                    Text(
-                        "No templates saved.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-            } else {
-                items(templates.size) { index ->
-                    val hint = templates[index]
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                item { SettingsDialogEmpty("No templates saved.") }
+            } else item {
+                BoardFlowFormGroup(raised = true) {
+                    templates.forEachIndexed { index, hint ->
+                        if (index > 0) BoardFlowFormDivider()
+                        Column(
+                            modifier = Modifier.padding(start = Spacing.lg, end = Spacing.xs, top = Spacing.sm, bottom = Spacing.md),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
-                            Text(
-                                hint.gameName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                "confirmed ${hint.timesConfirmed}x",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                        }
-                        if (hint.normalizedCategories.isNotEmpty()) {
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                hint.normalizedCategories.forEach { cat ->
-                                    Surface(
-                                        shape = MaterialTheme.shapes.small,
-                                        color = MaterialTheme.colorScheme.surfaceVariant
-                                    ) {
-                                        Text(
-                                            cat,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                                        )
-                                    }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(hint.gameName, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                                    Text(
+                                        if (hint.timesConfirmed == 1) "Confirmed once" else "Confirmed ${hint.timesConfirmed} times",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                BoardFlowIconButton(
+                                    onClick = {
+                                        viewModel.deleteGameRecognitionHint(hint.gameObjectId)
+                                        templates = viewModel.getGameRecognitionHints()
+                                        onTemplatesChanged(templates.size)
+                                    },
+                                    colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete template", modifier = Modifier.size(Dimens.Icon))
+                                }
+                                BoardFlowIconButton(onClick = { editingHint = hint }) {
+                                    Icon(
+                                        Icons.Default.Edit,
+                                        contentDescription = "Edit template",
+                                        modifier = Modifier.size(Dimens.Icon),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
                                 }
                             }
-                        } else {
-                            Text(
-                                "No categories saved",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            TextButton(
-                                onClick = { editingHint = hint },
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Edit")
-                            }
-                            TextButton(
-                                onClick = {
-                                    viewModel.deleteGameRecognitionHint(hint.gameObjectId)
-                                    templates = viewModel.getGameRecognitionHints()
-                                    onTemplatesChanged(templates.size)
-                                },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.error
-                                ),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Delete")
+                            if (hint.normalizedCategories.isNotEmpty()) {
+                                FlowRow(
+                                    modifier = Modifier.padding(end = Spacing.md),
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                                ) {
+                                    hint.normalizedCategories.forEach { cat -> CategoryTag(cat) }
+                                }
+                            } else {
+                                Text(
+                                    "No categories saved",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
-                    if (index < templates.size - 1) HorizontalDivider()
                 }
             }
         }
@@ -1108,7 +1059,6 @@ private fun EditTemplateDialog(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.fillMaxWidth()
             )
-            HorizontalDivider()
             Text(
                 "Scoring categories",
                 style = MaterialTheme.typography.labelMedium,
@@ -1116,7 +1066,7 @@ private fun EditTemplateDialog(
             )
             if (categories.isEmpty()) {
                 Text(
-                    "No categories — add one below.",
+                    "No categories yet. Add one below.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
@@ -1170,7 +1120,6 @@ private fun EditTemplateDialog(
                     Icon(Icons.Default.Add, contentDescription = "Add")
                 }
             }
-            HorizontalDivider()
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
@@ -1212,74 +1161,77 @@ private fun CustomMoodsDialog(
     AnimatedDialog(onDismissRequest = onDismiss) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            item {
-                Text(
-                    "Mood templates",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 8.dp)
-                )
-            }
-            item {
-                Text(
-                    "Custom moods you've added while logging session memories.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-            }
-            item { HorizontalDivider() }
+            item { SettingsDialogHeader("Mood templates", "Custom moods you've added while logging session memories.") }
             if (moods.isEmpty()) {
-                item {
-                    Text(
-                        "No custom moods saved.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-            } else {
-                items(moods.size) { index ->
-                    val mood = moods[index]
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.tertiaryContainer
+                item { SettingsDialogEmpty("No custom moods saved.") }
+            } else item {
+                BoardFlowFormGroup(raised = true) {
+                    moods.forEachIndexed { index, mood ->
+                        if (index > 0) BoardFlowFormDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 56.dp)
+                                .padding(start = Spacing.lg, end = Spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 mood,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
                             )
-                        }
-                        IconButton(onClick = { moodPendingDelete = mood }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Delete mood",
-                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                                modifier = Modifier.size(20.dp)
-                            )
+                            BoardFlowIconButton(
+                                onClick = { moodPendingDelete = mood },
+                                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete $mood", modifier = Modifier.size(Dimens.Icon))
+                            }
                         }
                     }
-                    if (index < moods.size - 1) HorizontalDivider()
                 }
             }
         }
     }
-
 }
 
+/** Title and one line of explanation at the top of a Settings dialog. */
+@Composable
+private fun SettingsDialogHeader(title: String, description: String) {
+    Column(
+        modifier = Modifier.padding(top = Spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+    ) {
+        Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
+        Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun SettingsDialogEmpty(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(vertical = Spacing.md)
+    )
+}
+
+/** A scoring category saved in a recognition template. Read-only, so grey. */
+@Composable
+private fun CategoryTag(label: String) {
+    Surface(shape = BoardFlowShape.Pill, color = MaterialTheme.colorScheme.surfaceContainerHighest) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+        )
+    }
+}
 
 /** A setting as one row: icon, title with a one-line description, and its value or switch. */
 @Composable
