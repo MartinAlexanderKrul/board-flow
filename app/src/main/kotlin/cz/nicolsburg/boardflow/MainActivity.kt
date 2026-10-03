@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
                     appViewModel = appViewModel,
                     syncViewModel = syncViewModel,
                     setupGuideRepository = container.setupGuideRepository,
+                    guideDraftService = container.guideDraftService,
                     onRequestSignIn = ::launchSignIn,
                     onRequestSignOut = ::launchSignOut,
                     onRequestCsvPick = { csvPickerLauncher.launch("*/*") }

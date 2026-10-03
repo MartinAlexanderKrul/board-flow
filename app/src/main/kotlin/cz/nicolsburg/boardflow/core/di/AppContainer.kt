@@ -12,6 +12,7 @@ import cz.nicolsburg.boardflow.data.chronicle.FallbackChronicleComposer
 import cz.nicolsburg.boardflow.data.chronicle.GeminiChronicleLineGenerator
 import cz.nicolsburg.boardflow.data.chronicle.SessionChronicleService
 import cz.nicolsburg.boardflow.data.setupguide.BundledSetupGuideSource
+import cz.nicolsburg.boardflow.data.setupguide.GuideDraftService
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideCatalogClient
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 
@@ -31,6 +32,7 @@ class AppContainer(context: Context) {
         bundled = BundledSetupGuideSource(appContext),
         catalog = SetupGuideCatalogClient()
     )
+    val guideDraftService = GuideDraftService(appContext, securePreferences, setupGuideRepository)
 
     /** Lets [BggPlayPostWorker] post plays that were saved without reaching BGG. */
     fun scheduleUnpostedPlayPost() = BggPlayPostWorker.enqueue(appContext)

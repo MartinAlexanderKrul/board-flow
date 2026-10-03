@@ -7,6 +7,8 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import android.net.Uri
+import cz.nicolsburg.boardflow.data.setupguide.GuideDraftService
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideJson
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideResolver
@@ -46,10 +48,12 @@ sealed interface QuickSetupUiState {
 class QuickSetupViewModel(
     private val savedState: SavedStateHandle,
     private val repository: SetupGuideRepository,
-    private val isOnline: () -> Boolean
+    private val isOnline: () -> Boolean,
+    private val draftService: GuideDraftService? = null
 ) : ViewModel() {
 
     private val requestedGameId: Int = savedState.get<Int>(ARG_GAME_ID) ?: 0
+    val gameId: Int get() = requestedGameId
 
     private val guide = MutableStateFlow<LoadedSetupGuide?>(null)
     private val loadFinished = MutableStateFlow(false)
@@ -95,6 +99,38 @@ class QuickSetupViewModel(
                 if (first) first = false else reloadKeepingSelection()
             }
         }
+    }
+
+    private val _drafting = MutableStateFlow(false)
+    /** True while Gemini reads a rulebook to draft a guide for this game. */
+    val drafting: StateFlow<Boolean> = _drafting.asStateFlow()
+
+    /** Whether a standard guide exists for this game (it may just not be downloaded yet). */
+    val hasStandardGuide: Boolean get() = requestedGameId in repository.availability.value
+
+    val canDraft: Boolean get() = draftService?.hasGeminiKey() == true
+
+    /**
+     * Drafts a guide for this game from a rulebook PDF. On success the draft is saved as the
+     * user's guide and this screen shows it (through [SetupGuideRepository.userGuideChanges]).
+     * [onResult] gets null on success, or a message for the user.
+     */
+    fun draftFromRulebook(pdf: Uri, gameName: String, onResult: (String?) -> Unit) {
+        val service = draftService ?: return
+        if (_drafting.value) return
+        if (!isOnline()) return onResult("Drafting a guide needs a connection")
+        _drafting.value = true
+        viewModelScope.launch {
+            val problem = service.draftFromRulebook(pdf, requestedGameId, gameName)
+            _drafting.value = false
+            onResult(problem)
+        }
+    }
+
+    /** Marks an AI draft as checked against the rulebook. */
+    fun markReviewed() {
+        val current = guide.value ?: return
+        viewModelScope.launch { repository.markReviewed(current.guide.gameId) }
     }
 
     private suspend fun reloadKeepingSelection() {
@@ -193,9 +229,13 @@ class QuickSetupViewModel(
         private const val KEY_MODULES = "qs_modules"
         private const val KEY_CHECKED = "qs_checked"
 
-        fun factory(repository: SetupGuideRepository, isOnline: () -> Boolean): ViewModelProvider.Factory =
+        fun factory(
+            repository: SetupGuideRepository,
+            isOnline: () -> Boolean,
+            draftService: GuideDraftService? = null
+        ): ViewModelProvider.Factory =
             viewModelFactory {
-                initializer { QuickSetupViewModel(createSavedStateHandle(), repository, isOnline) }
+                initializer { QuickSetupViewModel(createSavedStateHandle(), repository, isOnline, draftService) }
             }
     }
 }

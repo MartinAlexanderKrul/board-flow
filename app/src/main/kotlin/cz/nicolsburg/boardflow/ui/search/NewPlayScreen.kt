@@ -991,14 +991,13 @@ private fun SetupGameRow(
     available: Boolean,
     onClick: () -> Unit
 ) {
-    // Games without a guide stay listed so search finds them, but cannot be opened.
+    // A game without a guide opens the screen that drafts one from its rulebook.
     GameListRow(
         name = game.name,
         thumbnailUrl = game.thumbnailUrl,
-        supporting = if (available) null else "No setup guide yet",
-        enabled = available,
+        supporting = if (available) null else "No guide yet - draft one from the rulebook",
         onClick = onClick
     ) {
-        if (available) RowChevron()
+        RowChevron()
     }
 }

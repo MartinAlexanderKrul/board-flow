@@ -117,6 +117,9 @@ Source: `ui/setup/QuickSetupScreen.kt`
 - `Easy to forget` and `Start playing` cards; the attribution line with `Share guide` (sends the guide as a `.json` file) and, for the user's own version, `Use standard guide`
 - `Updated guide available` card when the user's own version is older than the standard guide: `Keep mine` / `Use updated guide`
 - `Edit guide` opens the guide editor
+- An AI draft shows "Draft guide - check it against the rulebook." with `Mark as reviewed`; a guide of your own with no standard guide behind it has `Delete guide`
+- `Start game` starts the play timer and returns to Log Play with the Playing now banner. The screen stays awake while open
+- No guide: "No setup guide for X yet" with white `Back` and the `Draft from rulebook` pill (needs a Gemini key; picks a PDF, then "Reading the rulebook" with a spinner while Gemini drafts it). A standard guide that is not downloaded yet says to connect instead
 
 ## Guide editor
 
@@ -124,7 +127,6 @@ Source: `ui/setup/GuideEditorScreen.kt`
 
 - A form: game name, then one grouped card per section (section name field, then each step's text and optional note, a grey line with the quantities and conditions kept as they are, and move up / move down / delete). `Add step` per section, `Add section` at the end, a red delete per section
 - White `Cancel` and the `Save` pill at the bottom; leaving with unsaved changes asks `Discard changes?`. Save stores the guide as your version
-- `Start game` starts the play timer and returns to Log Play with the Playing now banner. The screen stays awake while open
 
 ## Journal
 

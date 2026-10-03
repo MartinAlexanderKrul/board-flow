@@ -194,6 +194,28 @@ class SetupGuideRepository(
         return emptyList()
     }
 
+    /**
+     * Saves an AI draft (already validated, provenance AI_DRAFT and not reviewed) as the user's
+     * guide for its game. Returns the validator's problems; nothing is saved when there are any.
+     */
+    suspend fun saveDraftGuide(draft: SetupGuide): List<String> {
+        val problems = SetupGuideValidator.validate(draft)
+        if (problems.isNotEmpty()) return problems
+        saveUserGuide(draft, basedOnVersion = upstreamVersion(draft.gameId))
+        refreshAvailability()
+        _userGuideChanges.value++
+        return emptyList()
+    }
+
+    /** Marks the user's guide (an AI draft) as checked against the rulebook. */
+    suspend fun markReviewed(gameId: Int) {
+        val row = store.getSetupGuide(gameId, SetupGuideSource.USER) ?: return
+        val guide = SetupGuideJson.parseOrNull(row.guideJson) ?: return
+        val reviewed = guide.copy(provenance = guide.provenance.copy(reviewed = true))
+        store.saveSetupGuide(row.copy(guideJson = SetupGuideJson.toJsonString(reviewed), updatedAt = System.currentTimeMillis()))
+        _userGuideChanges.value++
+    }
+
     /** Removes the user's own version; the bundled or downloaded guide shows again. */
     suspend fun deleteUserGuide(gameId: Int) {
         store.deleteSetupGuide(gameId, SetupGuideSource.USER)

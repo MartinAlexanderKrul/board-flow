@@ -59,6 +59,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.content.FileProvider
 import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.text.style.TextAlign
+import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
 import android.content.Intent
 import java.io.File
 import androidx.compose.ui.text.SpanStyle
@@ -91,10 +96,13 @@ fun QuickSetupScreen(
     onStartGame: (gameId: Int, gameName: String) -> Unit,
     onClose: () -> Unit,
     onEditGuide: (gameId: Int) -> Unit = {},
-    thumbnailFor: (gameId: Int) -> String? = { null }
+    thumbnailFor: (gameId: Int) -> String? = { null },
+    gameNameFor: (gameId: Int) -> String? = { null }
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val drafting by viewModel.drafting.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val messenger = LocalBoardFlowMessenger.current
 
     val view = LocalView.current
     DisposableEffect(view) {
@@ -106,20 +114,18 @@ fun QuickSetupScreen(
         QuickSetupUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
-        QuickSetupUiState.NotFound -> Box(
-            Modifier.fillMaxSize().padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("No setup guide available", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "This guide has not been downloaded yet. Connect to the internet and try again.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                BoardFlowSecondaryButton(onClick = onClose) { Text("Back") }
-            }
-        }
+        QuickSetupUiState.NotFound -> NoGuide(
+            hasStandardGuide = viewModel.hasStandardGuide,
+            canDraft = viewModel.canDraft,
+            drafting = drafting,
+            gameName = gameNameFor(viewModel.gameId),
+            onDraft = { pdf, name ->
+                viewModel.draftFromRulebook(pdf, name) { problem ->
+                    messenger.show(problem ?: "Draft guide ready - check it against the rulebook")
+                }
+            },
+            onClose = onClose
+        )
         is QuickSetupUiState.Ready -> QuickSetupContent(
             state = s,
             onSelectPlayers = viewModel::selectPlayerCount,
@@ -131,6 +137,10 @@ fun QuickSetupScreen(
             onEditGuide = { onEditGuide(s.loaded.guide.gameId) },
             onUseStandardGuide = viewModel::useStandardGuide,
             onKeepUserGuide = viewModel::keepUserGuide,
+            onMarkReviewed = {
+                viewModel.markReviewed()
+                messenger.show("Guide marked as reviewed")
+            },
             thumbnailUrl = thumbnailFor(s.loaded.guide.gameId)
         )
     }
@@ -149,6 +159,7 @@ private fun QuickSetupContent(
     onEditGuide: () -> Unit,
     onUseStandardGuide: () -> Unit,
     onKeepUserGuide: () -> Unit,
+    onMarkReviewed: () -> Unit,
     thumbnailUrl: String? = null
 ) {
     val guide = state.loaded.guide
@@ -215,7 +226,7 @@ private fun QuickSetupContent(
             contentPadding = PaddingValues(top = 14.dp, bottom = 14.dp)
         ) {
             item(key = "header") {
-                SetupHeader(state = state, thumbnailUrl = thumbnailUrl, onReset = { showResetConfirm = true })
+                SetupHeader(state = state, thumbnailUrl = thumbnailUrl, onReset = { showResetConfirm = true }, onMarkReviewed = onMarkReviewed)
             }
             if (state.loaded.upstreamUpdated) {
                 item(key = "upstream-update") {
@@ -326,6 +337,11 @@ private fun QuickSetupContent(
                                 Text("Use standard guide")
                             }
                         }
+                        if (state.loaded.source == SetupGuideSource.USER && state.loaded.upstreamVersion == null) {
+                            BoardFlowInlineAction(onClick = { showUseStandardConfirm = true }) {
+                                Text("Delete guide")
+                            }
+                        }
                     }
                 }
             }
@@ -333,10 +349,15 @@ private fun QuickSetupContent(
     }
 
     if (showUseStandardConfirm) {
+        val hasStandard = state.loaded.upstreamVersion != null
         BoardFlowConfirmationDialog(
-            title = "Use the standard guide?",
-            message = "Your version of this guide is removed from this phone. Share it first if you want to keep a copy.",
-            confirmLabel = "Use standard guide",
+            title = if (hasStandard) "Use the standard guide?" else "Delete this guide?",
+            message = if (hasStandard) {
+                "Your version of this guide is removed from this phone. Share it first if you want to keep a copy."
+            } else {
+                "This game has no standard guide, so it will have no guide at all. Share it first if you want to keep a copy."
+            },
+            confirmLabel = if (hasStandard) "Use standard guide" else "Delete guide",
             kind = cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind.DESTRUCTIVE,
             onConfirm = { onUseStandardGuide(); showUseStandardConfirm = false },
             onDismiss = { showUseStandardConfirm = false }
@@ -356,7 +377,7 @@ private fun QuickSetupContent(
 }
 
 @Composable
-private fun SetupHeader(state: QuickSetupUiState.Ready, thumbnailUrl: String?, onReset: () -> Unit) {
+private fun SetupHeader(state: QuickSetupUiState.Ready, thumbnailUrl: String?, onReset: () -> Unit, onMarkReviewed: () -> Unit) {
     val progress by animateFloatAsState(
         targetValue = if (state.totalSteps == 0) 0f else state.doneSteps.toFloat() / state.totalSteps,
         label = "setupProgress"
@@ -398,7 +419,75 @@ private fun SetupHeader(state: QuickSetupUiState.Ready, thumbnailUrl: String?, o
             strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
         )
         if (!state.loaded.guide.provenance.reviewed) {
-            HintText("Draft guide - check it against the rulebook.")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) { HintText("Draft guide - check it against the rulebook.") }
+                BoardFlowInlineAction(onClick = onMarkReviewed) { Text("Mark as reviewed") }
+            }
+        }
+    }
+}
+
+/** No guide to show: a standard one is not downloaded yet, or the game has none and can get an AI draft. */
+@Composable
+private fun NoGuide(
+    hasStandardGuide: Boolean,
+    canDraft: Boolean,
+    drafting: Boolean,
+    gameName: String?,
+    onDraft: (Uri, String) -> Unit,
+    onClose: () -> Unit
+) {
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null && gameName != null) onDraft(uri, gameName)
+    }
+    Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            when {
+                hasStandardGuide -> {
+                    Text("No setup guide available", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "This guide has not been downloaded yet. Connect to the internet and try again.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    BoardFlowSecondaryButton(onClick = onClose) { Text("Back") }
+                }
+                drafting -> {
+                    CircularProgressIndicator()
+                    Text("Reading the rulebook", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "This can take a minute or two. Keep this screen open.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                else -> {
+                    Text(
+                        gameName?.let { "No setup guide for $it yet" } ?: "No setup guide yet",
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        if (canDraft) {
+                            "Pick the rulebook PDF and Gemini drafts a guide from it. Check the draft against the rulebook before you rely on it."
+                        } else {
+                            "Add a Gemini key in Settings > Scan to draft a guide from the rulebook PDF."
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        BoardFlowInlineAction(onClick = onClose, neutral = true, large = true) { Text("Back") }
+                        if (canDraft && gameName != null) {
+                            BoardFlowButton(onClick = { picker.launch(arrayOf("application/pdf")) }) {
+                                Text("Draft from rulebook")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

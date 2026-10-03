@@ -112,6 +112,7 @@ import cz.nicolsburg.boardflow.ui.scan.ScanScreen
 import cz.nicolsburg.boardflow.ui.search.NewPlayScreen
 import cz.nicolsburg.boardflow.ui.settings.SettingsScreen
 import cz.nicolsburg.boardflow.ui.setup.QuickSetupScreen
+import cz.nicolsburg.boardflow.data.setupguide.GuideDraftService
 import cz.nicolsburg.boardflow.ui.setup.GuideEditorScreen
 import cz.nicolsburg.boardflow.ui.setup.GuideEditorViewModel
 import cz.nicolsburg.boardflow.ui.setup.QuickSetupViewModel
@@ -135,6 +136,7 @@ fun BoardFlowApp(
     appViewModel: AppViewModel,
     syncViewModel: SyncViewModel,
     setupGuideRepository: SetupGuideRepository,
+    guideDraftService: GuideDraftService,
     onRequestSignIn: () -> Unit,
     onRequestSignOut: () -> Unit,
     onRequestCsvPick: () -> Unit
@@ -776,12 +778,13 @@ fun BoardFlowApp(
                 )
             ) {
                 val quickSetupViewModel: QuickSetupViewModel = viewModel(
-                    factory = QuickSetupViewModel.factory(setupGuideRepository, appViewModel::isOnline)
+                    factory = QuickSetupViewModel.factory(setupGuideRepository, appViewModel::isOnline, guideDraftService)
                 )
                 val setupCollection by appViewModel.collection.collectAsState()
                 QuickSetupScreen(
                     viewModel = quickSetupViewModel,
                     thumbnailFor = { id -> setupCollection.firstOrNull { it.id == id }?.thumbnailUrl },
+                    gameNameFor = { id -> setupCollection.firstOrNull { it.id == id }?.name },
                     onStartGame = { gameId, gameName ->
                         appViewModel.startPlayTimer(gameId, gameName)
                         navController.navigate(AppRoutes.NEW_PLAY) {
