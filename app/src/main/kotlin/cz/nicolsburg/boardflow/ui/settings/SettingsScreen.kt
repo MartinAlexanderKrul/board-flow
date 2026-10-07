@@ -30,6 +30,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Casino
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
@@ -182,6 +183,7 @@ fun SettingsScreen(
     val currentStatsPlayScope by viewModel.statsPlayScope.collectAsState()
     val recommendationsEnabled by viewModel.recommendationsEnabled.collectAsState()
     val chronicleEnabled by viewModel.chronicleEnabled.collectAsState()
+    val showPlayerAvatarsInPlays by viewModel.showPlayerAvatarsInPlays.collectAsState()
     val googleAccount by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
     val spreadsheetTitle by syncViewModel.spreadsheetTitle.collectAsState()
@@ -502,6 +504,18 @@ fun SettingsScreen(
                             androidx.compose.material3.Switch(
                                 checked = chronicleEnabled,
                                 onCheckedChange = { viewModel.setChronicleEnabled(it) }
+                            )
+                        }
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Palette,
+                            title = "Player colours in plays",
+                            detail = "Show each player's coloured initials in the Journal",
+                            onClick = { viewModel.setShowPlayerAvatarsInPlays(!showPlayerAvatarsInPlays) }
+                        ) {
+                            androidx.compose.material3.Switch(
+                                checked = showPlayerAvatarsInPlays,
+                                onCheckedChange = { viewModel.setShowPlayerAvatarsInPlays(it) }
                             )
                         }
                         BoardFlowFormDivider()

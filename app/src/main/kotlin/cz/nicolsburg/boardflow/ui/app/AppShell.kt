@@ -5,6 +5,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SnackbarDuration
 import cz.nicolsburg.boardflow.ui.common.playerColorMap
 import cz.nicolsburg.boardflow.ui.common.LocalPlayerColors
+import cz.nicolsburg.boardflow.ui.common.LocalShowPlayerAvatarsInPlays
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
@@ -477,9 +478,11 @@ fun BoardFlowApp(
     LaunchedEffect(syncBusy) { if (syncBusy) requestNotifications() }
 
     val playerColors = remember(players) { playerColorMap(players) }
+    val showPlayerAvatarsInPlays by appViewModel.showPlayerAvatarsInPlays.collectAsState()
     CompositionLocalProvider(
         LocalBoardFlowMessenger provides messenger,
-        LocalPlayerColors provides playerColors
+        LocalPlayerColors provides playerColors,
+        LocalShowPlayerAvatarsInPlays provides showPlayerAvatarsInPlays
     ) {
     Box(Modifier.fillMaxSize()) {
     Scaffold(

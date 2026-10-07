@@ -925,8 +925,16 @@ val PlayerColorChoices: List<Pair<String, String>> = listOf(
     "Red" to "#E53935", "Pink" to "#E91E63", "Purple" to "#8E24AA", "Violet" to "#7C4DFF",
     "Blue" to "#1E88E5", "Cyan" to "#00ACC1", "Teal" to "#00897B", "Green" to "#43A047",
     "Lime" to "#7CB342", "Yellow" to "#FDD835", "Orange" to "#FB8C00", "Brown" to "#6D4C41",
-    "Grey" to "#757575", "White" to "#F5F5F5"
+    "Navy" to "#283593", "Olive" to "#827717", "Maroon" to "#8D2B3A", "Taupe" to "#8D7B6E",
+    "Beige" to "#D7CCB8", "Slate" to "#546E7A", "Grey" to "#757575", "Silver" to "#BDBDBD",
+    "Charcoal" to "#424242", "Black" to "#1A1A1A", "White" to "#F5F5F5"
 )
+
+/**
+ * Whether play rows (Journal list, play details, session cards) show the coloured initials
+ * next to each player. Provided by AppShell from Settings > Preferences.
+ */
+val LocalShowPlayerAvatarsInPlays = compositionLocalOf { true }
 
 fun parsePlayerColor(hex: String): Color? =
     hex.trim().takeIf { it.isNotBlank() }?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }

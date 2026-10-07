@@ -12,6 +12,7 @@ import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import cz.nicolsburg.boardflow.ui.common.PlayerAvatar
+import cz.nicolsburg.boardflow.ui.common.LocalShowPlayerAvatarsInPlays
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
@@ -378,11 +379,13 @@ private fun SessionHubPlayCard(
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    PlayerAvatar(
-                        displayName,
-                        size = 24.dp,
-                        color = player.color.takeIf { it.isNotBlank() }?.let(::resolvedPlayerColor)
-                    )
+                    if (LocalShowPlayerAvatarsInPlays.current) {
+                        PlayerAvatar(
+                            displayName,
+                            size = 24.dp,
+                            color = player.color.takeIf { it.isNotBlank() }?.let(::resolvedPlayerColor)
+                        )
+                    }
                     Text(
                         displayName,
                         style = MaterialTheme.typography.bodyMedium,

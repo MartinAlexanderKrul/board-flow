@@ -186,6 +186,7 @@ It stores:
 - sleeve exclusion list (game IDs)
 - per-game insight key cache
 - chronicle enabled flag (`chronicle_enabled`; boolean; default true)
+- player avatars in plays (`show_player_avatars_in_plays`; boolean; default true; Settings > Preferences > Logging plays; provided to play rows as `LocalShowPlayerAvatarsInPlays`)
 - custom mood templates (`custom_moods`; JSON array of user-defined mood label strings)
 - challenges (legacy; still written for backup compatibility; Room is authoritative at runtime)
 

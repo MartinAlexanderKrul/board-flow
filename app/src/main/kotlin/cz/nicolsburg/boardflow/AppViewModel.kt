@@ -132,6 +132,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         prefs.recommendationsEnabled = enabled
     }
 
+    private val _showPlayerAvatarsInPlays = MutableStateFlow(prefs.showPlayerAvatarsInPlays)
+    val showPlayerAvatarsInPlays: StateFlow<Boolean> = _showPlayerAvatarsInPlays.asStateFlow()
+
+    fun setShowPlayerAvatarsInPlays(show: Boolean) {
+        _showPlayerAvatarsInPlays.value = show
+        prefs.showPlayerAvatarsInPlays = show
+    }
+
     private val _chronicleEnabled = MutableStateFlow(prefs.chronicleEnabled)
     val chronicleEnabled: StateFlow<Boolean> = _chronicleEnabled.asStateFlow()
 
@@ -2402,6 +2410,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             }
             _recommendationsEnabled.value = prefs.recommendationsEnabled
             _chronicleEnabled.value = prefs.chronicleEnabled
+            _showPlayerAvatarsInPlays.value = prefs.showPlayerAvatarsInPlays
             try {
                 _sleevePreferredManufacturer.value = SleeveManufacturer.valueOf(prefs.sleevePreferredManufacturer)
             } catch (_: Exception) {

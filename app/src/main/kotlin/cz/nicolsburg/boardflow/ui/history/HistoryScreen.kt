@@ -19,6 +19,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.foundation.layout.ColumnScope
 import cz.nicolsburg.boardflow.ui.common.PlayerAvatar
+import cz.nicolsburg.boardflow.ui.common.LocalShowPlayerAvatarsInPlays
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.heightIn
 import cz.nicolsburg.boardflow.ui.theme.Spacing
@@ -1655,8 +1656,10 @@ private fun HistoryListPlayerRow(player: PlayerResult, displayName: String) {
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             // The colour the player used in this play replaces the default avatar colour.
-            PlayerAvatar(displayName, size = 24.dp, color = inlineColor)
-            Spacer(Modifier.width(Spacing.xs))
+            if (LocalShowPlayerAvatarsInPlays.current) {
+                PlayerAvatar(displayName, size = 24.dp, color = inlineColor)
+                Spacer(Modifier.width(Spacing.xs))
+            }
             Text(
                 displayName,
                 style = MaterialTheme.typography.bodyMedium,
@@ -1741,7 +1744,9 @@ private fun PlayDetailsPlayerRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.width(28.dp)
         )
-        PlayerAvatar(displayName, size = 28.dp, color = inlineColor)
+        if (LocalShowPlayerAvatarsInPlays.current) {
+            PlayerAvatar(displayName, size = 28.dp, color = inlineColor)
+        }
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
