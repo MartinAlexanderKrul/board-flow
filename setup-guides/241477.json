@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "gameId": 241477,
   "gameName": "Karak",
-  "version": 4,
+  "version": 5,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "Karak rulebook (Albi, via RulesPal)",
       "Karak: Regent rules (Albi)",
-      "Karak: Sidhar, Kirima, Elspeth contents (Albi, BoardGameGeek)"
+      "Karak: Sidhar, Kirima, Elspeth hero sheet (Albi, 2022)"
     ]
   },
   "players": {
@@ -62,13 +62,13 @@
         },
         {
           "id": "extra-heroes",
-          "text": "Add the Sidhar, Kirima and Elspeth hero boards to the heroes to choose from; their standees go in plastic stands",
+          "text": "Add the Sidhar, Kirima and Elspeth hero cards and figures to the heroes to choose from",
           "condition": {
             "modules": [
               "sidhar-kirima-elspeth"
             ]
           },
-          "ref": "Sidhar, Kirima, Elspeth contents"
+          "ref": "Sidhar, Kirima, Elspeth hero sheet"
         },
         {
           "id": "hero",
@@ -101,6 +101,66 @@
             ]
           },
           "ref": "Regent rules"
+        },
+        {
+          "id": "sidhar-skin",
+          "text": "Doctor Sidhar loses HP from a lost battle only if he lost it by 3 or more",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          },
+          "ref": "Sidhar, Kirima, Elspeth hero sheet"
+        },
+        {
+          "id": "sidhar-transform",
+          "text": "Doctor Sidhar may put a drawn token aside and draw again, 1 HP each time; set-aside tokens go back in the bag",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          },
+          "ref": "Sidhar, Kirima, Elspeth hero sheet"
+        },
+        {
+          "id": "elspeth-reroll",
+          "text": "Elspeth may reroll one die in each combat and must keep the new roll",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          },
+          "ref": "Sidhar, Kirima, Elspeth hero sheet"
+        },
+        {
+          "id": "elspeth-reposition",
+          "text": "Elspeth can pass through a monster's tile to the tile beyond for 1 move and 1 HP",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          },
+          "ref": "Sidhar, Kirima, Elspeth hero sheet"
+        },
+        {
+          "id": "kirima-protector",
+          "text": "Kirima can use a move to jump to any tile with a hurt hero and heal them 1 HP (an unconscious hero wakes up)",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          },
+          "ref": "Sidhar, Kirima, Elspeth hero sheet"
+        },
+        {
+          "id": "kirima-ambush",
+          "text": "Kirima gets +1 strength against a monster revealed on an earlier turn",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          },
+          "ref": "Sidhar, Kirima, Elspeth hero sheet"
         }
       ]
     },
@@ -128,7 +188,7 @@
       "id": "sidhar-kirima-elspeth",
       "name": "Sidhar, Kirima, Elspeth",
       "bggId": 347190,
-      "note": "3 more heroes: the alchemist Doctor Sidhar, the warrior princess Elspeth and the beast hunter Kirima."
+      "note": "3 more heroes: Doctor Sidhar (Alchemist), Elspeth (Warrior Princess) and Kirima (Beast Hunter). Their abilities are under Easy to forget."
     }
   ]
 }
