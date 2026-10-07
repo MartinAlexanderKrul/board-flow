@@ -29,7 +29,7 @@ To add or fix a guide, open a pull request. Every guide must pass
 **When you change a guide, bump its `version` in both the guide file and `index.json`.** The app
 only downloads a guide when the index version is higher than the copy it already has.
 
-## Guide format (schemaVersion 1)
+## Guide format (schemaVersion 1 and 2)
 
 ```jsonc
 {
@@ -57,7 +57,7 @@ only downloads a guide when the index version is higher than the copy it already
   "sections": [
     {
       "id": "board", "title": "Board",
-      "kind": "SETUP",              // SETUP (checklist) | REMINDERS ("Easy to forget") | START
+      "kind": "SETUP",              // SETUP (checklist) | REMINDERS ("Easy to forget") | START | CHARACTERS (schema 2)
       "condition": { "modules": ["pearlbrook"] },   // optional, hides the whole section
       "steps": [
         {
@@ -89,6 +89,31 @@ only downloads a guide when the index version is higher than the copy it already
 - For a rule object, the first matching `cases` entry wins, then `byPlayers`, then `default`.
 - Values can be text, e.g. `"5, 6, 7"` for per-seat hand sizes.
 
+### Characters (schemaVersion 2)
+
+Games whose heroes, factions or roles each have their own abilities list them in a `CHARACTERS`
+section, shown as its own box (for example "Heroes") between the checklist and "Easy to forget".
+Each step is one character: `text` is the name and `details` lists one line per ability, starting
+with the ability's name, which the app shows in bold:
+
+```jsonc
+{
+  "id": "hero-abilities", "title": "Heroes", "kind": "CHARACTERS",
+  "steps": [
+    { "id": "thief", "text": "Aderyn, the Thief",
+      "details": ["Backstab: wins any combat that would be a tie",
+                  "Stealth: may enter a monster's tile and walk on without fighting it"],
+      "ref": "Karak rulebook, The Heroes" },
+    { "id": "ranger", "text": "Lady Lorraine, the Ranger", "condition": { "modules": ["regent"] },
+      "details": ["Bear Attack: a 1 on a combat die counts as a 6"] }
+  ]
+}
+```
+
+A guide that uses `CHARACTERS` or `details` must say `"schemaVersion": 2` in the guide and in
+`index.json`. Older app versions skip schema-2 guides (they would show the box as a checklist)
+and keep the copy they have.
+
 ## Writing rules
 
 - Cover **every published gameplay expansion**, not only the ones you own: one module per
@@ -101,4 +126,5 @@ only downloads a guide when the index version is higher than the copy it already
 - Paraphrase. Never paste rulebook text.
 - Keep each step to one short line with the quantity in it.
 - Put anything people forget under `REMINDERS`, and keep `START` to 1-3 steps.
+- Character abilities go in a `CHARACTERS` section, not in `REMINDERS`.
 - Add a `ref` to every step so reviewers can check it against the rulebook.

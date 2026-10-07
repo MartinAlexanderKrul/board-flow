@@ -64,7 +64,7 @@ object GuideDraftPrompt {
     private val FORMAT = """
 Format (JSON, comments are explanations only and must not appear in the answer):
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 0,
   "gameName": "",
   "version": 1,
@@ -85,7 +85,7 @@ Format (JSON, comments are explanations only and must not appear in the answer):
   "sections": [
     {
       "id": "board", "title": "Board",
-      "kind": "SETUP",                         // SETUP (checklist), REMINDERS (easy to forget) or START
+      "kind": "SETUP",                         // SETUP (checklist), REMINDERS (easy to forget), START, or CHARACTERS
       "condition": { "modules": ["x"] },       // optional, hides the whole section
       "steps": [
         {
@@ -95,7 +95,8 @@ Format (JSON, comments are explanations only and must not appear in the answer):
                               "cases": [ { "when": { "players": [2], "modules": ["x"] }, "value": 4 } ] } },
           "condition": { "minPlayers": 2, "maxPlayers": 4, "players": [2, 3], "modules": ["x"], "notModules": ["y"] },
           "note": "optional one line that is easy to miss",
-          "ref": "p.5"                          // rulebook page or section the step comes from
+          "ref": "p.5",                         // rulebook page or section the step comes from
+          "details": ["..."]                    // only in CHARACTERS sections, see below
         }
       ]
     }
@@ -117,6 +118,7 @@ Rules:
 - Take setup numbers from the setup section. The same action later in the game often uses other numbers (cards dealt at setup vs drawn on a turn); do not mix them up, and do not use numbers from other editions of the game.
 - Each step is one short line with its quantity in it; use amounts with byPlayers for anything that depends on the player count.
 - Put things people often forget in one REMINDERS section titled "Easy to forget" (rules that are easy to miss during play, at most 6), and keep the START section titled "Start playing" to 1-3 steps.
+- When the game has characters with their own abilities (heroes, factions, roles), add one CHARACTERS section titled after them (e.g. "Heroes", "Factions") listing every one: "text" is the character's name, "details" is a list of short lines, one per ability, starting with the ability's name ("Backstab: wins any combat that would be a tie"). Characters from an expansion get that module as their condition. Do not repeat these abilities in REMINDERS.
 - Give every step a "ref" with the rulebook page or section.
 - Use modules only for expansions or variants this PDF actually describes.
 - Only use "group" for alternatives where exactly one must be chosen (e.g. Competitive / Co-op). Optional scenarios or variants are separate modules without a group.

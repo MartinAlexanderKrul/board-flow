@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
@@ -316,6 +317,7 @@ private fun QuickSetupContent(
                         GuideSectionKind.SETUP -> ChecklistSection(section, state.checkedStepIds, onToggleStep)
                         GuideSectionKind.REMINDERS -> ReminderSection(section)
                         GuideSectionKind.START -> StartSection(section)
+                        GuideSectionKind.CHARACTERS -> CharactersSection(section)
                     }
                 }
             }
@@ -573,6 +575,59 @@ private fun ReminderSection(section: ResolvedSection) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         StepText(step)
                         step.note?.let { NoteText(it) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Every character (hero, faction, role) in play with its abilities as bullets, kept apart from
+ * "Easy to forget" so a player can find their own character at a glance.
+ */
+@Composable
+private fun CharactersSection(section: ResolvedSection) {
+    SectionCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Default.Groups,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            SectionLabel(section.title)
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            section.steps.forEach { character ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        character.plainText,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    character.note?.let { NoteText(it) }
+                    character.details.forEach { ability ->
+                        Row {
+                            Text("•", modifier = Modifier.width(16.dp), color = MaterialTheme.colorScheme.primary)
+                            // "Backstab: wins ties" -> the ability's name in bold, so it is found at a glance.
+                            val split = ability.indexOf(": ").takeIf { it in 1..40 }
+                            Text(
+                                buildAnnotatedString {
+                                    if (split != null) {
+                                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(ability.substring(0, split + 1)) }
+                                        append(ability.substring(split + 1))
+                                    } else {
+                                        append(ability)
+                                    }
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }

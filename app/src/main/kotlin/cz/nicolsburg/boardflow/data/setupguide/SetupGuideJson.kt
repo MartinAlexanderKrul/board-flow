@@ -103,7 +103,10 @@ object SetupGuideJson {
         }.orEmpty(),
         condition = obj.optJSONObject("condition")?.let(::parseCondition),
         note = obj.optStringOrNull("note"),
-        ref = obj.optStringOrNull("ref")
+        ref = obj.optStringOrNull("ref"),
+        // Kept as written: the guide editor round-trips its draft through this format while the
+        // user types, so a new empty line must survive. GuideEdits.tidy drops blanks on save.
+        details = obj.optJSONArray("details")?.let { array -> (0 until array.length()).map { array.optString(it) } }.orEmpty()
     )
 
     /** An amount is either a bare value (`5`, `"5, 6"`) or a rule object. */
@@ -176,6 +179,7 @@ object SetupGuideJson {
         s.condition?.let { put("condition", conditionToJson(it)) }
         s.note?.let { put("note", it) }
         s.ref?.let { put("ref", it) }
+        if (s.details.isNotEmpty()) put("details", JSONArray(s.details))
     }
 
     private fun amountToJson(rule: AmountRule): Any {

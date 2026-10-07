@@ -40,6 +40,15 @@ object SetupGuideValidator {
         val stepIds = guide.sections.flatMap { s -> s.steps.map { it.id } }
         duplicates(stepIds).forEach { add("Duplicate step id '$it'") }
         if (guide.sections.none { it.kind == GuideSectionKind.SETUP }) add("Guide has no SETUP section")
+        // Schema 2 features must be declared, so apps that only know schema 1 skip the guide.
+        if (guide.schemaVersion < 2) {
+            if (guide.sections.any { it.kind == GuideSectionKind.CHARACTERS }) add("CHARACTERS sections need schemaVersion 2")
+            if (guide.sections.any { s -> s.steps.any { it.details.isNotEmpty() } }) add("Step details need schemaVersion 2")
+        }
+        guide.sections.filter { it.kind == GuideSectionKind.CHARACTERS }.forEach { section ->
+            section.steps.filter { step -> step.details.none { it.isNotBlank() } }
+                .forEach { add("Character '${it.id}' in section '${section.id}' has no abilities (details)") }
+        }
 
         fun checkCondition(where: String, condition: StepCondition?) {
             condition ?: return

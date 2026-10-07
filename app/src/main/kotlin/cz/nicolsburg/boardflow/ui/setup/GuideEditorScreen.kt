@@ -187,7 +187,8 @@ private fun EditorContent(
                         onDelete = { stepId -> viewModel.deleteStep(section.id, stepId) },
                         onAddStep = { viewModel.addStep(section.id) },
                         onDeleteSection = { deleteSectionId = section.id },
-                        onEditRules = { stepId -> rulesSectionId = section.id; rulesStepId = stepId.orEmpty() }
+                        onEditRules = { stepId -> rulesSectionId = section.id; rulesStepId = stepId.orEmpty() },
+                        onDetails = { stepId, lines -> viewModel.setStepDetails(section.id, stepId, lines) }
                     )
                 }
             }
@@ -231,7 +232,8 @@ private fun SectionEditor(
     onDelete: (stepId: String) -> Unit,
     onAddStep: () -> Unit,
     onDeleteSection: () -> Unit,
-    onEditRules: (stepId: String?) -> Unit
+    onEditRules: (stepId: String?) -> Unit,
+    onDetails: (stepId: String, lines: String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -240,6 +242,7 @@ private fun SectionEditor(
                     GuideSectionKind.SETUP -> "Checklist"
                     GuideSectionKind.REMINDERS -> "Reminders"
                     GuideSectionKind.START -> "First turn"
+                    GuideSectionKind.CHARACTERS -> "Characters"
                 },
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -267,6 +270,8 @@ private fun SectionEditor(
                 BoardFlowFormDivider()
                 StepEditor(
                     step = step,
+                    isCharacter = section.kind == GuideSectionKind.CHARACTERS,
+                    onDetails = { onDetails(step.id, it) },
                     rules = GuideEdits.describeRules(step, null, modules),
                     canMoveUp = index > 0,
                     canMoveDown = index < section.steps.lastIndex,
@@ -288,6 +293,8 @@ private fun SectionEditor(
 @Composable
 private fun StepEditor(
     step: GuideStep,
+    isCharacter: Boolean,
+    onDetails: (String) -> Unit,
     rules: String?,
     canMoveUp: Boolean,
     canMoveDown: Boolean,
@@ -305,7 +312,7 @@ private fun StepEditor(
             BoardFlowInlineField(
                 value = step.text,
                 onValueChange = onText,
-                placeholder = "What to do",
+                placeholder = if (isCharacter) "Character name" else "What to do",
                 singleLine = false,
                 maxLines = 6
             )
@@ -320,6 +327,17 @@ private fun StepEditor(
                 textStyle = MaterialTheme.typography.bodySmall,
                 textColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+        if (isCharacter) {
+            Box(Modifier.padding(end = Spacing.sm)) {
+                BoardFlowInlineField(
+                    value = step.details.joinToString("\n"),
+                    onValueChange = onDetails,
+                    placeholder = "Abilities, one per line",
+                    singleLine = false,
+                    maxLines = 12
+                )
+            }
         }
         // Quantities and conditions on the left (tap to edit), the step's actions on the right.
         Row(verticalAlignment = Alignment.CenterVertically) {

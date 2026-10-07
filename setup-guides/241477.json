@@ -1,13 +1,13 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 241477,
   "gameName": "Karak",
-  "version": 5,
+  "version": 6,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Karak rulebook (Albi, via RulesPal)",
+      "Karak rulebook (Albi)",
       "Karak: Regent rules (Albi)",
       "Karak: Sidhar, Kirima, Elspeth hero sheet (Albi, 2022)"
     ]
@@ -83,6 +83,165 @@
       ]
     },
     {
+      "id": "hero-abilities",
+      "title": "Heroes",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "wizard",
+          "text": "Argentus, the Wizard",
+          "details": [
+            "Magical Affinity: his magic bolt scrolls are not used up (when cursed he discards them like anyone)",
+            "Astral Walking: moves through walls, over discovered tiles only"
+          ],
+          "ref": "Karak rulebook, The Heroes"
+        },
+        {
+          "id": "warrior",
+          "text": "Horan, the Warrior",
+          "details": [
+            "Double Attack: may reroll a combat once and must keep the second roll",
+            "Reincarnation: at 0 HP he does not fall unconscious; he teleports to any healing fountain tile and heals fully, but his turn ends"
+          ],
+          "ref": "Karak rulebook, The Heroes"
+        },
+        {
+          "id": "warlock",
+          "text": "Lord Xanros, the Warlock",
+          "details": [
+            "Sacrifice: once per combat, after rolling, may pay 1 HP for +1 strength (paying his last HP knocks him out for his next turn)",
+            "Magic Swap: for all 4 moves (start of turn), swaps places with any other hero; may still use the ability of the tile he ends on"
+          ],
+          "ref": "Karak rulebook, The Heroes"
+        },
+        {
+          "id": "thief",
+          "text": "Aderyn, the Thief",
+          "details": [
+            "Backstab: wins any combat that would be a tie",
+            "Stealth: may enter a monster's tile and walk on without fighting it"
+          ],
+          "ref": "Karak rulebook, The Heroes"
+        },
+        {
+          "id": "swordsman",
+          "text": "Victorius, the Swordsman",
+          "details": [
+            "Combat Training: rerolls any die that shows 1, as often as needed",
+            "Unstoppable: if a die shows 6 in combat, he may keep moving afterwards, even after a tie or a loss"
+          ],
+          "ref": "Karak rulebook, The Heroes"
+        },
+        {
+          "id": "oracle",
+          "text": "Taia, the Oracle",
+          "details": [
+            "Farseeing: +1 to her roll when she fights on the first move of her turn",
+            "Fateweaver: draws 2 tokens from the bag, places 1 and returns the other"
+          ],
+          "ref": "Karak rulebook, The Heroes"
+        },
+        {
+          "id": "barbarian",
+          "text": "Valduk, the Barbarian",
+          "details": [
+            "Berserk: +1 attack at exactly 3 or 4 HP, +2 at 1 or 2 HP; when healing he chooses how many HP to heal",
+            "Perseverance: after defeating a monster without taking its loot, he may use his remaining moves"
+          ],
+          "ref": "Regent rules, New Heroes",
+          "condition": {
+            "modules": [
+              "regent"
+            ]
+          }
+        },
+        {
+          "id": "battle-mage",
+          "text": "Baron Markul, the Battle Mage",
+          "details": [
+            "Sword Master: a sword has strength 3 in his hands",
+            "Blitz Attack: for all 4 moves, teleports to any tile with a monster and fights it; if he loses he picks where to retreat (discovered tiles only)"
+          ],
+          "ref": "Regent rules, New Heroes",
+          "condition": {
+            "modules": [
+              "regent"
+            ]
+          }
+        },
+        {
+          "id": "acrobat",
+          "text": "Hannah, the Acrobat",
+          "details": [
+            "Throwing Daggers: may put daggers (strength 1) in her spell slots; each adds +1 in combat and is not used up",
+            "Sprint: instead of a normal move, may sprint up to 8 tiles, over discovered tiles only"
+          ],
+          "ref": "Regent rules, New Heroes",
+          "condition": {
+            "modules": [
+              "regent"
+            ]
+          }
+        },
+        {
+          "id": "ranger",
+          "text": "Lady Lorraine, the Ranger",
+          "details": [
+            "Bear Attack: a 1 on a combat die counts as a 6",
+            "Eavesdropping: for 1 move, explores an adjacent tile (draws its token) without entering it; she may repeat it"
+          ],
+          "ref": "Regent rules, New Heroes",
+          "condition": {
+            "modules": [
+              "regent"
+            ]
+          }
+        },
+        {
+          "id": "alchemist",
+          "text": "Doctor Sidhar, the Alchemist",
+          "details": [
+            "Skin of Steel: loses HP from a lost battle only if he lost it by 3 or more",
+            "Transformation: may set a drawn token aside and draw again, 1 HP each time; the set-aside tokens go back in the bag"
+          ],
+          "ref": "Sidhar, Kirima, Elspeth hero sheet",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          }
+        },
+        {
+          "id": "warrior-princess",
+          "text": "Elspeth, the Warrior Princess",
+          "details": [
+            "Dual Wielding: may reroll one die in each combat and must keep the new roll",
+            "Tactical Reposition: for 1 move and 1 HP, passes through a monster's tile to the tile beyond"
+          ],
+          "ref": "Sidhar, Kirima, Elspeth hero sheet",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          }
+        },
+        {
+          "id": "beast-hunter",
+          "text": "Kirima, the Beast Hunter",
+          "details": [
+            "Protector: as a move, jumps to any tile with a hurt hero and heals them 1 HP (an unconscious hero wakes up)",
+            "Ambush: +1 strength against a monster revealed on an earlier turn"
+          ],
+          "ref": "Sidhar, Kirima, Elspeth hero sheet",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "reminders",
       "title": "Easy to forget",
       "kind": "REMINDERS",
@@ -101,66 +260,6 @@
             ]
           },
           "ref": "Regent rules"
-        },
-        {
-          "id": "sidhar-skin",
-          "text": "Doctor Sidhar loses HP from a lost battle only if he lost it by 3 or more",
-          "condition": {
-            "modules": [
-              "sidhar-kirima-elspeth"
-            ]
-          },
-          "ref": "Sidhar, Kirima, Elspeth hero sheet"
-        },
-        {
-          "id": "sidhar-transform",
-          "text": "Doctor Sidhar may put a drawn token aside and draw again, 1 HP each time; set-aside tokens go back in the bag",
-          "condition": {
-            "modules": [
-              "sidhar-kirima-elspeth"
-            ]
-          },
-          "ref": "Sidhar, Kirima, Elspeth hero sheet"
-        },
-        {
-          "id": "elspeth-reroll",
-          "text": "Elspeth may reroll one die in each combat and must keep the new roll",
-          "condition": {
-            "modules": [
-              "sidhar-kirima-elspeth"
-            ]
-          },
-          "ref": "Sidhar, Kirima, Elspeth hero sheet"
-        },
-        {
-          "id": "elspeth-reposition",
-          "text": "Elspeth can pass through a monster's tile to the tile beyond for 1 move and 1 HP",
-          "condition": {
-            "modules": [
-              "sidhar-kirima-elspeth"
-            ]
-          },
-          "ref": "Sidhar, Kirima, Elspeth hero sheet"
-        },
-        {
-          "id": "kirima-protector",
-          "text": "Kirima can use a move to jump to any tile with a hurt hero and heal them 1 HP (an unconscious hero wakes up)",
-          "condition": {
-            "modules": [
-              "sidhar-kirima-elspeth"
-            ]
-          },
-          "ref": "Sidhar, Kirima, Elspeth hero sheet"
-        },
-        {
-          "id": "kirima-ambush",
-          "text": "Kirima gets +1 strength against a monster revealed on an earlier turn",
-          "condition": {
-            "modules": [
-              "sidhar-kirima-elspeth"
-            ]
-          },
-          "ref": "Sidhar, Kirima, Elspeth hero sheet"
         }
       ]
     },
@@ -188,7 +287,7 @@
       "id": "sidhar-kirima-elspeth",
       "name": "Sidhar, Kirima, Elspeth",
       "bggId": 347190,
-      "note": "3 more heroes: Doctor Sidhar (Alchemist), Elspeth (Warrior Princess) and Kirima (Beast Hunter). Their abilities are under Easy to forget."
+      "note": "3 more heroes: Doctor Sidhar (Alchemist), Elspeth (Warrior Princess) and Kirima (Beast Hunter)."
     }
   ]
 }

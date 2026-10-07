@@ -75,6 +75,7 @@ class GuideEditorViewModel(
     fun setSectionTitle(sectionId: String, title: String) = update { GuideEdits.setSectionTitle(it, sectionId, title) }
     fun setStepText(sectionId: String, stepId: String, text: String) = update { GuideEdits.setStepText(it, sectionId, stepId, text) }
     fun setStepNote(sectionId: String, stepId: String, note: String) = update { GuideEdits.setStepNote(it, sectionId, stepId, note) }
+    fun setStepDetails(sectionId: String, stepId: String, lines: String) = update { GuideEdits.setStepDetails(it, sectionId, stepId, lines) }
     fun addStep(sectionId: String) = update { GuideEdits.addStep(it, sectionId).first }
     fun deleteStep(sectionId: String, stepId: String) = update { GuideEdits.deleteStep(it, sectionId, stepId) }
     fun moveStep(sectionId: String, stepId: String, delta: Int) = update { GuideEdits.moveStep(it, sectionId, stepId, delta) }

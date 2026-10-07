@@ -27,7 +27,11 @@ data class SetupGuide(
         }
 
     companion object {
-        const val CURRENT_SCHEMA_VERSION = 1
+        /**
+         * 2 added the CHARACTERS section kind and step `details`. Apps that only know 1 skip
+         * schema-2 guides in the catalog (they would show a characters box as a checklist).
+         */
+        const val CURRENT_SCHEMA_VERSION = 2
     }
 }
 
@@ -66,7 +70,12 @@ data class GuideModule(
     val group: String? = null
 )
 
-enum class GuideSectionKind { SETUP, REMINDERS, START }
+/**
+ * SETUP is a checklist, REMINDERS the "Easy to forget" box, START "Start playing". CHARACTERS
+ * (schema 2) lists the heroes, factions or roles a game has, each step one character with its
+ * abilities as [GuideStep.details] bullets.
+ */
+enum class GuideSectionKind { SETUP, REMINDERS, START, CHARACTERS }
 
 data class GuideSection(
     val id: String,
@@ -84,7 +93,9 @@ data class GuideStep(
     val condition: StepCondition? = null,
     val note: String? = null,
     /** Optional rulebook reference (e.g. "Pearlbrook p.3") for checking a guide against its source. */
-    val ref: String? = null
+    val ref: String? = null,
+    /** Bullet lines under the step (schema 2): a character's abilities in a CHARACTERS section. */
+    val details: List<String> = emptyList()
 )
 
 /**
@@ -156,7 +167,8 @@ data class ResolvedStep(
     val id: String,
     /** Text split into runs so quantities can be emphasised. */
     val parts: List<ResolvedTextPart>,
-    val note: String?
+    val note: String?,
+    val details: List<String> = emptyList()
 ) {
     val plainText: String get() = parts.joinToString("") { it.text }
 }

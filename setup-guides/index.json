@@ -1021,8 +1021,8 @@
       "gameId": 241477,
       "gameName": "Karak",
       "gameIds": [241477, 291436, 347190],
-      "version": 5,
-      "schemaVersion": 1,
+      "version": 6,
+      "schemaVersion": 2,
       "path": "241477.json"
     },
     {

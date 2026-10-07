@@ -115,6 +115,7 @@ Source: `ui/setup/QuickSetupScreen.kt`
 - Header with the game, steps done and a progress bar
 - Player count and content (modules) chips
 - One checklist card per setup section. Once every step is ticked, the checklist folds into a single "All N setup steps done" row
+- A characters card (for example `Heroes`, schema-2 guides) when the game has characters with their own abilities: each character's name, then one bullet per ability with its name in bold; expansion characters show only with their module
 - `Easy to forget` and `Start playing` cards; the attribution line with `Share guide` (sends the guide as a `.json` file) and, for the user's own version, `Use standard guide`
 - `Updated guide available` card when the user's own version is older than the standard guide: `Keep mine` / `Use updated guide`
 - `Edit guide` opens the guide editor

@@ -26,6 +26,10 @@ object GuideEdits {
     fun setStepNote(guide: SetupGuide, sectionId: String, stepId: String, note: String): SetupGuide =
         guide.mapStep(sectionId, stepId) { it.copy(note = note.ifBlank { null }) }
 
+    /** A character's abilities, one per line (blank lines are kept while typing, dropped by [tidy]). */
+    fun setStepDetails(guide: SetupGuide, sectionId: String, stepId: String, lines: String): SetupGuide =
+        guide.mapStep(sectionId, stepId) { it.copy(details = lines.split("\n")) }
+
     /** Adds an empty step at the end of a section; returns the new guide and the step's id. */
     fun addStep(guide: SetupGuide, sectionId: String): Pair<SetupGuide, String> {
         val id = uniqueId(guide.allStepIds(), "my-step")
@@ -61,7 +65,10 @@ object GuideEdits {
     /** Drops steps left empty and sections left with no steps, so a half-done edit still saves. */
     fun tidy(guide: SetupGuide): SetupGuide = guide.copy(
         sections = guide.sections
-            .map { section -> section.copy(steps = section.steps.filter { it.text.isNotBlank() }) }
+            .map { section ->
+                section.copy(steps = section.steps.filter { it.text.isNotBlank() }
+                    .map { step -> step.copy(details = step.details.map(String::trim).filter(String::isNotEmpty)) })
+            }
             .filter { it.steps.isNotEmpty() }
     )
 

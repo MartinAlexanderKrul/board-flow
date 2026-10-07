@@ -126,7 +126,8 @@ object SetupGuideResolver {
                     ResolvedStep(
                         id = step.id,
                         parts = renderText(step.text, step.amounts, playerCount, modules),
-                        note = step.note
+                        note = step.note,
+                        details = step.details.map(String::trim).filter(String::isNotEmpty)
                     )
                 }
             if (steps.isEmpty()) null
