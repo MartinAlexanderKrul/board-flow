@@ -1203,6 +1203,7 @@ fun HistoryScreen(
                 CreateChallengeDialog(
                     collectionItems = collectionItems,
                     players = visiblePlayers,
+                    bggSearch = viewModel.bggGameSearch,
                     onDismiss = { showCreateChallengeDialog = false },
                     onSave = { challenge ->
                         viewModel.addChallenge(challenge)
@@ -1217,6 +1218,7 @@ fun HistoryScreen(
                     collectionItems = collectionItems,
                     players = visiblePlayers,
                     initialChallenge = challenge,
+                    bggSearch = viewModel.bggGameSearch,
                     onDismiss = { editingChallenge = null },
                     onSave = { updated ->
                         viewModel.updateChallenge(updated)

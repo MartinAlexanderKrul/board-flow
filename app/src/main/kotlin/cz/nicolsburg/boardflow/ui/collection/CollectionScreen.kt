@@ -98,6 +98,9 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterSection
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BggSearchSheet
+import cz.nicolsburg.boardflow.ui.common.SearchBggRow
+import cz.nicolsburg.boardflow.data.BggGameSearch
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowAnimatedVisibility
 import cz.nicolsburg.boardflow.ui.common.BoardFlowPullRefreshContainer
@@ -209,7 +212,7 @@ fun CollectionScreen(
     var showFilters by remember { mutableStateOf(false) }
     var selectedGame by remember { mutableStateOf<GameItem?>(null) }
     // Adding a game that is not on the shelf: BGG search results, and a detail dialog that opens on its status.
-    val shelfBggSearch by syncViewModel.shelfBggSearch.collectAsState()
+    val shelfBggSearch by syncViewModel.shelfBggSearch.state.collectAsState()
     var showBggSearch by remember { mutableStateOf(false) }
     var selectedFromBggSearch by remember { mutableStateOf(false) }
     var sleeveTrackingGame by remember { mutableStateOf<GameItem?>(null) }
@@ -340,14 +343,15 @@ fun CollectionScreen(
     }
 
     if (showBggSearch) {
-        val shelfIds = remember(allGames) { allGames.map { it.objectId }.toSet() }
-        ShelfBggSearchSheet(
+        val shelfIds = remember(allGames) { allGames.mapNotNull { it.objectId.toIntOrNull() }.toSet() }
+        BggSearchSheet(
             search = shelfBggSearch,
-            shelfIds = shelfIds,
+            title = "Add to your collection",
+            collectionIds = shelfIds,
             onOpen = { result ->
                 syncViewModel.openBggSearchResult(result) { game ->
                     showBggSearch = false
-                    syncViewModel.clearShelfBggSearch()
+                    syncViewModel.shelfBggSearch.clear()
                     // Only a game that is not owned yet opens straight on its collection status.
                     selectedFromBggSearch = !game.isOwned
                     selectedGame = game
@@ -355,7 +359,7 @@ fun CollectionScreen(
             },
             onDismiss = {
                 showBggSearch = false
-                syncViewModel.clearShelfBggSearch()
+                syncViewModel.shelfBggSearch.clear()
             }
         )
     }
@@ -627,10 +631,10 @@ fun CollectionScreen(
                                             }
                                         }
 
-                                        if (searchQuery.trim().length >= 2) {
+                                        if (searchQuery.trim().length >= BggGameSearch.MIN_QUERY) {
                                             item(key = "search-bgg") {
                                                 SearchBggRow(query = searchQuery) {
-                                                    syncViewModel.searchBggForShelf(searchQuery)
+                                                    syncViewModel.shelfBggSearch.search(searchQuery)
                                                     showBggSearch = true
                                                 }
                                             }

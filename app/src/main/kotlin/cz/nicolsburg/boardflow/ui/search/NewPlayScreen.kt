@@ -96,6 +96,9 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
 import cz.nicolsburg.boardflow.ui.common.GameSearchField
+import cz.nicolsburg.boardflow.ui.common.BggSearchSheet
+import cz.nicolsburg.boardflow.ui.common.SearchBggRow
+import cz.nicolsburg.boardflow.data.BggGameSearch
 import cz.nicolsburg.boardflow.ui.common.SearchFieldActionButton
 import cz.nicolsburg.boardflow.ui.common.rememberBoardFlowShimmerAlpha
 import kotlinx.coroutines.delay
@@ -125,6 +128,10 @@ fun NewPlayScreen(
     // Correcting a scanned game is a Log Play flow; never show it on the Quick Setup tab.
     val setupTab = selectedTab == NewPlayTab.QUICK_SETUP && !correctionMode
     val results by viewModel.logPlaySearchResults.collectAsState()
+    val bggSearch by viewModel.bggGameSearch.state.collectAsState()
+    var showBggSearch by remember { mutableStateOf(false) }
+    // Searches look only in the collection; BoardGameGeek is one tap away under the results.
+    val offerBggSearch = query.trim().length >= BggGameSearch.MIN_QUERY && !(setupTab && showAllGuides)
     val loading by viewModel.searchLoading.collectAsState()
     val error   by viewModel.searchError.collectAsState()
     val collectionLoaded by viewModel.collectionLoaded.collectAsState()
@@ -174,6 +181,30 @@ fun NewPlayScreen(
     LaunchedEffect(query) {
         delay(800)
         viewModel.filterLogPlayGames(query)
+    }
+
+    if (showBggSearch) {
+        val collectionIds = remember(collectionItems) { collectionItems.mapNotNull { it.objectId.toIntOrNull() }.toSet() }
+        BggSearchSheet(
+            search = bggSearch,
+            title = if (setupTab) "Open a quick guide" else "Log a play",
+            collectionIds = collectionIds,
+            onOpen = { game ->
+                showBggSearch = false
+                viewModel.bggGameSearch.clear()
+                viewModel.rememberSearchedGame(game)
+                if (setupTab) {
+                    onOpenQuickSetup(game.id)
+                } else {
+                    viewModel.selectGame(game)
+                    onGameSelected(game)
+                }
+            },
+            onDismiss = {
+                showBggSearch = false
+                viewModel.bggGameSearch.clear()
+            }
+        )
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -379,11 +410,22 @@ fun NewPlayScreen(
                     }
                 }
 
-                results.isEmpty() && query.isNotBlank() -> BoardFlowEmptyState(
-                    icon = Icons.Default.Search,
-                    title = "No games found for \"$query\"",
-                    message = "Check the spelling, or try a shorter part of the name."
-                )
+                results.isEmpty() && query.isNotBlank() -> Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                ) {
+                    BoardFlowEmptyState(
+                        icon = Icons.Default.Search,
+                        title = "No games in your collection match \"${query.trim()}\"",
+                        message = "Check the spelling, or search BoardGameGeek."
+                    )
+                    if (offerBggSearch) {
+                        SearchBggRow(query = query) {
+                            viewModel.bggGameSearch.search(query)
+                            showBggSearch = true
+                        }
+                    }
+                }
 
                 results.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     BoardFlowEmptyState(
@@ -446,6 +488,14 @@ fun NewPlayScreen(
                                         }
                                     },
                                 )
+                            }
+                            if (offerBggSearch) {
+                                item(key = "search-bgg") {
+                                    SearchBggRow(query = query) {
+                                        viewModel.bggGameSearch.search(query)
+                                        showBggSearch = true
+                                    }
+                                }
                             }
                         }
 

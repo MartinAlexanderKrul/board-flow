@@ -1,4 +1,4 @@
-package cz.nicolsburg.boardflow.ui.collection
+package cz.nicolsburg.boardflow.ui.common
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,17 +21,18 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import cz.nicolsburg.boardflow.SyncViewModel
+import cz.nicolsburg.boardflow.data.BggGameSearch
 import cz.nicolsburg.boardflow.model.BggGame
-import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
-import cz.nicolsburg.boardflow.ui.common.BoardFlowModalBottomSheet
-import cz.nicolsburg.boardflow.ui.common.GameListRow
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 
-/** The row under the My Shelf results that searches BoardGameGeek for the typed name. */
+/**
+ * The line under any game search's results that asks BoardGameGeek for the typed name. Game
+ * searches look only in the collection by themselves; BGG is asked only from here.
+ */
 @Composable
-internal fun SearchBggRow(query: String, onClick: () -> Unit) {
+fun SearchBggRow(query: String, onClick: () -> Unit) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         BoardFlowInlineAction(onClick = onClick, icon = Icons.Default.Search) {
             Text("Search BoardGameGeek for \"${query.trim()}\"")
@@ -40,14 +41,16 @@ internal fun SearchBggRow(query: String, onClick: () -> Unit) {
 }
 
 /**
- * BoardGameGeek results for the shelf search. A game already on the shelf says so; tapping any
- * result opens its detail dialog (a new game opens on its collection status, to add it).
+ * BoardGameGeek results for a game search, from [BggGameSearch]. [title] says what picking a
+ * result does on this screen ("Log a play", "Add to your collection", ...). Games in the
+ * collection are marked; a spinner shows on the result being opened.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ShelfBggSearchSheet(
-    search: SyncViewModel.ShelfBggSearch,
-    shelfIds: Set<String>,
+fun BggSearchSheet(
+    search: BggGameSearch.State,
+    title: String,
+    collectionIds: Set<Int>,
     onOpen: (BggGame) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -57,7 +60,7 @@ internal fun ShelfBggSearchSheet(
     ) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
             Column(Modifier.padding(horizontal = Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Text("Add to your collection", style = MaterialTheme.typography.titleLarge)
+                Text(title, style = MaterialTheme.typography.titleLarge)
                 Text(
                     "BoardGameGeek results for \"${search.query}\"",
                     style = MaterialTheme.typography.bodyMedium,
@@ -72,7 +75,8 @@ internal fun ShelfBggSearchSheet(
                     Text(
                         search.error ?: "Nothing found",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                 }
                 else -> LazyColumn(
@@ -80,13 +84,13 @@ internal fun ShelfBggSearchSheet(
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     items(search.results, key = { it.id }) { game ->
-                        val onShelf = game.id.toString() in shelfIds
+                        val inCollection = game.id in collectionIds
                         GameListRow(
                             name = game.name,
                             thumbnailUrl = game.thumbnailUrl,
                             supporting = listOfNotNull(
                                 game.yearPublished?.takeIf { it.isNotBlank() },
-                                "In your collection".takeIf { onShelf }
+                                "In your collection".takeIf { inCollection }
                             ).joinToString(" - ").ifBlank { null },
                             enabled = search.openingGameId == null,
                             onClick = { onOpen(game) }

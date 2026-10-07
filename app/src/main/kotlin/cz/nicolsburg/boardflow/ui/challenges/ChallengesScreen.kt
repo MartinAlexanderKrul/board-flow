@@ -1,5 +1,10 @@
 package cz.nicolsburg.boardflow.ui.challenges
 
+import androidx.compose.runtime.collectAsState
+import cz.nicolsburg.boardflow.ui.common.SearchBggRow
+import cz.nicolsburg.boardflow.ui.common.BggSearchSheet
+import cz.nicolsburg.boardflow.model.bggOnlyGameItem
+import cz.nicolsburg.boardflow.data.BggGameSearch
 import androidx.compose.material3.ButtonDefaults
 import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
@@ -848,6 +853,8 @@ fun CreateChallengeDialog(
     collectionItems: List<GameItem>,
     players: List<Player>,
     initialChallenge: Challenge? = null,
+    // BoardGameGeek search for a game outside the collection; null hides "Search BoardGameGeek".
+    bggSearch: BggGameSearch? = null,
     onDismiss: () -> Unit,
     onSave: (Challenge) -> Unit
 ) {
@@ -860,6 +867,8 @@ fun CreateChallengeDialog(
         mutableStateOf(
             initialChallenge?.gameId?.let { id ->
                 collectionItems.firstOrNull { it.objectId.toIntOrNull() == id }
+                    // A challenge can be for a game picked from BoardGameGeek, outside the collection.
+                    ?: initialChallenge.gameName?.takeIf { it.isNotBlank() }?.let { bggOnlyGameItem(id, it) }
             }
         )
     }
@@ -879,6 +888,7 @@ fun CreateChallengeDialog(
     var endDate by rememberSaveable(initialChallenge?.id) { mutableStateOf(initialChallenge?.endDate.orEmpty()) }
     var streakPeriod by rememberSaveable(initialChallenge?.id) { mutableStateOf(initialChallenge?.streakPeriod ?: "WEEKLY") }
     var showStartDatePicker by remember { mutableStateOf(false) }
+    var showBggSearch by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
     var debouncedQuery by remember { mutableStateOf("") }
     var debouncedPlayerQuery by remember { mutableStateOf("") }
@@ -1116,6 +1126,13 @@ fun CreateChallengeDialog(
                                     gameQuery = game.name
                                 }
                             }
+                            if (bggSearch != null && selectedGame == null && debouncedQuery.trim().length >= BggGameSearch.MIN_QUERY) {
+                                BoardFlowFormDivider()
+                                SearchBggRow(query = debouncedQuery) {
+                                    bggSearch.search(debouncedQuery)
+                                    showBggSearch = true
+                                }
+                            }
                         }
                     }
                 }
@@ -1247,6 +1264,27 @@ fun CreateChallengeDialog(
                     Text(if (isEditing) "Save" else "Create")
                 }
             }
+        }
+        // Inside the dialog, so the sheet's window opens on top of the form.
+        if (showBggSearch && bggSearch != null) {
+            val search by bggSearch.state.collectAsState()
+            val collectionIds = remember(collectionItems) { collectionItems.mapNotNull { it.objectId.toIntOrNull() }.toSet() }
+            BggSearchSheet(
+                search = search,
+                title = "Pick a game",
+                collectionIds = collectionIds,
+                onOpen = { game ->
+                    selectedGame = collectionItems.firstOrNull { it.objectId == game.id.toString() }
+                        ?: bggOnlyGameItem(game.id, game.name, game.thumbnailUrl)
+                    gameQuery = game.name
+                    showBggSearch = false
+                    bggSearch.clear()
+                },
+                onDismiss = {
+                    showBggSearch = false
+                    bggSearch.clear()
+                }
+            )
         }
     }
 }

@@ -799,3 +799,15 @@ data class LogEntry(
             Type.INFO -> "info"
         }
 }
+
+/** A game known only from a BoardGameGeek search (not in the collection): its id, name and cover. */
+fun bggOnlyGameItem(id: Int, name: String, thumbnailUrl: String? = null): GameItem = GameItem(
+    identity = GameItem.Identity(objectId = id.toString(), name = name),
+    stats = GameItem.Stats(null, null, null, null, null, null, null, null, null, null, null),
+    players = GameItem.Players(null, null, null, null, null, null),
+    ownership = GameItem.Ownership(isOwned = false, isWishlisted = false, bggPlayCount = null),
+    sleeves = GameItem.Sleeves(),
+    media = GameItem.Media(thumbnailUrl = thumbnailUrl),
+    links = GameItem.Links(bggUrl = "https://boardgamegeek.com/boardgame/$id", driveUrl = null, qrImageUrl = null),
+    sources = GameItem.Sources(spreadsheetValues = emptyMap(), bggValues = emptyMap())
+)

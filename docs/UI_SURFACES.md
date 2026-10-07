@@ -79,6 +79,7 @@ Source: `ui/app/AppShell.kt`
 Source: `ui/search/NewPlayScreen.kt`
 
 - Tabs **Log Play** and **Quick Guides**. They switch on tap or swipe, and the tabs, search and "Playing" row slide away while scrolling down
+- Search looks only in your collection. With 2+ characters, the results end with an amber `Search BoardGameGeek for "..."` line (also under "No games in your collection match"), shared by every game search (Log Play, Quick Guides, My Shelf, the challenge picker). It opens a sheet of BGG results titled for what a pick does: "Log a play", "Open a quick guide", "Add to your collection", "Pick a game"
 - `PlayingNowBanner` while a play timer runs, with a Log result button
 - `SessionContinueBanner` to continue the last session, and a change-game notice
 - `GameSearchField` with the quick scan camera button
@@ -156,7 +157,7 @@ Source: `ui/collection/CollectionScreen.kt`
 
 - Tabs **My Shelf** and **Sleeves** (tap or swipe; content slides with the tab)
 - **My Shelf:** search, filter sheet (Show: Owned / Wishlist / Played, not owned / Any; Play status; player-count filters), game rows with a small white rating, pull to refresh
-- Adding a game: under the search results an amber `Search BoardGameGeek for "..."` text action opens the "Add to your collection" sheet with BGG results (year, "In your collection" for games already there, a spinner on the row being opened). A result opens the game detail dialog on its collection status editor, whose save pill reads `Add to collection`; the snackbar says "Added to your BGG collection"
+- Adding a game: under the search results the shared amber `Search BoardGameGeek for "..."` line (see Log Play) opens the "Add to your collection" sheet with BGG results (year, "In your collection" for games already there, a spinner on the row being opened). A result opens the game detail dialog on its collection status editor, whose save pill reads `Add to collection`; the snackbar says "Added to your BGG collection"
 - **Sleeves** (`ui/collection/SleevesScreen.kt`): summary with `To sleeve` / `All owned`, game selector (`All` / `None`), size groups with owned counts, `SleeveInventorySheetContent`
 
 ### Game detail

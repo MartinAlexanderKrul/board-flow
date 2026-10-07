@@ -785,7 +785,7 @@ fun BoardFlowApp(
                 QuickSetupScreen(
                     viewModel = quickSetupViewModel,
                     thumbnailFor = { id -> setupCollection.firstOrNull { it.id == id }?.thumbnailUrl },
-                    gameNameFor = { id -> setupCollection.firstOrNull { it.id == id }?.name },
+                    gameNameFor = { id -> setupCollection.firstOrNull { it.id == id }?.name ?: appViewModel.knownGameName(id) },
                     onStartGame = { gameId, gameName ->
                         appViewModel.startPlayTimer(gameId, gameName)
                         navController.navigate(AppRoutes.NEW_PLAY) {

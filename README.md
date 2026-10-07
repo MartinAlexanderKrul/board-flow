@@ -29,7 +29,7 @@
 ## Features
 
 ### Log Play
-- Search your collection first, with BoardGameGeek search (base games and expansions) as a fallback
+- Search your collection; a game you don't have is one tap away with "Search BoardGameGeek" (base games and expansions), the same in Log Play, Quick Guides, My Shelf and challenges
 - Recommendations for what to play next, based on player count and history
 - A grouped form for date, duration, location, notes, quantity, incomplete and "count in stats"; player rows with scores, teams and winners
 - **Score sheet scanning:** a local quality check warns about dark, blurry or distant photos, then Gemini reads players, scores and the game. Recognised players and games are matched to your roster and collection, and the app learns from every confirmed scan

@@ -87,18 +87,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     val collectionGames: StateFlow<List<GameItem>> = _collectionGames.asStateFlow()
 
     /** BoardGameGeek search from the My Shelf search field, for adding a game that is not on the shelf. */
-    data class ShelfBggSearch(
-        val query: String = "",
-        val loading: Boolean = false,
-        val results: List<cz.nicolsburg.boardflow.model.BggGame> = emptyList(),
-        /** The result whose details are being fetched before its detail dialog opens. */
-        val openingGameId: Int? = null,
-        val error: String? = null
-    )
-
-    private val _shelfBggSearch = MutableStateFlow(ShelfBggSearch())
-    val shelfBggSearch: StateFlow<ShelfBggSearch> = _shelfBggSearch.asStateFlow()
-    private var shelfSearchJob: Job? = null
+    val shelfBggSearch = cz.nicolsburg.boardflow.data.BggGameSearch(bggRepository, viewModelScope)
 
     // Games opened from a BGG search, keyed by BGG id: added to the shelf when a status is saved for them.
     private val stagedShelfGames = java.util.concurrent.ConcurrentHashMap<Int, GameItem>()
@@ -1311,40 +1300,6 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Searches BoardGameGeek for [query]: exact title matches first, then the rest, at most 50.
-     * Fails quietly to an empty list when the XML API token is missing or rejected.
-     */
-    fun searchBggForShelf(query: String) {
-        val q = query.trim()
-        if (q.length < 2) return
-        shelfSearchJob?.cancel()
-        _shelfBggSearch.value = ShelfBggSearch(query = q, loading = true)
-        shelfSearchJob = viewModelScope.launch {
-            val token = BuildConfig.BGG_XML_API_TOKEN
-            val exactResult = bggRepository.searchGames(q, token, exact = true)
-            val looseResult = bggRepository.searchGames(q, token, exact = false)
-            val exact = exactResult.getOrDefault(emptyList())
-            val loose = looseResult.getOrDefault(emptyList())
-            val results = (exact + loose.sortedBy { it.name.lowercase() }).distinctBy { it.id }.take(50)
-            val unreachable = exactResult.isFailure && looseResult.isFailure
-            _shelfBggSearch.value = ShelfBggSearch(
-                query = q,
-                results = results,
-                error = when {
-                    results.isNotEmpty() -> null
-                    unreachable -> "Could not reach BoardGameGeek. Check the connection and try again."
-                    else -> "Nothing found on BoardGameGeek for \"$q\""
-                }
-            )
-        }
-    }
-
-    fun clearShelfBggSearch() {
-        shelfSearchJob?.cancel()
-        _shelfBggSearch.value = ShelfBggSearch()
-    }
-
-    /**
      * Prepares a BGG search result for the game detail dialog: the game already in the snapshot
      * if it is there, otherwise a new [GameItem] built from BGG's details (or just the search
      * result when they cannot be read). A new game is staged and joins the shelf once a
@@ -1352,7 +1307,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun openBggSearchResult(result: cz.nicolsburg.boardflow.model.BggGame, onReady: (GameItem) -> Unit) {
         _collectionGames.value.firstOrNull { it.objectId == result.id.toString() }?.let { return onReady(it) }
-        _shelfBggSearch.value = _shelfBggSearch.value.copy(openingGameId = result.id)
+        shelfBggSearch.setOpening(result.id)
         viewModelScope.launch {
             val detail = runCatching {
                 withContext(Dispatchers.IO) {
@@ -1367,7 +1322,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 playCount = null
             )
             stagedShelfGames[result.id] = item
-            _shelfBggSearch.value = _shelfBggSearch.value.copy(openingGameId = null)
+            shelfBggSearch.setOpening(null)
             onReady(item)
         }
     }
