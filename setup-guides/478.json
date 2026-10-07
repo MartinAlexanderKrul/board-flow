@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 478,
   "gameName": "Citadels",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -106,6 +106,123 @@
           "id": "setup-8",
           "text": "The oldest player takes the Crown",
           "ref": "p.3 step 6"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "assassin",
+          "text": "1 Assassin",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "Rules p.7",
+          "details": [
+            "Name a character to murder: that character skips the whole turn"
+          ]
+        },
+        {
+          "id": "thief",
+          "text": "2 Thief",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "Rules p.7",
+          "details": [
+            "Name a character: when it is called, take all of its gold",
+            "Cannot rob the Assassin or the murdered character"
+          ]
+        },
+        {
+          "id": "magician",
+          "text": "3 Magician",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "Rules p.7",
+          "details": [
+            "Once in your turn: swap your whole hand with another player's, or put any cards on the bottom of the District Deck and draw as many"
+          ]
+        },
+        {
+          "id": "king",
+          "text": "4 King",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "Rules p.8",
+          "details": [
+            "1 gold per noble (yellow) district",
+            "Takes the Crown and chooses first next round (a murdered King still takes it at the end of the round)"
+          ]
+        },
+        {
+          "id": "bishop",
+          "text": "5 Bishop",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "Rules p.8",
+          "details": [
+            "1 gold per religious (blue) district",
+            "His districts cannot be destroyed by the Warlord"
+          ]
+        },
+        {
+          "id": "merchant",
+          "text": "6 Merchant",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "Rules p.8",
+          "details": [
+            "1 gold per trade (green) district",
+            "1 extra gold after taking an action"
+          ]
+        },
+        {
+          "id": "architect",
+          "text": "7 Architect",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "Rules p.8",
+          "details": [
+            "Draws 2 extra district cards after taking an action",
+            "May build up to 3 districts"
+          ]
+        },
+        {
+          "id": "warlord",
+          "text": "8 Warlord",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "Rules p.8",
+          "details": [
+            "1 gold per military (red) district",
+            "End of turn: destroy a district by paying its cost minus 1 (not in a completed city)"
+          ]
         }
       ]
     },

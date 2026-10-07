@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 3955,
   "gameName": "BANG!",
-  "version": 4,
+  "version": 5,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -15,7 +15,9 @@
       "Gold Rush rules",
       "The Valley of Shadows rules",
       "Wild West Show rules",
-      "The Great Train Robbery rules"
+      "The Great Train Robbery rules",
+      "BANG! rules (dV Giochi)",
+      "BANG! Dodge City rules (dV Giochi)"
     ]
   },
   "players": {
@@ -338,6 +340,502 @@
             ]
           },
           "ref": "Great Train Robbery p.1"
+        }
+      ]
+    },
+    {
+      "id": "roles-goals",
+      "title": "Roles",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "sheriff",
+          "text": "Sheriff",
+          "ref": "Object of the Game",
+          "details": [
+            "Eliminate all the Outlaws and the Renegade",
+            "Eliminating a Deputy: discard every card in hand and in play"
+          ]
+        },
+        {
+          "id": "deputy",
+          "text": "Deputy",
+          "ref": "Object of the Game",
+          "details": [
+            "Protect the Sheriff; win with him"
+          ]
+        },
+        {
+          "id": "outlaw",
+          "text": "Outlaw",
+          "ref": "Object of the Game",
+          "details": [
+            "Kill the Sheriff",
+            "Anyone who eliminates an Outlaw draws 3 cards"
+          ]
+        },
+        {
+          "id": "renegade",
+          "text": "Renegade",
+          "ref": "Object of the Game",
+          "details": [
+            "Be the last one alive; if the Sheriff dies while others live, the Outlaws win"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "bart-cassidy",
+          "text": "Bart Cassidy (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Draws a card each time he loses a life point"
+          ]
+        },
+        {
+          "id": "black-jack",
+          "text": "Black Jack (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Phase 1: shows his 2nd card; a Heart or Diamond draws him 1 more"
+          ]
+        },
+        {
+          "id": "calamity-janet",
+          "text": "Calamity Janet (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Uses BANG! as Missed! and Missed! as BANG! (still only 1 BANG! a turn)"
+          ]
+        },
+        {
+          "id": "el-gringo",
+          "text": "El Gringo (3)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Each life point another player's card costs him: he takes a random card from that player's hand"
+          ]
+        },
+        {
+          "id": "jesse-jones",
+          "text": "Jesse Jones (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Phase 1: may take his first card at random from another player's hand"
+          ]
+        },
+        {
+          "id": "jourdonnais",
+          "text": "Jourdonnais (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Always has a Barrel in play (a real one gives him a second try)"
+          ]
+        },
+        {
+          "id": "kit-carlson",
+          "text": "Kit Carlson (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Phase 1: looks at the top 3 cards, keeps 2, puts 1 back on top"
+          ]
+        },
+        {
+          "id": "lucky-duke",
+          "text": "Lucky Duke (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Every \"draw!\" flips 2 cards and he picks the result"
+          ]
+        },
+        {
+          "id": "paul-regret",
+          "text": "Paul Regret (3)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Always has a Mustang in play: others see him 1 further"
+          ]
+        },
+        {
+          "id": "pedro-ramirez",
+          "text": "Pedro Ramirez (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Phase 1: may take his first card from the top of the discard pile"
+          ]
+        },
+        {
+          "id": "rose-doolan",
+          "text": "Rose Doolan (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Always has a Scope in play: sees everyone 1 closer"
+          ]
+        },
+        {
+          "id": "sid-ketchum",
+          "text": "Sid Ketchum (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Any time: discard 2 cards to regain 1 life point"
+          ]
+        },
+        {
+          "id": "slab-the-killer",
+          "text": "Slab the Killer (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "His BANG! needs 2 Missed! to cancel (a Barrel counts as 1)"
+          ]
+        },
+        {
+          "id": "suzy-lafayette",
+          "text": "Suzy Lafayette (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Draws a card as soon as her hand is empty"
+          ]
+        },
+        {
+          "id": "vulture-sam",
+          "text": "Vulture Sam (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "Takes every card of each eliminated player"
+          ]
+        },
+        {
+          "id": "willy-the-kid",
+          "text": "Willy the Kid (4)",
+          "condition": {
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "The Characters",
+          "details": [
+            "May play any number of BANG! cards in his turn"
+          ]
+        },
+        {
+          "id": "apache-kid",
+          "text": "Apache Kid (3)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Diamond cards played by others do not affect him (not in a Duel)"
+          ]
+        },
+        {
+          "id": "belle-star",
+          "text": "Belle Star (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "In her turn, cards in front of other players have no effect"
+          ]
+        },
+        {
+          "id": "bill-noface",
+          "text": "Bill Noface (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Phase 1: draws 1 card plus 1 per life point he is missing"
+          ]
+        },
+        {
+          "id": "chuck-wengam",
+          "text": "Chuck Wengam (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "In his turn: lose 1 life point to draw 2 cards, repeatable (not his last life point)"
+          ]
+        },
+        {
+          "id": "doc-holyday",
+          "text": "Doc Holyday (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Once in his turn: discard 2 cards for a BANG! in range that does not count as his one BANG!"
+          ]
+        },
+        {
+          "id": "elena-fuente",
+          "text": "Elena Fuente (3)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Any card in her hand can be a Missed!"
+          ]
+        },
+        {
+          "id": "greg-digger",
+          "text": "Greg Digger (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Regains 2 life points whenever another character is eliminated"
+          ]
+        },
+        {
+          "id": "herb-hunter",
+          "text": "Herb Hunter (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Draws 2 cards whenever another character is eliminated"
+          ]
+        },
+        {
+          "id": "jose-delgado",
+          "text": "José Delgado (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Twice in his turn: discard a blue card to draw 2"
+          ]
+        },
+        {
+          "id": "molly-stark",
+          "text": "Molly Stark (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Draws a card each time she plays or chooses to discard a Missed!, Beer or BANG! out of her turn"
+          ]
+        },
+        {
+          "id": "pat-brennan",
+          "text": "Pat Brennan (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Phase 1: may instead take 1 card in play in front of any player"
+          ]
+        },
+        {
+          "id": "pixie-pete",
+          "text": "Pixie Pete (3)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Phase 1: draws 3 cards instead of 2"
+          ]
+        },
+        {
+          "id": "sean-mallory",
+          "text": "Sean Mallory (3)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Hand limit 10, whatever his life points"
+          ]
+        },
+        {
+          "id": "tequila-joe",
+          "text": "Tequila Joe (4)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "A Beer gives him 2 life points"
+          ]
+        },
+        {
+          "id": "vera-custer",
+          "text": "Vera Custer (3)",
+          "condition": {
+            "modules": [
+              "dodge"
+            ],
+            "notModules": [
+              "legends"
+            ]
+          },
+          "ref": "Dodge City",
+          "details": [
+            "Start of her turn: copies another living character's ability until her next turn"
+          ]
         }
       ]
     },

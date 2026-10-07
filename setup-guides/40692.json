@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 40692,
   "gameName": "Small World",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -48,6 +48,294 @@
           "id": "setup-6",
           "text": "Each player takes five 1-value Victory coins; the rest form the stash",
           "ref": "Setting up the game (p.2)"
+        }
+      ]
+    },
+    {
+      "id": "races",
+      "title": "Races",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "amazons",
+          "text": "Amazons",
+          "ref": "The Races p.9-10",
+          "details": [
+            "+4 tokens for conquest only: take 4 off the map after redeploying, back in hand when you ready troops"
+          ]
+        },
+        {
+          "id": "dwarves",
+          "text": "Dwarves",
+          "ref": "The Races p.9-10",
+          "details": [
+            "+1 coin per Mine region, even In Decline"
+          ]
+        },
+        {
+          "id": "elves",
+          "text": "Elves",
+          "ref": "The Races p.9-10",
+          "details": [
+            "Lose no tokens when a region is conquered: all come back to hand"
+          ]
+        },
+        {
+          "id": "ghouls",
+          "text": "Ghouls",
+          "ref": "The Races p.9-10",
+          "details": [
+            "All tokens stay when going In Decline",
+            "In Decline they still conquer, at the start of your turn"
+          ]
+        },
+        {
+          "id": "giants",
+          "text": "Giants",
+          "ref": "The Races p.9-10",
+          "details": [
+            "Conquer next to a Mountain they hold with 1 token less (minimum 1)"
+          ]
+        },
+        {
+          "id": "halflings",
+          "text": "Halflings",
+          "ref": "The Races p.9-10",
+          "details": [
+            "Enter the map anywhere",
+            "Holes-in-the-Ground in the first 2 regions conquered make them immune (until Decline or abandoned)"
+          ]
+        },
+        {
+          "id": "humans",
+          "text": "Humans",
+          "ref": "The Races p.9-10",
+          "details": [
+            "+1 coin per Farmland region"
+          ]
+        },
+        {
+          "id": "orcs",
+          "text": "Orcs",
+          "ref": "The Races p.9-10",
+          "details": [
+            "+1 coin per non-empty region conquered this turn"
+          ]
+        },
+        {
+          "id": "ratmen",
+          "text": "Ratmen",
+          "ref": "The Races p.9-10",
+          "details": [
+            "No power: lots of tokens"
+          ]
+        },
+        {
+          "id": "skeletons",
+          "text": "Skeletons",
+          "ref": "The Races p.9-10",
+          "details": [
+            "When redeploying: +1 token per 2 non-empty regions conquered this turn"
+          ]
+        },
+        {
+          "id": "sorcerers",
+          "text": "Sorcerers",
+          "ref": "The Races p.9-10",
+          "details": [
+            "Once per turn per opponent: replace a lone adjacent Active enemy token with one of yours from the tray"
+          ]
+        },
+        {
+          "id": "tritons",
+          "text": "Tritons",
+          "ref": "The Races p.9-10",
+          "details": [
+            "Conquer Coastal regions with 1 token less (minimum 1)"
+          ]
+        },
+        {
+          "id": "trolls",
+          "text": "Trolls",
+          "ref": "The Races p.9-10",
+          "details": [
+            "A Troll's Lair in each region: +1 defense, stays In Decline"
+          ]
+        },
+        {
+          "id": "wizards",
+          "text": "Wizards",
+          "ref": "The Races p.9-10",
+          "details": [
+            "+1 coin per Magic region"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "special-powers",
+      "title": "Special powers",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "alchemist",
+          "text": "Alchemist",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "+2 coins each turn while Active"
+          ]
+        },
+        {
+          "id": "berserk",
+          "text": "Berserk",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Roll the reinforcement die before each conquest, not only the last"
+          ]
+        },
+        {
+          "id": "bivouacking",
+          "text": "Bivouacking",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "5 Encampments when redeploying: each is +1 defense; moved freely each turn"
+          ]
+        },
+        {
+          "id": "commando",
+          "text": "Commando",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Conquer any region with 1 token less (minimum 1)"
+          ]
+        },
+        {
+          "id": "diplomat",
+          "text": "Diplomat",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "End of turn: pick an opponent you did not attack; they cannot attack your Active race until your next turn"
+          ]
+        },
+        {
+          "id": "dragon-master",
+          "text": "Dragon Master",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Once per turn: conquer a region with 1 token whatever defends it; the Dragon there makes it immune"
+          ]
+        },
+        {
+          "id": "flying",
+          "text": "Flying",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Conquer any region except Seas and Lakes, adjacent or not"
+          ]
+        },
+        {
+          "id": "forest",
+          "text": "Forest",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "+1 coin per Forest region"
+          ]
+        },
+        {
+          "id": "fortified",
+          "text": "Fortified",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Once per turn: a Fortress in one of your regions, +1 coin while Active and +1 defense (max 6)"
+          ]
+        },
+        {
+          "id": "heroic",
+          "text": "Heroic",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "End of turn: 2 Heroes make 2 of your regions immune"
+          ]
+        },
+        {
+          "id": "hill",
+          "text": "Hill",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "+1 coin per Hill region"
+          ]
+        },
+        {
+          "id": "merchant",
+          "text": "Merchant",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "+1 coin per region you occupy"
+          ]
+        },
+        {
+          "id": "mounted",
+          "text": "Mounted",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Conquer Hill and Farmland regions with 1 token less (minimum 1)"
+          ]
+        },
+        {
+          "id": "pillaging",
+          "text": "Pillaging",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "+1 coin per non-empty region conquered this turn"
+          ]
+        },
+        {
+          "id": "seafaring",
+          "text": "Seafaring",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Conquer the Seas and the Lake as empty regions and keep them In Decline"
+          ]
+        },
+        {
+          "id": "spirit",
+          "text": "Spirit",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "In Decline, does not count against the one-race-In-Decline limit and never leaves the map"
+          ]
+        },
+        {
+          "id": "stout",
+          "text": "Stout",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Go In Decline right after a normal turn of conquests and scoring"
+          ]
+        },
+        {
+          "id": "swamp",
+          "text": "Swamp",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "+1 coin per Swamp region"
+          ]
+        },
+        {
+          "id": "underworld",
+          "text": "Underworld",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "Conquer Cavern regions with 1 token less; all Caverns are adjacent"
+          ]
+        },
+        {
+          "id": "wealthy",
+          "text": "Wealthy",
+          "ref": "Special Powers p.10-12",
+          "details": [
+            "+7 coins once, at the end of your first turn"
+          ]
         }
       ]
     },

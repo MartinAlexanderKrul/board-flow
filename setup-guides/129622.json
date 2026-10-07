@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 129622,
   "gameName": "Love Letter",
-  "version": 4,
+  "version": 5,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -64,6 +64,118 @@
           "id": "each-round-4",
           "text": "Deal 1 card to each player",
           "ref": "Setup (p.9)"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "The court",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "princess",
+          "text": "8 Princess",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "The People",
+          "details": [
+            "Discard her for any reason and you are out of the round"
+          ]
+        },
+        {
+          "id": "countess",
+          "text": "7 Countess",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "The People",
+          "details": [
+            "Must be discarded if you also hold the King or the Prince",
+            "No effect when discarded"
+          ]
+        },
+        {
+          "id": "king",
+          "text": "6 King",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "The People",
+          "details": [
+            "Trade your other card with another player's hand"
+          ]
+        },
+        {
+          "id": "prince",
+          "text": "5 Prince",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "The People",
+          "details": [
+            "A player (you too) discards their hand without its effect and draws a new card"
+          ]
+        },
+        {
+          "id": "handmaid",
+          "text": "4 Handmaid",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "The People",
+          "details": [
+            "Other players' cards cannot affect you until your next turn"
+          ]
+        },
+        {
+          "id": "baron",
+          "text": "3 Baron",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "The People",
+          "details": [
+            "Secretly compare hands with another player; the lower card is out of the round (tie: nothing)"
+          ]
+        },
+        {
+          "id": "priest",
+          "text": "2 Priest",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "The People",
+          "details": [
+            "Look at another player's hand"
+          ]
+        },
+        {
+          "id": "guard",
+          "text": "1 Guard",
+          "condition": {
+            "modules": [
+              "classic"
+            ]
+          },
+          "ref": "The People",
+          "details": [
+            "Name a card other than Guard: if your target holds it, they are out of the round"
+          ]
         }
       ]
     },

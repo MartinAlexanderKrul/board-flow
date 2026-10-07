@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 393530,
   "gameName": "Karak II",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -78,6 +78,67 @@
           "id": "city",
           "text": "Your Hero's city token in front of you, grey (unbuilt) side up",
           "ref": "Setting Up the Game (p.3)"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Heroes",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "warrior",
+          "text": "Horan, the Warrior (The Beast)",
+          "ref": "Heroes p.14",
+          "details": [
+            "War Strategy: once per battle, may reroll all the Unit dice (not the Hero die) and keep the second roll",
+            "Plunder: after winning a battle, gains resources as if he had gathered on that tile"
+          ]
+        },
+        {
+          "id": "oracle",
+          "text": "Taia, the Oracle (Camel)",
+          "ref": "Heroes p.14",
+          "details": [
+            "Fate-weaver: on a new tile, draws 1 extra monster token, places as usual and returns the extra one",
+            "Expert Builder: the city and every building cost her 1 resource less (her choice)"
+          ]
+        },
+        {
+          "id": "ranger",
+          "text": "Lady Lorraine, the Ranger (Bear)",
+          "ref": "Heroes p.14",
+          "details": [
+            "Hawkeye: once per turn, for free, lay the top landscape tile anywhere reachable with its monsters, without moving there",
+            "Bear Friend: starts with an extra Bear die in her color that does not count against her Unit die limit"
+          ]
+        },
+        {
+          "id": "warlock",
+          "text": "Lord Xanros, the Warlock (Skeletal Bull)",
+          "ref": "Heroes p.15",
+          "details": [
+            "Necromancy: spend actions to add Skeleton dice in his color, up to 3, outside his glory limit",
+            "Soul Collector: heals 1 life each time one of his Units dies in combat"
+          ]
+        },
+        {
+          "id": "warrior-princess",
+          "text": "Elspeth, the Warrior Princess (Unicorn)",
+          "ref": "Heroes p.15",
+          "details": [
+            "Combat Finesse: once per battle, may reroll the Hero die and keep the second roll",
+            "Magic Run: once per turn, instead of moving, goes up to 3 explored tiles in a straight line over chasms; must stop at an undefeated monster army"
+          ]
+        },
+        {
+          "id": "scout",
+          "text": "Darius, the Scout (Raptor)",
+          "ref": "Heroes p.15",
+          "details": [
+            "Terrain Exploration: on unexplored ground, draws 2 landscape tiles, places 1 and returns the other to the top unseen",
+            "Claws and Fangs: defeats one strength-1 monster army on his tile automatically (Dark General: discards a praetorian token first)"
+          ]
         }
       ]
     },

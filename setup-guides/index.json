@@ -61,8 +61,8 @@
       "gameId": 478,
       "gameName": "Citadels",
       "gameIds": [478],
-      "version": 3,
-      "schemaVersion": 1,
+      "version": 4,
+      "schemaVersion": 2,
       "path": "478.json"
     },
     {
@@ -125,8 +125,8 @@
       "gameId": 3955,
       "gameName": "BANG!",
       "gameIds": [3955, 8269, 9653, 20237, 66508, 107794, 130046, 349886, 401241],
-      "version": 4,
-      "schemaVersion": 1,
+      "version": 5,
+      "schemaVersion": 2,
       "path": "3955.json"
     },
     {
@@ -221,8 +221,8 @@
       "gameId": 30549,
       "gameName": "Pandemic",
       "gameIds": [30549],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "30549.json"
     },
     {
@@ -269,8 +269,8 @@
       "gameId": 40692,
       "gameName": "Small World",
       "gameIds": [40692],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "40692.json"
     },
     {
@@ -309,8 +309,8 @@
       "gameId": 65244,
       "gameName": "Forbidden Island",
       "gameIds": [65244],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "65244.json"
     },
     {
@@ -405,8 +405,8 @@
       "gameId": 121921,
       "gameName": "Robinson Crusoe: Adventures on the Cursed Island",
       "gameIds": [121921],
-      "version": 3,
-      "schemaVersion": 1,
+      "version": 4,
+      "schemaVersion": 2,
       "path": "121921.json"
     },
     {
@@ -461,16 +461,16 @@
       "gameId": 129622,
       "gameName": "Love Letter",
       "gameIds": [129622],
-      "version": 4,
-      "schemaVersion": 1,
+      "version": 5,
+      "schemaVersion": 2,
       "path": "129622.json"
     },
     {
       "gameId": 131357,
       "gameName": "Coup",
       "gameIds": [131357],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "131357.json"
     },
     {
@@ -485,8 +485,8 @@
       "gameId": 136063,
       "gameName": "Forbidden Desert",
       "gameIds": [136063],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "136063.json"
     },
     {
@@ -805,8 +805,8 @@
       "gameId": 194655,
       "gameName": "Santorini",
       "gameIds": [194655],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "194655.json"
     },
     {
@@ -1669,8 +1669,8 @@
       "gameId": 393530,
       "gameName": "Karak II",
       "gameIds": [393530],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "393530.json"
     },
     {

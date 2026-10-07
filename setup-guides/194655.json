@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 194655,
   "gameName": "Santorini",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -40,6 +40,409 @@
           },
           "note": "With 3-4 players check that each God Power is compatible",
           "ref": "God Power Setup (p.2)"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "God powers",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "apollo",
+          "text": "1 Apollo",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "note": "1-10 are the Simple God Powers, recommended for your first games with gods.",
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your move: may move into an opponent Worker's space, forcing it to the space you left"
+          ]
+        },
+        {
+          "id": "artemis",
+          "text": "2 Artemis",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your move: may move one more time, not back to where it started"
+          ]
+        },
+        {
+          "id": "athena",
+          "text": "3 Athena",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Opponent's turn: if one of your Workers moved up last turn, they cannot move up"
+          ]
+        },
+        {
+          "id": "atlas",
+          "text": "4 Atlas",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your build: may build a dome at any level"
+          ]
+        },
+        {
+          "id": "demeter",
+          "text": "5 Demeter",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your build: may build one more time, not on the same space"
+          ]
+        },
+        {
+          "id": "hephaestus",
+          "text": "6 Hephaestus",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your build: may build one more block (not a dome) on top of the first"
+          ]
+        },
+        {
+          "id": "hermes",
+          "text": "7 Hermes",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your turn: if your Workers stay on their level, each may move any number of times, then either builds"
+          ]
+        },
+        {
+          "id": "minotaur",
+          "text": "8 Minotaur",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your move: may move into an opponent Worker's space if it can be pushed one space straight back to a free space"
+          ]
+        },
+        {
+          "id": "pan",
+          "text": "9 Pan",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Also wins by moving down two or more levels"
+          ]
+        },
+        {
+          "id": "prometheus",
+          "text": "10 Prometheus",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your turn: if your Worker does not move up, it may build both before and after moving"
+          ]
+        },
+        {
+          "id": "aphrodite",
+          "text": "11 Aphrodite",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "An opponent Worker that starts its turn next to one of yours must end its move next to one of yours"
+          ]
+        },
+        {
+          "id": "ares",
+          "text": "12 Ares",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "End of your turn: may remove an unoccupied block (not a dome) next to your unmoved Worker"
+          ]
+        },
+        {
+          "id": "bia",
+          "text": "13 Bia",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Places Workers first",
+            "Your move: an opponent Worker in the next space in the same direction is removed from the game"
+          ]
+        },
+        {
+          "id": "chaos",
+          "text": "14 Chaos",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Plays the face-up card of a deck of the unused Simple God Powers",
+            "After any turn in which a dome is built, discards it and draws the next"
+          ]
+        },
+        {
+          "id": "charon",
+          "text": "15 Charon",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your move: first may force a neighboring opponent Worker to the free space directly across your Worker"
+          ]
+        },
+        {
+          "id": "chronus",
+          "text": "16 Chronus",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Also wins when there are at least 5 Complete Towers"
+          ]
+        },
+        {
+          "id": "circe",
+          "text": "17 Circe",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Start of your turn: if an opponent's Workers do not neighbor each other, only you use their power until your next turn"
+          ]
+        },
+        {
+          "id": "dionysus",
+          "text": "18 Dionysus",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Each Complete Tower your Worker creates gives an extra turn with an opponent's Worker (no one can win in it)"
+          ]
+        },
+        {
+          "id": "eros",
+          "text": "19 Eros",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Places Workers along opposite edges",
+            "Also wins when a Worker moves next to the other and both are on the first level (same level in 3 players)"
+          ]
+        },
+        {
+          "id": "hera",
+          "text": "20 Hera",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Opponents cannot win by moving into a perimeter space"
+          ]
+        },
+        {
+          "id": "hestia",
+          "text": "21 Hestia",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your build: may build one more time, not on a perimeter space"
+          ]
+        },
+        {
+          "id": "hypnus",
+          "text": "22 Hypnus",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "An opponent Worker higher than all their others cannot move"
+          ]
+        },
+        {
+          "id": "limus",
+          "text": "23 Limus",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Opponents cannot build next to your Workers, except a dome completing a tower"
+          ]
+        },
+        {
+          "id": "medusa",
+          "text": "24 Medusa",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "End of your turn: if possible, build in lower neighboring spaces with opponent Workers, removing those Workers"
+          ]
+        },
+        {
+          "id": "morpheus",
+          "text": "25 Morpheus",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Start of your turn: put a block or dome on your card",
+            "Your build: instead, build any number of times with the pieces on your card"
+          ]
+        },
+        {
+          "id": "persephone",
+          "text": "26 Persephone",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Opponent's turn: if possible, at least one of their Workers must move up"
+          ]
+        },
+        {
+          "id": "poseidon",
+          "text": "27 Poseidon",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "End of your turn: your unmoved Worker on the ground level may build up to 3 times"
+          ]
+        },
+        {
+          "id": "selene",
+          "text": "28 Selene",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Uses a male and a female Worker",
+            "Your build: instead, the female Worker may build a dome at any level"
+          ]
+        },
+        {
+          "id": "triton",
+          "text": "29 Triton",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your move: each time a Worker enters a perimeter space, it may move again"
+          ]
+        },
+        {
+          "id": "zeus",
+          "text": "30 Zeus",
+          "condition": {
+            "modules": [
+              "gods"
+            ]
+          },
+          "ref": "God Powers p.2-3",
+          "details": [
+            "Your build: may build a block under itself"
+          ]
         }
       ]
     },

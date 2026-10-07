@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 121921,
   "gameName": "Robinson Crusoe: Adventures on the Cursed Island",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -15,23 +15,6 @@
     "max": 4
   },
   "sections": [
-    {
-      "id": "characters",
-      "title": "Characters",
-      "steps": [
-        {
-          "id": "characters-1",
-          "text": "Each player draws a random Character card and puts its Invention card on it",
-          "note": "2 players: draw only from Carpenter, Cook and Explorer",
-          "ref": "Setup (p.4)"
-        },
-        {
-          "id": "characters-2",
-          "text": "2 pawns each and a Wound marker on the leftmost space of the life track",
-          "ref": "Setup (p.4)"
-        }
-      ]
-    },
     {
       "id": "board",
       "title": "Board",
@@ -110,6 +93,72 @@
           "id": "solo-setup-2",
           "text": "You are always First Player; Shelter, Roof and Palisade cost the same as in the 2-player game",
           "ref": "p.26"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "carpenter",
+          "text": "Carpenter",
+          "note": "Each ability can be used once per round; the number is its cost in Determination tokens.",
+          "ref": "Appendix p.33",
+          "details": [
+            "Economical Construction (2): 1 less wood for one Action (can bring a cost to 0)",
+            "Craftsmanship (2): reroll any brown die in a Build Action",
+            "A New Idea (3): draw 5 Inventions, put 1 on the board, discard the rest",
+            "Handyman (3): an extra brown Action pawn this round, for his own Build Actions only"
+          ]
+        },
+        {
+          "id": "cook",
+          "text": "Cook",
+          "ref": "Appendix p.33",
+          "details": [
+            "Grandma's Recipe (2 + 1 food): heal 2 wounds of one character or 1 each of two, at any time",
+            "Scrounger (2): reroll any grey die in a Gather Action",
+            "Stone Soup (3): gain 1 food",
+            "Hooch (3): ignore 1 rain cloud in the Weather Phase, or treat 1 snow cloud as rain"
+          ]
+        },
+        {
+          "id": "explorer",
+          "text": "Explorer",
+          "ref": "Appendix p.33-34",
+          "details": [
+            "Lucky (2): reroll any green die in an Explore Action",
+            "Reconnaissance (2): look at the top 3 Island tiles, keep 1 on top and shuffle 2 back (before exploring)",
+            "Motivational Speech (3): morale +1",
+            "Scouting (3): draw 2 Discovery tokens, keep 1"
+          ]
+        },
+        {
+          "id": "soldier",
+          "text": "Soldier",
+          "ref": "Appendix p.34",
+          "details": [
+            "Tracking (2): look at the top Hunting card, put it on the top or bottom",
+            "The Hunt (4): put the top Beast card unseen on top of the Hunting deck",
+            "Frenzy (3): +3 Weapon level during his Action",
+            "Defensive Plan (3): Palisade (if the Shelter is built) or Weapon level +1"
+          ]
+        },
+        {
+          "id": "friday",
+          "text": "Friday (1-2 players)",
+          "condition": {
+            "maxPlayers": 2
+          },
+          "ref": "Additional rules p.27",
+          "details": [
+            "Never First Player and not affected by Event cards",
+            "Can take any Action alone, or only support when paired with a player",
+            "A \"?\" on his Adventure die gives him 1 wound instead of an Adventure card",
+            "May spend 2 of his Determination tokens to reroll one of his dice"
+          ]
         }
       ]
     },

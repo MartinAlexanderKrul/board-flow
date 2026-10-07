@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 65244,
   "gameName": "Forbidden Island",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -52,6 +52,61 @@
           "id": "setup-6",
           "text": "Water Level marker at your chosen difficulty (Novice for a first game)",
           "ref": "Setup 7 (p.2)"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Adventurers",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "pilot",
+          "text": "Pilot",
+          "ref": "Rules p.4",
+          "details": [
+            "Once per turn, for 1 action: fly to any tile"
+          ]
+        },
+        {
+          "id": "engineer",
+          "text": "Engineer",
+          "ref": "Rules p.4",
+          "details": [
+            "Shore up 2 tiles for 1 action"
+          ]
+        },
+        {
+          "id": "navigator",
+          "text": "Navigator",
+          "ref": "Rules p.4",
+          "details": [
+            "For 1 action: move another player up to 2 adjacent tiles"
+          ]
+        },
+        {
+          "id": "diver",
+          "text": "Diver",
+          "ref": "Rules p.4",
+          "details": [
+            "For 1 action: move through one or more adjacent flooded or missing tiles"
+          ]
+        },
+        {
+          "id": "explorer",
+          "text": "Explorer",
+          "ref": "Rules p.4",
+          "details": [
+            "Moves and shores up diagonally too"
+          ]
+        },
+        {
+          "id": "messenger",
+          "text": "Messenger",
+          "ref": "Rules p.5",
+          "details": [
+            "Gives Treasure cards to a player anywhere, not only on the same tile"
+          ]
         }
       ]
     },

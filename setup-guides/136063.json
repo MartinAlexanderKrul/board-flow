@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 136063,
   "gameName": "Forbidden Desert",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -84,6 +84,66 @@
           "id": "pawns",
           "text": "Your pawn on the helicopter crash tile; box unused cards and pawns",
           "ref": "Set Up 7 (p.2)"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Adventurers",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "archeologist",
+          "text": "Archeologist",
+          "ref": "Meet the Adventurers",
+          "details": [
+            "Removes 2 sand markers from one tile for 1 action"
+          ]
+        },
+        {
+          "id": "climber",
+          "text": "Climber",
+          "ref": "Meet the Adventurers",
+          "details": [
+            "Can move onto blocked tiles (2+ sand) and take one other player along when he moves",
+            "Pawns on his tile are never buried and can leave it even when it is blocked"
+          ]
+        },
+        {
+          "id": "explorer",
+          "text": "Explorer",
+          "ref": "Meet the Adventurers",
+          "details": [
+            "Moves, removes sand and uses Dune Blasters diagonally too"
+          ]
+        },
+        {
+          "id": "meteorologist",
+          "text": "Meteorologist",
+          "ref": "Meet the Adventurers",
+          "details": [
+            "At the end of her turn, draws 1 fewer Storm card per action she spends",
+            "For 1 action: looks at as many top Storm cards as the storm level and may put 1 at the bottom"
+          ]
+        },
+        {
+          "id": "navigator",
+          "text": "Navigator",
+          "ref": "Meet the Adventurers",
+          "details": [
+            "For 1 action: moves another player up to 3 unblocked tiles, tunnels included",
+            "Moves the Explorer diagonally and the Climber through blocked tiles (he can still take someone along)"
+          ]
+        },
+        {
+          "id": "water-carrier",
+          "text": "Water Carrier",
+          "ref": "Meet the Adventurers",
+          "details": [
+            "Starts with 5 water instead of 4",
+            "Takes 2 water from an excavated well for 1 action",
+            "Gives water to players on adjacent tiles for free, at any time"
+          ]
         }
       ]
     },

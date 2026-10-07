@@ -1,13 +1,14 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 30549,
   "gameName": "Pandemic",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Pandemic rules (Z-Man Games, via RulesPal)"
+      "Pandemic rules (Z-Man Games, via RulesPal)",
+      "Pandemic rules, 2013 edition (Z-Man Games)"
     ]
   },
   "players": {
@@ -68,6 +69,74 @@
           "id": "players-3",
           "text": "Choose 4, 5 or 6 Epidemic cards (Introductory, Standard, Heroic); split the Player cards into that many piles, shuffle 1 Epidemic into each and stack them, smaller piles at the bottom",
           "ref": "Setup 5 (p.3)"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Roles",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "contingency-planner",
+          "text": "Contingency Planner",
+          "ref": "Roles",
+          "details": [
+            "Action: take an Event card from the player discard pile and keep it on his role card (1 at a time, not part of his hand)",
+            "When he plays that stored Event, it is removed from the game"
+          ]
+        },
+        {
+          "id": "dispatcher",
+          "text": "Dispatcher",
+          "ref": "Roles",
+          "details": [
+            "Action: move any pawn to a city that has another pawn",
+            "Action: move another player's pawn as if it were his own (ask first)"
+          ]
+        },
+        {
+          "id": "medic",
+          "text": "Medic",
+          "ref": "Roles",
+          "details": [
+            "Treat Disease removes all cubes of one color",
+            "Cured diseases: their cubes leave his city without an action, and none can be placed there"
+          ]
+        },
+        {
+          "id": "operations-expert",
+          "text": "Operations Expert",
+          "ref": "Roles",
+          "details": [
+            "Action: build a research station in his city without a City card",
+            "Once per turn, as an action: move from a research station to any city by discarding any City card"
+          ]
+        },
+        {
+          "id": "quarantine-specialist",
+          "text": "Quarantine Specialist",
+          "ref": "Roles",
+          "details": [
+            "No cubes are placed and no outbreaks happen in her city or the cities connected to it (setup cubes still go down)"
+          ]
+        },
+        {
+          "id": "researcher",
+          "text": "Researcher",
+          "ref": "Roles",
+          "details": [
+            "Share Knowledge: may give any City card from her hand, not only the card of the city she is in",
+            "A player sharing with her on their turn may take any 1 of her City cards"
+          ]
+        },
+        {
+          "id": "scientist",
+          "text": "Scientist",
+          "ref": "Roles",
+          "details": [
+            "Discover a Cure with 4 cards of one color instead of 5"
+          ]
         }
       ]
     },

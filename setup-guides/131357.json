@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 131357,
   "gameName": "Coup",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -40,6 +40,56 @@
           "id": "setup-3",
           "text": "A summary card for each player",
           "ref": "Set-Up (p.1)"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "duke",
+          "text": "Duke",
+          "ref": "Character Actions",
+          "details": [
+            "Tax: take 3 coins",
+            "Blocks Foreign Aid"
+          ]
+        },
+        {
+          "id": "assassin",
+          "text": "Assassin",
+          "ref": "Character Actions",
+          "details": [
+            "Assassinate: pay 3 coins; the target loses an influence (the Contessa blocks it)"
+          ]
+        },
+        {
+          "id": "captain",
+          "text": "Captain",
+          "ref": "Character Actions",
+          "details": [
+            "Steal: take 2 coins from another player (1 if they only have 1)",
+            "Blocks stealing"
+          ]
+        },
+        {
+          "id": "ambassador",
+          "text": "Ambassador",
+          "ref": "Character Actions",
+          "details": [
+            "Exchange: draw 2 from the Court deck, swap any with your face-down cards, return 2",
+            "Blocks stealing"
+          ]
+        },
+        {
+          "id": "contessa",
+          "text": "Contessa",
+          "ref": "Counteractions",
+          "details": [
+            "Blocks an assassination"
+          ]
         }
       ]
     },
