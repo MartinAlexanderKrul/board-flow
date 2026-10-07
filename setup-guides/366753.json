@@ -1,27 +1,151 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 366753,
   "gameName": "Disney Villains: The Card Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
-    "sources": ["Disney Villains: The Card Game rulebook (via RulesPal)"]
+    "sources": [
+      "Disney Villains: The Card Game rulebook (via RulesPal)"
+    ]
   },
-  "players": { "min": 3, "max": 6 },
+  "players": {
+    "min": 3,
+    "max": 6
+  },
   "modules": [
-    { "id": "special", "name": "Special cards", "defaultEnabled": true, "note": "Beginners may leave them out." }
+    {
+      "id": "special",
+      "name": "Special cards",
+      "defaultEnabled": true,
+      "note": "Beginners may leave them out."
+    }
   ],
   "sections": [
     {
       "id": "decks",
       "title": "Villain decks",
       "steps": [
-        { "id": "villain", "text": "Each player picks a Villain (Maleficent, Jafar, Captain Hook, Scar, Ursula, Cruella de Vil) and takes that deck", "ref": "Setup" },
-        { "id": "no-special", "text": "Remove the special cards from the decks", "condition": { "notModules": ["special"] }, "ref": "Setup" },
-        { "id": "shuffle", "text": "Shuffle your deck facedown (Hero side up) as your draw pile", "ref": "Setup" },
-        { "id": "first-discard", "text": "Flip 1 card Villain side up as the start of your discard pile", "note": "A special card here gets shuffled back and redrawn", "ref": "Setup, Special Cards" },
-        { "id": "hand", "text": "Draw {n} cards (hidden)", "amounts": { "n": 4 }, "ref": "Setup" }
+        {
+          "id": "villain",
+          "text": "Each player picks a Villain (Maleficent, Jafar, Captain Hook, Scar, Ursula, Cruella de Vil) and takes that deck",
+          "ref": "Setup"
+        },
+        {
+          "id": "no-special",
+          "text": "Remove the special cards from the decks",
+          "condition": {
+            "notModules": [
+              "special"
+            ]
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "shuffle",
+          "text": "Shuffle your deck facedown (Hero side up) as your draw pile",
+          "ref": "Setup"
+        },
+        {
+          "id": "first-discard",
+          "text": "Flip 1 card Villain side up as the start of your discard pile",
+          "note": "A special card here gets shuffled back and redrawn",
+          "ref": "Setup, Special Cards"
+        },
+        {
+          "id": "hand",
+          "text": "Draw {n} cards (hidden)",
+          "amounts": {
+            "n": 4
+          },
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Villains' special cards",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "maleficent",
+          "text": "Maleficent",
+          "condition": {
+            "modules": [
+              "special"
+            ]
+          },
+          "ref": "Special Cards",
+          "details": [
+            "Powerful Curse: the highest card on top of any discard pile is removed from the game (all of them on a tie)"
+          ]
+        },
+        {
+          "id": "jafar",
+          "text": "Jafar",
+          "condition": {
+            "modules": [
+              "special"
+            ]
+          },
+          "ref": "Special Cards",
+          "details": [
+            "Hypnotize: an opponent hands you the top card of their discard pile; play it on a later turn"
+          ]
+        },
+        {
+          "id": "captain-hook",
+          "text": "Captain Hook",
+          "condition": {
+            "modules": [
+              "special"
+            ]
+          },
+          "ref": "Special Cards",
+          "details": [
+            "Meddling: every opponent flips the top card of their discard pile (Villain to Hero and back)"
+          ]
+        },
+        {
+          "id": "cruella",
+          "text": "Cruella de Vil",
+          "condition": {
+            "modules": [
+              "special"
+            ]
+          },
+          "ref": "Special Cards",
+          "details": [
+            "Swipe: swap the top card of a player's discard pile with yours (placement rules do not apply)"
+          ]
+        },
+        {
+          "id": "scar",
+          "text": "Scar",
+          "condition": {
+            "modules": [
+              "special"
+            ]
+          },
+          "ref": "Special Cards",
+          "details": [
+            "No Escape: take a card from each opponent's hand and lay it face up; they must play it next turn"
+          ]
+        },
+        {
+          "id": "ursula",
+          "text": "Ursula",
+          "condition": {
+            "modules": [
+              "special"
+            ]
+          },
+          "ref": "Special Cards",
+          "details": [
+            "Whirlpool: every top discard card moves one player left or right, your choice (placement rules do not apply)"
+          ]
+        }
       ]
     },
     {
@@ -29,8 +153,16 @@
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
-        { "id": "forced", "text": "A card matching a neighbor's top card must go to their pile", "ref": "How To Play" },
-        { "id": "no-search", "text": "Never look through your discard pile to count", "ref": "Additional Rules" }
+        {
+          "id": "forced",
+          "text": "A card matching a neighbor's top card must go to their pile",
+          "ref": "How To Play"
+        },
+        {
+          "id": "no-search",
+          "text": "Never look through your discard pile to count",
+          "ref": "Additional Rules"
+        }
       ]
     },
     {
@@ -38,7 +170,11 @@
       "title": "Start playing",
       "kind": "START",
       "steps": [
-        { "id": "first", "text": "Best Villainous laugh goes first; play is clockwise", "ref": "How To Play" }
+        {
+          "id": "first",
+          "text": "Best Villainous laugh goes first; play is clockwise",
+          "ref": "How To Play"
+        }
       ]
     }
   ]

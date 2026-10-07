@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 331106,
   "gameName": "The Witcher: Old World",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -211,6 +211,54 @@
           "id": "box",
           "text": "Return unused player components to the box",
           "ref": "p.8"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Witcher schools",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "bear",
+          "text": "School of the Bear",
+          "note": "Each specialty works once per fight; your level on its track sets its strength.",
+          "ref": "Witchers Specialties p.34",
+          "details": [
+            "Armor: on your turn with Shield level 0, draw cards (level 2+: raise your Shield too); triggers by itself"
+          ]
+        },
+        {
+          "id": "griffin",
+          "text": "School of the Griffin",
+          "ref": "Witchers Specialties p.34",
+          "details": [
+            "Magic: take the top card of your discard pile, then discard 0-2 cards (level 4-5: pick any card from the discard pile)"
+          ]
+        },
+        {
+          "id": "cat",
+          "text": "School of the Cat",
+          "ref": "Witchers Specialties p.34",
+          "details": [
+            "Speed: in your first turn, draw cards (and maybe return some to the top of your deck in any order)"
+          ]
+        },
+        {
+          "id": "wolf",
+          "text": "School of the Wolf",
+          "ref": "Witchers Specialties p.34",
+          "details": [
+            "Swordsmanship: after a combo of 3+ cards, deal extra damage (level 2+: draw cards too)"
+          ]
+        },
+        {
+          "id": "viper",
+          "text": "School of the Viper",
+          "ref": "Witchers Specialties p.34",
+          "details": [
+            "Venomous-Steel: when your attack makes the opponent discard, look at and reorder their top cards (level 2+: discard some)"
+          ]
         }
       ]
     },

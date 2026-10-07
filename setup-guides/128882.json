@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 128882,
   "gameName": "The Resistance: Avalon",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -87,6 +87,64 @@
           "id": "evil-reveals-itself-2",
           "text": "Minions raise a thumb; Merlin opens their eyes to see the agents of Evil; thumbs down, Merlin closes eyes; everyone opens eyes",
           "ref": "p.2"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "merlin",
+          "text": "Merlin (Good)",
+          "ref": "Rules p.6-7",
+          "details": [
+            "Sees the agents of Evil at the start (except Mordred)",
+            "Must stay hidden: if Good wins 3 Quests, the Assassin gets one guess at Merlin"
+          ]
+        },
+        {
+          "id": "assassin",
+          "text": "Assassin (Evil)",
+          "ref": "Assassinate Merlin p.6",
+          "details": [
+            "After 3 successful Quests, Evil discusses and the Assassin names one Good player: if it is Merlin, Evil wins"
+          ]
+        },
+        {
+          "id": "percival",
+          "text": "Percival (Good, optional)",
+          "ref": "Optional Characters p.7",
+          "details": [
+            "Knows who Merlin is (and Morgana, who also shows as Merlin)",
+            "With 5 players, add Mordred or Morgana too"
+          ]
+        },
+        {
+          "id": "mordred",
+          "text": "Mordred (Evil, optional)",
+          "ref": "Optional Characters p.7",
+          "details": [
+            "Not revealed to Merlin"
+          ]
+        },
+        {
+          "id": "morgana",
+          "text": "Morgana (Evil, optional)",
+          "ref": "Optional Characters p.7",
+          "details": [
+            "Appears to Percival as Merlin"
+          ]
+        },
+        {
+          "id": "oberon",
+          "text": "Oberon (Evil, optional)",
+          "ref": "Optional Characters p.7",
+          "details": [
+            "Does not reveal himself to Evil and does not see them",
+            "Not a Minion of Mordred: keeps his eyes closed in the Evil reveal"
+          ]
         }
       ]
     },

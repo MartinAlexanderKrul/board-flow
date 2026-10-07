@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 285967,
   "gameName": "Ankh: Gods of Egypt",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -161,6 +161,56 @@
           "id": "pharaoh-card",
           "text": "Choose or draw a Pharaoh card; follow its back to place the Pharaoh figure and any extra setup",
           "ref": "Pharaoh p.6"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Gods",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "amun",
+          "text": "Amun",
+          "ref": "The Gods of Egypt p.30",
+          "details": [
+            "Mysterious Forms: once per Conflict event, announce before others choose that you play 2 Battle cards and use both (flip the Amun token)"
+          ]
+        },
+        {
+          "id": "anubis",
+          "text": "Anubis",
+          "ref": "The Gods of Egypt p.30",
+          "details": [
+            "Judge of the Dead: when enemy Warriors are killed, trap 1 on your dashboard; +1 strength each in Battle Resolution (max +3)",
+            "Owners may summon a trapped Warrior by paying you 1 Follower"
+          ]
+        },
+        {
+          "id": "isis",
+          "text": "Isis",
+          "ref": "The Gods of Egypt p.30",
+          "details": [
+            "Protectress: your figures next to an enemy figure are Protected; you may keep them alive in Battle Resolution (not against Plague of Locusts)"
+          ]
+        },
+        {
+          "id": "osiris",
+          "text": "Osiris",
+          "ref": "The Gods of Egypt p.30",
+          "details": [
+            "Gateway to the Underworld: after losing a Battle, place or move 1 of 3 Underworld tokens in that region",
+            "Summon: 1 extra figure onto an empty Underworld token space; other gods cannot end a move there"
+          ]
+        },
+        {
+          "id": "ra",
+          "text": "Ra",
+          "ref": "The Gods of Egypt p.30",
+          "details": [
+            "Radiance: when summoning, may give the figure 1 of 3 Sun tokens (Radiant)",
+            "+1 Devotion for Dominating or winning a Battle in a region with your Radiant figures"
+          ]
         }
       ]
     },

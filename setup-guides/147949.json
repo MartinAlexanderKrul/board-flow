@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 147949,
   "gameName": "One Night Ultimate Werewolf",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -57,6 +57,115 @@
       ]
     },
     {
+      "id": "characters",
+      "title": "Roles",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "doppelganger",
+          "text": "1 Doppelganger",
+          "note": "Listed in the order they wake at night; the last three never wake.",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "Looks at another player's card and becomes that role and team",
+            "Seer, Robber, Troublemaker or Drunk: does that action right away; Werewolf or Mason: wakes with them; Minion: sees the Werewolves",
+            "As Insomniac, wakes again after the Insomniac"
+          ]
+        },
+        {
+          "id": "werewolf",
+          "text": "2 Werewolves",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "Wake together and see each other",
+            "Lone Wolf option: a lone Werewolf may look at one center card"
+          ]
+        },
+        {
+          "id": "minion",
+          "text": "3 Minion",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "Sees the Werewolves (they do not know him); on the werewolf team",
+            "If no players are Werewolves, wins if someone other than him dies"
+          ]
+        },
+        {
+          "id": "mason",
+          "text": "4 Masons",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "Always use both; wake and see each other (a missing one is in the center)"
+          ]
+        },
+        {
+          "id": "seer",
+          "text": "5 Seer",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "Looks at one other player's card or two center cards"
+          ]
+        },
+        {
+          "id": "robber",
+          "text": "6 Robber",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "May swap cards with another player and look at the new card; he is now that role but does not act"
+          ]
+        },
+        {
+          "id": "troublemaker",
+          "text": "7 Troublemaker",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "May swap two other players' cards without looking"
+          ]
+        },
+        {
+          "id": "drunk",
+          "text": "8 Drunk",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "Must swap his card with a center card without looking at it"
+          ]
+        },
+        {
+          "id": "insomniac",
+          "text": "9 Insomniac",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "Looks at her own card at the end of the night to see if it changed"
+          ]
+        },
+        {
+          "id": "villager",
+          "text": "Villager",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "No ability"
+          ]
+        },
+        {
+          "id": "tanner",
+          "text": "Tanner",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "Only wins if he dies; then the Werewolves do not win",
+            "Not on either team"
+          ]
+        },
+        {
+          "id": "hunter",
+          "text": "Hunter",
+          "ref": "One Night Roles p.2-5",
+          "details": [
+            "If he dies, the player he points at dies too"
+          ]
+        }
+      ]
+    },
+    {
       "id": "reminders",
       "title": "Easy to forget",
       "kind": "REMINDERS",
@@ -65,11 +174,6 @@
           "id": "reminders-1",
           "text": "Your role at the end is the card in front of you, which may have changed; nobody looks at cards after the night",
           "ref": "Setup"
-        },
-        {
-          "id": "wake-order",
-          "text": "Night wake order: Doppelganger, Werewolves, Minion, Masons, Seer, Robber, Troublemaker, Drunk, Insomniac; Villagers, Tanner and Hunter never wake",
-          "ref": "Night Wake Order (p.6)"
         }
       ]
     },

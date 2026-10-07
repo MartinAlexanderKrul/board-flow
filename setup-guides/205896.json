@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 205896,
   "gameName": "Rising Sun",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -122,6 +122,55 @@
           "id": "supply",
           "text": "Monster figures, Coins and Ronin within reach",
           "ref": "p.9"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Clans",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "bonsai",
+          "text": "Bonsai Clan",
+          "ref": "The Clans p.26",
+          "details": [
+            "Sacred Bounty: anything you buy (Season cards, Strongholds) costs at most 1 coin; discounts apply after"
+          ]
+        },
+        {
+          "id": "koi",
+          "text": "Koi Clan",
+          "ref": "The Clans p.26",
+          "details": [
+            "Eddies in the Stream: at the start of the War Phase, trade all your Ronin for coins",
+            "In Hire Ronin, every coin in your reserve counts as a Ronin"
+          ]
+        },
+        {
+          "id": "lotus",
+          "text": "Lotus Clan",
+          "ref": "The Clans p.26",
+          "details": [
+            "Dictate the Flow: play your chosen Political Mandate face down and announce any Mandate you like"
+          ]
+        },
+        {
+          "id": "dragonfly",
+          "text": "Dragonfly Clan",
+          "ref": "The Clans p.26",
+          "details": [
+            "Gossamer Wings: summon to any Province (Stronghold or not) and move anywhere, without Shipping Routes"
+          ]
+        },
+        {
+          "id": "turtle",
+          "text": "Turtle Clan",
+          "ref": "The Clans p.26",
+          "details": [
+            "Shell of the Eternal: Strongholds move like figures and count as 1 Force",
+            "Your Strongholds are never killed, taken hostage or Betrayed"
+          ]
         }
       ]
     },

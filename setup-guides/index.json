@@ -453,8 +453,8 @@
       "gameId": 128882,
       "gameName": "The Resistance: Avalon",
       "gameIds": [128882],
-      "version": 1,
-      "schemaVersion": 1,
+      "version": 2,
+      "schemaVersion": 2,
       "path": "128882.json"
     },
     {
@@ -517,8 +517,8 @@
       "gameId": 147949,
       "gameName": "One Night Ultimate Werewolf",
       "gameIds": [147949],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "147949.json"
     },
     {
@@ -621,8 +621,8 @@
       "gameId": 169786,
       "gameName": "Scythe",
       "gameIds": [169786, 199727, 223555],
-      "version": 1,
-      "schemaVersion": 1,
+      "version": 2,
+      "schemaVersion": 2,
       "path": "169786.json"
     },
     {
@@ -885,8 +885,8 @@
       "gameId": 205896,
       "gameName": "Rising Sun",
       "gameIds": [205896],
-      "version": 1,
-      "schemaVersion": 1,
+      "version": 2,
+      "schemaVersion": 2,
       "path": "205896.json"
     },
     {
@@ -1005,8 +1005,8 @@
       "gameId": 237182,
       "gameName": "Root",
       "gameIds": [237182, 241386, 272637, 287220, 330149, 428335],
-      "version": 1,
-      "schemaVersion": 1,
+      "version": 2,
+      "schemaVersion": 2,
       "path": "237182.json"
     },
     {
@@ -1285,8 +1285,8 @@
       "gameId": 285967,
       "gameName": "Ankh: Gods of Egypt",
       "gameIds": [285967, 307807, 308505],
-      "version": 3,
-      "schemaVersion": 1,
+      "version": 4,
+      "schemaVersion": 2,
       "path": "285967.json"
     },
     {
@@ -1437,8 +1437,8 @@
       "gameId": 331106,
       "gameName": "The Witcher: Old World",
       "gameIds": [331106],
-      "version": 2,
-      "schemaVersion": 1,
+      "version": 3,
+      "schemaVersion": 2,
       "path": "331106.json"
     },
     {
@@ -1573,8 +1573,8 @@
       "gameId": 366753,
       "gameName": "Disney Villains: The Card Game",
       "gameIds": [366753],
-      "version": 1,
-      "schemaVersion": 1,
+      "version": 2,
+      "schemaVersion": 2,
       "path": "366753.json"
     },
     {
