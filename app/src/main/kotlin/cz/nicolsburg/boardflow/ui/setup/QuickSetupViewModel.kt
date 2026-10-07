@@ -79,7 +79,7 @@ class QuickSetupViewModel(
                         playerCounts = SetupGuideResolver.allPlayerCounts(g),
                         selectablePlayerCounts = SetupGuideResolver.selectablePlayerCounts(g, resolved.enabledModules),
                         selectedModules = resolved.enabledModules,
-                        lockedModules = SetupGuideResolver.lockedModules(g, players),
+                        lockedModules = SetupGuideResolver.lockedModules(g, players, resolved.enabledModules),
                         resolved = resolved,
                         checkedStepIds = done.toSet()
                     )
@@ -187,17 +187,19 @@ class QuickSetupViewModel(
     fun toggleModule(moduleId: String) {
         val g = guide.value?.guide ?: return
         val players = playerCount.value
-        if (moduleId in SetupGuideResolver.lockedModules(g, players)) return
+        val enabledNow = SetupGuideResolver.effectiveModules(g, players, modules.value.toSet())
+        if (moduleId in SetupGuideResolver.lockedModules(g, players, enabledNow)) return
         val current = modules.value.toSet()
         val module = g.modules.first { it.id == moduleId }
         val next = if (module.group != null) {
-            // Single-choice group: picking one replaces its siblings; tapping the active one does nothing.
+            // Single-choice group: picking one replaces its siblings, and drops what needed them
+            // (or the requirement would switch the old sibling back on). Tapping the active one does nothing.
             if (moduleId in current) return
-            current - g.modules.filter { it.group == module.group }.map { it.id }.toSet() + moduleId
+            val siblings = g.modules.filter { it.group == module.group && it.id != moduleId }.map { it.id }.toSet()
+            current - SetupGuideResolver.withDependents(g, siblings) + moduleId
         } else if (moduleId in current) {
             // Switching a module off also drops modules that depend on it.
-            val dependents = g.modules.filter { moduleId in it.requires }.map { it.id }.toSet()
-            current - moduleId - dependents
+            current - SetupGuideResolver.withDependents(g, setOf(moduleId))
         } else {
             current - module.excludes.toSet() - g.modules.filter { moduleId in it.excludes }.map { it.id }.toSet() + moduleId
         }

@@ -133,4 +133,21 @@ class SetupGuideResolverTest {
         val badRef = mistborn.copy(modules = emptyList())
         assertTrue(SetupGuideValidator.validate(badRef).any { it.contains("unknown module 'coop'") })
     }
+
+    @Test
+    fun switchingModeDropsModulesThatNeedTheOldMode() {
+        // Arcs: Leaders & Lore (and Two lore cards on top of it) only exist in a single game.
+        val arcs = guide("359871.json")
+        assertEquals(
+            setOf("single-game", "leaders-and-lore", "extra-lore"),
+            SetupGuideResolver.withDependents(arcs, setOf("single-game"))
+        )
+        // What the screen does when Campaign: Act I is picked with Leaders & Lore on.
+        val before = setOf("single-game", "leaders-and-lore", "extra-lore")
+        val siblings = arcs.modules.filter { it.group == "Mode" && it.id != "campaign-act-1" }.map { it.id }.toSet()
+        val next = before - SetupGuideResolver.withDependents(arcs, siblings) + "campaign-act-1"
+        assertEquals(setOf("campaign-act-1"), SetupGuideResolver.effectiveModules(arcs, 3, next))
+        val steps = SetupGuideResolver.resolve(arcs, 3, next).sections.flatMap { s -> s.steps.map { it.id } }
+        assertTrue("imperial" in steps && "setup-card" !in steps && "ll-draft" !in steps)
+    }
 }

@@ -729,4 +729,12 @@ private fun ModuleChips(
     modules
         .filter { it.id in state.selectedModules && it.note != null }
         .forEach { HintText("${it.name}: ${it.note}") }
+    // Why a module is greyed out when it belongs to another mode (Arcs' Leaders & Lore in a campaign).
+    val all = state.loaded.guide.modules.associateBy { it.id }
+    modules
+        .filter { it.id in state.lockedModules && it.id !in state.selectedModules }
+        .forEach { module ->
+            val mode = module.requires.mapNotNull { all[it] }.firstOrNull { it.group != null && it.id !in state.selectedModules }
+            if (mode != null) HintText("${module.name}: only with ${mode.name}")
+        }
 }

@@ -2,13 +2,14 @@
   "schemaVersion": 1,
   "gameId": 241477,
   "gameName": "Karak",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "Karak rulebook (Albi, via RulesPal)",
-      "Karak: Regent rules (Albi)"
+      "Karak: Regent rules (Albi)",
+      "Karak: Sidhar, Kirima, Elspeth contents (Albi, BoardGameGeek)"
     ]
   },
   "players": {
@@ -58,6 +59,16 @@
             "n": 5
           },
           "ref": "Setup (p.3)"
+        },
+        {
+          "id": "extra-heroes",
+          "text": "Add the Sidhar, Kirima and Elspeth hero boards to the heroes to choose from; their standees go in plastic stands",
+          "condition": {
+            "modules": [
+              "sidhar-kirima-elspeth"
+            ]
+          },
+          "ref": "Sidhar, Kirima, Elspeth contents"
         },
         {
           "id": "hero",
@@ -112,6 +123,12 @@
       "name": "Regent",
       "bggId": 291436,
       "note": "4 heroes, new monsters, items and rooms, and the Lord of Karak game version."
+    },
+    {
+      "id": "sidhar-kirima-elspeth",
+      "name": "Sidhar, Kirima, Elspeth",
+      "bggId": 347190,
+      "note": "3 more heroes: the alchemist Doctor Sidhar, the warrior princess Elspeth and the beast hunter Kirima."
     }
   ]
 }

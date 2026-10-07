@@ -1020,8 +1020,8 @@
     {
       "gameId": 241477,
       "gameName": "Karak",
-      "gameIds": [241477, 291436],
-      "version": 3,
+      "gameIds": [241477, 291436, 347190],
+      "version": 4,
       "schemaVersion": 1,
       "path": "241477.json"
     },
@@ -1540,8 +1540,8 @@
     {
       "gameId": 359871,
       "gameName": "Arcs",
-      "gameIds": [359871],
-      "version": 1,
+      "gameIds": [359871, 363757, 419279],
+      "version": 2,
       "schemaVersion": 1,
       "path": "359871.json"
     },

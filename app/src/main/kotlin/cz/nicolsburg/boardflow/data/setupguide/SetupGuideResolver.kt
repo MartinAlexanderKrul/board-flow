@@ -89,10 +89,32 @@ object SetupGuideResolver {
         return kept.filterTo(linkedSetOf()) { id -> byId.getValue(id).requires.all { it in kept } }
     }
 
+    /** [ids] plus every module that requires one of them, directly or through another module. */
+    fun withDependents(guide: SetupGuide, ids: Set<String>): Set<String> {
+        val result = ids.toMutableSet()
+        do {
+            val added = guide.modules.filter { it.id !in result && it.requires.any(result::contains) }.map { it.id }
+            result += added
+        } while (added.isNotEmpty())
+        return result
+    }
+
     /** Modules the user may not toggle at this player count (forced on, or unavailable). */
-    fun lockedModules(guide: SetupGuide, playerCount: Int): Set<String> =
-        guide.modules.filter { playerCount in it.forcedAtPlayers || !isModuleAvailable(it, playerCount) }
-            .map { it.id }.toSet()
+    fun lockedModules(guide: SetupGuide, playerCount: Int, enabled: Set<String> = emptySet()): Set<String> {
+        val byId = guide.modules.associateBy { it.id }
+        // A module that needs a mode (a group member) that is not chosen, directly or through
+        // another module: Arcs' Leaders & Lore in a campaign. Turning it on would switch the mode.
+        fun needsOtherMode(id: String, seen: Set<String> = emptySet()): Boolean {
+            val module = byId[id] ?: return false
+            return module.requires.any { req ->
+                req !in seen && ((byId[req]?.group != null && req !in enabled) || needsOtherMode(req, seen + id))
+            }
+        }
+        return guide.modules.filter {
+            playerCount in it.forcedAtPlayers || !isModuleAvailable(it, playerCount) ||
+                (enabled.isNotEmpty() && needsOtherMode(it.id))
+        }.map { it.id }.toSet()
+    }
 
     fun resolve(guide: SetupGuide, playerCount: Int, selectedModules: Set<String>): ResolvedSetup {
         val modules = effectiveModules(guide, playerCount, selectedModules)

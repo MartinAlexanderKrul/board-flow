@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 359871,
   "gameName": "Arcs",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Arcs base rulebook (Leder Games, Aug 27, 2025)"
+      "Arcs base rulebook (Leder Games, Aug 27, 2025)",
+      "Arcs: The Blighted Reach campaign rulebook (Leder Games, Dec 18, 2023)"
     ]
   },
   "players": {
@@ -16,9 +17,32 @@
   },
   "modules": [
     {
+      "id": "single-game",
+      "name": "Single game",
+      "group": "Mode",
+      "defaultEnabled": true
+    },
+    {
+      "id": "campaign-act-1",
+      "name": "Campaign: Act I",
+      "group": "Mode",
+      "bggId": 363757,
+      "note": "The Blighted Reach campaign, first game. Play at least one single game first."
+    },
+    {
+      "id": "campaign-later-act",
+      "name": "Campaign: Act II or III",
+      "group": "Mode",
+      "note": "Continue from the end of the previous Act, after its Intermission."
+    },
+    {
       "id": "leaders-and-lore",
       "name": "Leaders & Lore",
-      "note": "Not for a first game. Leader cards replace the standard starting pieces and resources."
+      "bggId": 419279,
+      "requires": [
+        "single-game"
+      ],
+      "note": "Not for a first game. Leader cards replace the standard starting pieces and resources. The Leaders & Lore Pack adds more leaders and lore to choose from."
     },
     {
       "id": "extra-lore",
@@ -33,11 +57,31 @@
     {
       "id": "table",
       "title": "Table",
+      "condition": {
+        "notModules": [
+          "campaign-later-act"
+        ]
+      },
       "steps": [
         {
           "id": "map",
           "text": "Place the map; set out the 18 battle dice and 25 resource tokens",
-          "ref": "p.4 A"
+          "ref": "p.4 A",
+          "condition": {
+            "modules": [
+              "single-game"
+            ]
+          }
+        },
+        {
+          "id": "map-campaign",
+          "text": "Place the map; set out the 18 battle dice, 25 resource tokens, 24 Blight tokens, 28 Free cities and 14 Free starports",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.4 A"
         },
         {
           "id": "initiative",
@@ -68,6 +112,25 @@
           "ref": "p.4 D"
         },
         {
+          "id": "events",
+          "text": "Shuffle {n} Event action cards into the action deck",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 2,
+                "4": 3
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.4 E"
+        },
+        {
           "id": "ambitions",
           "text": "3 ambition markers, blue (lower-number) side up, in Available Markers on the map",
           "ref": "p.4 E"
@@ -75,7 +138,22 @@
         {
           "id": "chapter",
           "text": "Chapter marker on space 1 of the Chapter track",
-          "ref": "p.4 F"
+          "ref": "p.4 F",
+          "condition": {
+            "modules": [
+              "single-game"
+            ]
+          }
+        },
+        {
+          "id": "chapter-campaign",
+          "text": "Chapter track tile over the chapter track, \"Act I & II\" side up; chapter marker on its 1 space",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.4 G"
         },
         {
           "id": "zero",
@@ -94,7 +172,85 @@
               }
             }
           },
-          "ref": "p.4 H"
+          "ref": "p.4 H",
+          "condition": {
+            "modules": [
+              "single-game"
+            ]
+          }
+        },
+        {
+          "id": "court-campaign",
+          "text": "Shuffle the 15 campaign Vox and Guild cards (marked CC) into the Court deck; deal {n} into the Court row",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 4
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "note": "Leave out the base Court cards (marked BC)",
+          "ref": "Campaign p.5 I"
+        },
+        {
+          "id": "court-lore",
+          "text": "Shuffle {n} random lore cards from the lore deck into the Court deck",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "note": "Lore cards from expansion packs may be added too",
+          "ref": "Campaign p.5 J"
+        },
+        {
+          "id": "council",
+          "text": "Imperial Council card (01) In Session side up as the leftmost Court card",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.5 K"
+        },
+        {
+          "id": "edict-2p",
+          "text": "Slide the Guild Envoys Depart edict (02) into the first slot of the rules booklet",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ],
+            "players": [
+              2
+            ]
+          },
+          "ref": "Campaign p.5 L"
+        },
+        {
+          "id": "edicts",
+          "text": "Shuffle the 3 Govern the Imperial Reach edicts (03-05) face down, turn them all face up and slide them into the first free slot of the rules booklet",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.5 M"
         },
         {
           "id": "setup-card",
@@ -108,7 +264,12 @@
               }
             }
           },
-          "ref": "p.4 I"
+          "ref": "p.4 I",
+          "condition": {
+            "modules": [
+              "single-game"
+            ]
+          }
         },
         {
           "id": "out-of-play",
@@ -122,7 +283,12 @@
               }
             }
           },
-          "ref": "p.4 J"
+          "ref": "p.4 J",
+          "condition": {
+            "modules": [
+              "single-game"
+            ]
+          }
         },
         {
           "id": "ambition-resources",
@@ -130,15 +296,67 @@
           "condition": {
             "players": [
               2
+            ],
+            "modules": [
+              "single-game"
             ]
           },
           "ref": "p.4 K"
+        },
+        {
+          "id": "imperial",
+          "text": "Roll the number die: 1 Imperial ship in each system of the rolled cluster and of the next cluster clockwise (8 ships)",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "note": "No setup cards and no out-of-play clusters in the campaign",
+          "ref": "Campaign p.5 N"
+        },
+        {
+          "id": "free-cities",
+          "text": "Roll the event die: 1 Free city on each planet with the rolled symbol outside the Imperial clusters",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.5 O"
+        },
+        {
+          "id": "blight",
+          "text": "1 damaged Blight (shaded side) in each system outside the Imperial clusters",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.5 P"
+        },
+        {
+          "id": "ambition-resources-campaign",
+          "text": "Put the 6 resources matching the planets in the Imperial clusters on the ambition boxes: Material and Fuel on Tycoon, Weapons on Warlord, Relics on Keeper, Psionics on Empath",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ],
+            "players": [
+              2
+            ]
+          },
+          "ref": "Campaign p.5 Q"
         }
       ]
     },
     {
       "id": "players",
       "title": "Players",
+      "condition": {
+        "notModules": [
+          "campaign-later-act"
+        ]
+      },
       "steps": [
         {
           "id": "pieces",
@@ -146,9 +364,49 @@
           "ref": "p.5 L"
         },
         {
+          "id": "fates",
+          "text": "Each player draws 2 \"A\" Fate cards and secretly picks 1; reveal together and take the matching Fate Sets",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.6 B"
+        },
+        {
+          "id": "fate-setup",
+          "text": "Set up from the Setup side of your objective card (the first card of your Fate Set), then flip it to its Objective side",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.6 C"
+        },
+        {
+          "id": "objective-marker",
+          "text": "Objective marker on the Power track space shown by the large clock on your objective card",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.6 D"
+        },
+        {
           "id": "power",
           "text": "Power markers on 0 of the Power track",
           "ref": "p.5 M"
+        },
+        {
+          "id": "title",
+          "text": "Tuck a Regent/Outlaw title card (06-09), Regent side up, under your Fate card; if nobody got the First Regent tile in setup, the initiative player takes it",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.6 F"
         },
         {
           "id": "start-a",
@@ -156,6 +414,9 @@
           "condition": {
             "notModules": [
               "leaders-and-lore"
+            ],
+            "modules": [
+              "single-game"
             ]
           },
           "note": "Seats 1-4 match the systems 1A-4C on the setup card",
@@ -167,6 +428,9 @@
           "condition": {
             "notModules": [
               "leaders-and-lore"
+            ],
+            "modules": [
+              "single-game"
             ]
           },
           "ref": "p.5 N"
@@ -178,6 +442,9 @@
             "minPlayers": 3,
             "notModules": [
               "leaders-and-lore"
+            ],
+            "modules": [
+              "single-game"
             ]
           },
           "ref": "p.5 N"
@@ -191,6 +458,9 @@
             ],
             "notModules": [
               "leaders-and-lore"
+            ],
+            "modules": [
+              "single-game"
             ]
           },
           "ref": "p.5 N"
@@ -201,9 +471,43 @@
           "condition": {
             "notModules": [
               "leaders-and-lore"
+            ],
+            "modules": [
+              "single-game"
             ]
           },
           "ref": "p.5 O"
+        },
+        {
+          "id": "campaign-place",
+          "text": "In turn order: 3 ships and 1 building in an empty building slot at a planet with an Imperial ship; gain 1 resource of that planet type",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "note": "The planet may already have Rival pieces",
+          "ref": "Campaign p.6 G"
+        },
+        {
+          "id": "campaign-place-reverse",
+          "text": "Then the same again in reverse turn order (last player first, counterclockwise)",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.6 H"
+        },
+        {
+          "id": "free-fill",
+          "text": "Free cities in every empty building slot on planets with Imperial ships",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.6 I"
         },
         {
           "id": "ll-leaders",
@@ -342,14 +646,140 @@
           "condition": {
             "players": [
               2
+            ],
+            "modules": [
+              "single-game"
             ]
           },
           "ref": "p.5 P"
         },
         {
+          "id": "redraw-campaign",
+          "text": "The player without initiative may discard every card except Events and draw as many new ones",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ],
+            "players": [
+              2
+            ]
+          },
+          "ref": "Campaign p.6 J"
+        },
+        {
           "id": "discard",
           "text": "All other action cards go face down as the action discard pile on the map; shuffle it",
-          "ref": "p.5 Q"
+          "ref": "p.5 Q",
+          "condition": {
+            "modules": [
+              "single-game"
+            ]
+          }
+        },
+        {
+          "id": "discard-campaign",
+          "text": "All other action cards go to the action discard pile on the map",
+          "condition": {
+            "modules": [
+              "campaign-act-1"
+            ]
+          },
+          "ref": "Campaign p.6 K"
+        }
+      ]
+    },
+    {
+      "id": "later-act",
+      "title": "Act II or III",
+      "condition": {
+        "modules": [
+          "campaign-later-act"
+        ]
+      },
+      "steps": [
+        {
+          "id": "intermission",
+          "text": "Do the Intermission at the end of the previous Act first (Rules aid)",
+          "ref": "Campaign p.3 Intermission"
+        },
+        {
+          "id": "carry-over",
+          "text": "Set up the same as the end of the previous Act, Power included, with these changes",
+          "ref": "Campaign p.7"
+        },
+        {
+          "id": "ambitions-later",
+          "text": "Ambition markers: Act II flips the lowest-Power one to its higher side, Act III the two lowest; the rest stay on their lower sides",
+          "ref": "Campaign p.7 A"
+        },
+        {
+          "id": "court-later",
+          "text": "Shuffle the Court deck; deal {n} into the Court; flip the Imperial Council to In Session",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 4
+              }
+            }
+          },
+          "ref": "Campaign p.7 B"
+        },
+        {
+          "id": "blight-gates",
+          "text": "1 damaged Blight on each gate with no Blight and no ships",
+          "ref": "Campaign p.7 C"
+        },
+        {
+          "id": "blight-roll",
+          "text": "Roll the event die: in each cluster 1 damaged Blight at the planet with that symbol; if it already has Blight, 1 at every planet of the cluster without Blight",
+          "ref": "Campaign p.7 D"
+        },
+        {
+          "id": "resources-later-2p",
+          "text": "Roll the number die twice; put the 6 resources matching the planets of the 2 rolled clusters on the ambition boxes as in Act I",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Campaign p.7 E"
+        },
+        {
+          "id": "fate-setup-later",
+          "text": "Set up from the Setup side of your objective card, then flip it to Objective; you may rearrange your resources (choices in turn order)",
+          "ref": "Campaign p.7 F"
+        },
+        {
+          "id": "objective-later",
+          "text": "Objective marker on the Power track space shown at the top of your objective card (Act III: only players with a \"C\" Fate)",
+          "ref": "Campaign p.7 G"
+        },
+        {
+          "id": "chapter-later",
+          "text": "Chapter track tile on the side for this Act; chapter marker on its 1 space",
+          "ref": "Campaign p.7 H"
+        },
+        {
+          "id": "hands-later",
+          "text": "Each player draws 6 action cards",
+          "ref": "Campaign p.7 H"
+        },
+        {
+          "id": "redraw-later",
+          "text": "The player without initiative may discard every card except Events and draw as many new ones",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Campaign p.7 H"
+        },
+        {
+          "id": "discard-later",
+          "text": "All other action cards go to the action discard pile on the map",
+          "ref": "Campaign p.7 H"
         }
       ]
     },
@@ -370,7 +800,12 @@
               }
             }
           },
-          "ref": "p.2"
+          "ref": "p.2",
+          "condition": {
+            "modules": [
+              "single-game"
+            ]
+          }
         },
         {
           "id": "declare",
@@ -396,6 +831,26 @@
           "id": "damaged",
           "text": "Anything you build in a system someone else controls is placed damaged",
           "ref": "p.12"
+        },
+        {
+          "id": "empire-control",
+          "text": "The Empire controls a system with any fresh Imperial ship; the First Regent counts as controlling it for ambitions and objectives",
+          "condition": {
+            "notModules": [
+              "single-game"
+            ]
+          },
+          "ref": "Campaign p.3 Empire Rules"
+        },
+        {
+          "id": "events-cards",
+          "text": "Event cards cannot be led, copied with, or discarded to seize the initiative",
+          "condition": {
+            "notModules": [
+              "single-game"
+            ]
+          },
+          "ref": "Campaign p.3 Event"
         }
       ]
     },
