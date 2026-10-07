@@ -1045,8 +1045,8 @@
       "gameId": 246900,
       "gameName": "Eclipse: Second Dawn for the Galaxy",
       "gameIds": [246900],
-      "version": 1,
-      "schemaVersion": 1,
+      "version": 2,
+      "schemaVersion": 2,
       "path": "246900.json"
     },
     {

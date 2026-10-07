@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": 246900,
   "gameName": "Eclipse: Second Dawn for the Galaxy",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -105,6 +105,79 @@
           "id": "players-5",
           "text": "Starting Sector: 1 Interceptor, a Population Cube on each square without a star, 1 Influence Disc from the left of your track",
           "ref": "p.5"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Species",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "terran",
+          "text": "Terran factions",
+          "ref": "Species p.26-28",
+          "details": [
+            "No special rules: the standard species"
+          ]
+        },
+        {
+          "id": "eridani",
+          "text": "Eridani Empire",
+          "ref": "Species p.26-28",
+          "details": [
+            "Draw 2 random Reputation Tiles face down before the game",
+            "Start with 2 fewer Influence Discs (leave the two leftmost spaces empty)",
+            "Interceptor, Cruiser and Dreadnought blueprints produce extra energy"
+          ]
+        },
+        {
+          "id": "hydran",
+          "text": "Hydran Progress",
+          "ref": "Species p.26-28",
+          "details": [
+            "Setup: a Population Cube in the Advanced Science square of the Starting Sector",
+            "2 activations per Research action"
+          ]
+        },
+        {
+          "id": "planta",
+          "text": "Planta",
+          "ref": "Species p.26-28",
+          "details": [
+            "Opponent Ships destroy your Population Cubes automatically at the end of the Combat Phase",
+            "+1 VP per Controlled Sector at game end",
+            "Blueprints: lower Initiative, extra computers and energy, one less Ship Part space",
+            "2 activations per Explore action"
+          ]
+        },
+        {
+          "id": "descendants",
+          "text": "Descendants of Draco",
+          "ref": "Species p.26-28",
+          "details": [
+            "Explore: flip two Sectors per activation and place one (or none); the rest are discarded face up",
+            "+1 VP per Ancient on the board at game end",
+            "Ships and Influence Discs may share Sectors with Ancients (no battle), but no Discovery Tiles from them"
+          ]
+        },
+        {
+          "id": "mechanema",
+          "text": "Mechanema",
+          "ref": "Species p.26-28",
+          "details": [
+            "Cheaper building: Interceptor 2, Cruiser 4, Dreadnought 7, Starbase 2, Orbital 3, Monolith 8",
+            "3 activations per Upgrade and per Build action"
+          ]
+        },
+        {
+          "id": "orion",
+          "text": "Orion Hegemony",
+          "ref": "Species p.26-28",
+          "details": [
+            "Start with a Cruiser instead of an Interceptor",
+            "All blueprints have higher Initiative; Interceptor, Cruiser and Dreadnought produce extra energy"
+          ]
         }
       ]
     },
