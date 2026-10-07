@@ -13,6 +13,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -46,8 +47,13 @@ data class GuideDraftAiConfig(
  *
  * Busy models are not waited for one after another: [PARALLEL_MODELS] models work on the same
  * rulebook at once, the first valid guide wins and the other requests are cancelled. A model
- * that fails (busy, retired, or an answer that is still invalid after one retry with the
- * validator's problems) is replaced by the next candidate straight away.
+ * that fails (busy, retired, slower than [MODEL_TIMEOUT_MS], or an answer that is still invalid
+ * after one retry with the validator's problems) is replaced by the next candidate straight away.
+ *
+ * Full Flash models are preferred over Flash-Lite: compared on the Arcs rulebook, the full
+ * models made no factual errors, while Lite runs dropped whole setup steps and one gave a wrong
+ * card count that no validation can catch. Lite models are tried only after every full model,
+ * and a Lite guide that arrives while a full model is still working is held as a fallback.
  */
 class GeminiGuideDraftGenerator {
 
@@ -70,7 +76,10 @@ class GeminiGuideDraftGenerator {
             val inline = if (pdf.length() <= INLINE_LIMIT_BYTES) Base64.getEncoder().encodeToString(pdf.readBytes()) else null
             val uploads = mutableMapOf<String, String>()
             val uploadLock = Mutex()
-            val queue = ArrayDeque(config.models.take(MAX_MODELS))
+            val candidates = config.models.take(MAX_MODELS)
+            val queue = ArrayDeque(candidates.filterNot(::isLite) + candidates.filter(::isLite))
+            var fullInFlight = 0
+            var liteFallback: SetupGuide? = null
             val queueLock = Mutex()
             val failures = mutableListOf<String>()
             val winner = CompletableDeferred<SetupGuide>()
@@ -88,16 +97,35 @@ class GeminiGuideDraftGenerator {
                         // Staggered a little so two lanes do not hit the same busy moment.
                         if (lane > 0) delay(LANE_STAGGER_MS)
                         while (!winner.isCompleted) {
-                            val model = queueLock.withLock { queue.removeFirstOrNull() } ?: break
-                            when (val outcome = tryModel(model, ::pdfPart, gameId, gameName, sourceName, config)) {
-                                is Outcome.Guide -> winner.complete(outcome.guide)
-                                is Outcome.Failed -> synchronized(failures) { failures += outcome.reason }
+                            val model = queueLock.withLock {
+                                // With a Lite guide already held, only a full model is worth another request.
+                                val next = if (liteFallback == null) queue.firstOrNull() else queue.firstOrNull { !isLite(it) }
+                                next?.also { queue.remove(it); if (!isLite(it)) fullInFlight++ }
+                            } ?: break
+                            val outcome = withTimeoutOrNull(MODEL_TIMEOUT_MS) {
+                                tryModel(model, ::pdfPart, gameId, gameName, sourceName, config)
+                            } ?: Outcome.Failed(SLOW).also { log("draft model=$model gave up after ${MODEL_TIMEOUT_MS / 1000} s") }
+                            queueLock.withLock {
+                                if (!isLite(model)) fullInFlight--
+                                val fullLeft = fullInFlight > 0 || queue.any { !isLite(it) }
+                                when (outcome) {
+                                    is Outcome.Guide ->
+                                        if (isLite(model) && fullLeft) {
+                                            if (liteFallback == null) liteFallback = outcome.guide
+                                        } else {
+                                            winner.complete(outcome.guide)
+                                        }
+                                    is Outcome.Failed -> synchronized(failures) { failures += outcome.reason }
+                                }
+                                // No full model left to wait for: a held Lite guide is the answer.
+                                if (!fullLeft) liteFallback?.let { winner.complete(it) }
                             }
                         }
                     }
                 }
                 launch {
                     lanes.joinAll()
+                    liteFallback?.let { winner.complete(it) }
                     if (!winner.isCompleted) {
                         winner.completeExceptionally(IllegalStateException(summarise(synchronized(failures) { failures.toList() })))
                     }
@@ -170,10 +198,10 @@ class GeminiGuideDraftGenerator {
     }
 
     private fun summarise(failures: List<String>): String {
-        val problem = failures.firstOrNull { it != BUSY && it != UNAVAILABLE && !it.startsWith("Gemini error") }
+        val problem = failures.firstOrNull { it != BUSY && it != UNAVAILABLE && it != SLOW && !it.startsWith("Gemini error") }
         return when {
             problem != null -> "The draft did not pass the guide checks: $problem"
-            failures.isNotEmpty() && failures.all { it == BUSY || it == UNAVAILABLE } -> "Gemini is busy right now. Try again in a few minutes."
+            failures.isNotEmpty() && failures.all { it == BUSY || it == UNAVAILABLE || it == SLOW } -> "Gemini is busy right now. Try again in a few minutes."
             else -> failures.firstOrNull() ?: "Gemini could not draft a guide. Try again later."
         }
     }
@@ -255,6 +283,8 @@ class GeminiGuideDraftGenerator {
         return file.getString("uri")
     }
 
+    private fun isLite(model: String) = model.contains("lite", ignoreCase = true)
+
     private fun log(message: String) {
         runCatching { Log.d(TAG, message) }
     }
@@ -272,6 +302,9 @@ class GeminiGuideDraftGenerator {
         /** Candidates tried at most, across all lanes. */
         const val MAX_MODELS = 6
         const val BUSY = "busy"
+        const val SLOW = "slow"
+        /** A model still thinking after this long is given up (one took over 10 minutes on Arcs). */
+        const val MODEL_TIMEOUT_MS = 4 * 60 * 1000L
         const val UNAVAILABLE = "unavailable"
     }
 }

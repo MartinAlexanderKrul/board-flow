@@ -111,8 +111,12 @@ Rules:
 - Use only what the rulebook says. Never add rules, components or quantities that are not in it.
 - Paraphrase; do not copy sentences from the rulebook.
 - Cover the whole setup in the order it is done, then the first turn. Leave out strategy and the full rules.
+- Do not list the box contents; every SETUP step is something to do.
+- Spell out every quantity the rulebook gives (cards, tokens, ships and buildings per system, cards to deal). Never send the reader to a card or the rulebook for a number the rulebook states.
+- Put every amount you define into its step text as {name}; an amount the text does not show is lost.
+- Take setup numbers from the setup section. The same action later in the game often uses other numbers (cards dealt at setup vs drawn on a turn); do not mix them up, and do not use numbers from other editions of the game.
 - Each step is one short line with its quantity in it; use amounts with byPlayers for anything that depends on the player count.
-- Put things people often forget in one REMINDERS section titled "Easy to forget", and keep the START section titled "Start playing" to 1-3 steps.
+- Put things people often forget in one REMINDERS section titled "Easy to forget" (rules that are easy to miss during play, at most 6), and keep the START section titled "Start playing" to 1-3 steps.
 - Give every step a "ref" with the rulebook page or section.
 - Use modules only for expansions or variants this PDF actually describes.
 - Only use "group" for alternatives where exactly one must be chosen (e.g. Competitive / Co-op). Optional scenarios or variants are separate modules without a group.

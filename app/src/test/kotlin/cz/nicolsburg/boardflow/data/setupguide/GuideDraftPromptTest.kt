@@ -34,6 +34,17 @@ class GuideDraftPromptTest {
     }
 
     @Test
+    fun quantityTheTextDoesNotUseIsAProblem() {
+        // Seen from Flash-Lite on Arcs: the Court row size was stored but the text said "a row of cards".
+        val answer = azulJson.replace(
+            "\"text\": \"Scoring marker on 0 of your score track\",",
+            "\"text\": \"Scoring marker on 0 of your score track\", \"amounts\": { \"n\": { \"byPlayers\": { \"2\": 3 } } },"
+        )
+        val (_, problems) = GuideDraftPrompt.parse(answer, 230802, "Azul", null, null)
+        assertTrue(problems.toString(), problems.any { "'n'" in it && "does not use" in it })
+    }
+
+    @Test
     fun invalidGuideComesBackWithItsProblems() {
         val noSteps = """{"schemaVersion":1,"gameId":1,"gameName":"X","version":1,"sections":[]}"""
         val (_, problems) = GuideDraftPrompt.parse(noSteps, 42, "Test", null, null)

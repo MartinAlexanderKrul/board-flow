@@ -1538,6 +1538,14 @@
       "path": "359502.json"
     },
     {
+      "gameId": 359871,
+      "gameName": "Arcs",
+      "gameIds": [359871],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "359871.json"
+    },
+    {
       "gameId": 365717,
       "gameName": "Clank!: Catacombs",
       "gameIds": [365717],

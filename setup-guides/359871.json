@@ -1,0 +1,420 @@
+{
+  "schemaVersion": 1,
+  "gameId": 359871,
+  "gameName": "Arcs",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Arcs base rulebook (Leder Games, Aug 27, 2025)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "leaders-and-lore",
+      "name": "Leaders & Lore",
+      "note": "Not for a first game. Leader cards replace the standard starting pieces and resources."
+    },
+    {
+      "id": "extra-lore",
+      "name": "Two lore cards each",
+      "requires": [
+        "leaders-and-lore"
+      ],
+      "note": "More chaos: every player drafts a second lore card."
+    }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "map",
+          "text": "Place the map; set out the 18 battle dice and 25 resource tokens",
+          "ref": "p.4 A"
+        },
+        {
+          "id": "initiative",
+          "text": "Give the initiative marker to a random player",
+          "ref": "p.4 B"
+        },
+        {
+          "id": "action-deck",
+          "text": "Shuffle the 20 action cards numbered 2-6 to start the action deck",
+          "ref": "p.4 C"
+        },
+        {
+          "id": "action-deck-4p",
+          "text": "Shuffle the 8 action cards numbered 1 and 7 into the action deck",
+          "condition": {
+            "players": [
+              4
+            ]
+          },
+          "ref": "p.4 D"
+        },
+        {
+          "id": "action-deck-box",
+          "text": "Return the 8 action cards numbered 1 and 7 to the box",
+          "condition": {
+            "maxPlayers": 3
+          },
+          "ref": "p.4 D"
+        },
+        {
+          "id": "ambitions",
+          "text": "3 ambition markers, blue (lower-number) side up, in Available Markers on the map",
+          "ref": "p.4 E"
+        },
+        {
+          "id": "chapter",
+          "text": "Chapter marker on space 1 of the Chapter track",
+          "ref": "p.4 F"
+        },
+        {
+          "id": "zero",
+          "text": "Zero marker in the Ambition Declared slot",
+          "ref": "p.4 G"
+        },
+        {
+          "id": "court",
+          "text": "Shuffle the 6 Vox and 25 Guild cards into the Court deck; deal {n} face up as the Court row",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 4
+              }
+            }
+          },
+          "ref": "p.4 H"
+        },
+        {
+          "id": "setup-card",
+          "text": "Shuffle the {p}-player setup cards and draw 1",
+          "amounts": {
+            "p": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "p.4 I"
+        },
+        {
+          "id": "out-of-play",
+          "text": "In each of the {n} Out of Play clusters on the setup card: path marker over its numbered gate, 3 out-of-play markers on the planets touching that gate",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 2,
+                "4": 1
+              }
+            }
+          },
+          "ref": "p.4 J"
+        },
+        {
+          "id": "ambition-resources",
+          "text": "Put the 6 resources matching the covered planets on the ambition boxes: Material and Fuel on Tycoon, Weapons on Warlord, Relics on Keeper, Psionics on Empath",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.4 K"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "pieces",
+          "text": "Each player: board, 5 cities, 5 starports, 15 ships, 10 agents; cities go in the triangle slots on the board",
+          "ref": "p.5 L"
+        },
+        {
+          "id": "power",
+          "text": "Power markers on 0 of the Power track",
+          "ref": "p.5 M"
+        },
+        {
+          "id": "start-a",
+          "text": "Starting with the initiative player as seat 1, then clockwise: 3 ships and your leftmost city in your A system",
+          "condition": {
+            "notModules": [
+              "leaders-and-lore"
+            ]
+          },
+          "note": "Seats 1-4 match the systems 1A-4C on the setup card",
+          "ref": "p.5 N"
+        },
+        {
+          "id": "start-b",
+          "text": "3 ships and 1 starport in your B system",
+          "condition": {
+            "notModules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.5 N"
+        },
+        {
+          "id": "start-c",
+          "text": "2 ships in your C system",
+          "condition": {
+            "minPlayers": 3,
+            "notModules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.5 N"
+        },
+        {
+          "id": "start-c-2p",
+          "text": "2 ships in your C systems (the setup card marks 2 of them for you)",
+          "condition": {
+            "players": [
+              2
+            ],
+            "notModules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.5 N"
+        },
+        {
+          "id": "start-resources",
+          "text": "Take the resources matching the planets of your A and B systems into your two leftmost resource slots (A first)",
+          "condition": {
+            "notModules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.5 O"
+        },
+        {
+          "id": "ll-leaders",
+          "text": "Lay out {n} leader cards face up",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 5
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.21"
+        },
+        {
+          "id": "ll-lore",
+          "text": "Lay out {n} lore cards face up",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 5
+              },
+              "cases": [
+                {
+                  "when": {
+                    "players": [
+                      2
+                    ],
+                    "modules": [
+                      "extra-lore"
+                    ]
+                  },
+                  "value": 5
+                },
+                {
+                  "when": {
+                    "players": [
+                      3
+                    ],
+                    "modules": [
+                      "extra-lore"
+                    ]
+                  },
+                  "value": 7
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "extra-lore"
+                    ]
+                  },
+                  "value": 9
+                }
+              ]
+            }
+          },
+          "condition": {
+            "modules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.21"
+        },
+        {
+          "id": "ll-draft",
+          "text": "From the player right of the initiative player, counterclockwise: take 1 leader or 1 lore card; repeat until everyone has 1 leader and 1 lore",
+          "condition": {
+            "modules": [
+              "leaders-and-lore"
+            ],
+            "notModules": [
+              "extra-lore"
+            ]
+          },
+          "ref": "p.21"
+        },
+        {
+          "id": "ll-draft-extra",
+          "text": "From the player right of the initiative player, counterclockwise: take 1 leader or 1 lore card; repeat until everyone has 1 leader and 2 lore",
+          "condition": {
+            "modules": [
+              "extra-lore"
+            ]
+          },
+          "ref": "p.21"
+        },
+        {
+          "id": "ll-pieces",
+          "text": "Place your starting pieces in your A, B and C systems as your leader card shows (pips under a ship = number of ships)",
+          "condition": {
+            "modules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.21"
+        },
+        {
+          "id": "ll-resources",
+          "text": "Take the 2 resources on your leader card into your 2 leftmost resource slots, in the order shown",
+          "condition": {
+            "modules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.21"
+        },
+        {
+          "id": "ll-extra-steps",
+          "text": "Leaders with extra setup steps do them now, in turn order",
+          "condition": {
+            "modules": [
+              "leaders-and-lore"
+            ]
+          },
+          "ref": "p.21"
+        },
+        {
+          "id": "hands",
+          "text": "Each player draws 6 action cards",
+          "ref": "p.5 P"
+        },
+        {
+          "id": "redraw",
+          "text": "The player without initiative may discard all 6 and draw 6 new ones",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "p.5 P"
+        },
+        {
+          "id": "discard",
+          "text": "All other action cards go face down as the action discard pile on the map; shuffle it",
+          "ref": "p.5 Q"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "goal",
+          "text": "The game ends when someone has {n} Power; most Power wins",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 33,
+                "3": 30,
+                "4": 27
+              }
+            }
+          },
+          "ref": "p.2"
+        },
+        {
+          "id": "declare",
+          "text": "Only the lead card can declare an ambition: zero marker over its number, highest available ambition marker on that ambition",
+          "ref": "p.3"
+        },
+        {
+          "id": "seize",
+          "text": "Seize the initiative once per round by playing an extra card face down (no actions for it)",
+          "ref": "p.10"
+        },
+        {
+          "id": "seize-7",
+          "text": "Surpassing with a 7 also seizes the initiative",
+          "condition": {
+            "players": [
+              4
+            ]
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "damaged",
+          "text": "Anything you build in a system someone else controls is placed damaged",
+          "ref": "p.12"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "lead",
+          "text": "The initiative player plays a lead card: one action per pip on it",
+          "ref": "p.3"
+        },
+        {
+          "id": "follow",
+          "text": "Clockwise, the others Surpass (same suit, higher number: all its pips), Copy (face down: 1 lead-card action) or Pivot (other suit: 1 action)",
+          "ref": "p.3"
+        }
+      ]
+    }
+  ]
+}

@@ -56,8 +56,12 @@ object SetupGuideValidator {
                 if (!idPattern.matches(step.id)) add("$where id must be kebab-case")
                 if (step.text.isBlank()) add("$where has blank text")
                 checkCondition(where, step.condition)
-                SetupGuideResolver.placeholders(step.text).filter { it !in step.amounts }
+                val placeholders = SetupGuideResolver.placeholders(step.text)
+                placeholders.filter { it !in step.amounts }
                     .forEach { add("$where uses {$it} without an amount") }
+                // A quantity the text never shows is lost on screen ("deal a row of cards").
+                step.amounts.keys.filter { it !in placeholders }
+                    .forEach { add("$where has an amount '$it' that its text does not use; put {$it} in the text") }
                 step.amounts.forEach { (key, rule) ->
                     if (rule.default == null && rule.byPlayers.isEmpty() && rule.cases.isEmpty()) {
                         add("$where amount '$key' has no values")
