@@ -53,7 +53,7 @@
 - **Sharing:** a play or a whole session as a QR code, importable on another phone
 
 ### Collection
-- **My Shelf:** your BGG collection with filters for owned, wishlist and played games, play status and best player count
+- **My Shelf:** your BGG collection with filters for owned, wishlist and played games, play status and best player count. Search for a game you don't have and add it to your BGG collection (owned, wishlist, want to play, ...) from the results
 - **Game detail:** your stats, player-count advice, ratings, BGG collection status and rating editing, sleeves, and links to BGG, rules and Drive
 - **Sleeves:** sleeves needed per size, owned sleeve counts, per-game exclusions and a preferred brand
 

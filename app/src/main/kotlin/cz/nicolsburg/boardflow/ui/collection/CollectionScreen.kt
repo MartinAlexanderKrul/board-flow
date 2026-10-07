@@ -208,6 +208,10 @@ fun CollectionScreen(
     var sleevesReturnTab by remember { mutableStateOf(TabMode.SHELF) }
     var showFilters by remember { mutableStateOf(false) }
     var selectedGame by remember { mutableStateOf<GameItem?>(null) }
+    // Adding a game that is not on the shelf: BGG search results, and a detail dialog that opens on its status.
+    val shelfBggSearch by syncViewModel.shelfBggSearch.collectAsState()
+    var showBggSearch by remember { mutableStateOf(false) }
+    var selectedFromBggSearch by remember { mutableStateOf(false) }
     var sleeveTrackingGame by remember { mutableStateOf<GameItem?>(null) }
     var sleeveTrackingReturnGame by remember { mutableStateOf<GameItem?>(null) }
 
@@ -335,12 +339,39 @@ fun CollectionScreen(
         onActiveTabChange(if (controlsVisible) null else tabMode.label)
     }
 
+    if (showBggSearch) {
+        val shelfIds = remember(allGames) { allGames.map { it.objectId }.toSet() }
+        ShelfBggSearchSheet(
+            search = shelfBggSearch,
+            shelfIds = shelfIds,
+            onOpen = { result ->
+                syncViewModel.openBggSearchResult(result) { game ->
+                    showBggSearch = false
+                    syncViewModel.clearShelfBggSearch()
+                    // Only a game that is not owned yet opens straight on its collection status.
+                    selectedFromBggSearch = !game.isOwned
+                    selectedGame = game
+                }
+            },
+            onDismiss = {
+                showBggSearch = false
+                syncViewModel.clearShelfBggSearch()
+            }
+        )
+    }
+
     selectedGame?.let { game ->
         val personalRating = remember(personalRatings, game.objectId) { personalRatings[game.objectId] }
         val gameObjectId = remember(game.objectId) { game.objectId.toIntOrNull()?.takeIf { it > 0 } }
         GameDetailsDialog(
             game = game,
-            onDismiss = { selectedGame = null; sleevesReturnGame = null; onClearCollectionStatus() },
+            onDismiss = {
+                selectedGame = null
+                sleevesReturnGame = null
+                selectedFromBggSearch = false
+                onClearCollectionStatus()
+            },
+            startWithCollectionEditor = selectedFromBggSearch,
             historyPlays = historyPlays,
             players = players,
             personalRating = personalRating,
@@ -565,7 +596,8 @@ fun CollectionScreen(
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Text(
-                                                        "No games match these filters",
+                                                        if (searchQuery.isNotBlank()) "No games on your shelf match \"${searchQuery.trim()}\""
+                                                        else "No games match these filters",
                                                         style = MaterialTheme.typography.bodyMedium,
                                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                                     )
@@ -591,6 +623,15 @@ fun CollectionScreen(
                                                             Text("Clear filters")
                                                         }
                                                     }
+                                                }
+                                            }
+                                        }
+
+                                        if (searchQuery.trim().length >= 2) {
+                                            item(key = "search-bgg") {
+                                                SearchBggRow(query = searchQuery) {
+                                                    syncViewModel.searchBggForShelf(searchQuery)
+                                                    showBggSearch = true
                                                 }
                                             }
                                         }

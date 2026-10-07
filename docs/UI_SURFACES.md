@@ -156,6 +156,7 @@ Source: `ui/collection/CollectionScreen.kt`
 
 - Tabs **My Shelf** and **Sleeves** (tap or swipe; content slides with the tab)
 - **My Shelf:** search, filter sheet (Show: Owned / Wishlist / Played, not owned / Any; Play status; player-count filters), game rows with a small white rating, pull to refresh
+- Adding a game: under the search results an amber `Search BoardGameGeek for "..."` text action opens the "Add to your collection" sheet with BGG results (year, "In your collection" for games already there, a spinner on the row being opened). A result opens the game detail dialog on its collection status editor, whose save pill reads `Add to collection`; the snackbar says "Added to your BGG collection"
 - **Sleeves** (`ui/collection/SleevesScreen.kt`): summary with `To sleeve` / `All owned`, game selector (`All` / `None`), size groups with owned counts, `SleeveInventorySheetContent`
 
 ### Game detail

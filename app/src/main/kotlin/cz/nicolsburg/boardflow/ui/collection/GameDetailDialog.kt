@@ -154,7 +154,9 @@ fun GameDetailsDialog(
     onViewPlayers: (playerName: String) -> Unit = {},
     canEditSleeveTracking: Boolean = false,
     onOpenSleeveTrackingActions: (GameItem) -> Unit = {},
-    onNavigateToSleeve: (String) -> Unit = {}
+    onNavigateToSleeve: (String) -> Unit = {},
+    // A game picked from a BoardGameGeek search to add to the shelf: open on the status editor.
+    startWithCollectionEditor: Boolean = false
 ) {
     val context = LocalContext.current
     val securePreferences = remember(context) { SecurePreferences(context.applicationContext) }
@@ -187,7 +189,8 @@ fun GameDetailsDialog(
     }
     val compactChips = headerChips.size > 2 || LocalConfiguration.current.screenWidthDp < 380
     var showRatingPicker by remember { mutableStateOf(false) }
-    var showCollectionEditor by remember { mutableStateOf(false) }
+    var showCollectionEditor by remember { mutableStateOf(startWithCollectionEditor) }
+    LaunchedEffect(Unit) { if (startWithCollectionEditor) onLoadCollectionStatus() }
     val infoSections = remember(overviewStats, ratingStats, game, personalRating, collectionStatus, canEditSleeveTracking) {
         buildList {
             if (overviewStats.isNotEmpty()) {
@@ -668,7 +671,7 @@ private fun CollectionStatusEditorDialog(
                             Spacer(Modifier.width(8.dp))
                             Text("Saving")
                         } else {
-                            Text("Save")
+                            Text(if (state.loaded && !state.inCollection) "Add to collection" else "Save")
                         }
                     }
                 }

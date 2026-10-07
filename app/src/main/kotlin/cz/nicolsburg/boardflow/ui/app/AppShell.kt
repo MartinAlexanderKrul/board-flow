@@ -664,8 +664,9 @@ fun BoardFlowApp(
                         appViewModel.loadCollectionStatus(gameId)
                     },
                     onSaveCollectionStatus = { gameId, status ->
+                        val wasInCollection = collectionStatus.takeIf { it.gameId == gameId }?.inCollection != false
                         appViewModel.saveCollectionStatus(gameId, status)
-                        messenger.show("Collection status saved")
+                        messenger.show(if (wasInCollection) "Collection status saved" else "Added to your BGG collection")
                     },
                     onRemoveFromCollection = { gameId ->
                         appViewModel.removeFromCollection(gameId)

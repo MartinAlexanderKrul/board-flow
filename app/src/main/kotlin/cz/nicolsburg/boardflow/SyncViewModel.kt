@@ -86,6 +86,23 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     private val _collectionGames = MutableStateFlow<List<GameItem>>(emptyList())
     val collectionGames: StateFlow<List<GameItem>> = _collectionGames.asStateFlow()
 
+    /** BoardGameGeek search from the My Shelf search field, for adding a game that is not on the shelf. */
+    data class ShelfBggSearch(
+        val query: String = "",
+        val loading: Boolean = false,
+        val results: List<cz.nicolsburg.boardflow.model.BggGame> = emptyList(),
+        /** The result whose details are being fetched before its detail dialog opens. */
+        val openingGameId: Int? = null,
+        val error: String? = null
+    )
+
+    private val _shelfBggSearch = MutableStateFlow(ShelfBggSearch())
+    val shelfBggSearch: StateFlow<ShelfBggSearch> = _shelfBggSearch.asStateFlow()
+    private var shelfSearchJob: Job? = null
+
+    // Games opened from a BGG search, keyed by BGG id: added to the shelf when a status is saved for them.
+    private val stagedShelfGames = java.util.concurrent.ConcurrentHashMap<Int, GameItem>()
+
     private val _collectionLoading = MutableStateFlow(false)
     val collectionLoading: StateFlow<Boolean> = _collectionLoading.asStateFlow()
 
@@ -1207,42 +1224,12 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 ?: namesByGameId[id]?.ifBlank { null }
                 ?: cachedName?.ifBlank { null }
                 ?: return@mapNotNull null
-            GameItem(
-                identity = GameItem.Identity(objectId = id.toString(), name = name),
-                stats = GameItem.Stats(
-                    rank = null,
-                    averageRating = null,
-                    bayesAverage = null,
-                    weight = d?.avgweight?.toDoubleOrNull(),
-                    yearPublished = d?.yearpublished?.toIntOrNull(),
-                    playingTime = d?.playingtime?.toIntOrNull(),
-                    minPlayTime = d?.minplaytime?.toIntOrNull(),
-                    maxPlayTime = d?.maxplaytime?.toIntOrNull(),
-                    numOwned = null,
-                    languageDependence = d?.bgglanguagedependence?.ifBlank { null },
-                    language = null
-                ),
-                players = GameItem.Players(
-                    minPlayers = d?.minplayers?.toIntOrNull(),
-                    maxPlayers = d?.maxplayers?.toIntOrNull(),
-                    bestPlayers = d?.bggbestplayers?.ifBlank { null },
-                    recommendedPlayers = d?.bggrecplayers?.ifBlank { null },
-                    notRecommendedPlayers = d?.bggnotrecplayers?.ifBlank { null },
-                    recommendedAge = d?.bggrecagerange?.ifBlank { null }
-                ),
-                ownership = GameItem.Ownership(
-                    isOwned = false,
-                    isWishlisted = false,
-                    bggPlayCount = countsByGameId[id]
-                ),
-                sleeves = GameItem.Sleeves(),
-                media = GameItem.Media(thumbnailUrl = d?.thumbnailUrl ?: thumbnailCache[id]?.second),
-                links = GameItem.Links(
-                    bggUrl = "https://boardgamegeek.com/boardgame/$id",
-                    driveUrl = null,
-                    qrImageUrl = null
-                ),
-                sources = GameItem.Sources(spreadsheetValues = emptyMap(), bggValues = emptyMap())
+            gameItemFromBgg(
+                id = id,
+                name = name,
+                detail = d,
+                thumbnailUrl = d?.thumbnailUrl ?: thumbnailCache[id]?.second,
+                playCount = countsByGameId[id]
             )
         }
         if (playedItems.isEmpty()) return snapshot
@@ -1301,9 +1288,15 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     fun applyCollectionStatusUpdate(update: CollectionStatusUpdate) {
         viewModelScope.launch(Dispatchers.IO) {
             collectionMutex.withLock {
-                val games = readCanonicalSnapshotLocked()
+                var games = readCanonicalSnapshotLocked()
                 val objectId = update.gameId.toString()
-                if (games.none { it.objectId == objectId }) return@withLock
+                if (games.none { it.objectId == objectId }) {
+                    // A game found through the shelf's BGG search joins the shelf when the user saves a status for it.
+                    val staged = stagedShelfGames[update.gameId]
+                    if (staged == null || update.entry == null || !update.userEdit) return@withLock
+                    games = games + staged
+                    stagedShelfGames.remove(update.gameId)
+                }
                 val updatedGames = games.map { game ->
                     if (game.objectId == objectId) {
                         game.withSyncedCollectionEntry(update.entry, mirrorOwnership = update.userEdit)
@@ -1316,6 +1309,107 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
+
+    /**
+     * Searches BoardGameGeek for [query]: exact title matches first, then the rest, at most 50.
+     * Fails quietly to an empty list when the XML API token is missing or rejected.
+     */
+    fun searchBggForShelf(query: String) {
+        val q = query.trim()
+        if (q.length < 2) return
+        shelfSearchJob?.cancel()
+        _shelfBggSearch.value = ShelfBggSearch(query = q, loading = true)
+        shelfSearchJob = viewModelScope.launch {
+            val token = BuildConfig.BGG_XML_API_TOKEN
+            val exactResult = bggRepository.searchGames(q, token, exact = true)
+            val looseResult = bggRepository.searchGames(q, token, exact = false)
+            val exact = exactResult.getOrDefault(emptyList())
+            val loose = looseResult.getOrDefault(emptyList())
+            val results = (exact + loose.sortedBy { it.name.lowercase() }).distinctBy { it.id }.take(50)
+            val unreachable = exactResult.isFailure && looseResult.isFailure
+            _shelfBggSearch.value = ShelfBggSearch(
+                query = q,
+                results = results,
+                error = when {
+                    results.isNotEmpty() -> null
+                    unreachable -> "Could not reach BoardGameGeek. Check the connection and try again."
+                    else -> "Nothing found on BoardGameGeek for \"$q\""
+                }
+            )
+        }
+    }
+
+    fun clearShelfBggSearch() {
+        shelfSearchJob?.cancel()
+        _shelfBggSearch.value = ShelfBggSearch()
+    }
+
+    /**
+     * Prepares a BGG search result for the game detail dialog: the game already in the snapshot
+     * if it is there, otherwise a new [GameItem] built from BGG's details (or just the search
+     * result when they cannot be read). A new game is staged and joins the shelf once a
+     * collection status is saved for it ([applyCollectionStatusUpdate]).
+     */
+    fun openBggSearchResult(result: cz.nicolsburg.boardflow.model.BggGame, onReady: (GameItem) -> Unit) {
+        _collectionGames.value.firstOrNull { it.objectId == result.id.toString() }?.let { return onReady(it) }
+        _shelfBggSearch.value = _shelfBggSearch.value.copy(openingGameId = result.id)
+        viewModelScope.launch {
+            val detail = runCatching {
+                withContext(Dispatchers.IO) {
+                    BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(listOf(result.id.toString()))[result.id.toString()]
+                }
+            }.getOrNull()
+            val item = gameItemFromBgg(
+                id = result.id,
+                name = detail?.name?.ifBlank { null } ?: result.name,
+                detail = detail,
+                thumbnailUrl = detail?.thumbnailUrl ?: result.thumbnailUrl,
+                playCount = null
+            )
+            stagedShelfGames[result.id] = item
+            _shelfBggSearch.value = _shelfBggSearch.value.copy(openingGameId = null)
+            onReady(item)
+        }
+    }
+
+    /** A game that is not (yet) in the BGG collection, built from BGG's thing details. */
+    private fun gameItemFromBgg(id: Int, name: String, detail: BggApiClient.ThingDetail?, thumbnailUrl: String?, playCount: Int?) = GameItem(
+        identity = GameItem.Identity(objectId = id.toString(), name = name),
+        stats = GameItem.Stats(
+            rank = null,
+            averageRating = null,
+            bayesAverage = null,
+            weight = detail?.avgweight?.toDoubleOrNull(),
+            yearPublished = detail?.yearpublished?.toIntOrNull(),
+            playingTime = detail?.playingtime?.toIntOrNull(),
+            minPlayTime = detail?.minplaytime?.toIntOrNull(),
+            maxPlayTime = detail?.maxplaytime?.toIntOrNull(),
+            numOwned = null,
+            languageDependence = detail?.bgglanguagedependence?.ifBlank { null },
+            language = null
+        ),
+        players = GameItem.Players(
+            minPlayers = detail?.minplayers?.toIntOrNull(),
+            maxPlayers = detail?.maxplayers?.toIntOrNull(),
+            bestPlayers = detail?.bggbestplayers?.ifBlank { null },
+            recommendedPlayers = detail?.bggrecplayers?.ifBlank { null },
+            notRecommendedPlayers = detail?.bggnotrecplayers?.ifBlank { null },
+            recommendedAge = detail?.bggrecagerange?.ifBlank { null }
+        ),
+        ownership = GameItem.Ownership(
+            isOwned = false,
+            isWishlisted = false,
+            bggPlayCount = playCount
+        ),
+        sleeves = GameItem.Sleeves(),
+        media = GameItem.Media(thumbnailUrl = thumbnailUrl),
+        links = GameItem.Links(
+            bggUrl = "https://boardgamegeek.com/boardgame/$id",
+            driveUrl = null,
+            qrImageUrl = null
+        ),
+        sources = GameItem.Sources(spreadsheetValues = emptyMap(), bggValues = emptyMap())
+    )
 
     private suspend fun backfillMissingBggPlayCountsFromHistory(games: List<GameItem>): Pair<List<GameItem>, Int> {
         if (games.isEmpty()) return games to 0
