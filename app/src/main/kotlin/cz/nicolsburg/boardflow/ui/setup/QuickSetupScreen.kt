@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.setup
 
+import cz.nicolsburg.boardflow.ui.common.rememberNotificationPermissionRequest
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
@@ -103,6 +104,9 @@ fun QuickSetupScreen(
     val drafting by viewModel.drafting.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val messenger = LocalBoardFlowMessenger.current
+    LaunchedEffect(viewModel) {
+        viewModel.draftFailures.collect { messenger.show(it) }
+    }
 
     val view = LocalView.current
     DisposableEffect(view) {
@@ -121,7 +125,7 @@ fun QuickSetupScreen(
             gameName = gameNameFor(viewModel.gameId),
             onDraft = { pdf, name ->
                 viewModel.draftFromRulebook(pdf, name) { problem ->
-                    messenger.show(problem ?: "Draft guide ready - check it against the rulebook")
+                    messenger.show(problem ?: "Drafting the guide. You'll get a notification when it's ready")
                 }
             },
             onClose = onClose
@@ -440,6 +444,8 @@ private fun NoGuide(
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null && gameName != null) onDraft(uri, gameName)
     }
+    // The draft reports back by notification, so ask for it as the user starts one.
+    val requestNotifications = rememberNotificationPermissionRequest()
     Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             when {
@@ -454,13 +460,15 @@ private fun NoGuide(
                 }
                 drafting -> {
                     CircularProgressIndicator()
-                    Text("Reading the rulebook", style = MaterialTheme.typography.titleMedium)
+                    Text("Drafting the guide", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "This can take a minute or two. Keep this screen open.",
+                        "Gemini is reading the rulebook. This can take a few minutes. " +
+                            "You can leave this screen; you'll get a notification when the guide is ready.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
+                    BoardFlowSecondaryButton(onClick = onClose) { Text("Back") }
                 }
                 else -> {
                     Text(
@@ -481,7 +489,10 @@ private fun NoGuide(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         BoardFlowInlineAction(onClick = onClose, neutral = true, large = true) { Text("Back") }
                         if (canDraft && gameName != null) {
-                            BoardFlowButton(onClick = { picker.launch(arrayOf("application/pdf")) }) {
+                            BoardFlowButton(onClick = {
+                                requestNotifications()
+                                picker.launch(arrayOf("application/pdf"))
+                            }) {
                                 Text("Draft from rulebook")
                             }
                         }

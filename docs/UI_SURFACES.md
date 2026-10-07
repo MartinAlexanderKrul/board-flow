@@ -120,7 +120,7 @@ Source: `ui/setup/QuickSetupScreen.kt`
 - `Edit guide` opens the guide editor
 - An AI draft shows "Draft guide - check it against the rulebook." with `Mark as reviewed`; a guide of your own with no standard guide behind it has `Delete guide`
 - `Start game` starts the play timer and returns to Log Play with the Playing now banner. The screen stays awake while open
-- No guide: "No setup guide for X yet" with white `Back` and the `Draft from rulebook` pill (needs a Gemini key; picks a PDF, then "Reading the rulebook" with a spinner while Gemini drafts it). A standard guide that is not downloaded yet says to connect instead
+- No guide: "No setup guide for X yet" with white `Back` and the `Draft from rulebook` pill (needs a Gemini key; asks for notifications, picks a PDF, then "Drafting the guide" with a spinner, a line saying the user can leave, and a `Back` pill). The draft runs in the background with a "Drafting a guide for X" notification and ends with "X guide is ready" (tap opens this screen) A standard guide that is not downloaded yet says to connect instead
 
 ## Guide editor
 

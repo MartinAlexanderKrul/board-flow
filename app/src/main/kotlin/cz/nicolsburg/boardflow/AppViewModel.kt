@@ -593,6 +593,29 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _pendingWidgetQuickScan.value = false
     }
 
+    // Notification taps: a drafted guide opens its Quick Setup, a sync result opens Sync.
+    private val _pendingOpenQuickSetup = MutableStateFlow<Int?>(null)
+    val pendingOpenQuickSetup: StateFlow<Int?> = _pendingOpenQuickSetup.asStateFlow()
+    private val _pendingOpenSync = MutableStateFlow(false)
+    val pendingOpenSync: StateFlow<Boolean> = _pendingOpenSync.asStateFlow()
+
+    fun requestOpenQuickSetup(gameId: Int, gameName: String?) {
+        if (!gameName.isNullOrBlank()) searchedGameNames[gameId] = gameName
+        _pendingOpenQuickSetup.value = gameId
+    }
+
+    fun consumeOpenQuickSetup() {
+        _pendingOpenQuickSetup.value = null
+    }
+
+    fun requestOpenSync() {
+        _pendingOpenSync.value = true
+    }
+
+    fun consumeOpenSync() {
+        _pendingOpenSync.value = false
+    }
+
     fun requestWidgetOpenPlay(gameId: Int) {
         _pendingWidgetOpenGameId.value = gameId
     }

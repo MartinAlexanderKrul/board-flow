@@ -14,7 +14,10 @@ import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideResolver
 import cz.nicolsburg.boardflow.model.LoadedSetupGuide
 import cz.nicolsburg.boardflow.model.ResolvedSetup
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -102,8 +105,31 @@ class QuickSetupViewModel(
     }
 
     private val _drafting = MutableStateFlow(false)
-    /** True while Gemini reads a rulebook to draft a guide for this game. */
+    /** True while a draft for this game runs (in the background; it survives leaving the screen). */
     val drafting: StateFlow<Boolean> = _drafting.asStateFlow()
+
+    private val _draftFailures = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    /** A draft that failed while this screen was open; shown once. */
+    val draftFailures: SharedFlow<String> = _draftFailures.asSharedFlow()
+
+    init {
+        draftService?.let { service ->
+            viewModelScope.launch {
+                var sawRunning = false
+                service.state(requestedGameId).collect { state ->
+                    _drafting.value = state is GuideDraftService.DraftState.Running
+                    if (state is GuideDraftService.DraftState.Running) {
+                        sawRunning = true
+                    } else {
+                        // Only an outcome seen happen here is reported; an old failure is not.
+                        if (sawRunning && state is GuideDraftService.DraftState.Failed) _draftFailures.tryEmit(state.message)
+                        // The worker saved through the shared repository, so the guide shows by itself.
+                        sawRunning = false
+                    }
+                }
+            }
+        }
+    }
 
     /** Whether a standard guide exists for this game (it may just not be downloaded yet). */
     val hasStandardGuide: Boolean get() = requestedGameId in repository.availability.value
@@ -111,18 +137,16 @@ class QuickSetupViewModel(
     val canDraft: Boolean get() = draftService?.hasGeminiKey() == true
 
     /**
-     * Drafts a guide for this game from a rulebook PDF. On success the draft is saved as the
-     * user's guide and this screen shows it (through [SetupGuideRepository.userGuideChanges]).
-     * [onResult] gets null on success, or a message for the user.
+     * Starts drafting a guide for this game from a rulebook PDF, in the background: the user can
+     * leave and gets a notification. [onResult] gets null once it is queued, or a message.
      */
     fun draftFromRulebook(pdf: Uri, gameName: String, onResult: (String?) -> Unit) {
         val service = draftService ?: return
         if (_drafting.value) return
         if (!isOnline()) return onResult("Drafting a guide needs a connection")
-        _drafting.value = true
         viewModelScope.launch {
-            val problem = service.draftFromRulebook(pdf, requestedGameId, gameName)
-            _drafting.value = false
+            val problem = service.start(pdf, requestedGameId, gameName)
+            if (problem == null) _drafting.value = true
             onResult(problem)
         }
     }

@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow
 
+import cz.nicolsburg.boardflow.data.BackgroundNotifications
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -33,7 +34,7 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
-    private val container by lazy { AppContainer(applicationContext) }
+    private val container by lazy { AppContainer.get(applicationContext) }
     private val authManager by lazy { GoogleAuthManager(this) }
     private val appViewModel: AppViewModel by viewModels { AppViewModel.factory(container) }
     private val syncViewModel: SyncViewModel by viewModels()
@@ -41,13 +42,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        when (intent?.action) {
-            SessionGlanceWidget.ACTION_QUICK_SCAN -> appViewModel.requestWidgetQuickScan()
-            SessionGlanceWidget.ACTION_OPEN_PLAY  -> {
-                val gameId = intent.getIntExtra(SessionGlanceWidget.EXTRA_GAME_ID, 0)
-                if (gameId != 0) appViewModel.requestWidgetOpenPlay(gameId)
-            }
-        }
+        intent?.let(::handleIntent)
 
         container.securePreferences.run {
             syncViewModel.setSpreadsheetId(syncSpreadsheetId)
@@ -79,12 +74,24 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    /** Widget and notification taps; AppShell consumes the requests and navigates. */
+    private fun handleIntent(intent: Intent) {
         when (intent.action) {
             SessionGlanceWidget.ACTION_QUICK_SCAN -> appViewModel.requestWidgetQuickScan()
             SessionGlanceWidget.ACTION_OPEN_PLAY  -> {
                 val gameId = intent.getIntExtra(SessionGlanceWidget.EXTRA_GAME_ID, 0)
                 if (gameId != 0) appViewModel.requestWidgetOpenPlay(gameId)
             }
+            BackgroundNotifications.ACTION_OPEN_QUICK_SETUP -> {
+                val gameId = intent.getIntExtra(BackgroundNotifications.EXTRA_GAME_ID, 0)
+                if (gameId > 0) {
+                    appViewModel.requestOpenQuickSetup(gameId, intent.getStringExtra(BackgroundNotifications.EXTRA_GAME_NAME))
+                }
+            }
+            BackgroundNotifications.ACTION_OPEN_SYNC -> appViewModel.requestOpenSync()
         }
     }
 
@@ -155,6 +162,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun createNotificationChannels() {
+        BackgroundNotifications.ensureChannels(this)
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
             NotificationChannel(

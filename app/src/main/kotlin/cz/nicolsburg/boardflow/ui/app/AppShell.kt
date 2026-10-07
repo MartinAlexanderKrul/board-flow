@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.app
 
+import cz.nicolsburg.boardflow.ui.common.rememberNotificationPermissionRequest
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SnackbarDuration
 import cz.nicolsburg.boardflow.ui.common.playerColorMap
@@ -453,6 +454,27 @@ fun BoardFlowApp(
         }
         navController.navigate(AppRoutes.quickSetup(gameId)) { launchSingleTop = true }
     }
+
+    // Notification taps: "guide is ready" opens its Quick Setup, a sync result opens Sync.
+    val pendingOpenQuickSetup by appViewModel.pendingOpenQuickSetup.collectAsState()
+    LaunchedEffect(pendingOpenQuickSetup) {
+        val gameId = pendingOpenQuickSetup ?: return@LaunchedEffect
+        appViewModel.consumeOpenQuickSetup()
+        navController.navigate(AppRoutes.quickSetup(gameId)) { launchSingleTop = true }
+    }
+    val pendingOpenSync by appViewModel.pendingOpenSync.collectAsState()
+    LaunchedEffect(pendingOpenSync) {
+        if (!pendingOpenSync) return@LaunchedEffect
+        appViewModel.consumeOpenSync()
+        navController.navigate(AppRoutes.SETTINGS) {
+            popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+    // A sync reports back by notification when it ends while the user is in another app.
+    val requestNotifications = rememberNotificationPermissionRequest()
+    LaunchedEffect(syncBusy) { if (syncBusy) requestNotifications() }
 
     val playerColors = remember(players) { playerColorMap(players) }
     CompositionLocalProvider(

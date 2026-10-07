@@ -42,7 +42,7 @@
 - A session checklist, an "Easy to forget" list, and a Start game action that starts the play timer
 - Guides are open JSON in [`setup-guides/`](setup-guides/), bundled with the app and updated from GitHub without a new release. Every guide works offline
 - Edit any guide in the app (rename sections, change, add, remove and reorder steps, set per-player quantities and when a step shows), share it as a file, or import one as your own version (Settings > Preferences > Quick guides); your guides are included in backups
-- No guide for a game yet? Pick its rulebook PDF and Gemini drafts one, marked as a draft until you check it against the rulebook
+- No guide for a game yet? Pick its rulebook PDF and Gemini drafts one in the background; you get a notification when it is ready. It stays marked as a draft until you check it against the rulebook
 
 ### Journal
 - **Plays:** every play with players, scores and winners; filters, search, edit, delete with Undo, and an outbox for unposted plays
@@ -58,7 +58,7 @@
 - **Sleeves:** sleeves needed per size, owned sleeve counts, per-game exclusions and a preferred brand
 
 ### Settings
-- **Sync:** accounts (BGG and Google), collection and sleeve refresh, sleeve status backup to BGG, Google Sheets sync, CSV import, Drive folders and QR codes, and a sync log
+- **Sync:** accounts (BGG and Google), collection and sleeve refresh, sleeve status backup to BGG, Google Sheets sync, CSV import, Drive folders and QR codes, and a sync log. A sync keeps running when you switch apps and notifies you when it is done
 - **Preferences:** stats source, recommendations, chronicles, mood templates, sleeve brand and the setup guide
 - **Scan:** Gemini key, backup keys and model, and what the app has learned from scans
 - **Data:** backup and restore, and cache management

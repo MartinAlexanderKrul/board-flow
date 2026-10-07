@@ -1,37 +1,53 @@
 package cz.nicolsburg.boardflow.data.setupguide
 
-import android.util.Base64
 import android.util.Log
 import cz.nicolsburg.boardflow.data.GeminiModels
 import cz.nicolsburg.boardflow.model.SetupGuide
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.util.Base64
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
-/** The Gemini keys and models a draft may use, in order. */
+/** The Gemini keys and models a draft may use, models in the order to try them. */
 data class GuideDraftAiConfig(
     val apiKeys: List<String>,
     val models: List<String>,
-    val onModelExhausted: (String) -> Unit = {},
+    /** The model answered 429/503: busy for now, skip it for a while. */
+    val onModelBusy: (String) -> Unit = {},
+    /** 404 or a rejected request: the model is gone or cannot read PDFs. */
     val onModelUnavailable: (String) -> Unit = {}
 )
 
 /**
  * Drafts a Quick Setup guide from a rulebook PDF with Gemini. Small PDFs go inline; larger ones
  * are uploaded through the File API (once per key, since uploads belong to the key's project).
- * An answer that fails [SetupGuideValidator] is sent back once with its problems listed.
- * Same model and key rotation as the score scan: 404 / rejected model -> next model,
- * 429 / 503 -> next key, then next model.
+ *
+ * Busy models are not waited for one after another: [PARALLEL_MODELS] models work on the same
+ * rulebook at once, the first valid guide wins and the other requests are cancelled. A model
+ * that fails (busy, retired, or an answer that is still invalid after one retry with the
+ * validator's problems) is replaced by the next candidate straight away.
  */
 class GeminiGuideDraftGenerator {
 
@@ -51,89 +67,114 @@ class GeminiGuideDraftGenerator {
     ): Result<SetupGuide> = withContext(Dispatchers.IO) {
         runCatching {
             require(config.apiKeys.isNotEmpty() && config.models.isNotEmpty()) { "No Gemini key" }
-            val inline = if (pdf.length() <= INLINE_LIMIT_BYTES) Base64.encodeToString(pdf.readBytes(), Base64.NO_WRAP) else null
+            val inline = if (pdf.length() <= INLINE_LIMIT_BYTES) Base64.getEncoder().encodeToString(pdf.readBytes()) else null
             val uploads = mutableMapOf<String, String>()
-            val dropped = mutableSetOf<String>()
-            var model = config.models.first()
-            var keyIndex = 0
-            var problems = emptyList<String>()
-            var lastProblems = emptyList<String>()
-            var attempts = 0
+            val uploadLock = Mutex()
+            val queue = ArrayDeque(config.models.take(MAX_MODELS))
+            val queueLock = Mutex()
+            val failures = mutableListOf<String>()
+            val winner = CompletableDeferred<SetupGuide>()
 
-            while (attempts < MAX_ATTEMPTS) {
-                attempts++
-                val key = config.apiKeys[keyIndex]
-                val pdfPart = if (inline != null) {
-                    JSONObject().put("inline_data", JSONObject().put("mime_type", PDF).put("data", inline))
-                } else {
-                    val uri = uploads.getOrPut(key) { upload(pdf, key) }
-                    JSONObject().put("file_data", JSONObject().put("mime_type", PDF).put("file_uri", uri))
-                }
-                val body = requestBody(pdfPart, GuideDraftPrompt.build(gameId, gameName, problems))
-                val endpoint = if (model.contains("/")) model else "v1beta/models/$model"
-                log("draft attempt=$attempts model=$model key=${keyIndex + 1}/${config.apiKeys.size} inline=${inline != null} retryWithProblems=${problems.size}")
-                val response = client.newCall(
-                    Request.Builder()
-                        .url("$BASE/$endpoint:generateContent?key=$key")
-                        .post(body.toRequestBody(JSON))
-                        .build()
-                ).execute()
-                val text = response.body?.string().orEmpty()
-                log("draft response model=$model code=${response.code} length=${text.length}")
-
-                when {
-                    response.isSuccessful -> {
-                        val answer = answerText(text)
-                        val result = answer?.let {
-                            runCatching { GuideDraftPrompt.parse(it, gameId, gameName, model.substringAfterLast('/'), sourceName) }.getOrNull()
-                        }
-                        if (result != null && result.second.isEmpty()) return@runCatching result.first
-                        lastProblems = result?.second ?: listOf("The answer was not a guide in the requested JSON format")
-                        if (problems.isEmpty()) {
-                            // One more try on the same model, told what was wrong.
-                            problems = lastProblems
-                            continue
-                        }
-                        // Still wrong after the retry: another model may do better.
-                        dropped += model
-                        val next = GeminiModels.next(model, config.models, dropped) ?: break
-                        model = next
-                        keyIndex = 0
-                        problems = lastProblems
-                    }
-                    response.code == 404 || (response.code == 400 && GeminiModels.isModelRejection(text)) -> {
-                        config.onModelUnavailable(model)
-                        dropped += model
-                        model = GeminiModels.next(model, config.models, dropped)
-                            ?: throw IllegalStateException("No Gemini model could read the rulebook")
-                        keyIndex = 0
-                    }
-                    response.code == 429 || response.code == 503 -> {
-                        val noQuota = text.contains("limit: 0")
-                        if (!noQuota && keyIndex + 1 < config.apiKeys.size) {
-                            keyIndex++
-                        } else {
-                            config.onModelExhausted(model)
-                            dropped += model
-                            model = GeminiModels.next(model, config.models, dropped)
-                                ?: throw IllegalStateException("Gemini is busy right now. Try again in a minute.")
-                            keyIndex = 0
-                        }
-                        delay(1000)
-                    }
-                    response.code == 400 && text.contains("pages", ignoreCase = true) ->
-                        throw IllegalStateException("Gemini could not read this PDF. Try a smaller rulebook file.")
-                    else -> throw IllegalStateException("Gemini error ${response.code}")
-                }
+            suspend fun pdfPart(key: String): JSONObject = if (inline != null) {
+                JSONObject().put("inline_data", JSONObject().put("mime_type", PDF).put("data", inline))
+            } else {
+                val uri = uploadLock.withLock { uploads[key] ?: upload(pdf, key).also { uploads[key] = it } }
+                JSONObject().put("file_data", JSONObject().put("mime_type", PDF).put("file_uri", uri))
             }
-            throw IllegalStateException(
-                lastProblems.firstOrNull()?.let { "The draft did not pass the guide checks: $it" }
-                    ?: "Gemini could not draft a guide. Try again later."
-            )
+
+            coroutineScope {
+                val lanes = List(PARALLEL_MODELS) { lane ->
+                    launch {
+                        // Staggered a little so two lanes do not hit the same busy moment.
+                        if (lane > 0) delay(LANE_STAGGER_MS)
+                        while (!winner.isCompleted) {
+                            val model = queueLock.withLock { queue.removeFirstOrNull() } ?: break
+                            when (val outcome = tryModel(model, ::pdfPart, gameId, gameName, sourceName, config)) {
+                                is Outcome.Guide -> winner.complete(outcome.guide)
+                                is Outcome.Failed -> synchronized(failures) { failures += outcome.reason }
+                            }
+                        }
+                    }
+                }
+                launch {
+                    lanes.joinAll()
+                    if (!winner.isCompleted) {
+                        winner.completeExceptionally(IllegalStateException(summarise(synchronized(failures) { failures.toList() })))
+                    }
+                }
+                val guide = winner.await()
+                // The other lanes' requests are cancelled; their answers are not needed.
+                coroutineContext[kotlinx.coroutines.Job]?.children?.forEach { it.cancel() }
+                guide
+            }
         }.recoverCatching { error ->
             // Network failures carry raw exception text; the user needs to know only that Gemini was unreachable.
             if (error is IOException) throw IllegalStateException("Could not reach Gemini. Check the connection and try again.", error)
             throw error
+        }
+    }
+
+    private sealed interface Outcome {
+        data class Guide(val guide: SetupGuide) : Outcome
+        data class Failed(val reason: String) : Outcome
+    }
+
+    /** One model: its keys in turn while they are rate limited, and one retry with the validator's problems. */
+    private suspend fun tryModel(
+        model: String,
+        pdfPart: suspend (String) -> JSONObject,
+        gameId: Int,
+        gameName: String,
+        sourceName: String?,
+        config: GuideDraftAiConfig
+    ): Outcome {
+        var keyIndex = 0
+        var problems = emptyList<String>()
+        var retriedWithProblems = false
+        while (true) {
+            val key = config.apiKeys[keyIndex]
+            val body = requestBody(pdfPart(key), GuideDraftPrompt.build(gameId, gameName, problems))
+            val endpoint = if (model.contains("/")) model else "v1beta/models/$model"
+            log("draft model=$model key=${keyIndex + 1}/${config.apiKeys.size} retryWithProblems=${problems.size}")
+            val started = System.currentTimeMillis()
+            val (code, text) = post("$BASE/$endpoint:generateContent?key=$key", body)
+            log("draft response model=$model code=$code length=${text.length} seconds=${(System.currentTimeMillis() - started) / 1000}")
+            when {
+                code in 200..299 -> {
+                    val result = answerText(text)?.let {
+                        runCatching { GuideDraftPrompt.parse(it, gameId, gameName, model.substringAfterLast('/'), sourceName) }.getOrNull()
+                    }
+                    if (result != null && result.second.isEmpty()) return Outcome.Guide(result.first)
+                    val found = result?.second ?: listOf("The answer was not a guide in the requested JSON format")
+                    if (retriedWithProblems) return Outcome.Failed(found.first())
+                    retriedWithProblems = true
+                    problems = found
+                }
+                code == 404 || (code == 400 && GeminiModels.isModelRejection(text)) -> {
+                    config.onModelUnavailable(model)
+                    return Outcome.Failed(UNAVAILABLE)
+                }
+                code == 429 || code == 503 -> {
+                    if (!text.contains("limit: 0") && keyIndex + 1 < config.apiKeys.size) {
+                        keyIndex++
+                        continue
+                    }
+                    config.onModelBusy(model)
+                    return Outcome.Failed(BUSY)
+                }
+                code == 400 && text.contains("pages", ignoreCase = true) ->
+                    throw IllegalStateException("Gemini could not read this PDF. Try a smaller rulebook file.")
+                else -> return Outcome.Failed("Gemini error $code")
+            }
+        }
+    }
+
+    private fun summarise(failures: List<String>): String {
+        val problem = failures.firstOrNull { it != BUSY && it != UNAVAILABLE && !it.startsWith("Gemini error") }
+        return when {
+            problem != null -> "The draft did not pass the guide checks: $problem"
+            failures.isNotEmpty() && failures.all { it == BUSY || it == UNAVAILABLE } -> "Gemini is busy right now. Try again in a few minutes."
+            else -> failures.firstOrNull() ?: "Gemini could not draft a guide. Try again later."
         }
     }
 
@@ -157,6 +198,22 @@ class GeminiGuideDraftGenerator {
             .ifBlank { null }
     }.getOrNull()
 
+    /** POSTs and returns the status and body; cancelling the coroutine cancels the HTTP call. */
+    private suspend fun post(url: String, body: String): Pair<Int, String> {
+        val response = client.newCall(Request.Builder().url(url).post(body.toRequestBody(JSON)).build()).await()
+        return response.use { it.code to withContext(Dispatchers.IO) { it.body?.string().orEmpty() } }
+    }
+
+    private suspend fun Call.await(): Response = suspendCancellableCoroutine { cont ->
+        enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) = cont.resume(response)
+            override fun onFailure(call: Call, e: IOException) {
+                if (!cont.isCancelled) cont.resumeWithException(e)
+            }
+        })
+        cont.invokeOnCancellation { runCatching { cancel() } }
+    }
+
     /** Uploads the PDF with the File API and waits until Gemini has processed it; returns its uri. */
     private suspend fun upload(pdf: File, key: String): String {
         val start = client.newCall(
@@ -168,7 +225,7 @@ class GeminiGuideDraftGenerator {
                 .header("X-Goog-Upload-Header-Content-Type", PDF)
                 .post(JSONObject().put("file", JSONObject().put("display_name", "rulebook")).toString().toRequestBody(JSON))
                 .build()
-        ).execute()
+        ).await()
         val uploadUrl = start.use { it.header("X-Goog-Upload-URL") }
             ?: throw IllegalStateException("Could not upload the rulebook (${start.code})")
         val uploaded = client.newCall(
@@ -178,9 +235,9 @@ class GeminiGuideDraftGenerator {
                 .header("X-Goog-Upload-Command", "upload, finalize")
                 .post(pdf.asRequestBody(PDF.toMediaType()))
                 .build()
-        ).execute()
+        ).await()
         val file = uploaded.use { response ->
-            val text = response.body?.string().orEmpty()
+            val text = withContext(Dispatchers.IO) { response.body?.string().orEmpty() }
             if (!response.isSuccessful) throw IllegalStateException("Could not upload the rulebook (${response.code})")
             JSONObject(text).getJSONObject("file")
         }
@@ -190,7 +247,7 @@ class GeminiGuideDraftGenerator {
             if (state != "PROCESSING") return@repeat
             delay(2000)
             val text = client.newCall(Request.Builder().url("$BASE/v1beta/$name?key=$key").get().build())
-                .execute().use { it.body?.string().orEmpty() }
+                .await().use { withContext(Dispatchers.IO) { it.body?.string().orEmpty() } }
             state = runCatching { JSONObject(text).optString("state") }.getOrDefault("")
         }
         if (state == "FAILED") throw IllegalStateException("Gemini could not read this PDF")
@@ -198,7 +255,9 @@ class GeminiGuideDraftGenerator {
         return file.getString("uri")
     }
 
-    private fun log(message: String) = Log.d(TAG, message)
+    private fun log(message: String) {
+        runCatching { Log.d(TAG, message) }
+    }
 
     private companion object {
         const val TAG = "GuideDraft"
@@ -207,6 +266,12 @@ class GeminiGuideDraftGenerator {
         val JSON = "application/json".toMediaType()
         // Inline requests are capped at 20 MB and base64 adds a third.
         const val INLINE_LIMIT_BYTES = 14L * 1024 * 1024
-        const val MAX_ATTEMPTS = 6
+        /** Models working on one draft at the same time. */
+        const val PARALLEL_MODELS = 2
+        const val LANE_STAGGER_MS = 1_500L
+        /** Candidates tried at most, across all lanes. */
+        const val MAX_MODELS = 6
+        const val BUSY = "busy"
+        const val UNAVAILABLE = "unavailable"
     }
 }

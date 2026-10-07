@@ -16,7 +16,11 @@ import cz.nicolsburg.boardflow.data.setupguide.GuideDraftService
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideCatalogClient
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 
-class AppContainer(context: Context) {
+/**
+ * One per process ([get]): the activity, its view models and background workers share the same
+ * repositories, so a guide drafted by a worker shows up in an open screen at once.
+ */
+class AppContainer private constructor(context: Context) {
     private val appContext = context.applicationContext
 
     val securePreferences = SecurePreferences(appContext)
@@ -36,6 +40,13 @@ class AppContainer(context: Context) {
 
     /** Lets [BggPlayPostWorker] post plays that were saved without reaching BGG. */
     fun scheduleUnpostedPlayPost() = BggPlayPostWorker.enqueue(appContext)
+
+    companion object {
+        @Volatile private var instance: AppContainer? = null
+
+        fun get(context: Context): AppContainer =
+            instance ?: synchronized(this) { instance ?: AppContainer(context.applicationContext).also { instance = it } }
+    }
 
     fun isOnline(): Boolean {
         val connectivityManager = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager

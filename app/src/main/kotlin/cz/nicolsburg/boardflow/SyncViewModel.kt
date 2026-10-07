@@ -16,6 +16,7 @@ import cz.nicolsburg.boardflow.data.refreshBggPlayCache
 import cz.nicolsburg.boardflow.data.CsvParser
 import cz.nicolsburg.boardflow.data.GoogleApiClient
 import cz.nicolsburg.boardflow.data.SecurePreferences
+import cz.nicolsburg.boardflow.data.SyncForegroundService
 import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.CollectionStatusUpdate
 import cz.nicolsburg.boardflow.model.GameItem
@@ -588,6 +589,10 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun runSync(title: String, block: suspend kotlinx.coroutines.CoroutineScope.() -> Unit) {
         syncJob?.cancel()
+        val app = getApplication<Application>()
+        val label = sentenceCase(title)
+        // Keeps the process alive (and its network) when the user switches apps mid-sync.
+        SyncForegroundService.start(app, label)
         syncJob = viewModelScope.launch(Dispatchers.IO) {
             _busy.value = true
             val now = System.currentTimeMillis()
@@ -595,19 +600,33 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             securePrefs.lastSyncedAt = now
             refreshCredentialState()
             entry(title, "Starting...", LogEntry.Type.HEADER)
+            val logStart = _log.value.size
+            var cancelled = false
             try {
                 block()
             } catch (_: CancellationException) {
                 // User-initiated cancellation is already reflected in the sync log.
+                cancelled = true
             } catch (e: Exception) {
                 entry("Error", e.message ?: "Unknown error", LogEntry.Type.ERROR)
             } finally {
                 if (syncJob == currentCoroutineContext()[Job]) {
                     _busy.value = false
+                    SyncForegroundService.stop()
+                    if (!cancelled) {
+                        val error = _log.value.drop(logStart).lastOrNull { it.type == LogEntry.Type.ERROR }
+                        SyncForegroundService.finished(app, label, error?.let { listOf(it.name, it.status).filter(String::isNotBlank).joinToString(": ") })
+                    }
                 }
             }
         }
     }
+
+    /** "Refresh Collection" -> "Refresh collection"; words in capitals (BGG, QR) stay. */
+    private fun sentenceCase(title: String): String =
+        title.split(" ").mapIndexed { i, word ->
+            if (i == 0 || word.any { it.isLowerCase() }.not()) word else word.lowercase()
+        }.joinToString(" ")
 
     private suspend fun replaceCollectionSnapshot(games: List<GameItem>) {
         collectionMutex.withLock {
