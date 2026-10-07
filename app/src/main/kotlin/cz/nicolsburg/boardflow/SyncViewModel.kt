@@ -239,6 +239,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 withContext(Dispatchers.Main.immediate) {
                     onSuccess?.invoke(updatedGame)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 entry("Sleeves", e.message ?: "Could not update sleeve status", LogEntry.Type.ERROR)
                 withContext(Dispatchers.Main.immediate) {
@@ -251,6 +253,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 maybeMirrorSleeveTrackingToSheet(game.objectId, status, game.name)
                 maybeMirrorSleeveTrackingToBgg(game.objectId, status)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -330,6 +334,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                         if (objectid.isNotBlank()) sheetById[objectid] = newRowIdx
                         appended++
                     }
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     entry(name, e.message ?: "Unknown error", LogEntry.Type.ERROR)
                     failed++
@@ -380,6 +386,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 entry(row.gameName, detail, LogEntry.Type.DONE)
                 created++
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 entry(row.gameName, e.message ?: "Unknown error", LogEntry.Type.ERROR)
                 failed++
@@ -406,6 +414,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     entry(row.gameName, "QR not found on Drive", LogEntry.Type.INFO)
                     skipped++
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 entry(row.gameName, e.message ?: "Unknown error", LogEntry.Type.ERROR)
                 failed++
@@ -445,6 +455,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 launch { BggImageCache.preloadAll(getApplication(), merged) }
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 val cached = readCanonicalSnapshot()
                 _collectionGames.value = cached
@@ -482,6 +494,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 val now = System.currentTimeMillis()
                 _lastSyncedAt.value = now
                 securePrefs.lastSyncedAt = now
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 // Silent startup refresh should fail quietly and leave cached data in place.
             } finally {
@@ -525,6 +539,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     _collectionGames.value = merged
                     launch { BggImageCache.preloadAll(getApplication(), merged) }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -573,6 +589,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun entry(name: String, status: String, type: LogEntry.Type) {
         if (suppressLog) return
+        // A stopped sync unwinds through steps that may still report the cancellation as a failure.
+        if (type == LogEntry.Type.ERROR && syncJob?.isCancelled == true) return
         val current = _log.value.toMutableList()
         current.add(LogEntry(name, status, type))
         _log.value = current
@@ -664,6 +682,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 if (changed) "Updated sleeve status for $gameName" else "Sleeve status already current for $gameName",
                 LogEntry.Type.UPDATED
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             entry("Google Sheets", e.message ?: "Could not mirror sleeve status", LogEntry.Type.ERROR)
         }
@@ -692,6 +712,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 entry("BGG", "Backed up sleeve status for ${game.name}", LogEntry.Type.UPDATED)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -807,6 +829,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             }
             entry("BGG", "${enriched.size} games fetched", LogEntry.Type.INFO)
             enriched
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             entry("BGG", "Could not fetch game details: ${e.message}", LogEntry.Type.ERROR)
             games
@@ -843,6 +867,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     sheetById[game.objectid] = newRowIdx
                     appended++
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 entry(game.objectname, e.message ?: "Unknown error", LogEntry.Type.ERROR)
                 failed++
@@ -1077,6 +1103,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val wishlistClient = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
         val wishlistItems = try {
             wishlistClient.fetchWishlistGameItems(credentials.username, credentials.password)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             entry("BGG Wishlist", e.message ?: "Could not load wishlist", LogEntry.Type.ERROR)
             emptyList()
@@ -1102,6 +1130,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                         )
                     )
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 entry("BGG Wishlist", e.message ?: "Could not fetch wishlist details", LogEntry.Type.ERROR)
                 newWishlistItems
@@ -1129,6 +1159,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             entry("BGG", "${bggGames.size} games merged", LogEntry.Type.INFO)
         } catch (e: CancellationException) {
             throw e
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             merged = mergeGameItems(merged, mergeBase, CollectionUpdateSource.BGG)
             entry("BGG", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
@@ -1147,6 +1179,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 entry("Google Sheets", "${sheetGames.size} rows loaded", LogEntry.Type.INFO)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 entry("Google Sheets", fallbackMessage(e, mergeBase.size), fallbackLogType(mergeBase))
             }
@@ -1161,6 +1195,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val sleeveUpdates = fetchSleeveUpdates(merged, forceRefresh = false)
                 merged = mergeGameItems(merged, sleeveUpdates, CollectionUpdateSource.SLEEVES)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -1190,6 +1226,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             collectionStore.getBggPlaysCache() + collectionStore.getLoggedPlays()
         } catch (e: CancellationException) {
             throw e
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             return snapshot
         }
@@ -1211,6 +1249,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
 
         val thumbnailCache = try {
             collectionStore.getThumbnailCache()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             emptyMap()
         }
@@ -1218,6 +1258,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
         val details = try {
             client.fetchThingDetails(missingIds.map { it.toString() })
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -1258,6 +1300,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val entries = try {
             BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
                 .fetchCollectionStatuses(credentials.username, credentials.password)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -1485,6 +1529,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
                 refreshed += game.withSleeves(sleeves)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 failed++
                 entry(game.name, e.message ?: "Sleeve refresh failed", LogEntry.Type.ERROR)
@@ -1511,6 +1557,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
                 .onFailure {
                     entry("BGG History", it.message ?: "Failed to refresh play history", LogEntry.Type.ERROR)
                 }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -1544,6 +1592,8 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
             if (changedRows > 0) {
                 entry("Google Sheets", "Saved sleeves for $changedRows games", LogEntry.Type.DONE)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             entry("Google Sheets", e.message ?: "Could not save sleeves to sheet", LogEntry.Type.ERROR)
         }
