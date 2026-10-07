@@ -125,7 +125,7 @@ Source: `ui/setup/QuickSetupScreen.kt`
 
 Source: `ui/setup/GuideEditorScreen.kt`
 
-- A form: game name, then one grouped card per section (section name field, then each step's text and optional note, a grey line with the quantities and conditions kept as they are, and move up / move down / delete). `Add step` per section, `Add section` at the end, a red delete per section
+- A form: game name, then one grouped card per section (section name field and a grey "Shows always / with X" line, then each step's text and optional note, a grey line with its quantities and conditions, and move up / move down / delete). The grey lines have a chevron and open the quantities sheet: per-player values for each `{n}` in the text, special cases, the player-count chips the step shows at, and Either way / With / Without per module, with a `Done` pill. `Add step` per section, `Add section` at the end, a red delete per section
 - White `Cancel` and the `Save` pill at the bottom; leaving with unsaved changes asks `Discard changes?`. Save stores the guide as your version
 
 ## Journal

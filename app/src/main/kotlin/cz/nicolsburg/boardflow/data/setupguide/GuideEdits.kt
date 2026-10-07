@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.data.setupguide
 
+import cz.nicolsburg.boardflow.model.AmountCase
 import cz.nicolsburg.boardflow.model.AmountRule
 import cz.nicolsburg.boardflow.model.GuideModule
 import cz.nicolsburg.boardflow.model.GuideSection
@@ -9,7 +10,8 @@ import cz.nicolsburg.boardflow.model.SetupGuide
 import cz.nicolsburg.boardflow.model.StepCondition
 
 /**
- * The edits the in-app guide editor can make. Pure functions on [SetupGuide], so the editor's
+ * The edits the in-app guide editor can make, including per-player quantities and when a step
+ * or section shows. Pure functions on [SetupGuide], so the editor's
  * ViewModel stays thin and the rules are unit-tested. Existing step ids never change (ticks and
  * conditions refer to them); new steps and sections get ids that are unique in the guide.
  */
@@ -63,6 +65,101 @@ object GuideEdits {
             .filter { it.steps.isNotEmpty() }
     )
 
+    // --- Quantities ---
+
+    /**
+     * Sets one value of a step's quantity [name]: for [players] players, or the value for every
+     * other count when [players] is null. A blank value removes it; a quantity left with no
+     * values is removed (the validator then asks for one while the text still uses it).
+     */
+    fun setAmountValue(guide: SetupGuide, sectionId: String, stepId: String, name: String, players: Int?, value: String): SetupGuide =
+        guide.mapStep(sectionId, stepId) { step ->
+            val rule = step.amounts[name] ?: AmountRule()
+            val v = value.trim().ifBlank { null }
+            val updated = if (players == null) {
+                rule.copy(default = v)
+            } else {
+                rule.copy(byPlayers = if (v == null) rule.byPlayers - players else rule.byPlayers + (players to v))
+            }
+            step.withAmount(name, updated)
+        }
+
+    /** Changes the value of one special case (e.g. "with Pearlbrook at 2 players"). */
+    fun setCaseValue(guide: SetupGuide, sectionId: String, stepId: String, name: String, caseIndex: Int, value: String): SetupGuide =
+        guide.mapStep(sectionId, stepId) { step ->
+            val rule = step.amounts[name] ?: return@mapStep step
+            if (caseIndex !in rule.cases.indices) return@mapStep step
+            step.withAmount(name, rule.copy(cases = rule.cases.mapIndexed { i, c -> if (i == caseIndex) c.copy(value = value) else c }))
+        }
+
+    fun deleteCase(guide: SetupGuide, sectionId: String, stepId: String, name: String, caseIndex: Int): SetupGuide =
+        guide.mapStep(sectionId, stepId) { step ->
+            val rule = step.amounts[name] ?: return@mapStep step
+            step.withAmount(name, rule.copy(cases = rule.cases.filterIndexed { i, _ -> i != caseIndex }))
+        }
+
+    /** Quantity names the editor shows for a step: the ones its text uses, then any others it still has. */
+    fun quantityNames(step: GuideStep): List<String> =
+        (SetupGuideResolver.placeholders(step.text) + step.amounts.keys).distinct()
+
+    fun describeCase(case: AmountCase, modules: List<GuideModule>): String =
+        describeCondition(case.condition, modules) ?: "Always"
+
+    // --- When a step or section shows ---
+
+    enum class ModuleRule { ANY, WITH, WITHOUT }
+
+    /** The player counts (out of [allCounts]) at which [condition] lets a step show. */
+    fun shownAtCounts(condition: StepCondition?, allCounts: List<Int>): Set<Int> =
+        allCounts.filter { n ->
+            condition == null || (
+                (condition.players == null || n in condition.players) &&
+                    (condition.minPlayers == null || n >= condition.minPlayers) &&
+                    (condition.maxPlayers == null || n <= condition.maxPlayers)
+                )
+        }.toSet()
+
+    fun moduleRule(condition: StepCondition?, moduleId: String): ModuleRule = when {
+        condition == null -> ModuleRule.ANY
+        moduleId in condition.modules -> ModuleRule.WITH
+        moduleId in condition.notModules -> ModuleRule.WITHOUT
+        else -> ModuleRule.ANY
+    }
+
+    /**
+     * Shows the step (or, with [stepId] null, the whole section) only at [counts] players.
+     * Stored as compactly as the guides are written: nothing for every count, "N+" or "up to N"
+     * for a run at either end, otherwise the list. An empty selection is ignored.
+     */
+    fun setShownAtCounts(guide: SetupGuide, sectionId: String, stepId: String?, counts: Set<Int>, allCounts: List<Int>): SetupGuide {
+        if (counts.isEmpty()) return guide
+        val sorted = allCounts.sorted()
+        val chosen = sorted.filter { it in counts }
+        fun isRun(list: List<Int>) = list == sorted.subList(sorted.indexOf(list.first()), sorted.indexOf(list.first()) + list.size)
+        return guide.mapCondition(sectionId, stepId) { c ->
+            val base = (c ?: StepCondition()).copy(players = null, minPlayers = null, maxPlayers = null)
+            when {
+                chosen.size == sorted.size -> base
+                isRun(chosen) && chosen.last() == sorted.last() -> base.copy(minPlayers = chosen.first())
+                isRun(chosen) && chosen.first() == sorted.first() -> base.copy(maxPlayers = chosen.last())
+                else -> base.copy(players = chosen.toSet())
+            }
+        }
+    }
+
+    fun setModuleRule(guide: SetupGuide, sectionId: String, stepId: String?, moduleId: String, rule: ModuleRule): SetupGuide =
+        guide.mapCondition(sectionId, stepId) { c ->
+            val base = c ?: StepCondition()
+            base.copy(
+                modules = (base.modules - moduleId) + listOfNotNull(moduleId.takeIf { rule == ModuleRule.WITH }),
+                notModules = (base.notModules - moduleId) + listOfNotNull(moduleId.takeIf { rule == ModuleRule.WITHOUT })
+            )
+        }
+
+    /** One line for a condition, e.g. "only 2/3 players, with Pearlbrook", or null for "always". */
+    fun describeShownWhen(condition: StepCondition?, modules: List<GuideModule>): String? =
+        condition?.let { describeCondition(it, modules) }
+
     /**
      * A read-only line describing what the editor does not edit: player-count amounts and
      * conditions, e.g. "{n}: 2p 3, 3p 4 - only 2-3 players - with Rise of Ix".
@@ -93,6 +190,23 @@ object GuideEdits {
             condition.notModules.forEach { add("without ${name(it)}") }
         }
         return parts.joinToString(", ").ifBlank { null }
+    }
+
+    private fun GuideStep.withAmount(name: String, rule: AmountRule): GuideStep {
+        val empty = rule.default == null && rule.byPlayers.isEmpty() && rule.cases.isEmpty()
+        return copy(amounts = if (empty) amounts - name else amounts + (name to rule))
+    }
+
+    /** Applies [transform] to a step's condition, or the section's when [stepId] is null; an empty result is dropped. */
+    private fun SetupGuide.mapCondition(sectionId: String, stepId: String?, transform: (StepCondition?) -> StepCondition): SetupGuide {
+        fun tidy(c: StepCondition): StepCondition? = c.takeUnless {
+            it.players == null && it.minPlayers == null && it.maxPlayers == null && it.modules.isEmpty() && it.notModules.isEmpty()
+        }
+        return if (stepId == null) {
+            mapSection(sectionId) { it.copy(condition = tidy(transform(it.condition))) }
+        } else {
+            mapStep(sectionId, stepId) { it.copy(condition = tidy(transform(it.condition))) }
+        }
     }
 
     private fun SetupGuide.allStepIds(): Set<String> = sections.flatMap { s -> s.steps.map { it.id } }.toSet()

@@ -41,7 +41,7 @@
 - Setup cheat sheets (box, table, first turn) for each game, adjusted to player count, game mode and expansions
 - A session checklist, an "Easy to forget" list, and a Start game action that starts the play timer
 - Guides are open JSON in [`setup-guides/`](setup-guides/), bundled with the app and updated from GitHub without a new release. Every guide works offline
-- Edit any guide in the app (rename sections, change, add, remove and reorder steps), share it as a file, or import one as your own version (Settings > Preferences > Quick guides); your guides are included in backups
+- Edit any guide in the app (rename sections, change, add, remove and reorder steps, set per-player quantities and when a step shows), share it as a file, or import one as your own version (Settings > Preferences > Quick guides); your guides are included in backups
 - No guide for a game yet? Pick its rulebook PDF and Gemini drafts one, marked as a draft until you check it against the rulebook
 
 ### Journal

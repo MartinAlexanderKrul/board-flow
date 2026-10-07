@@ -1,7 +1,10 @@
 package cz.nicolsburg.boardflow.ui.setup
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -56,8 +59,9 @@ import cz.nicolsburg.boardflow.ui.theme.Spacing
 
 /**
  * Edits a guide as the user's own version: section names, step text and notes, adding,
- * deleting and reordering steps, and adding sections. Player-count amounts and conditions are
- * kept as they are and shown read-only under each step. A form: Cancel and Save at the bottom.
+ * deleting and reordering steps, and adding sections. The grey line under a step (and under a
+ * section name) opens [GuideRulesSheet] for its per-player quantities and when it shows.
+ * A form: Cancel and Save at the bottom.
  */
 @Composable
 fun GuideEditorScreen(
@@ -128,6 +132,9 @@ private fun EditorContent(
 ) {
     val guide = state.guide
     var deleteSectionId by rememberSaveable { mutableStateOf<String?>(null) }
+    // The step (or section, with an empty step id) whose quantities and conditions are open.
+    var rulesSectionId by rememberSaveable { mutableStateOf<String?>(null) }
+    var rulesStepId by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -162,7 +169,7 @@ private fun EditorContent(
                     Text(guide.gameName, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                     Text(
                         "Saved as your version of this guide; the standard guide stays as it was. " +
-                            "Grey lines show quantities and conditions that are kept as they are.",
+                            "Tap the grey line under a step for its quantities and when it shows.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -179,7 +186,8 @@ private fun EditorContent(
                         onMove = { stepId, delta -> viewModel.moveStep(section.id, stepId, delta) },
                         onDelete = { stepId -> viewModel.deleteStep(section.id, stepId) },
                         onAddStep = { viewModel.addStep(section.id) },
-                        onDeleteSection = { deleteSectionId = section.id }
+                        onDeleteSection = { deleteSectionId = section.id },
+                        onEditRules = { stepId -> rulesSectionId = section.id; rulesStepId = stepId.orEmpty() }
                     )
                 }
             }
@@ -187,6 +195,16 @@ private fun EditorContent(
                 BoardFlowInlineAction(onClick = viewModel::addSection, icon = Icons.Default.Add) { Text("Add section") }
             }
         }
+    }
+
+    rulesSectionId?.let { sectionId ->
+        GuideRulesSheet(
+            guide = guide,
+            sectionId = sectionId,
+            stepId = rulesStepId.ifEmpty { null },
+            viewModel = viewModel,
+            onDismiss = { rulesSectionId = null }
+        )
     }
 
     deleteSectionId?.let { id ->
@@ -212,7 +230,8 @@ private fun SectionEditor(
     onMove: (stepId: String, delta: Int) -> Unit,
     onDelete: (stepId: String) -> Unit,
     onAddStep: () -> Unit,
-    onDeleteSection: () -> Unit
+    onDeleteSection: () -> Unit,
+    onEditRules: (stepId: String?) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -239,17 +258,23 @@ private fun SectionEditor(
                     textStyle = MaterialTheme.typography.titleMedium
                 )
             }
+            RulesLine(
+                text = "Shows " + (GuideEdits.describeShownWhen(section.condition, modules) ?: "always"),
+                onClick = { onEditRules(null) },
+                modifier = Modifier.padding(start = Spacing.lg, end = Spacing.sm)
+            )
             section.steps.forEachIndexed { index, step ->
                 BoardFlowFormDivider()
                 StepEditor(
                     step = step,
-                    rules = GuideEdits.describeRules(step, section.condition, modules),
+                    rules = GuideEdits.describeRules(step, null, modules),
                     canMoveUp = index > 0,
                     canMoveDown = index < section.steps.lastIndex,
                     onText = { onText(step.id, it) },
                     onNote = { onNote(step.id, it) },
                     onMove = { onMove(step.id, it) },
-                    onDelete = { onDelete(step.id) }
+                    onDelete = { onDelete(step.id) },
+                    onEditRules = { onEditRules(step.id) }
                 )
             }
             BoardFlowFormDivider()
@@ -269,7 +294,8 @@ private fun StepEditor(
     onText: (String) -> Unit,
     onNote: (String) -> Unit,
     onMove: (Int) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEditRules: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(start = Spacing.lg, end = Spacing.sm, top = Spacing.md),
@@ -295,12 +321,11 @@ private fun StepEditor(
                 textColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        // Read-only rules on the left, the step's actions on the right, on one line.
+        // Quantities and conditions on the left (tap to edit), the step's actions on the right.
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                rules.orEmpty(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            RulesLine(
+                text = rules ?: "Quantities and conditions",
+                onClick = onEditRules,
                 modifier = Modifier.weight(1f)
             )
             IconButton(onClick = { onMove(-1) }, enabled = canMoveUp) {
@@ -318,5 +343,29 @@ private fun StepEditor(
                 )
             }
         }
+    }
+}
+
+/** A grey, tappable summary of quantities or conditions with a chevron, like an editable cell. */
+@Composable
+private fun RulesLine(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .heightIn(min = Dimens.MinTouchTarget),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f, fill = false)
+        )
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(Dimens.Icon)
+        )
     }
 }

@@ -81,6 +81,18 @@ class GuideEditorViewModel(
     fun addSection() = update { GuideEdits.addSection(it).first }
     fun deleteSection(sectionId: String) = update { GuideEdits.deleteSection(it, sectionId) }
 
+    // Quantities and when a step (or, with stepId null, a section) shows.
+    fun setAmountValue(sectionId: String, stepId: String, name: String, players: Int?, value: String) =
+        update { GuideEdits.setAmountValue(it, sectionId, stepId, name, players, value) }
+    fun setCaseValue(sectionId: String, stepId: String, name: String, caseIndex: Int, value: String) =
+        update { GuideEdits.setCaseValue(it, sectionId, stepId, name, caseIndex, value) }
+    fun deleteCase(sectionId: String, stepId: String, name: String, caseIndex: Int) =
+        update { GuideEdits.deleteCase(it, sectionId, stepId, name, caseIndex) }
+    fun setShownAtCounts(sectionId: String, stepId: String?, counts: Set<Int>, allCounts: List<Int>) =
+        update { GuideEdits.setShownAtCounts(it, sectionId, stepId, counts, allCounts) }
+    fun setModuleRule(sectionId: String, stepId: String?, moduleId: String, rule: GuideEdits.ModuleRule) =
+        update { GuideEdits.setModuleRule(it, sectionId, stepId, moduleId, rule) }
+
     /**
      * Saves the draft as the user's version. Empty steps and sections are dropped first.
      * [onResult] gets null on success, or the first problem the validator found.
