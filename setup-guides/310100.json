@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "gameId": 310100,
   "gameName": "Nemesis: Lockdown",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Nemesis: Lockdown rules (Awaken Realms, via RulesPal)",
-      "Nemesis: Lockdown rules summary (Esoteric Order of Gamers, v2)"
+      "Nemesis: Lockdown rulebook (Awaken Realms)",
+      "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms)"
     ]
   },
   "players": {
@@ -24,6 +24,30 @@
         "max": 5
       },
       "note": "All Objectives are public and must all be fulfilled; at least 1 Character must survive."
+    },
+    {
+      "id": "night-stalkers",
+      "name": "Night Stalkers",
+      "group": "Intruders",
+      "defaultEnabled": true
+    },
+    {
+      "id": "chytrids",
+      "name": "Chytrids (Stretch Goals)",
+      "bggId": 321742,
+      "group": "Intruders"
+    },
+    {
+      "id": "void",
+      "name": "Void Seeders (needs Nemesis: Void Seeders)",
+      "bggId": 313790,
+      "group": "Intruders"
+    },
+    {
+      "id": "carno",
+      "name": "Carnomorphs (needs Nemesis: Carnomorphs)",
+      "bggId": 245845,
+      "group": "Intruders"
     }
   ],
   "sections": [
@@ -34,53 +58,80 @@
         {
           "id": "board",
           "text": "Board on its basic side (red arrow, top left)",
-          "ref": "Setup (Summary)"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         },
         {
           "id": "fixed-rooms",
           "text": "Isolation Room (room-action side down), Repository and Backup Power Supply on their slots",
-          "ref": "Setup (Summary)"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
+        },
+        {
+          "id": "contaminated",
+          "text": "Void Seeders: remove the Contaminated Room from the II tiles",
+          "condition": {
+            "modules": [
+              "void"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.10"
         },
         {
           "id": "rooms",
-          "text": "Shuffle the II room tiles facedown, 1 per II slot (6 of 9 used); then the I tiles on the I slots",
-          "ref": "Setup (Summary)"
+          "text": "Shuffle the II room tiles facedown, 1 per II slot (box the rest); then the I tiles on the I slots",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         },
         {
           "id": "exploration",
-          "text": "1 random facedown Underground Exploration token on each unrevealed room",
-          "ref": "Setup (Summary)"
+          "text": "1 random facedown Underground Exploration token on each unrevealed room; box the rest",
+          "condition": {
+            "notModules": [
+              "void"
+            ]
+          },
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
+        },
+        {
+          "id": "exploration-void",
+          "text": "Exploration tokens: remove 2 Slime and 2 Silence, add 3 Lair; 1 on each unrevealed room and each Elevator Room",
+          "condition": {
+            "modules": [
+              "void"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.10"
         },
         {
           "id": "vehicles",
           "text": "Elevator, Main Gate and Rover in their places",
-          "ref": "Setup (Summary)"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         },
         {
           "id": "power",
           "text": "Power tokens: 3 in the section slots, 1 on the Elevator; 1 and 2 blue side up, 3 and 4 red side up",
-          "ref": "Setup (Summary)"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         },
         {
           "id": "css",
           "text": "1 CSS token facedown on each CSS slot of the time track; box the extra",
-          "ref": "Setup (Summary)"
-        },
-        {
-          "id": "time",
-          "text": "Time token red (inactive) side up on the 15th (green) space; Alert, Autodestruction and Venting tokens nearby",
-          "ref": "Crew setup"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         }
       ]
     },
     {
       "id": "intruders",
-      "title": "Night Stalkers",
+      "title": "Intruders",
       "steps": [
         {
           "id": "lab",
-          "text": "Laboratory board: 5 Egg tokens in the Nest; 3 random Weakness cards, the leftmost revealed",
-          "ref": "Setup (Summary)"
+          "text": "Night Stalkers Laboratory board: 5 Egg tokens in the Nest; 3 random Weakness cards, the leftmost revealed",
+          "condition": {
+            "notModules": [
+              "chytrids",
+              "void",
+              "carno"
+            ]
+          },
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         },
         {
           "id": "bag",
@@ -96,33 +147,179 @@
               }
             }
           },
-          "ref": "Setup (Summary)"
+          "condition": {
+            "notModules": [
+              "chytrids",
+              "void",
+              "carno"
+            ]
+          },
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
+        },
+        {
+          "id": "lab-chytrids",
+          "text": "Chytrid Laboratory board: 5 Eggs, Germinators in their coloured slots (1 protrusion up), 3 random Chytrid Weakness cards with the leftmost revealed",
+          "condition": {
+            "modules": [
+              "chytrids"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.4"
+        },
+        {
+          "id": "queen-board",
+          "text": "Queen board: the Chytrid Queen in the middle, the Stinkhorns around it; all Intruder tokens in the bag",
+          "condition": {
+            "modules": [
+              "chytrids"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.4"
+        },
+        {
+          "id": "lab-void",
+          "text": "Void Seeder Laboratory board: 5 Eggs; remove Solid Bulkheads and Wave of Calm, then 3 random Void Seeder Weakness cards with the leftmost revealed",
+          "condition": {
+            "modules": [
+              "void"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.10"
+        },
+        {
+          "id": "bag-void",
+          "text": "Intruder bag: 1 Blank and {n} random Void Seeder tokens",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "3",
+                "2": "4",
+                "3": "5",
+                "4": "6",
+                "5": "7"
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "void"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.10"
+        },
+        {
+          "id": "lab-carno",
+          "text": "Carnomorphs Laboratory board: 8 Eggs; 3 random Adaptation cards facedown, a Shambler, Fleshbeast and Butcher on their Adaptations",
+          "condition": {
+            "modules": [
+              "carno"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.12"
+        },
+        {
+          "id": "bag-carno",
+          "text": "Intruder bag: 1 Blank, 2 blue Metagorgers and {n} red Metagorgers",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "3",
+                "2": "4",
+                "3": "5",
+                "4": "6",
+                "5": "7"
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "carno"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.12"
         },
         {
           "id": "spares",
           "text": "Spare Intruder and Carcass tokens beside the board",
-          "ref": "Setup (Summary)"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         }
       ]
     },
     {
       "id": "decks",
-      "title": "Decks",
+      "title": "Decks and supply",
       "steps": [
         {
           "id": "items",
-          "text": "Shuffle the red, yellow and green Item decks; crafted item deck beside them",
-          "ref": "Setup (Summary) / Esoteric Order of Gamers Lockdown summary v2, Setup"
+          "text": "Shuffle the red, yellow and green Item decks, Contamination and Serious Wound decks; Crafted Item deck beside the Items, Scanner by Contamination",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         },
         {
           "id": "threat-decks",
-          "text": "Shuffle the Night Stalker Event and Attack decks, Contamination and Serious Wound decks; scanner by Contamination",
-          "ref": "Setup (Summary) / Esoteric Order of Gamers Lockdown summary v2, Setup"
+          "text": "Shuffle the Night Stalker Event and Attack decks",
+          "condition": {
+            "notModules": [
+              "chytrids",
+              "void",
+              "carno"
+            ]
+          },
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
+        },
+        {
+          "id": "threat-chytrids",
+          "text": "Shuffle the Chytrid Event and Attack decks",
+          "condition": {
+            "modules": [
+              "chytrids"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.4"
+        },
+        {
+          "id": "threat-void",
+          "text": "Shuffle the Void Seeder Attack deck and the Lockdown Void Seeder Event deck",
+          "condition": {
+            "modules": [
+              "void"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.10"
+        },
+        {
+          "id": "threat-carno",
+          "text": "Shuffle the Carnomorph Attack deck and the Lockdown Carnomorph Event deck",
+          "condition": {
+            "modules": [
+              "carno"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.12"
         },
         {
           "id": "computer",
-          "text": "Computer deck facedown on its slot; reveal the top card (Lock-down: reveal the next, shuffle Lock-down back in)",
-          "ref": "Setup (Summary) / Esoteric Order of Gamers Lockdown summary v2, Setup"
+          "text": "Computer deck on its slot; reveal the top card (Lock-down: reveal the next, shuffle Lock-down back in)",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
+        },
+        {
+          "id": "markers",
+          "text": "Beside the board: Fire, Malfunction, Noise, Ammo/Injury and Status markers, Doors, Character Corpses, 2 Combat, 2 Noise and 2 Advantage dice",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
+        },
+        {
+          "id": "spores",
+          "text": "Also the Spore and Mycelium markers",
+          "condition": {
+            "modules": [
+              "chytrids"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.4"
+        },
+        {
+          "id": "time",
+          "text": "Alert, Autodestruction and Venting tokens nearby; Time token red (inactive) side up on the 15th (green) space",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.6-7"
         }
       ]
     },
@@ -132,19 +329,49 @@
       "steps": [
         {
           "id": "help",
-          "text": "Each player: a Help card (draft order and player number) and an Inventory holder",
-          "ref": "Crew setup"
+          "text": "Deal each player a Help card (numbers 1 to player count; draft order) and the matching Inventory holder, plus Contingency and Reference cards",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
+        },
+        {
+          "id": "help-chytrids",
+          "text": "Use the Chytrid Help cards",
+          "condition": {
+            "modules": [
+              "chytrids"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.4"
+        },
+        {
+          "id": "help-void",
+          "text": "After dealing Inventories, swap the Help cards for the Lockdown Void Seeder Help cards",
+          "condition": {
+            "modules": [
+              "void"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.10"
+        },
+        {
+          "id": "help-carno",
+          "text": "After dealing Inventories, swap the Help cards for the Lockdown Carnomorph Help cards",
+          "condition": {
+            "modules": [
+              "carno"
+            ]
+          },
+          "ref": "Nemesis: Lockdown Stretch Goals / Chytrids rulebook (Awaken Realms) p.12"
         },
         {
           "id": "objectives",
-          "text": "Deal each player 1 Corporate and 1 Personal Objective, secret (first remove ones needing more players)",
+          "text": "Remove Objectives for more players; deal each player 1 Corporate and 1 Personal Objective, secret",
           "condition": {
             "minPlayers": 2,
             "notModules": [
               "coop"
             ]
           },
-          "ref": "Crew setup"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
         },
         {
           "id": "solo-objectives",
@@ -154,7 +381,7 @@
               1
             ]
           },
-          "ref": "Game Modes"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.30"
         },
         {
           "id": "coop-objectives",
@@ -164,11 +391,11 @@
               "coop"
             ]
           },
-          "ref": "Game Modes"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.30"
         },
         {
           "id": "contingency",
-          "text": "Deal each player {n} secret Contingency; 1 facedown on the Active Contingency slot, the rest in the Neutral Pool",
+          "text": "Deal each player {n} secret Contingency; 1 facedown on the Active Contingency slot, the rest in the Neutral Pool by the Alert Room",
           "amounts": {
             "n": {
               "default": "1 token",
@@ -178,9 +405,12 @@
             }
           },
           "condition": {
-            "minPlayers": 2
+            "minPlayers": 2,
+            "notModules": [
+              "coop"
+            ]
           },
-          "ref": "Crew setup"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
         },
         {
           "id": "solo-contingency",
@@ -190,27 +420,42 @@
               1
             ]
           },
-          "ref": "Game Modes"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.30"
+        },
+        {
+          "id": "coop-contingency",
+          "text": "1 Contingency on the Active slot, the rest in the Neutral Pool; reveal 1 of them to everyone",
+          "condition": {
+            "modules": [
+              "coop"
+            ]
+          },
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.30"
         },
         {
           "id": "draft",
-          "text": "Draft: in player order draw 2 Draft cards, keep 1, shuffle the other back",
-          "ref": "Crew setup"
+          "text": "Draft: in player order draw 2 Draft cards, keep 1, shuffle the other back; box the rest",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
         },
         {
           "id": "character",
-          "text": "Take your Character board, miniature, shuffled Action deck, Starting Item (with ammo) and Quest Item facedown",
-          "ref": "Crew setup"
+          "text": "Take your Character board and miniature; shuffle your Action deck left of the board; Starting Item in a Hand slot with full Ammo",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
+        },
+        {
+          "id": "quest-item",
+          "text": "Quest Item horizontal side up beside your board (inactive)",
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
         },
         {
           "id": "start-room",
           "text": "Nemesis Survivors start in the Isolation Room, Facility Workers in the Repository",
-          "ref": "Crew setup"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
         },
         {
           "id": "knowledge",
           "text": "Knowledge token inactive side up on the Laboratory board: slot 1 for Facility Workers, slot 3 for Survivors",
-          "ref": "Crew setup"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
         }
       ]
     },
@@ -233,7 +478,7 @@
               "coop"
             ]
           },
-          "ref": "Crew setup / First Encounter"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.10"
         },
         {
           "id": "solo-items",
@@ -243,17 +488,22 @@
               1
             ]
           },
-          "ref": "Game Modes"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.30"
         },
         {
-          "id": "fire",
-          "text": "Ending a turn in a room with Fire costs 1 Light Wound",
-          "ref": "Player Turns"
+          "id": "revive",
+          "text": "Co-op: a Corpse carried to a working Emergency Room comes back next round",
+          "condition": {
+            "modules": [
+              "coop"
+            ]
+          },
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.30"
         },
         {
           "id": "win",
           "text": "To win you must fulfil your Objective and survive: Isolation Room, CSS pod or the Bunker",
-          "ref": "Object of the Game"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.3"
         }
       ]
     },
@@ -265,7 +515,7 @@
         {
           "id": "first",
           "text": "Player 1 takes the First Player token",
-          "ref": "Crew setup"
+          "ref": "Nemesis: Lockdown rulebook (Awaken Realms) p.8-9"
         }
       ]
     }

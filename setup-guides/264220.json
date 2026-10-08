@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 264220,
   "gameName": "Tainted Grail: The Fall of Avalon",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Tainted Grail: The Fall of Avalon rulebook v2.0 (Awaken Realms, via RulesPal)"
+      "Tainted Grail: The Fall of Avalon rulebook 2.0 (Awaken Realms, corrected 2023)"
     ]
   },
   "players": {
@@ -20,13 +20,18 @@
       "title": "Each character",
       "steps": [
         {
+          "id": "open-play",
+          "text": "First time: learn with the Open & Play guide (an introductory solo adventure) instead",
+          "ref": "Campaign Setup"
+        },
+        {
           "id": "mode",
           "text": "Choose Story, Standard or Challenge mode (Challenge only after Chapter 1); Story and Challenge put their Help card out",
           "ref": "Character Setup I"
         },
         {
           "id": "character",
-          "text": "Choose a Character: its Tile and the Tray of the same colour",
+          "text": "Choose a Character: its Tile and the Tray of the same colour (Niamh, red, may use any Tray)",
           "ref": "Character Setup II"
         },
         {
@@ -67,7 +72,7 @@
       "steps": [
         {
           "id": "start",
-          "text": "Starting Location 101 in the middle with all Character models",
+          "text": "Starting Location 101 in the middle with all Character models (other campaigns start at 201, 301 or 401)",
           "ref": "World Setup I"
         },
         {

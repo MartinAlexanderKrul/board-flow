@@ -2,18 +2,40 @@
   "schemaVersion": 1,
   "gameId": 325494,
   "gameName": "ISS Vanguard",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "ISS Vanguard rulebook (Awaken Realms, via RulesPal)"
+      "ISS Vanguard rulebook (Awaken Realms, corrected 2023)",
+      "ISS Vanguard: The Lost Fleet rulebook",
+      "ISS Vanguard: Deadly Frontier rulebook"
     ]
   },
   "players": {
     "min": 1,
     "max": 4
   },
+  "modules": [
+    {
+      "id": "base-campaign",
+      "name": "Base campaign",
+      "group": "Campaign",
+      "defaultEnabled": true
+    },
+    {
+      "id": "lost-fleet",
+      "name": "The Lost Fleet campaign",
+      "bggId": 340233,
+      "group": "Campaign"
+    },
+    {
+      "id": "deadly-frontier",
+      "name": "Deadly Frontier campaign",
+      "bggId": 340235,
+      "group": "Campaign"
+    }
+  ],
   "sections": [
     {
       "id": "mode",
@@ -22,7 +44,45 @@
         {
           "id": "first-time",
           "text": "First time: play the Tutorial (Chapter II, ideally solo); afterwards start the Campaign with this quickstart",
+          "condition": {
+            "notModules": [
+              "lost-fleet",
+              "deadly-frontier"
+            ]
+          },
           "ref": "Starting Your Game"
+        },
+        {
+          "id": "lf-prep",
+          "text": "Lost Fleet (stand-alone campaign, decades later): do its Campaign Setup first: clean up the base campaign, refill Card Trays A and B, Secret Envelope, Ship Book, Logbook and Section Compartments",
+          "condition": {
+            "modules": [
+              "lost-fleet"
+            ]
+          },
+          "note": "Takes a while: do it before the session",
+          "ref": "ISS Vanguard: The Lost Fleet rulebook, Campaign Setup"
+        },
+        {
+          "id": "lf-start",
+          "text": "Then go to Log 1200 in the Lost Fleet Logbook",
+          "condition": {
+            "modules": [
+              "lost-fleet"
+            ]
+          },
+          "ref": "ISS Vanguard: The Lost Fleet rulebook, Starting Your Game"
+        },
+        {
+          "id": "df-prep",
+          "text": "Deadly Frontier: do its Campaign Setup first: take the listed base game and Lost Fleet components, swap in the DF Ship Book pages and starting cards, then follow its \"Start here\"",
+          "condition": {
+            "modules": [
+              "deadly-frontier"
+            ]
+          },
+          "note": "Takes a while: do it before the session",
+          "ref": "ISS Vanguard: Deadly Frontier rulebook, Campaign Setup"
         },
         {
           "id": "sections",
@@ -44,6 +104,12 @@
     {
       "id": "quickstart",
       "title": "Campaign quickstart",
+      "condition": {
+        "notModules": [
+          "lost-fleet",
+          "deadly-frontier"
+        ]
+      },
       "steps": [
         {
           "id": "trays",
@@ -90,6 +156,12 @@
     {
       "id": "planet",
       "title": "First planet",
+      "condition": {
+        "notModules": [
+          "lost-fleet",
+          "deadly-frontier"
+        ]
+      },
       "steps": [
         {
           "id": "planetopedia",
@@ -137,6 +209,16 @@
           "id": "logs",
           "text": "Logs are not in order: read only the number you are sent to",
           "ref": "Starting Your Game"
+        },
+        {
+          "id": "alien-dice",
+          "text": "Lost Fleet: Alien dice count as Section dice of no colour; the Vanguard icon is any Alien icon",
+          "condition": {
+            "modules": [
+              "lost-fleet"
+            ]
+          },
+          "ref": "ISS Vanguard: The Lost Fleet rulebook, Alien Dice"
         }
       ]
     },
@@ -148,7 +230,33 @@
         {
           "id": "start-token",
           "text": "The Recon player gives the Start token to a Crewmember; go to Log 1",
+          "condition": {
+            "notModules": [
+              "lost-fleet",
+              "deadly-frontier"
+            ]
+          },
           "ref": "Tutorial setup"
+        },
+        {
+          "id": "lf-go",
+          "text": "Start the Lost Fleet campaign at Log 1200",
+          "condition": {
+            "modules": [
+              "lost-fleet"
+            ]
+          },
+          "ref": "ISS Vanguard: The Lost Fleet rulebook, Starting Your Game"
+        },
+        {
+          "id": "df-go",
+          "text": "Start the Deadly Frontier campaign as its \"Start here\" section directs",
+          "condition": {
+            "modules": [
+              "deadly-frontier"
+            ]
+          },
+          "ref": "ISS Vanguard: Deadly Frontier rulebook"
         }
       ]
     }

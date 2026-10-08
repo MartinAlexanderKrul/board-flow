@@ -1924,8 +1924,8 @@
     {
       "gameId": 310100,
       "gameName": "Nemesis: Lockdown",
-      "gameIds": [310100],
-      "version": 1,
+      "gameIds": [310100, 321742, 313790, 245845],
+      "version": 2,
       "schemaVersion": 1,
       "path": "310100.json"
     },
@@ -1933,7 +1933,7 @@
       "gameId": 318182,
       "gameName": "Imperium: Legends",
       "gameIds": [318182, 318184],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "318182.json"
     },
@@ -2044,8 +2044,8 @@
     {
       "gameId": 325494,
       "gameName": "ISS Vanguard",
-      "gameIds": [325494],
-      "version": 1,
+      "gameIds": [325494, 340233, 340235],
+      "version": 2,
       "schemaVersion": 1,
       "path": "325494.json"
     },
@@ -2109,7 +2109,7 @@
       "gameId": 264220,
       "gameName": "Tainted Grail: The Fall of Avalon",
       "gameIds": [264220],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "264220.json"
     },
