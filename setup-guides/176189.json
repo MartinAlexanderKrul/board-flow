@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "gameId": 176189,
+  "gameName": "Zombicide: Black Plague",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Zombicide: Black Plague rules (CMON, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "quest",
+          "text": "Choose a Quest; lay out its tiles",
+          "ref": "Setup"
+        },
+        {
+          "id": "quest-pieces",
+          "text": "Place doors, Objectives and tokens as the Quest shows; do its special setup",
+          "ref": "Setup"
+        },
+        {
+          "id": "decks",
+          "text": "Shuffle the Zombie cards and the Equipment cards into 2 facedown decks by the board",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "survivors",
+      "title": "Survivors",
+      "steps": [
+        {
+          "id": "pick",
+          "text": "Split 6 Survivors among the players (new players: 1 each)",
+          "note": "All players are one team",
+          "ref": "Setup / Game Overview"
+        },
+        {
+          "id": "dashboard",
+          "text": "Each Survivor: a Dashboard with its ID card, a coloured base on the miniature and the 5 trackers of that colour",
+          "ref": "Setup"
+        },
+        {
+          "id": "aside",
+          "text": "Set aside the grey-backed Starting Equipment (Hammer, Mana Blast, Short Bow, 3 Short Swords) and the blue Vault cards (Inferno, Orcish Crossbow)",
+          "ref": "Setup"
+        },
+        {
+          "id": "equipment",
+          "text": "Share the Starting Equipment as a team, at least 1 card each; Survivors whose Skill lists a weapon also get it",
+          "ref": "Setup"
+        },
+        {
+          "id": "trackers",
+          "text": "Danger Bar arrow on 0 (blue); trackers on Wound 0 and on the first (blue) Skill; 3 in the reserve slots",
+          "ref": "Setup"
+        },
+        {
+          "id": "miniatures",
+          "text": "Survivor miniatures on the Quest's starting Zone",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "actions",
+          "text": "Each Survivor has 3 Actions per Turn",
+          "ref": "Game Overview"
+        },
+        {
+          "id": "spawn",
+          "text": "Zombies' Phase ends with new Zombies in every active Spawn Zone",
+          "ref": "Game Overview"
+        },
+        {
+          "id": "noise",
+          "text": "End Phase: remove all Noise tokens and pass the first player token left",
+          "ref": "Game Overview"
+        },
+        {
+          "id": "lose",
+          "text": "You lose if all Survivors die or too many Necromancers escape",
+          "ref": "Winning and Losing"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Choose the first player and give them the first player token",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

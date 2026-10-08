@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "gameId": 169255,
+  "gameName": "A Game of Thrones: The Card Game (Second Edition)",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "A Game of Thrones: The Card Game 2nd ed. Learn to Play (FFG, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "modules": [
+    {
+      "id": "tutorial",
+      "name": "Tutorial joust with the starter decks",
+      "players": {
+        "min": 2,
+        "max": 2
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "decks",
+      "title": "Decks",
+      "steps": [
+        {
+          "id": "tutorial-decks",
+          "text": "Tutorial joust: one player takes the Stark starter deck, the other the Lannister one, each with its 7 listed plots",
+          "condition": {
+            "modules": [
+              "tutorial"
+            ]
+          },
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "own-decks",
+          "text": "Each player brings a deck: faction card, exactly 7 plot cards and a draw deck",
+          "condition": {
+            "notModules": [
+              "tutorial"
+            ]
+          },
+          "ref": "Deckbuilding"
+        }
+      ]
+    },
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Randomly pick the first player; they take the first player token",
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "faction",
+          "text": "Each player puts their faction card faceup in their play area",
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "treasury",
+          "text": "Gold tokens, power counters and influence tokens in a shared treasury",
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "titles",
+          "text": "The 6 title cards (206-211) in a title pool by the treasury",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Melee Rules"
+        },
+        {
+          "id": "plots",
+          "text": "Your 7 plot cards facedown in a stack next to your faction card",
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "shuffle",
+          "text": "Shuffle your draw deck",
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "hand",
+          "text": "Draw 7; you may mulligan once (shuffle them back, draw 7 new)",
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "setup-cards",
+          "text": "In player order, place up to 8 cost of characters, locations and attachments facedown (at most 1 Limited, no events)",
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "reveal",
+          "text": "Everyone reveals their setup cards; attach attachments in player order",
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "refill",
+          "text": "Draw back up to 7 cards",
+          "ref": "Tutorial Joust Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "win",
+          "text": "First to 15 power on cards they control wins at once",
+          "ref": "Winning and Losing"
+        },
+        {
+          "id": "tutorial-end",
+          "text": "Tutorial decks are small: if a player runs out, the most power wins",
+          "condition": {
+            "modules": [
+              "tutorial"
+            ]
+          },
+          "ref": "Tutorial Joust Game Setup"
+        },
+        {
+          "id": "titles-round",
+          "text": "Melee plot phase: remove {n} random title(s), then each player secretly picks one",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": "2",
+                "4": "1",
+                "5": "1",
+                "6": "0"
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Melee Rules"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "plot",
+          "text": "Round 1 starts with the Plot phase: everyone chooses and reveals a plot",
+          "ref": "Phase 1: Plot"
+        }
+      ]
+    }
+  ]
+}

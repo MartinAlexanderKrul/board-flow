@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "gameId": 103885,
+  "gameName": "Star Wars: X-Wing Miniatures Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "X-Wing Miniatures Game core rules (FFG, 1st edition, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "modules": [
+    {
+      "id": "squads",
+      "name": "Squad building (more ships)"
+    }
+  ],
+  "sections": [
+    {
+      "id": "forces",
+      "title": "Forces",
+      "steps": [
+        {
+          "id": "factions",
+          "text": "One player takes the Rebels, the other the Imperials (random if you disagree)",
+          "ref": "Setup"
+        },
+        {
+          "id": "core-ships",
+          "text": "Rebel: Luke Skywalker; Imperial: Night Beast and 1 Obsidian Squadron Pilot",
+          "condition": {
+            "notModules": [
+              "squads"
+            ]
+          },
+          "ref": "Setup"
+        },
+        {
+          "id": "points",
+          "text": "Agree a squad point total (100 recommended; 31 with only the core box)",
+          "condition": {
+            "modules": [
+              "squads"
+            ]
+          },
+          "ref": "Squad Building"
+        },
+        {
+          "id": "build",
+          "text": "Each player secretly picks Ship and Upgrade cards up to the total; reveal together",
+          "condition": {
+            "modules": [
+              "squads"
+            ]
+          },
+          "ref": "Squad Building"
+        },
+        {
+          "id": "assemble",
+          "text": "Assemble each ship: token on the base (arc over the chevron), 2 pegs, then the ship",
+          "ref": "Ship Assembly"
+        },
+        {
+          "id": "cards",
+          "text": "Each player's Ship cards faceup outside the play area, in view",
+          "ref": "Setup"
+        },
+        {
+          "id": "shields",
+          "text": "Shield tokens on each Ship card equal to its shield value (blue number)",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "area",
+      "title": "Play area",
+      "steps": [
+        {
+          "id": "area",
+          "text": "A 3' x 3' flat area (a playmat or cloth helps); sit on opposite edges",
+          "ref": "The Play Area"
+        },
+        {
+          "id": "damage",
+          "text": "Shuffle the Damage deck facedown beside the area; dice, ruler, templates and tokens in reach",
+          "ref": "Setup"
+        },
+        {
+          "id": "place",
+          "text": "Place ships from lowest to highest pilot skill, each within Range 1 of its owner's edge, facing any way",
+          "note": "Ties: the player with initiative places first",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "initiative",
+          "text": "The Imperial player has initiative (squad building: the lower point total does)",
+          "ref": "Initiative / Squad Building"
+        },
+        {
+          "id": "round",
+          "text": "Round: Planning (dials), Activation (low to high skill), Combat (high to low), End",
+          "ref": "The Game Round"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "dials",
+          "text": "Planning Phase: each player secretly sets a maneuver dial for every ship",
+          "ref": "The Game Round"
+        }
+      ]
+    }
+  ]
+}

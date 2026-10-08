@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "gameId": 73171,
+  "gameName": "Earth Reborn",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Earth Reborn rulebook (Z-Man Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Setup",
+      "steps": [
+        {
+          "id": "scenario",
+          "text": "Choose a scenario (play them in order, starting with #1); it lists the rules in play",
+          "ref": "Setup / Where to Start"
+        },
+        {
+          "id": "map",
+          "text": "Build the map from the scenario: board frame, floor tiles and doors",
+          "ref": "Setup"
+        },
+        {
+          "id": "factions",
+          "text": "Decide who plays which faction; a Player Aid screen in front of each player",
+          "ref": "Setup"
+        },
+        {
+          "id": "cards",
+          "text": "The scenario's Character cards in front of each screen, Healthy side up",
+          "ref": "Setup"
+        },
+        {
+          "id": "minis",
+          "text": "Their miniatures on the map where the scenario shows",
+          "ref": "Setup"
+        },
+        {
+          "id": "bag",
+          "text": "All Order tiles in the cloth bag",
+          "ref": "Setup"
+        },
+        {
+          "id": "bank",
+          "text": "Command Point / Wound counters in a shared bank",
+          "ref": "Setup"
+        },
+        {
+          "id": "extra",
+          "text": "Do any other setup the scenario lists",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "scenario-wins",
+          "text": "Scenario text beats the rules when they disagree",
+          "ref": "Scenarios"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "initiative",
+          "text": "Each turn starts with the Initiative Phase: draw Order tiles and gain Command Points",
+          "ref": "Turn Sequence"
+        }
+      ]
+    }
+  ]
+}

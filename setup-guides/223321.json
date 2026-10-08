@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 2,
+  "gameId": 223321,
+  "gameName": "Detective: A Modern Crime Board Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Detective rules (Portal Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "table",
+      "title": "Each case",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Board in reach; Investigation Team marker on Headquarters",
+          "ref": "Case Set-up"
+        },
+        {
+          "id": "time",
+          "text": "Time marker on 8:00 AM, Day marker on day 1",
+          "ref": "Case Set-up"
+        },
+        {
+          "id": "investigators",
+          "text": "Each player picks an investigator tile, faceup, and takes the Skill token shown bottom right",
+          "ref": "Case Set-up"
+        },
+        {
+          "id": "consultants",
+          "text": "Unused tiles go Consultant side up; take their Skill tokens too",
+          "ref": "Case Set-up"
+        },
+        {
+          "id": "pool",
+          "text": "All those Skill tokens form the shared Token pool",
+          "ref": "Case Set-up"
+        },
+        {
+          "id": "antares",
+          "text": "Log in at antaresdatabase.com and choose the campaign and case",
+          "ref": "Case Set-up"
+        },
+        {
+          "id": "deck",
+          "text": "Case deck beside the board; read the casebook introduction, special rules and setup changes",
+          "ref": "Case Set-up"
+        },
+        {
+          "id": "notes",
+          "text": "Room for notes or a mind map, and a browser in reach",
+          "ref": "Case Set-up"
+        }
+      ]
+    },
+    {
+      "id": "investigators",
+      "title": "Investigators",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "coleman",
+          "text": "Jack Coleman, former cop",
+          "ref": "Investigators",
+          "details": [
+            "Reports: Write a report gives 2 Authority instead of 1"
+          ]
+        },
+        {
+          "id": "stone",
+          "text": "Chris Stone, former private eye",
+          "ref": "Investigators",
+          "details": [
+            "Second look: pay 1 Authority and the Skill token to Dig Deeper on an already resolved lead"
+          ]
+        },
+        {
+          "id": "harris",
+          "text": "Ben Harris, former FBI analyst",
+          "ref": "Investigators",
+          "details": [
+            "Analysis: pay 2 Skill tokens to gain 1 Authority"
+          ]
+        },
+        {
+          "id": "jacobson",
+          "text": "Julia Jacobson, former investigative journalist",
+          "ref": "Investigators",
+          "details": [
+            "Sources: pay 1 Skill token to turn another Skill token in the pool into 1 Authority"
+          ]
+        },
+        {
+          "id": "roberts",
+          "text": "Mia Roberts, former psychologist",
+          "ref": "Investigators",
+          "details": [
+            "Support: pay 1 Authority to remove another investigator's Used Ability token"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "once-per-day",
+          "text": "Each ability once per day: mark it with a Used Ability token; clear them at day's end",
+          "ref": "Use an Ability"
+        },
+        {
+          "id": "travel",
+          "text": "Leads in another Location: move the IT marker there and advance Time 1 hour",
+          "ref": "Rule 3: Locations"
+        },
+        {
+          "id": "overtime",
+          "text": "Each hour after 4:00 PM adds 1 Stress; reaching the case's Stress limit ends the investigation",
+          "ref": "Overtime & Stress"
+        },
+        {
+          "id": "resolve",
+          "text": "A drawn lead must be resolved; no peeking at its cost first",
+          "ref": "Follow a Lead"
+        },
+        {
+          "id": "plot",
+          "text": "Plot cards go unread into the bag of the case they name",
+          "ref": "Plot Cards"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "leads",
+          "text": "Pick a lead from the casebook's Further Leads and start the day at Headquarters",
+          "ref": "Follow a Lead"
+        }
+      ]
+    }
+  ]
+}

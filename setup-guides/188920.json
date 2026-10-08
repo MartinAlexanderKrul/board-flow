@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "gameId": 188920,
+  "gameName": "This War of Mine: The Board Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 6
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board and decks",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Board in the middle of the table",
+          "ref": "Setup"
+        },
+        {
+          "id": "events",
+          "text": "Events deck, unseen, from the bottom: 3 shuffled Ending Events, Chapter III, 4 random Events, Chapter II, 3 random Events, Chapter I on top",
+          "note": "Unused Event cards go in the Waste bag",
+          "ref": "Setup"
+        },
+        {
+          "id": "locations",
+          "text": "Locations: 3 cards on Far, Distant and Close at random; the rest shuffled on the Locations space",
+          "ref": "Setup"
+        },
+        {
+          "id": "red-corners",
+          "text": "Residents and Night Raids: set aside the 5 red-corner (!) cards of each; shuffle the rest onto their spaces",
+          "ref": "Setup"
+        },
+        {
+          "id": "decks",
+          "text": "Shuffle Exploration, Findings, Visitors, Characters, Fate, Narrative Actions and Colors decks onto their spaces",
+          "ref": "Setup"
+        },
+        {
+          "id": "objectives",
+          "text": "Objectives deck: all Chapter Objectives and the Final Objective (Chapter I sorts them)",
+          "ref": "Setup"
+        },
+        {
+          "id": "fittings",
+          "text": "Green-corner Fittings on the Fittings space; orange-corner ones as the Ideas deck",
+          "ref": "Setup"
+        },
+        {
+          "id": "shelter",
+          "text": "The 19 Shelter cards, blue-corner side down and unseen, each on its matching Shelter space",
+          "ref": "Setup"
+        },
+        {
+          "id": "dice",
+          "text": "Combat dice, black die and Noise marker near the board; tokens and resources in their box compartments",
+          "ref": "Setup"
+        },
+        {
+          "id": "storage",
+          "text": "On Storage: Lockpick, Shovel, 3 Raw Food, 4 Components, 4 Wood, 2 Water",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "steps": [
+        {
+          "id": "draw",
+          "text": "From the Character deck keep the first red-bordered and the first 2 black-bordered cards",
+          "ref": "Setup"
+        },
+        {
+          "id": "save",
+          "text": "Write their names on the Save Sheet",
+          "ref": "Setup"
+        },
+        {
+          "id": "figures",
+          "text": "Their figures (each in a coloured disk) on the Guard space; matching colour token by each card",
+          "ref": "Setup"
+        },
+        {
+          "id": "hunger",
+          "text": "A Hunger 2 token by each Character",
+          "ref": "Setup"
+        },
+        {
+          "id": "rest",
+          "text": "Shuffle the other Character cards onto the Characters space",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "scripts",
+          "text": "Never read a script in the Book of Scripts until the game sends you there",
+          "ref": "The Book of Scripts"
+        },
+        {
+          "id": "leader",
+          "text": "The Leader has the final word, after hearing everyone",
+          "ref": "Shared Experience and the Leader"
+        },
+        {
+          "id": "shared",
+          "text": "Characters belong to nobody: the group runs them together",
+          "ref": "The Characters"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "leader-pick",
+          "text": "Pick a random Leader; they take the first player token. Begin with the Morning phase",
+          "ref": "Setup"
+        }
+      ]
+    }
+  ]
+}

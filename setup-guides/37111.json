@@ -1,0 +1,668 @@
+{
+  "schemaVersion": 1,
+  "gameId": 37111,
+  "gameName": "Battlestar Galactica: The Board Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "BSG rulebook (FFG)",
+      "Esoteric Order of Gamers BSG summary v4.4 (core, Pegasus, Exodus, Daybreak)"
+    ]
+  },
+  "players": {
+    "min": 3,
+    "max": 6
+  },
+  "modules": [
+    {
+      "id": "pegasus",
+      "name": "Pegasus",
+      "bggId": 43539
+    },
+    {
+      "id": "exodus",
+      "name": "Exodus",
+      "bggId": 85905
+    },
+    {
+      "id": "daybreak",
+      "name": "Daybreak",
+      "bggId": 141648
+    },
+    {
+      "id": "new-caprica",
+      "name": "Pegasus: New Caprica ending",
+      "requires": [
+        "pegasus"
+      ],
+      "excludes": [
+        "nebula",
+        "search-home"
+      ]
+    },
+    {
+      "id": "cylon-fleet",
+      "name": "Exodus: Cylon Fleet option",
+      "requires": [
+        "exodus"
+      ]
+    },
+    {
+      "id": "nebula",
+      "name": "Exodus: Ionian Nebula option",
+      "requires": [
+        "exodus"
+      ],
+      "excludes": [
+        "search-home"
+      ]
+    },
+    {
+      "id": "search-home",
+      "name": "Daybreak: Search for Home option",
+      "requires": [
+        "daybreak"
+      ]
+    },
+    {
+      "id": "leaders",
+      "name": "Cylon Leaders (Daybreak rules)",
+      "requires": [
+        "daybreak"
+      ],
+      "players": {
+        "min": 4,
+        "max": 6
+      },
+      "note": "Only one Cylon Leader per game."
+    }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "dials",
+          "text": "Board in the middle: food 8, fuel 8, morale 10, population 12",
+          "ref": "BSG rulebook (FFG) p.5 step 1"
+        },
+        {
+          "id": "pegasus-board",
+          "text": "Pegasus board right of the main board (bottom edges level); Cylon overlay on the Cylon locations",
+          "condition": {
+            "modules": [
+              "pegasus"
+            ],
+            "notModules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+        },
+        {
+          "id": "pegasus-board-db",
+          "text": "Pegasus board right of the main board (bottom edges level); use the Daybreak Cylon overlay, not the Pegasus one",
+          "condition": {
+            "modules": [
+              "pegasus",
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus and Daybreak"
+        },
+        {
+          "id": "daybreak-overlays",
+          "text": "Colonial One overlay and Cylon locations overlay (destroyed sides down) on the main board",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "reserves",
+          "text": "8 vipers and 4 raptors in the Viper and Raptor Reserves; fleet token on Start of the Jump Preparation track",
+          "ref": "BSG rulebook (FFG) p.5 step 2"
+        },
+        {
+          "id": "cylon-fleet-board",
+          "text": "Cylon Fleet board beside the main board, pursuit marker on Start; 2 vipers from Reserves to the box; 4 viper Mk VIIs in Damaged Vipers; add the 4 new raiders",
+          "condition": {
+            "modules": [
+              "cylon-fleet"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "assault-raptor",
+          "text": "1 assault raptor in the Reserves, the others beside the board; centurion figures replace the markers",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "tokens",
+          "text": "All other tokens facedown and the plastic ships beside the board",
+          "ref": "BSG rulebook (FFG) p.5 step 2"
+        },
+        {
+          "id": "pegasus-damage",
+          "text": "Keep the Pegasus damage tokens apart from Galactica's",
+          "condition": {
+            "modules": [
+              "pegasus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+        },
+        {
+          "id": "exodus-nuke",
+          "text": "Extra nuke token beside the board (the humans still start with 2, max 3)",
+          "condition": {
+            "modules": [
+              "exodus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "nebula-tokens",
+          "text": "Exodus basestar damage tokens replace the core ones; trauma tokens facedown, 1 unseen on Sickbay and 1 on the Brig",
+          "condition": {
+            "modules": [
+              "nebula"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "demetrius",
+          "text": "Demetrius board left of the main board (leave room for the Rebel Basestar board)",
+          "condition": {
+            "modules": [
+              "search-home"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        }
+      ]
+    },
+    {
+      "id": "characters",
+      "title": "Characters",
+      "steps": [
+        {
+          "id": "first",
+          "text": "A random first player takes the current player token and picks first",
+          "ref": "BSG rulebook (FFG) p.5 step 3"
+        },
+        {
+          "id": "characters-pegasus",
+          "text": "Add the 7 Pegasus character sheets",
+          "condition": {
+            "modules": [
+              "pegasus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+        },
+        {
+          "id": "characters-exodus",
+          "text": "Add the 4 Exodus character sheets",
+          "condition": {
+            "modules": [
+              "exodus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "characters-daybreak",
+          "text": "Add the Daybreak sheets; only one version each of Lee Adama, Zarek, Helo and Baltar (both still count for type)",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "choose",
+          "text": "Clockwise, each player picks a character of the most plentiful type (political, military, pilot); support characters any time",
+          "ref": "BSG rulebook (FFG) p.5 step 4"
+        },
+        {
+          "id": "place",
+          "text": "Take the sheet, standee and any piloting token; place the standee where the sheet says",
+          "ref": "BSG rulebook (FFG) p.5 step 4"
+        },
+        {
+          "id": "miracle",
+          "text": "Each player puts 1 miracle token on their sheet; the rest in a pile",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "titles",
+          "text": "President: first of Roslin, Baltar, Zarek. Admiral: first of Adama, Tigh, Helo; the Admiral takes 2 nukes",
+          "ref": "BSG rulebook (FFG) p.5 step 5"
+        },
+        {
+          "id": "cag",
+          "text": "Cylon Fleet: CAG title by its line of succession; the Alternate Admiral title replaces the Admiral card",
+          "condition": {
+            "modules": [
+              "cylon-fleet"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "quorum",
+          "text": "The President shuffles the Quorum deck and draws 1",
+          "ref": "BSG rulebook (FFG) p.5 step 5"
+        },
+        {
+          "id": "cylon-leader",
+          "text": "A Cylon Leader player takes the Infiltration card and 2 Motive cards; shuffle the other Motives aside",
+          "condition": {
+            "modules": [
+              "leaders"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        }
+      ]
+    },
+    {
+      "id": "loyalty",
+      "title": "Loyalty deck",
+      "steps": [
+        {
+          "id": "organize",
+          "text": "Remove the Sympathizer card; split the Not a Cylon and Cylon cards and shuffle the Cylon pile",
+          "condition": {
+            "notModules": [
+              "daybreak"
+            ]
+          },
+          "ref": "BSG rulebook (FFG) p.6"
+        },
+        {
+          "id": "exodus-piles",
+          "text": "Include the Exodus Loyalty cards in both piles and shuffle both",
+          "condition": {
+            "modules": [
+              "exodus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "build",
+          "text": "Build the Loyalty deck: {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": "1 Cylon + 5 Not a Cylon",
+                "4": "1 Cylon + 6 Not a Cylon",
+                "5": "2 Cylon + 8 Not a Cylon",
+                "6": "2 Cylon + 9 Not a Cylon"
+              },
+              "cases": [
+                {
+                  "when": {
+                    "players": [
+                      3
+                    ],
+                    "modules": [
+                      "exodus"
+                    ]
+                  },
+                  "value": "1 Cylon + 6 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "exodus"
+                    ]
+                  },
+                  "value": "1 Cylon + 7 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      5
+                    ],
+                    "modules": [
+                      "exodus"
+                    ]
+                  },
+                  "value": "2 Cylon + 9 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      6
+                    ],
+                    "modules": [
+                      "exodus"
+                    ]
+                  },
+                  "value": "2 Cylon + 10 Not a Cylon"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "notModules": [
+              "daybreak"
+            ]
+          },
+          "ref": "BSG rulebook (FFG) p.6 / Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "build-daybreak",
+          "text": "Box the Sympathizer, set the Mutineer card by the board; build the deck from the Daybreak chart",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "exodus-daybreak",
+          "text": "Add 1 more Not a Cylon card for Exodus",
+          "condition": {
+            "modules": [
+              "daybreak",
+              "exodus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "adjust",
+          "text": "+1 Not a Cylon for each Sharon Valerii or Gaius Baltar in play (not the alternate Baltar)",
+          "ref": "BSG rulebook (FFG) p.6 / Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "deal",
+          "text": "Shuffle; deal 1 facedown to each player (original Baltar gets 2, a Cylon Leader none)",
+          "ref": "BSG rulebook (FFG) p.6 / Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "sympathizer",
+          "text": "Shuffle the Sympathizer card into the rest",
+          "condition": {
+            "players": [
+              4,
+              6
+            ],
+            "notModules": [
+              "daybreak"
+            ]
+          },
+          "ref": "BSG rulebook (FFG) p.6"
+        },
+        {
+          "id": "box-rest",
+          "text": "Loyalty deck beside the board; box unused Loyalty cards unseen (Exodus: keep the Not a Cylon pile by the board)",
+          "ref": "BSG rulebook (FFG) p.6 / Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        {
+          "id": "cards-pegasus",
+          "text": "Shuffle the Pegasus Crisis, Skill and Destination cards into their decks; box the core Investigative Committee cards",
+          "condition": {
+            "modules": [
+              "pegasus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+        },
+        {
+          "id": "cards-exodus",
+          "text": "Shuffle the Exodus Crisis, Quorum, Super Crisis, Skill and Destination cards into their decks",
+          "condition": {
+            "modules": [
+              "exodus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "cards-daybreak",
+          "text": "Shuffle the Daybreak Crisis and Skill cards into their decks",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "cylon-fleet-cards",
+          "text": "Box all Cylon attack Crisis and Super Crisis cards",
+          "condition": {
+            "modules": [
+              "cylon-fleet"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "decks",
+          "text": "Shuffle the Quorum, Crisis, Super Crisis and Destination decks beside the board",
+          "ref": "BSG rulebook (FFG) p.5 step 7"
+        },
+        {
+          "id": "skills",
+          "text": "Skill cards: 5 decks by type, shuffled, below the matching colours on the board",
+          "ref": "BSG rulebook (FFG) p.5 step 7"
+        },
+        {
+          "id": "treachery",
+          "text": "Shuffle the Treachery cards by the marked area of the Pegasus board",
+          "condition": {
+            "modules": [
+              "pegasus"
+            ],
+            "notModules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+        },
+        {
+          "id": "treachery-daybreak",
+          "text": "Shuffle the Daybreak Treachery cards right of the Engineering deck (box the Pegasus ones)",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "mutiny",
+          "text": "Shuffle the Mutiny deck facedown next to the Crisis deck",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "objective",
+          "text": "Kobol Objective faceup by the Destination deck",
+          "condition": {
+            "notModules": [
+              "new-caprica",
+              "nebula",
+              "search-home"
+            ]
+          },
+          "ref": "BSG rulebook (FFG) p.5 step 7"
+        },
+        {
+          "id": "objective-nc",
+          "text": "New Caprica Objective instead of Kobol; New Caprica board and its Crisis cards set aside for later",
+          "condition": {
+            "modules": [
+              "new-caprica"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+        },
+        {
+          "id": "objective-nebula",
+          "text": "Ionian Nebula Objective instead of Kobol; shuffle the Crossroads cards",
+          "condition": {
+            "modules": [
+              "nebula"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "allies",
+          "text": "Ally deck: 3 faceup (box allies who are chosen characters), each with 1 unseen trauma token, ally tokens on their locations",
+          "condition": {
+            "modules": [
+              "nebula"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "trauma-deal",
+          "text": "Each player draws 3 trauma tokens secretly; redraw any disaster token",
+          "condition": {
+            "modules": [
+              "nebula"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+        },
+        {
+          "id": "objective-earth",
+          "text": "Earth Objective instead of Kobol; shuffle the Mission deck by the Demetrius board",
+          "condition": {
+            "modules": [
+              "search-home"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "receive",
+          "text": "Every player except the first draws 3 Skill cards from their Receive Skills types (Cylon Leader: 2)",
+          "ref": "BSG rulebook (FFG) p.5 step 8"
+        },
+        {
+          "id": "destiny",
+          "text": "Destiny deck: 2 Skill cards of each type facedown on its space, shuffled",
+          "condition": {
+            "notModules": [
+              "pegasus",
+              "daybreak"
+            ]
+          },
+          "ref": "BSG rulebook (FFG) p.5 step 9"
+        },
+        {
+          "id": "destiny-treachery",
+          "text": "Destiny deck: 2 Skill cards of each type plus 2 Treachery (12 cards), shuffled",
+          "condition": {
+            "modules": [
+              "pegasus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus / Daybreak"
+        },
+        {
+          "id": "destiny-treachery-db",
+          "text": "Destiny deck: 2 Skill cards of each type plus 2 Treachery (12 cards), shuffled",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ],
+            "notModules": [
+              "pegasus"
+            ]
+          },
+          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+        },
+        {
+          "id": "ships",
+          "text": "1 basestar and 3 raiders in front of Galactica; 2 vipers below it; 2 civilian ships behind it",
+          "ref": "BSG rulebook (FFG) p.5 step 10"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "first-no-hand",
+          "text": "The first player gets no starting Skill cards; they draw at the start of their turn",
+          "ref": "BSG rulebook (FFG) p.5 step 8"
+        },
+        {
+          "id": "resources-zero",
+          "text": "Humans lose when any resource is 0 at the end of a turn",
+          "ref": "BSG rulebook (FFG) p.5"
+        },
+        {
+          "id": "human-goal",
+          "text": "Humans win by travelling 8 distance and jumping once more",
+          "condition": {
+            "notModules": [
+              "new-caprica",
+              "nebula",
+              "search-home"
+            ]
+          },
+          "ref": "BSG rulebook (FFG) p.6"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "turn",
+          "text": "The first player starts: Receive Skills, Movement, Action, Crisis",
+          "ref": "BSG rulebook (FFG) p.6"
+        }
+      ]
+    }
+  ]
+}

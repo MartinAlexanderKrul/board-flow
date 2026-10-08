@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "gameId": 93260,
+  "gameName": "Summoner Wars: Master Set",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Summoner Wars Master Set rules (Plaid Hat Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "battlefield",
+          "text": "Unfold the Battlefield between the players, card piles toward them",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "two-boards",
+          "text": "Two Battlefields side by side (needs a second Master Set, Starter Set or board); split into 2 teams",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Adding More Players"
+        },
+        {
+          "id": "three-solo",
+          "text": "3 players: the player on their own team picks 2 decks and plays them as 2 separate turns",
+          "condition": {
+            "players": [
+              3
+            ]
+          },
+          "ref": "Adding More Players"
+        },
+        {
+          "id": "dice",
+          "text": "Dice and Wound markers to the side in reach",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "decks",
+          "text": "Each player picks a faction deck and keeps its Reference Card handy",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "starting",
+          "text": "Place your Starting Setup cards as your Reference Card shows, readable from your side",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "draw-pile",
+          "text": "Shuffle the rest facedown on your Draw Pile space; start with no cards in hand",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "first-turn",
+          "text": "First player skips phases 1-3 and moves only up to 2 Units in that first turn",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "limits",
+          "text": "Each turn: draw to 5, move up to 3 Units (2 spaces), attack with up to 3 Units",
+          "ref": "Turn Sequence"
+        },
+        {
+          "id": "magic",
+          "text": "Destroyed enemy cards go facedown on top of YOUR Magic Pile",
+          "ref": "Phase 5: Attack"
+        },
+        {
+          "id": "summon",
+          "text": "Summon only next to a Wall you control",
+          "ref": "Phase 2: Summon"
+        },
+        {
+          "id": "team-walls",
+          "text": "Teams: walls anywhere on your team's side; you may pass Magic Pile cards to a teammate in Build Magic",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Rules for 3-4 Players"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "roll",
+          "text": "Everyone rolls; the highest chooses who goes first (re-roll ties)",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "roll-team",
+          "text": "Everyone rolls; the highest goes first, then turns alternate between the teams",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Adding More Players"
+        }
+      ]
+    }
+  ]
+}

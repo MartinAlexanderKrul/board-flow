@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "gameId": 308119,
+  "aliasGameIds": [
+    198953
+  ],
+  "gameName": "Pax Renaissance: 2nd Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Pax Renaissance 2nd ed. rules (Sierra Madre Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "1550",
+      "name": "1550 Map variant"
+    },
+    {
+      "id": "astrology",
+      "name": "Astrology variant"
+    }
+  ],
+  "sections": [
+    {
+      "id": "map",
+      "title": "Map",
+      "steps": [
+        {
+          "id": "edition",
+          "text": "These steps follow the 2nd edition rules",
+          "note": "The 1st edition opens this guide too; the 2nd edition added components such as Pawns and squares",
+          "ref": "A4. Changes from 1st Edition"
+        },
+        {
+          "id": "busted",
+          "text": "Black disks on Timbuktu and Novgorod, white disks on the Spice Islands and the Red Sea",
+          "ref": "C1"
+        },
+        {
+          "id": "no-board",
+          "text": "No gameboard: lay the 10 starting Map cards (marked with a small diamond) in a 2 x 5 grid",
+          "ref": "C1"
+        },
+        {
+          "id": "1550",
+          "text": "1550 variant: Reformist England and Reformist Holy Roman Empire Map cards on those Empires",
+          "condition": {
+            "modules": [
+              "1550"
+            ]
+          },
+          "ref": "C1"
+        },
+        {
+          "id": "capitals",
+          "text": "One Token of the shown shape and colour in each Empire's capital (name in capitals); Constantinople gets 2 green Knights and a green Rook",
+          "ref": "C4"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "boards",
+          "text": "Deal Player Boards at random; each sets theirs in front of them (East cards go right, West left)",
+          "ref": "C2 / C3"
+        },
+        {
+          "id": "concessions",
+          "text": "Starting Pawns: Fugger in Augsburg, Medici in Florence, Coeur in Alexandria, Marchionni in Lisbon (only for banks in play)",
+          "ref": "C2"
+        },
+        {
+          "id": "reserves",
+          "text": "Your other 9 Pawns into your Reserves",
+          "ref": "C3"
+        }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Decks and market",
+      "steps": [
+        {
+          "id": "east",
+          "text": "East deck: 12 random East cards shuffled with the 2 East Comets, then {n} more random East cards on top",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 8,
+                "3": 12,
+                "4": 16
+              }
+            }
+          },
+          "ref": "C5"
+        },
+        {
+          "id": "west",
+          "text": "West deck the same way with West cards and the 2 West Comets",
+          "ref": "C5"
+        },
+        {
+          "id": "astrology",
+          "text": "Astrology variant: turn the top card of each deck faceup (not for sale)",
+          "condition": {
+            "modules": [
+              "astrology"
+            ]
+          },
+          "ref": "C5"
+        },
+        {
+          "id": "market",
+          "text": "Deal 6 East cards in a row on the board and flip the one furthest from the deck facedown (the trade fair); same for West",
+          "ref": "C6"
+        },
+        {
+          "id": "thrones",
+          "text": "The 10 Empire squares King side up next to their Empires",
+          "ref": "C6"
+        },
+        {
+          "id": "victory",
+          "text": "The 4 Victory squares on the board, inactive side up",
+          "ref": "C6"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "two-actions",
+          "text": "Each turn: 2 actions, then refresh the market",
+          "ref": "D"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Random first player (Fugger always goes first if in play)",
+          "ref": "C7"
+        },
+        {
+          "id": "florins",
+          "text": "Florins by seat: {f}; the rest go in China on the board",
+          "amounts": {
+            "f": {
+              "byPlayers": {
+                "2": "3 / 4",
+                "3": "3 / 4 / 5",
+                "4": "3 / 4 / 5 / 6"
+              }
+            }
+          },
+          "ref": "C7"
+        }
+      ]
+    }
+  ]
+}

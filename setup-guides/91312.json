@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 2,
+  "gameId": 91312,
+  "gameName": "Discworld: Ankh-Morpork",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Discworld: Ankh-Morpork rules (Treefrog Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "pieces",
+          "text": "Each player: 12 minions and 6 buildings of one colour; a Player Aid card",
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "start-minions",
+          "text": "Each player puts 1 minion in The Shades, The Scours and Dolly Sisters; 1 trouble marker in each of those 3 areas",
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "side",
+          "text": "Other trouble markers, demons and trolls beside the board; the money as the bank",
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "cash",
+          "text": "Each player takes $10 (money is always open)",
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "two-player",
+          "text": "2 players: remove Chrysoprase from the Personalities and Hubert and Cosmos Lavish from the brown deck",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "personality",
+          "text": "Shuffle the Personality cards; deal 1 secretly to each player; set the rest aside unseen",
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "events",
+          "text": "Shuffle the Random Event cards facedown beside the board",
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "deck",
+          "text": "Shuffle the brown Player cards; shuffle the green ones and put them on top",
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "hands",
+          "text": "Deal 5 cards each; the rest is the draw pile",
+          "ref": "Starting the Game"
+        },
+        {
+          "id": "areas",
+          "text": "City Area cards faceup beside the board",
+          "ref": "Starting the Game"
+        }
+      ]
+    },
+    {
+      "id": "personalities",
+      "title": "Personalities",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "vetinari",
+          "text": "Lord Vetinari",
+          "ref": "Ending and Winning the Game",
+          "details": [
+            "Spies: start your turn with minions in 11 / 10 / 9 different demon-free areas (2 / 3 / 4 players)"
+          ]
+        },
+        {
+          "id": "lords",
+          "text": "Lord Selachii, Lord Rust, Lord de Worde",
+          "ref": "Ending and Winning the Game",
+          "details": [
+            "Control: start your turn controlling 7 / 5 / 4 areas (2 / 3 / 4 players); control means more pieces than any other player and than the trolls there, and no demon"
+          ]
+        },
+        {
+          "id": "dragon-king",
+          "text": "Dragon King of Arms",
+          "ref": "Ending and Winning the Game",
+          "details": [
+            "Chaos: start your turn with 8 trouble markers on the board"
+          ]
+        },
+        {
+          "id": "chrysoprase",
+          "text": "Chrysoprase",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Ending and Winning the Game",
+          "details": [
+            "Wealth: start your turn worth $50 or more (cash plus your buildings' costs, each loan counts -$12)"
+          ]
+        },
+        {
+          "id": "vimes",
+          "text": "Commander Vimes",
+          "ref": "Ending and Winning the Game",
+          "details": [
+            "Patience: you win if nobody else has won when the draw pile runs out"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "refill",
+          "text": "End of turn: draw back up to 5 cards (no discarding if you have more)",
+          "ref": "Playing the Game"
+        },
+        {
+          "id": "random-event",
+          "text": "A Random Event symbol must be resolved; every other symbol is optional, left to right",
+          "ref": "Playing the Game"
+        },
+        {
+          "id": "trouble",
+          "text": "A minion entering an area with other minions adds a trouble marker if there is none",
+          "ref": "Frequently Asked Questions"
+        },
+        {
+          "id": "points",
+          "text": "If the deck runs out without Vimes: minion 5, building = its cost, $1 = 1 point",
+          "ref": "Ending and Winning the Game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Roll the die to pick the first player",
+          "ref": "Starting the Game"
+        }
+      ]
+    }
+  ]
+}

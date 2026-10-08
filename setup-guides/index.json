@@ -1952,6 +1952,102 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "368305.json"
+    },
+    {
+      "gameId": 91312,
+      "gameName": "Discworld: Ankh-Morpork",
+      "gameIds": [91312],
+      "version": 1,
+      "schemaVersion": 2,
+      "path": "91312.json"
+    },
+    {
+      "gameId": 223321,
+      "gameName": "Detective: A Modern Crime Board Game",
+      "gameIds": [223321],
+      "version": 1,
+      "schemaVersion": 2,
+      "path": "223321.json"
+    },
+    {
+      "gameId": 93260,
+      "gameName": "Summoner Wars: Master Set",
+      "gameIds": [93260],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "93260.json"
+    },
+    {
+      "gameId": 101721,
+      "gameName": "Mage Wars Arena",
+      "gameIds": [101721],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "101721.json"
+    },
+    {
+      "gameId": 37111,
+      "gameName": "Battlestar Galactica: The Board Game",
+      "gameIds": [37111, 43539, 85905, 141648],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "37111.json"
+    },
+    {
+      "gameId": 176189,
+      "gameName": "Zombicide: Black Plague",
+      "gameIds": [176189],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "176189.json"
+    },
+    {
+      "gameId": 169255,
+      "gameName": "A Game of Thrones: The Card Game (Second Edition)",
+      "gameIds": [169255],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "169255.json"
+    },
+    {
+      "gameId": 308119,
+      "gameName": "Pax Renaissance: 2nd Edition",
+      "gameIds": [308119, 198953],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "308119.json"
+    },
+    {
+      "gameId": 73171,
+      "gameName": "Earth Reborn",
+      "gameIds": [73171],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "73171.json"
+    },
+    {
+      "gameId": 103885,
+      "gameName": "Star Wars: X-Wing Miniatures Game",
+      "gameIds": [103885],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "103885.json"
+    },
+    {
+      "gameId": 188920,
+      "gameName": "This War of Mine: The Board Game",
+      "gameIds": [188920],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "188920.json"
+    },
+    {
+      "gameId": 325494,
+      "gameName": "ISS Vanguard",
+      "gameIds": [325494],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "325494.json"
     }
   ]
 }

@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "gameId": 101721,
+  "gameName": "Mage Wars Arena",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Mage Wars Arena rules (Arcane Wonders, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "modules": [
+    {
+      "id": "apprentice",
+      "name": "Apprentice Mode (first games)",
+      "note": "Half the arena, equal Mages, preset spellbooks."
+    }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Board on the table",
+          "note": "Apprentice Mode: use only half of it (2 by 3 zones)",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "mage",
+          "text": "Each player picks a Mage: Mage card and Ability card",
+          "condition": {
+            "notModules": [
+              "apprentice"
+            ]
+          },
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "mage-apprentice",
+          "text": "Each player picks a Mage card (suggested: Warlock and Beastmaster); no Ability cards",
+          "condition": {
+            "modules": [
+              "apprentice"
+            ]
+          },
+          "ref": "Apprentice Mode, The Mages / Spellbooks"
+        },
+        {
+          "id": "colour",
+          "text": "Each player picks red or blue: 10 action markers, 3 black and 1 red status cube, 1 black quickcast marker",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "corner",
+          "text": "Mage card in the corner zone nearest you (door symbol), with an action marker and the quickcast marker white side up",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "status",
+          "text": "Mage status board: black cubes on the Mage's Channeling, Mana Supply 10 and Life; red cube on Life damage 0",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "status-apprentice",
+          "text": "Apprentice values for every Mage: Channeling 10, Life 24, melee attack 3 dice",
+          "condition": {
+            "modules": [
+              "apprentice"
+            ]
+          },
+          "ref": "Apprentice Mode, The Mages"
+        },
+        {
+          "id": "spellbook",
+          "text": "Take your spellbook",
+          "ref": "Setting Up the Game"
+        },
+        {
+          "id": "spellbook-apprentice",
+          "text": "Fill the spellbook from your Mage's preset deck, in order up to the Ability card (one card per pocket)",
+          "condition": {
+            "modules": [
+              "apprentice"
+            ]
+          },
+          "ref": "Apprentice Mode, Spellbooks"
+        },
+        {
+          "id": "markers",
+          "text": "Dice, condition markers and other markers in reach",
+          "ref": "Setting Up the Game"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "initiative",
+          "text": "The initiative marker passes to the other player every round",
+          "ref": "Phase 1: Initiative"
+        },
+        {
+          "id": "channel",
+          "text": "Each round add your Channeling to your mana",
+          "ref": "Phase 3: Channel"
+        },
+        {
+          "id": "planning",
+          "text": "Planning: secretly choose up to 2 spells each round; only those can be cast that round",
+          "ref": "Phase 5: Planning"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "roll",
+          "text": "Both roll the d12; the higher roller decides who takes the initiative marker and acts first",
+          "ref": "Setting Up the Game"
+        }
+      ]
+    }
+  ]
+}

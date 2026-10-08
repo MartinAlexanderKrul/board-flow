@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "gameId": 325494,
+  "gameName": "ISS Vanguard",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "ISS Vanguard rulebook (Awaken Realms, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "mode",
+      "title": "Mode",
+      "steps": [
+        {
+          "id": "first-time",
+          "text": "First time: play the Tutorial (Chapter II, ideally solo); afterwards start the Campaign with this quickstart",
+          "ref": "Starting Your Game"
+        },
+        {
+          "id": "sections",
+          "text": "Sections (Engineering, Recon, Science, Security) per player: {s}",
+          "amounts": {
+            "s": {
+              "byPlayers": {
+                "1": "1 player runs all 4",
+                "2": "2 each",
+                "3": "1, 1 and 2",
+                "4": "1 each"
+              }
+            }
+          },
+          "ref": "Number of Players"
+        }
+      ]
+    },
+    {
+      "id": "quickstart",
+      "title": "Campaign quickstart",
+      "steps": [
+        {
+          "id": "trays",
+          "text": "Card Trays and Ship Book organized as in \"Before your First Play\" (tutorial cards back in their trays)",
+          "ref": "Campaign Quickstart"
+        },
+        {
+          "id": "components",
+          "text": "On the table: Reference cards, Danger Die card, 4 Crew boards, Card Trays A and B, Section Compartments, Planetopedia, Start token and tokens, 12 Injury dice, 2 Danger dice, 5 Tutorial Events, Tutorial Rank-Up card",
+          "ref": "Campaign Quickstart"
+        },
+        {
+          "id": "starting-log",
+          "text": "Read the Starting Log (first Log in the Logbook)",
+          "ref": "Campaign Quickstart"
+        },
+        {
+          "id": "crew-boards",
+          "text": "Each player takes the Crew boards of their Sections",
+          "ref": "Campaign Quickstart"
+        },
+        {
+          "id": "recruits",
+          "text": "Per Section: draw 3 from Recruits, keep 2 in Rank 1 sleeves: 1 on the Crew board, 1 to Resting Crew; shuffle the rest back",
+          "ref": "Campaign Quickstart"
+        },
+        {
+          "id": "dice",
+          "text": "Section dice into the Crew board slots; unused dice back in the box",
+          "ref": "Campaign Quickstart"
+        },
+        {
+          "id": "away-team",
+          "text": "Away Team: each player sends 1 of their Sections (solo: 2); the others go to Resting Crew and their dice to their Compartment",
+          "ref": "Campaign Quickstart"
+        },
+        {
+          "id": "section-decks",
+          "text": "Each Away Team Crewmember shuffles the 10 white-bar Rank 1 Section cards as their Section deck, left of the Crew board",
+          "ref": "Campaign Quickstart"
+        }
+      ]
+    },
+    {
+      "id": "planet",
+      "title": "First planet",
+      "steps": [
+        {
+          "id": "planetopedia",
+          "text": "Planetopedia at pages 02-03 (Eye of the Void); Tutorial Rank-Up card Incomplete side up",
+          "ref": "Tutorial setup"
+        },
+        {
+          "id": "mission",
+          "text": "Mission M01 faceup, Unique Discovery 1 facedown; shuffle the 5 Tutorial Event cards beside the board",
+          "ref": "Tutorial setup"
+        },
+        {
+          "id": "minis",
+          "text": "One ringed mini per Away Team Section in Sectors 1 and 2 (at least one in each)",
+          "ref": "Tutorial setup"
+        },
+        {
+          "id": "turn-tokens",
+          "text": "A Turn token on Turn Available by each Crew board; Charges slot empty",
+          "ref": "Tutorial setup"
+        },
+        {
+          "id": "hands",
+          "text": "Read the Mission card aloud; each Section draws 2 Section cards",
+          "ref": "Tutorial setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "away-min",
+          "text": "An Away Team needs at least 2 Crewmembers from different Sections",
+          "ref": "Number of Players"
+        },
+        {
+          "id": "two-actions",
+          "text": "Each turn: 2 Actions (Special Action once), then flip your Turn token and draw an Event",
+          "ref": "Planetary Exploration Rules"
+        },
+        {
+          "id": "logs",
+          "text": "Logs are not in order: read only the number you are sent to",
+          "ref": "Starting Your Game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "start-token",
+          "text": "The Recon player gives the Start token to a Crewmember; go to Log 1",
+          "ref": "Tutorial setup"
+        }
+      ]
+    }
+  ]
+}
