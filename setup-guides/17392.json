@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "gameId": 17392,
+  "aliasGameIds": [
+    242722
+  ],
+  "gameName": "Here I Stand",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "HIS Scenario Book, 500th Anniversary (GMT, 2024)",
+      "HIS Rules (GMT, 2024)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "modules": [
+    {
+      "id": "s1517",
+      "name": "1517 scenario (9 turns)",
+      "group": "Scenario",
+      "defaultEnabled": true
+    },
+    {
+      "id": "s1532",
+      "name": "1532 scenario (6 turns)",
+      "group": "Scenario",
+      "players": {
+        "min": 3,
+        "max": 6
+      }
+    },
+    {
+      "id": "tournament",
+      "name": "Tournament scenario (3 turns)",
+      "group": "Scenario",
+      "players": {
+        "min": 3,
+        "max": 6
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "learn",
+      "title": "First game",
+      "steps": [
+        {
+          "id": "read",
+          "text": "Everyone reads the rulebook (Section 9 can wait); play the 1517 scenario with no Diplomacy Phase on Turn 1",
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.2"
+        }
+      ]
+    },
+    {
+      "id": "powers",
+      "title": "Powers",
+      "steps": [
+        {
+          "id": "assign",
+          "text": "Powers: {p}",
+          "amounts": {
+            "p": {
+              "byPlayers": {
+                "3": "1: Ottoman + France; 2: Hapsburgs + Papacy; 3: England + Protestant",
+                "4": "1: Ottoman; 2: Hapsburgs + Papacy; 3: England + Protestant; 4: France",
+                "5": "1: Ottoman; 2: Hapsburgs; 3: England + Protestant; 4: France; 5: Papacy",
+                "6": "one power each: Ottoman, Hapsburgs, England, France, Papacy, Protestant"
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.6"
+        },
+        {
+          "id": "two-player",
+          "text": "Two players: Papacy against Protestant; the Diplomacy Deck stands in for the other powers",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.2 / Two-Player Variant"
+        },
+        {
+          "id": "layout",
+          "text": "Map in the middle; power cards and the Religious Struggle card around it in Impulse Order",
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.2"
+        }
+      ]
+    },
+    {
+      "id": "units",
+      "title": "Units and markers",
+      "steps": [
+        {
+          "id": "tables",
+          "text": "Set up one power at a time from its table in the {s} scenario: units on the map, markers on its power card, debaters on the Religious Struggle card",
+          "amounts": {
+            "s": {
+              "default": "1517",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "s1532"
+                    ]
+                  },
+                  "value": "1532"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "tournament"
+                    ]
+                  },
+                  "value": "1532"
+                }
+              ]
+            }
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.3-5"
+        },
+        {
+          "id": "two-player-units",
+          "text": "Two-player changes: outside the German and Italian zones each stack is just 1 regular; ships only in Marseilles, Genoa, Naples, Venice and Rome; Andrea Doria is the only leader",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024), Two-Player Variant Setup (p.40)"
+        },
+        {
+          "id": "two-player-hungary",
+          "text": "Two players: Hapsburg SCM in Prague and HCMs in Brunn and Breslau; Hungary is a Hapsburg ally; the rest of Hungary Ottoman, with 1 Ottoman regular in Buda and Belgrade",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024), Two-Player Variant Setup (p.40)"
+        },
+        {
+          "id": "force-pool",
+          "text": "Units not on the map go beside each power card as its force pool; minor and neutral units in a separate pile",
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.3"
+        },
+        {
+          "id": "turn",
+          "text": "Turn marker in the Turn {t} box",
+          "amounts": {
+            "t": {
+              "default": "1",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "s1532"
+                    ]
+                  },
+                  "value": "4"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "tournament"
+                    ]
+                  },
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.3"
+        },
+        {
+          "id": "vp",
+          "text": "VP markers on the scenario's starting values",
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.4-5"
+        },
+        {
+          "id": "protestant-track",
+          "text": "Protestant Spaces and English Home Spaces markers on the Protestant Space track: {v}",
+          "amounts": {
+            "v": {
+              "default": "0 and 0",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "s1532"
+                    ]
+                  },
+                  "value": "19 and 0"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "tournament"
+                    ]
+                  },
+                  "value": "19 and 0"
+                }
+              ]
+            }
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.4-5"
+        },
+        {
+          "id": "wars-1517",
+          "text": "At war: Hapsburgs-France, France-Papacy, Ottomans-Hungary/Bohemia",
+          "condition": {
+            "notModules": [
+              "s1532",
+              "tournament"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.4"
+        },
+        {
+          "id": "wars-1532",
+          "text": "At war: Ottoman-Hapsburgs, Hapsburgs-Protestants, Papacy-Protestants; Hapsburgs and Hungary/Bohemia allied",
+          "condition": {
+            "modules": [
+              "s1532"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.5"
+        },
+        {
+          "id": "wars-tournament",
+          "text": "At war: Ottoman-Hapsburgs, Hapsburgs-Protestants, Papacy-Protestants; Hapsburgs and Hungary/Bohemia allied",
+          "condition": {
+            "modules": [
+              "tournament"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.5-6"
+        },
+        {
+          "id": "new-world-1517",
+          "text": "All 9 New World VP markers (6 exploration, 3 conquest) on the New World display",
+          "condition": {
+            "notModules": [
+              "s1532",
+              "tournament"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.3"
+        },
+        {
+          "id": "new-world-1532",
+          "text": "6 New World VP markers on the display; Circumnavigation, Pacific Strait and Aztecs in the Hapsburg Bonus VP box",
+          "condition": {
+            "modules": [
+              "s1532"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.3"
+        },
+        {
+          "id": "new-world-tournament",
+          "text": "6 New World VP markers on the display; Circumnavigation, Pacific Strait and Aztecs in the Hapsburg Bonus VP box",
+          "condition": {
+            "modules": [
+              "tournament"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.3"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards",
+      "steps": [
+        {
+          "id": "deck-1517",
+          "text": "Leave out cards that enter later: #14-23, #38-64, #113-116",
+          "condition": {
+            "notModules": [
+              "s1532",
+              "tournament"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.4"
+        },
+        {
+          "id": "deck-1532",
+          "text": "Remove the cards marked (1517); add the Turn 3 cards now",
+          "condition": {
+            "modules": [
+              "s1532"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.5"
+        },
+        {
+          "id": "deck-tournament",
+          "text": "Remove the cards marked (1517); add the Turn 3 cards now; every power gets 1 extra card on Turn 4",
+          "condition": {
+            "modules": [
+              "tournament"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.5-6"
+        },
+        {
+          "id": "deck-two-player",
+          "text": "Two players: also remove the cards the variant lists",
+          "condition": {
+            "players": [
+              2
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024), Two-Player Variant Setup (p.40)"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "two-powers",
+          "text": "Controlling two powers: they never war on, raid, pay or hand spaces to each other (they may ally)",
+          "condition": {
+            "minPlayers": 3,
+            "maxPlayers": 5
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.6"
+        },
+        {
+          "id": "vp-cap",
+          "text": "Two powers: your higher one counts as at most the lower one plus 5 VP for victory",
+          "condition": {
+            "minPlayers": 3,
+            "maxPlayers": 5
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.7"
+        },
+        {
+          "id": "tournament-end",
+          "text": "Tournament: the game ends by Turn 6; no suing for peace on Turn 6; 5 VP ahead wins",
+          "condition": {
+            "modules": [
+              "tournament"
+            ]
+          },
+          "ref": "HIS Scenario Book, 500th Anniversary (GMT, 2024) p.6"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "card-draw",
+          "text": "Turn {t} begins with the Card Draw Phase",
+          "amounts": {
+            "t": {
+              "default": "1",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "s1532"
+                    ]
+                  },
+                  "value": "4"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "tournament"
+                    ]
+                  },
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          "ref": "HIS Rules, 8. Starting a Turn"
+        }
+      ]
+    }
+  ]
+}

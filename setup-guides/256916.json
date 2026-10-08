@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "gameId": 256916,
+  "gameName": "Concordia Venus",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Concordia Venus Game Setup sheet (PD-Verlag)",
+      "Concordia Venus rules (PD-Verlag / Rio Grande, V1.1)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "modules": [
+    {
+      "id": "team",
+      "name": "Team play (4 or 6 players)",
+      "players": {
+        "min": 4,
+        "max": 6,
+        "exclude": [
+          5
+        ]
+      },
+      "forcedAtPlayers": [
+        6
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Choose a board (Hellas or Ionium); Ionium works with 2-3 players without its 3 Italian provinces",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag), On the development"
+        },
+        {
+          "id": "cities",
+          "text": "Shuffle the 30 city tokens letter side up; deal them to the cities with the matching letter, then flip them (Hellas: box the D tokens)",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 1"
+        },
+        {
+          "id": "bonus",
+          "text": "Each province gets the bonus marker of its most valuable good: cloth 7, wine 6, tools 5, food 4, bricks 3",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 2"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": "Cards for sale",
+      "steps": [
+        {
+          "id": "stack-individual",
+          "text": "Take the 30 cards for sale with a column on the back",
+          "condition": {
+            "notModules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 3"
+        },
+        {
+          "id": "stack-team",
+          "text": "Take the 30 cards for sale with the double circle on the back",
+          "condition": {
+            "modules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 3"
+        },
+        {
+          "id": "numerals",
+          "text": "Box cards with a numeral above the player count; shuffle each numeral and stack I on top, then II and so on",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 3"
+        },
+        {
+          "id": "display",
+          "text": "Top 7 cards faceup in the display; the stack and the Concordia card beside it",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 3"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Random start player; Praefectus Magnus to the last player in turn order",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 4"
+        },
+        {
+          "id": "teams",
+          "text": "Teams of 2 sit opposite each other; the start player takes the orange turn order marker",
+          "condition": {
+            "modules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 5"
+        },
+        {
+          "id": "colonists",
+          "text": "Each player: scoring marker on 0; 1 land and 1 sea colonist in the capital",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 6"
+        },
+        {
+          "id": "partner-start",
+          "text": "Each team's second partner puts their 2 starting colonists in a free city not next to the capital",
+          "condition": {
+            "modules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 6"
+        },
+        {
+          "id": "storehouse",
+          "text": "Storehouse: the other 4 colonists plus 2 food, 1 cloth, 1 wine, 1 brick, 1 tool",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 6"
+        },
+        {
+          "id": "houses",
+          "text": "15 houses of your colour and a player aid",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 6"
+        },
+        {
+          "id": "hand",
+          "text": "The 8 column-marked starting cards in hand",
+          "condition": {
+            "notModules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 6"
+        },
+        {
+          "id": "hand-team",
+          "text": "The 7 double-circle starting cards; the first partner boxes the Diplomat, the second the Architect (6 cards each)",
+          "condition": {
+            "modules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 6"
+        },
+        {
+          "id": "money",
+          "text": "Starting money by seat: 5, 6, 7... sestertii",
+          "condition": {
+            "notModules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 6"
+        },
+        {
+          "id": "money-team",
+          "text": "Starting money: first team 5 each, second team 6 each, third team 7 each",
+          "condition": {
+            "modules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag) 6"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "partner-acts",
+          "text": "Team play: your partner also carries out the card you play",
+          "condition": {
+            "modules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus rules (PD-Verlag / Rio Grande, V1.1), Game flow"
+        },
+        {
+          "id": "partner-cash",
+          "text": "Team play: only sestertii may be shared; your partner must give cash you need",
+          "condition": {
+            "modules": [
+              "team"
+            ]
+          },
+          "ref": "Concordia Venus rules (PD-Verlag / Rio Grande, V1.1), Stockpile and Sestertii"
+        },
+        {
+          "id": "intermediate",
+          "text": "First game: score everyone after their first Tribune; best gets 2, second 1 sestertius",
+          "ref": "Concordia Venus rules (PD-Verlag / Rio Grande, V1.1), Intermediate Scoring"
+        },
+        {
+          "id": "end",
+          "text": "Last display card bought or 15th house built: Concordia card (7 VP), then everyone else one more turn",
+          "ref": "Concordia Venus rules (PD-Verlag / Rio Grande, V1.1), Game End"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "play",
+          "text": "The start player plays 1 card from hand and carries out its action",
+          "ref": "Concordia Venus Game Setup sheet (PD-Verlag), Game Flow"
+        }
+      ]
+    }
+  ]
+}
