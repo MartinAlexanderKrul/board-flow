@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "gameId": 172931,
+  "gameName": "Outfoxed!",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Outfoxed! rules (Gamewright, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Board in the middle; every detective hat on a space in the center",
+          "ref": "Set Up"
+        },
+        {
+          "id": "fox",
+          "text": "Fox pawn on the start space (fox icon) at the edge of the board",
+          "ref": "Set Up"
+        },
+        {
+          "id": "suspects",
+          "text": "16 Suspect cards facedown around the board, 4 per side; turn any 2 faceup",
+          "ref": "Set Up"
+        },
+        {
+          "id": "thief",
+          "text": "Shuffle the 16 Thief cards; slide 1 unseen into the Clue decoder (window down, slider closed)",
+          "note": "Box the other Thief cards",
+          "ref": "Set Up"
+        },
+        {
+          "id": "clues",
+          "text": "12 Clue markers in a facedown stack by the board; 3 dice in reach",
+          "ref": "Set Up"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "declare",
+          "text": "Say \"Clues\" or \"Suspects\" before rolling; up to 3 rolls, keeping matching dice",
+          "ref": "How to Play"
+        },
+        {
+          "id": "fail",
+          "text": "Failed roll: the fox moves 3 spaces toward the foxhole (4 or 5 for a harder game)",
+          "ref": "Failing Your Roll / Variant"
+        },
+        {
+          "id": "clue-marker",
+          "text": "After checking a clue, leave its marker faceup where you landed",
+          "ref": "Search for Clues"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Whoever most recently ate pie starts; play goes left",
+          "ref": "How to Play"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "gameId": 318182,
+  "aliasGameIds": [
+    318184
+  ],
+  "gameName": "Imperium: Legends",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Imperium rulebook (Osprey, update 1.0)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "combined",
+      "name": "Classics and Legends combined",
+      "note": "Any of the 16 nations; commons from either box."
+    }
+  ],
+  "sections": [
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "nation",
+          "text": "Choose a nation; take all its cards (colour in the bottom left corner)",
+          "note": "Combining boxes: any of the 16 nations",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.6"
+        },
+        {
+          "id": "power",
+          "text": "Power card left of your play area, either side up for the whole game (new players: B side)",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.7"
+        },
+        {
+          "id": "in-play",
+          "text": "Arthurians: King Arthur's Court below the power card. Utopians: Visions of Shangri-La on Gates of Shangri-La below it",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.7"
+        },
+        {
+          "id": "accession",
+          "text": "Accession card (Vikings: zenith, Arthurians: nadir) faceup above the power card; Atlanteans and Utopians have none",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.7"
+        },
+        {
+          "id": "nation-deck",
+          "text": "Shuffle your nation cards facedown on top of it, sideways: your nation deck",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.7"
+        },
+        {
+          "id": "development",
+          "text": "Development cards (Arthurians: quests) faceup left of the nation deck",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.7"
+        },
+        {
+          "id": "state",
+          "text": "State card barbarian side up left of your cards (Atlanteans: empire side up)",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.7"
+        },
+        {
+          "id": "unrest-cards",
+          "text": "Arthurians, Celts, Olmecs, Qin, Utopians, Vikings: add your unrest cards to the commons",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.7"
+        },
+        {
+          "id": "draw-deck",
+          "text": "Shuffle your remaining cards as your draw deck right of the power card; draw 5",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.7"
+        }
+      ]
+    },
+    {
+      "id": "commons",
+      "title": "Commons",
+      "steps": [
+        {
+          "id": "supply",
+          "text": "All tokens as the supply; give each player 3 materials, 2 population, 1 progress, 5 exhaustion, 3 action",
+          "note": "A Utopian gets only 3 exhaustion; exhaustion and action tokens go on the state card",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.8"
+        },
+        {
+          "id": "market-board",
+          "text": "Market board in the middle; sort the commons cards by suit (dual uncivilised/civilised counts as uncivilised)",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.8"
+        },
+        {
+          "id": "combine",
+          "text": "Using commons from either box: replace any tributary card named like a chosen nation with a random tributary from the other box",
+          "condition": {
+            "modules": [
+              "combined"
+            ]
+          },
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.6"
+        },
+        {
+          "id": "player-icons",
+          "text": "Remove commons cards marked {icons}",
+          "amounts": {
+            "icons": {
+              "byPlayers": {
+                "2": "3+ or 4",
+                "3": "4"
+              }
+            }
+          },
+          "condition": {
+            "maxPlayers": 3
+          },
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.8"
+        },
+        {
+          "id": "unrest",
+          "text": "Unrest cards faceup below the unrest icon: the unrest pile",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.8"
+        },
+        {
+          "id": "fame",
+          "text": "King of Kings faceup (A side) above the fame icon; shuffle the other fame cards on it, sideways",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.8-9"
+        },
+        {
+          "id": "fame-remove",
+          "text": "Box the top {n} of the fame deck unseen",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": "2 cards",
+                "3": "card"
+              }
+            }
+          },
+          "condition": {
+            "maxPlayers": 3
+          },
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.9"
+        },
+        {
+          "id": "suit-decks",
+          "text": "Region, uncivilised and civilised decks: {n} cards each, above their icons",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 6,
+                "3": 7,
+                "4": 8
+              }
+            }
+          },
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.9"
+        },
+        {
+          "id": "main-deck",
+          "text": "Shuffle the leftover region, uncivilised and civilised cards with the tributary cards: the main deck",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.9"
+        },
+        {
+          "id": "market",
+          "text": "Market: 1 card from each suit deck and 2 from the main deck, faceup below the board",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.9"
+        },
+        {
+          "id": "tuck",
+          "text": "Tuck an unrest card under each uncivilised, civilised and tributary card in the market",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.9"
+        },
+        {
+          "id": "progress",
+          "text": "A progress token on each civilised market card that has no uncivilised icon",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.9"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "solstice-round",
+          "text": "The round ends when the player right of the solstice card finishes; then everyone resolves solstice",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.12"
+        },
+        {
+          "id": "state-change",
+          "text": "Placing your accession card in your discard flips your state card to empire",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.12"
+        },
+        {
+          "id": "game-end",
+          "text": "Scoring triggers (empty main deck, last development, King of Kings...): finish the round, then play one more",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.13"
+        },
+        {
+          "id": "collapse",
+          "text": "An empty unrest pile collapses the game at once: fewest unrest cards wins",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.13"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "solstice",
+          "text": "Place the solstice card randomly between two players; the player on its left starts",
+          "ref": "Imperium rulebook (Osprey, update 1.0) p.9"
+        }
+      ]
+    }
+  ]
+}

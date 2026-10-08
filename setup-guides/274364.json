@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "gameId": 274364,
+  "gameName": "Watergate",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Watergate rules (Frosted Games / Capstone, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "roles",
+          "text": "Pick roles: Editor and Nixon Administration",
+          "ref": "Set Up"
+        },
+        {
+          "id": "board",
+          "text": "Board between you, right way up for the Editor",
+          "ref": "Set Up"
+        },
+        {
+          "id": "decks",
+          "text": "Each: take your role's 21 cards; momentum card faceup by your side of the research track; shuffle your 20 player cards as your draw deck",
+          "ref": "Set Up"
+        },
+        {
+          "id": "initiative",
+          "text": "Initiative card faceup between the momentum cards, arrows pointing to the Editor; End of round card beside it",
+          "ref": "Set Up"
+        },
+        {
+          "id": "track",
+          "text": "Initiative token and 1 momentum token on the 0 space; the other 8 momentum tokens as a supply",
+          "ref": "Set Up"
+        },
+        {
+          "id": "pictures",
+          "text": "The 7 picture tiles beside the board: the potential informant supply",
+          "ref": "Set Up"
+        },
+        {
+          "id": "bag",
+          "text": "Evidence tokens into the bag",
+          "ref": "Set Up"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "hand",
+          "text": "Each round draw the number on your side of the initiative card (4 or 5)",
+          "ref": "A) Initial Phase"
+        },
+        {
+          "id": "nixon-evidence",
+          "text": "Each round Nixon draws 3 evidence tokens, looks, and places them facedown on 0",
+          "ref": "A) Initial Phase"
+        },
+        {
+          "id": "events",
+          "text": "Used events leave the game; conspirators and journalists go to your discard pile",
+          "ref": "Action Part"
+        },
+        {
+          "id": "space5",
+          "text": "A token pushed to space 5 on your side is gained at once",
+          "ref": "Value Part"
+        },
+        {
+          "id": "pinning",
+          "text": "Editor pins evidence faceup, Nixon facedown",
+          "ref": "C) Evaluation Phase"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The player the initiative arrows point to (the Editor) plays first",
+          "ref": "B) Card Phase"
+        }
+      ]
+    }
+  ]
+}

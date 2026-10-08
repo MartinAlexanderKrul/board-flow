@@ -172,8 +172,8 @@
     {
       "gameId": 14996,
       "gameName": "Ticket to Ride: Europe",
-      "gameIds": [14996],
-      "version": 2,
+      "gameIds": [14996, 329841],
+      "version": 3,
       "schemaVersion": 1,
       "path": "14996.json"
     },
@@ -348,16 +348,16 @@
     {
       "gameId": 84876,
       "gameName": "The Castles of Burgundy",
-      "gameIds": [84876],
-      "version": 3,
+      "gameIds": [84876, 271320],
+      "version": 4,
       "schemaVersion": 1,
       "path": "84876.json"
     },
     {
       "gameId": 96848,
       "gameName": "Mage Knight Board Game",
-      "gameIds": [96848],
-      "version": 1,
+      "gameIds": [96848, 248562],
+      "version": 2,
       "schemaVersion": 1,
       "path": "96848.json"
     },
@@ -1856,6 +1856,102 @@
       "version": 2,
       "schemaVersion": 1,
       "path": "455843.json"
+    },
+    {
+      "gameId": 172931,
+      "gameName": "Outfoxed!",
+      "gameIds": [172931],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "172931.json"
+    },
+    {
+      "gameId": 271321,
+      "gameName": "CABO (Second Edition)",
+      "gameIds": [271321, 73664],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "271321.json"
+    },
+    {
+      "gameId": 434654,
+      "gameName": "Toy Battle",
+      "gameIds": [434654],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "434654.json"
+    },
+    {
+      "gameId": 391163,
+      "gameName": "Forest Shuffle",
+      "gameIds": [391163, 412576, 424129, 438231],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "391163.json"
+    },
+    {
+      "gameId": 385610,
+      "gameName": "Kutná Hora: The City of Silver",
+      "gameIds": [385610],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "385610.json"
+    },
+    {
+      "gameId": 274364,
+      "gameName": "Watergate",
+      "gameIds": [274364],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "274364.json"
+    },
+    {
+      "gameId": 339789,
+      "gameName": "Welcome to the Moon",
+      "gameIds": [339789],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "339789.json"
+    },
+    {
+      "gameId": 319910,
+      "gameName": "Pagan: Fate of Roanoke",
+      "gameIds": [319910],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "319910.json"
+    },
+    {
+      "gameId": 310100,
+      "gameName": "Nemesis: Lockdown",
+      "gameIds": [310100],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "310100.json"
+    },
+    {
+      "gameId": 318182,
+      "gameName": "Imperium: Legends",
+      "gameIds": [318182, 318184],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "318182.json"
+    },
+    {
+      "gameId": 311988,
+      "gameName": "Frostpunk: The Board Game",
+      "gameIds": [311988],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "311988.json"
+    },
+    {
+      "gameId": 368305,
+      "gameName": "Life of the Amazonia",
+      "gameIds": [368305],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "368305.json"
     }
   ]
 }

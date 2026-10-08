@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "gameId": 434654,
+  "gameName": "Toy Battle",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Toy Battle rules (Repos Production, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "terrain",
+      "title": "Terrain",
+      "steps": [
+        {
+          "id": "terrain",
+          "text": "Choose 1 of the 8 Terrains (first game: Castle Field) and lay it between you",
+          "note": "The symbol in front of you sets your colour and the Medals objective",
+          "ref": "Setup"
+        },
+        {
+          "id": "medals",
+          "text": "A Medal marker on every Medal space; box the rest",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "rack",
+          "text": "Take a rack; shuffle your colour's Troops facedown as your reserve",
+          "ref": "Setup"
+        },
+        {
+          "id": "remove",
+          "text": "Return 4 Troops from your reserve to the box unseen",
+          "ref": "Setup"
+        },
+        {
+          "id": "hand",
+          "text": "Start player draws 3 Troops onto their rack; the other player draws 4",
+          "ref": "Setup"
+        },
+        {
+          "id": "discard",
+          "text": "Leave space beside the board for discards; player aid in reach",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "first-games",
+          "text": "First games: treat special bases as plain bases (no effect)",
+          "ref": "Place 1 Troop on the Terrain"
+        },
+        {
+          "id": "rack-limit",
+          "text": "Your rack holds at most 8 Troops",
+          "ref": "Draw 2 Troops"
+        },
+        {
+          "id": "connected",
+          "text": "Every Troop must be placed on a slot connected to your H.Q. through bases you occupy",
+          "ref": "Connection to Your H.Q."
+        },
+        {
+          "id": "cover",
+          "text": "You may cover only your own Troops or enemy Troops of strictly lower strength",
+          "ref": "Slots"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Random start player; each turn draw 2 Troops or place 1",
+          "ref": "Setup / Turn Overview"
+        }
+      ]
+    }
+  ]
+}

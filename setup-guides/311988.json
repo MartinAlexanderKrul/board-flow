@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "gameId": 311988,
+  "gameName": "Frostpunk: The Board Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Frostpunk rulebook (Glass Cannon Unplugged)",
+      "Frostpunk Scenario Book"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "scenario",
+      "title": "Scenario",
+      "steps": [
+        {
+          "id": "choose",
+          "text": "Scenario: A New Home: Crater for a first game; others are set up from the Scenario Book",
+          "ref": "Frostpunk rulebook p.8"
+        },
+        {
+          "id": "society",
+          "text": "Choose a Society card (I-VI) and Normal or Hard (first game: Society I - Normal); it sets the starting numbers below",
+          "ref": "Frostpunk rulebook p.10"
+        }
+      ]
+    },
+    {
+      "id": "map",
+      "title": "Map",
+      "steps": [
+        {
+          "id": "generator-tile",
+          "text": "Generator tile in the middle; 6 Rim pieces around it as a hexagon, cliff side up",
+          "ref": "Frostpunk rulebook p.9"
+        },
+        {
+          "id": "generator",
+          "text": "Generator (with drawer) and the Cookhouse on the Generator tile; 5 Wood and 5 Coal on it",
+          "note": "Keep the Generator Upgrade boxed until needed",
+          "ref": "Frostpunk rulebook p.9"
+        },
+        {
+          "id": "walls",
+          "text": "Starting Wall tiles facedown; from any corner, clockwise, flip 1 per corner until 3 show Deposits; box the rest",
+          "ref": "Frostpunk rulebook p.9"
+        },
+        {
+          "id": "map-tiles",
+          "text": "Shuffle the Far and Near Map tiles separately; a Far tile in each corner without a Deposit, a Near tile between it and the Generator",
+          "ref": "Frostpunk rulebook p.9"
+        },
+        {
+          "id": "flip",
+          "text": "Flip those tiles; put the Resources and Trees shown on them",
+          "note": "Food icons are added to the Food track later",
+          "ref": "Frostpunk rulebook p.9"
+        },
+        {
+          "id": "bank",
+          "text": "Bank: spare Wood, Coal, Steam Cores, Trees, Citizen meeples and Automatons (Crater uses no Steel)",
+          "ref": "Frostpunk rulebook p.10"
+        },
+        {
+          "id": "expeditions",
+          "text": "Expedition cards for the scenario, split into A, B, C decks white side up; 3 A cards faceup on the right edge of the map",
+          "ref": "Frostpunk rulebook p.10"
+        },
+        {
+          "id": "technology",
+          "text": "4 random Technology cards faceup on the bottom-right edge, each with an inactive Development token (Crater: no Steam Hub)",
+          "ref": "Frostpunk rulebook p.10"
+        }
+      ]
+    },
+    {
+      "id": "boards",
+      "title": "Boards",
+      "steps": [
+        {
+          "id": "population",
+          "text": "Population board above the map: Citizen and Sickness markers as on the Society card (Society I: 22 Workers, 12 Engineers, 8 Children)",
+          "ref": "Frostpunk rulebook p.11"
+        },
+        {
+          "id": "food",
+          "text": "Food marker on the Society card value (Society I: 8) plus any Map tile Food; Hunger marker on 0",
+          "ref": "Frostpunk rulebook p.11"
+        },
+        {
+          "id": "supply",
+          "text": "Supply board right of the map: Corpse marker, starting Wood, Coal and Steam Cores, Citizen meeples and Automatons per the Society card",
+          "note": "Society I: Corpse on 1; 4 Wood, 5 Coal; 2 Child, 3 Engineer, 5 Worker meeples; 0 Automatons",
+          "ref": "Frostpunk rulebook p.11"
+        },
+        {
+          "id": "spent",
+          "text": "Spent Citizen tokens beside the Supply board",
+          "ref": "Frostpunk rulebook p.11"
+        },
+        {
+          "id": "buildings",
+          "text": "Buildings board below the Supply board; Buildings sorted onto it, non-upgraded side up",
+          "ref": "Frostpunk rulebook p.12"
+        },
+        {
+          "id": "hope",
+          "text": "Hope & Discontent board left of the Population board; tokens into their bags; draw tokens as the Society card says (Society I: 2 Discontent, 1 active; 2 Hope, both active)",
+          "ref": "Frostpunk rulebook p.12"
+        },
+        {
+          "id": "round",
+          "text": "Round & Morning board above it: Round marker on 1; Morning deck shuffled; Storm marker per the scenario (Crater: space 9)",
+          "ref": "Frostpunk rulebook p.13"
+        },
+        {
+          "id": "laws",
+          "text": "Law cards L01-L08 faceup; add 4 random of L09-L16; Consequence cards facedown beside them",
+          "ref": "Frostpunk rulebook p.13"
+        },
+        {
+          "id": "law-buildings",
+          "text": "Below the Buildings board: Child Shelter, the 4 Faith/Order Buildings and any Buildings the chosen Laws need",
+          "ref": "Frostpunk rulebook p.13"
+        },
+        {
+          "id": "dusk",
+          "text": "Dusk board above the Population board: Inevitable card (D000) facedown in the middle, Social Disputes faceup on the right",
+          "ref": "Frostpunk rulebook p.14"
+        },
+        {
+          "id": "dusk-deck",
+          "text": "Read the top Social Dispute, flip it facedown and shuffle it with the Inevitable card: the Dusk deck",
+          "ref": "Frostpunk rulebook p.14"
+        },
+        {
+          "id": "generator-board",
+          "text": "Generator board left of the map: Heat marker on space 1; Heat Range red, orange, yellow on spaces 1-3; Cold marker on space 5",
+          "ref": "Frostpunk rulebook p.14"
+        },
+        {
+          "id": "weather",
+          "text": "Weather cards for the scenario (Crater: all) shuffled facedown on the Generator board",
+          "ref": "Frostpunk rulebook p.14"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Players",
+      "steps": [
+        {
+          "id": "advisor",
+          "text": "Each player chooses an Advisor card (assign at random if you disagree)",
+          "ref": "Frostpunk rulebook p.14"
+        },
+        {
+          "id": "rise",
+          "text": "Solo: also take the Call to Rise card",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Frostpunk rulebook p.14"
+        },
+        {
+          "id": "citizens",
+          "text": "Shuffle the scenario's Citizen cards (Crater: all) bottom left of the map; each player draws {n}",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 7,
+                "2": 6,
+                "3": 5,
+                "4": 4
+              }
+            }
+          },
+          "ref": "Frostpunk rulebook p.14"
+        },
+        {
+          "id": "discard-citizen",
+          "text": "Each player discards 1 Citizen card faceup right of the deck and pays its starting cost",
+          "note": "If the cost can't be paid, discard any card and add 1 sick Citizen of its type instead",
+          "ref": "Frostpunk rulebook p.15"
+        },
+        {
+          "id": "phase",
+          "text": "Phase tracker card nearby, Phase marker on the Action Phase",
+          "ref": "Frostpunk rulebook p.15"
+        },
+        {
+          "id": "scenario-cards",
+          "text": "Scenario cards in the Scenario display (Crater: I/01 faceup); Scenario Trigger tokens on the Round track (Crater: 4 and 11)",
+          "ref": "Frostpunk rulebook p.15"
+        },
+        {
+          "id": "storm",
+          "text": "Storm card facedown left of the Weather deck (Crater: I/08); Stockpile markers near the Scenario display",
+          "ref": "Frostpunk rulebook p.15"
+        },
+        {
+          "id": "responsibility",
+          "text": "Responsibility sheets: one per Advisor; share out the rest (solo: take all)",
+          "ref": "Frostpunk rulebook p.15"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "first-round",
+          "text": "Round 1 skips phases 1-5: start with the Action Phase",
+          "ref": "Frostpunk rulebook p.18"
+        },
+        {
+          "id": "leader",
+          "text": "Disagreements: the Leadership marker holder decides",
+          "ref": "Frostpunk rulebook p.16"
+        },
+        {
+          "id": "lose",
+          "text": "Lose on: no Hope, a 6th Discontent, a second Generator breakdown, Sickness 26+, Hunger 25+, or a full Corpse track",
+          "ref": "Frostpunk rulebook p.16"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "leadership",
+          "text": "Give the Leadership marker to a random player",
+          "ref": "Frostpunk rulebook p.15"
+        }
+      ]
+    }
+  ]
+}

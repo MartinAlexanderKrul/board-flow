@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "gameId": 319910,
+  "gameName": "Pagan: Fate of Roanoke",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Pagan: Fate of Roanoke rules (Kosmos / Capstone, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 2
+  },
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "roles",
+          "text": "Decide who plays the Witch and who plays the Hunter",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "witch",
+          "text": "Witch: 3 Action pawns (2 regular, 1 Familiar), Witch board, green Influence disc",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "hunter",
+          "text": "Hunter: 3 Action pawns, Hunter board, red Influence disc",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "village",
+          "text": "3-part village board in the middle (1st, 2nd, 3rd); Enchantment board beside it",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "villagers",
+          "text": "The 9 villagers on their matching spaces (symbol and colour)",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "suspect",
+          "text": "Shuffle the 9 Suspects; the Witch secretly draws 1: the true Witch",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "decks",
+          "text": "Each player shuffles their 50-card deck",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "supply",
+          "text": "Clues, Evidence, Secrets and Favors in the general supply",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "hands",
+          "text": "Each player draws 3 cards and sets their Influence disc to 2",
+          "note": "First game: a player aid next to each board",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "first-turn",
+          "text": "First turn: the Witch has only 2 regular pawns, both on villagers of the same faction",
+          "ref": "Action phase"
+        },
+        {
+          "id": "ready",
+          "text": "A villager is ready only with no Action pawn on it",
+          "ref": "Action phase"
+        },
+        {
+          "id": "hand-limit",
+          "text": "Upkeep: discard down to 7 cards; Hunter pays Ally upkeep in Influence",
+          "ref": "Upkeep phase"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "The Witch takes the first turn",
+          "ref": "Start of the Game"
+        }
+      ]
+    }
+  ]
+}

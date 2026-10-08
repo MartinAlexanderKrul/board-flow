@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 1,
+  "gameId": 391163,
+  "gameName": "Forest Shuffle",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Forest Shuffle rules (Lookout, via RulesPal)",
+      "Forest Shuffle: Alpine rules (Lookout, 2024)",
+      "Forest Shuffle: Woodland Edge rules (Lookout, 2024)",
+      "Forest Shuffle: Exploration rules (Lookout, 2025)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "modules": [
+    {
+      "id": "alpine",
+      "name": "Alpine",
+      "bggId": 412576,
+      "note": "Adds Alpine Larch and Swiss Pine."
+    },
+    {
+      "id": "edge",
+      "name": "Woodland Edge",
+      "bggId": 424129,
+      "note": "Adds shrubs."
+    },
+    {
+      "id": "exploration",
+      "name": "Exploration: solo (Alone in the Forest)",
+      "forcedAtPlayers": [
+        1
+      ],
+      "players": {
+        "min": 1,
+        "max": 1
+      },
+      "note": "Solo against Anna with 12 challenges."
+    },
+    {
+      "id": "caves",
+      "name": "Exploration: special caves",
+      "bggId": 438231
+    },
+    {
+      "id": "rare",
+      "name": "Exploration: new and rare cards"
+    }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "clearing",
+          "text": "Clearing (board) in the middle; the 14 reference cards beside it",
+          "ref": "Forest Shuffle rules, Setup"
+        },
+        {
+          "id": "mix-expansions",
+          "text": "Shuffle the expansion cards into the base game cards",
+          "note": "Either expansion or both can be mixed in",
+          "ref": "Alpine rules p.2 / Woodland Edge rules p.2"
+        },
+        {
+          "id": "rare-cards",
+          "text": "Shuffle in the new and rare cards you want (or deal 2 to each player later instead)",
+          "condition": {
+            "modules": [
+              "rare"
+            ]
+          },
+          "ref": "Exploration rules p.9"
+        },
+        {
+          "id": "winter-aside",
+          "text": "Set the 3 winter cards aside",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Forest Shuffle rules, Setup"
+        },
+        {
+          "id": "remove",
+          "text": "Shuffle; box {n} cards unseen",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "30",
+                "2": "30",
+                "3": "20",
+                "4": "10",
+                "5": "no"
+              },
+              "cases": [
+                {
+                  "when": {
+                    "players": [
+                      1
+                    ],
+                    "modules": [
+                      "alpine",
+                      "edge"
+                    ]
+                  },
+                  "value": "90"
+                },
+                {
+                  "when": {
+                    "players": [
+                      1
+                    ],
+                    "modules": [
+                      "alpine"
+                    ]
+                  },
+                  "value": "55"
+                },
+                {
+                  "when": {
+                    "players": [
+                      1
+                    ],
+                    "modules": [
+                      "edge"
+                    ]
+                  },
+                  "value": "55"
+                },
+                {
+                  "when": {
+                    "players": [
+                      2
+                    ],
+                    "modules": [
+                      "alpine",
+                      "edge"
+                    ]
+                  },
+                  "value": "90"
+                },
+                {
+                  "when": {
+                    "players": [
+                      3
+                    ],
+                    "modules": [
+                      "alpine",
+                      "edge"
+                    ]
+                  },
+                  "value": "60"
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "alpine",
+                      "edge"
+                    ]
+                  },
+                  "value": "45"
+                },
+                {
+                  "when": {
+                    "players": [
+                      5
+                    ],
+                    "modules": [
+                      "alpine",
+                      "edge"
+                    ]
+                  },
+                  "value": "30"
+                },
+                {
+                  "when": {
+                    "players": [
+                      2
+                    ],
+                    "modules": [
+                      "alpine"
+                    ]
+                  },
+                  "value": "55"
+                },
+                {
+                  "when": {
+                    "players": [
+                      2
+                    ],
+                    "modules": [
+                      "edge"
+                    ]
+                  },
+                  "value": "55"
+                },
+                {
+                  "when": {
+                    "players": [
+                      3
+                    ],
+                    "modules": [
+                      "alpine"
+                    ]
+                  },
+                  "value": "40"
+                },
+                {
+                  "when": {
+                    "players": [
+                      3
+                    ],
+                    "modules": [
+                      "edge"
+                    ]
+                  },
+                  "value": "40"
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "alpine"
+                    ]
+                  },
+                  "value": "25"
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "edge"
+                    ]
+                  },
+                  "value": "25"
+                },
+                {
+                  "when": {
+                    "players": [
+                      5
+                    ],
+                    "modules": [
+                      "alpine"
+                    ]
+                  },
+                  "value": "10"
+                },
+                {
+                  "when": {
+                    "players": [
+                      5
+                    ],
+                    "modules": [
+                      "edge"
+                    ]
+                  },
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "note": "With both expansions you can instead split the deck into equal piles and box some: 2 players 2 of 5, 3 players 1 of 4",
+          "ref": "Forest Shuffle rules, Setup / Alpine rules p.2 / Woodland Edge rules p.2 / Exploration rules p.2"
+        },
+        {
+          "id": "remove-rare",
+          "text": "Box 1 more card for each new and rare card you mixed in",
+          "condition": {
+            "modules": [
+              "rare"
+            ]
+          },
+          "ref": "Exploration rules p.9"
+        },
+        {
+          "id": "deck",
+          "text": "Split the rest into 3 similar piles; shuffle 2 winter cards into one, put the third winter card on top of it",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Forest Shuffle rules, Setup"
+        },
+        {
+          "id": "deck-stack",
+          "text": "Stack the other 2 piles on top of the winter pile; deck to the left of the clearing",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Forest Shuffle rules, Setup"
+        },
+        {
+          "id": "solo-winter",
+          "text": "Use only 1 winter card: shuffle it into the last 10 cards of the deck",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Exploration rules p.3"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "cave",
+          "text": "Take a cave card",
+          "condition": {
+            "notModules": [
+              "caves"
+            ]
+          },
+          "ref": "Forest Shuffle rules, Setup"
+        },
+        {
+          "id": "hand",
+          "text": "Draw 6 cards; with no tree among them you may mulligan once (box all 6, draw 6 new)",
+          "ref": "Forest Shuffle rules, Setup"
+        },
+        {
+          "id": "rare-deal",
+          "text": "Even spread instead: deal each player 2 new and rare cards (8 cards in hand)",
+          "condition": {
+            "modules": [
+              "rare"
+            ]
+          },
+          "ref": "Exploration rules p.9"
+        },
+        {
+          "id": "special-caves",
+          "text": "Lay out the 5 special caves; in reverse turn order each player picks 1; box the rest",
+          "condition": {
+            "modules": [
+              "caves"
+            ]
+          },
+          "ref": "Exploration rules p.7"
+        }
+      ]
+    },
+    {
+      "id": "solo",
+      "title": "Solo: Anna",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-clearing",
+          "text": "Place 5 cards faceup in the clearing",
+          "ref": "Exploration rules p.3"
+        },
+        {
+          "id": "automa",
+          "text": "Shuffle the 20 Automa cards into a facedown Automa deck",
+          "ref": "Exploration rules p.3"
+        },
+        {
+          "id": "challenge",
+          "text": "Pick a challenge and a level to aim for: bronze, silver or gold",
+          "note": "Reforestation with both expansions: a random Water Vole goes into your hand before boxing cards; then draw only 5",
+          "ref": "Exploration rules p.3"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "hand-limit",
+          "text": "Hand limit 10: with 9 cards you may draw only 1",
+          "ref": "Forest Shuffle rules, Drawing Two Cards"
+        },
+        {
+          "id": "tree-clearing",
+          "text": "Playing a tree also puts the top deck card faceup in the clearing",
+          "ref": "Forest Shuffle rules, Trees"
+        },
+        {
+          "id": "clearing-empty",
+          "text": "End of turn: 10+ cards in the clearing are all boxed",
+          "ref": "Forest Shuffle rules, Checking the Clearing"
+        },
+        {
+          "id": "winter-end",
+          "text": "The 3rd winter card ends the game at once",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Forest Shuffle rules, End of Game"
+        },
+        {
+          "id": "shrubs",
+          "text": "Shrubs give 4 slots like trees and a permanent effect, but are not trees",
+          "condition": {
+            "modules": [
+              "edge"
+            ]
+          },
+          "ref": "Woodland Edge rules p.3"
+        },
+        {
+          "id": "oak",
+          "text": "Oak and Strawberries still need only 8 different tree species",
+          "condition": {
+            "modules": [
+              "alpine"
+            ]
+          },
+          "ref": "Alpine rules p.3"
+        },
+        {
+          "id": "solo-scoring",
+          "text": "Solo scoring: Linden 3 points needs 3+ Lindens; Great Spotted Woodpecker needs 10+ trees",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Exploration rules p.6"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Whoever last walked in a forest starts; play goes clockwise",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Forest Shuffle rules, Scoring"
+        },
+        {
+          "id": "solo-first",
+          "text": "You take the first turn; then Anna flips an Automa card each turn",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Exploration rules p.3-4"
+        }
+      ]
+    }
+  ]
+}

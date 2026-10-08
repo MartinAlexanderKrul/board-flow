@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "gameId": 310100,
+  "gameName": "Nemesis: Lockdown",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Nemesis: Lockdown rules (Awaken Realms, via RulesPal)",
+      "Nemesis: Lockdown rules summary (Esoteric Order of Gamers, v2)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 5
+  },
+  "modules": [
+    {
+      "id": "coop",
+      "name": "Fully cooperative mode",
+      "players": {
+        "min": 2,
+        "max": 5
+      },
+      "note": "All Objectives are public and must all be fulfilled; at least 1 Character must survive."
+    }
+  ],
+  "sections": [
+    {
+      "id": "facility",
+      "title": "Facility",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Board on its basic side (red arrow, top left)",
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "fixed-rooms",
+          "text": "Isolation Room (room-action side down), Repository and Backup Power Supply on their slots",
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "rooms",
+          "text": "Shuffle the II room tiles facedown, 1 per II slot (6 of 9 used); then the I tiles on the I slots",
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "exploration",
+          "text": "1 random facedown Underground Exploration token on each unrevealed room",
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "vehicles",
+          "text": "Elevator, Main Gate and Rover in their places",
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "power",
+          "text": "Power tokens: 3 in the section slots, 1 on the Elevator; 1 and 2 blue side up, 3 and 4 red side up",
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "css",
+          "text": "1 CSS token facedown on each CSS slot of the time track; box the extra",
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "time",
+          "text": "Time token red (inactive) side up on the 15th (green) space; Alert, Autodestruction and Venting tokens nearby",
+          "ref": "Crew setup"
+        }
+      ]
+    },
+    {
+      "id": "intruders",
+      "title": "Night Stalkers",
+      "steps": [
+        {
+          "id": "lab",
+          "text": "Laboratory board: 5 Egg tokens in the Nest; 3 random Weakness cards, the leftmost revealed",
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "bag",
+          "text": "Intruder bag: 1 Blank, 4 Larvae, 1 Creeper, 1 Queen, {n} Adults",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": "4",
+                "2": "5",
+                "3": "6",
+                "4": "7",
+                "5": "8"
+              }
+            }
+          },
+          "ref": "Setup (Summary)"
+        },
+        {
+          "id": "spares",
+          "text": "Spare Intruder and Carcass tokens beside the board",
+          "ref": "Setup (Summary)"
+        }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Decks",
+      "steps": [
+        {
+          "id": "items",
+          "text": "Shuffle the red, yellow and green Item decks; crafted item deck beside them",
+          "ref": "Setup (Summary) / Esoteric Order of Gamers Lockdown summary v2, Setup"
+        },
+        {
+          "id": "threat-decks",
+          "text": "Shuffle the Night Stalker Event and Attack decks, Contamination and Serious Wound decks; scanner by Contamination",
+          "ref": "Setup (Summary) / Esoteric Order of Gamers Lockdown summary v2, Setup"
+        },
+        {
+          "id": "computer",
+          "text": "Computer deck facedown on its slot; reveal the top card (Lock-down: reveal the next, shuffle Lock-down back in)",
+          "ref": "Setup (Summary) / Esoteric Order of Gamers Lockdown summary v2, Setup"
+        }
+      ]
+    },
+    {
+      "id": "crew",
+      "title": "Crew",
+      "steps": [
+        {
+          "id": "help",
+          "text": "Each player: a Help card (draft order and player number) and an Inventory holder",
+          "ref": "Crew setup"
+        },
+        {
+          "id": "objectives",
+          "text": "Deal each player 1 Corporate and 1 Personal Objective, secret (first remove ones needing more players)",
+          "condition": {
+            "minPlayers": 2,
+            "notModules": [
+              "coop"
+            ]
+          },
+          "ref": "Crew setup"
+        },
+        {
+          "id": "solo-objectives",
+          "text": "Draw 2 Solo/Coop Objectives; keep 1 after the first Encounter",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Game Modes"
+        },
+        {
+          "id": "coop-objectives",
+          "text": "1 Solo/Coop Objective per player, all faceup",
+          "condition": {
+            "modules": [
+              "coop"
+            ]
+          },
+          "ref": "Game Modes"
+        },
+        {
+          "id": "contingency",
+          "text": "Deal each player {n} secret Contingency; 1 facedown on the Active Contingency slot, the rest in the Neutral Pool",
+          "amounts": {
+            "n": {
+              "default": "1 token",
+              "byPlayers": {
+                "2": "2 tokens"
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Crew setup"
+        },
+        {
+          "id": "solo-contingency",
+          "text": "1 Contingency on the Active slot, the rest in the Neutral Pool; then draw 2 from the Neutral Pool",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Game Modes"
+        },
+        {
+          "id": "draft",
+          "text": "Draft: in player order draw 2 Draft cards, keep 1, shuffle the other back",
+          "ref": "Crew setup"
+        },
+        {
+          "id": "character",
+          "text": "Take your Character board, miniature, shuffled Action deck, Starting Item (with ammo) and Quest Item facedown",
+          "ref": "Crew setup"
+        },
+        {
+          "id": "start-room",
+          "text": "Nemesis Survivors start in the Isolation Room, Facility Workers in the Repository",
+          "ref": "Crew setup"
+        },
+        {
+          "id": "knowledge",
+          "text": "Knowledge token inactive side up on the Laboratory board: slot 1 for Facility Workers, slot 3 for Survivors",
+          "ref": "Crew setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "draw5",
+          "text": "Each round draw up to 5 Action cards",
+          "ref": "I. Player Phase"
+        },
+        {
+          "id": "first-encounter",
+          "text": "At the first Intruder appearance everyone discards 1 Objective facedown",
+          "condition": {
+            "minPlayers": 2,
+            "notModules": [
+              "coop"
+            ]
+          },
+          "ref": "Crew setup / First Encounter"
+        },
+        {
+          "id": "solo-items",
+          "text": "Solo: items per room are halved (round up)",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Game Modes"
+        },
+        {
+          "id": "fire",
+          "text": "Ending a turn in a room with Fire costs 1 Light Wound",
+          "ref": "Player Turns"
+        },
+        {
+          "id": "win",
+          "text": "To win you must fulfil your Objective and survive: Isolation Room, CSS pod or the Bunker",
+          "ref": "Object of the Game"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Player 1 takes the First Player token",
+          "ref": "Crew setup"
+        }
+      ]
+    }
+  ]
+}

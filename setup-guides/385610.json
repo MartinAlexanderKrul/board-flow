@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "gameId": 385610,
+  "gameName": "Kutná Hora: The City of Silver",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Kutná Hora: The City of Silver rules (Czech Games Edition, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "events",
+      "name": "Event cards",
+      "forcedAtPlayers": [
+        2
+      ],
+      "note": "Required at 2 players; optional at 3-4 for a livelier economy."
+    }
+  ],
+  "sections": [
+    {
+      "id": "boards",
+      "title": "Boards",
+      "steps": [
+        {
+          "id": "rounds",
+          "text": "Rounds track on its {side} side; rounds counter on space 1, tax counter on 0",
+          "amounts": {
+            "side": {
+              "default": "6-round",
+              "byPlayers": {
+                "4": "5-round"
+              }
+            }
+          },
+          "ref": "Setup, Rounds Track"
+        },
+        {
+          "id": "red-patricians",
+          "text": "Stack the 3 red-patrician buildings on the marked square of the rounds track",
+          "ref": "Setup, Rounds Track"
+        },
+        {
+          "id": "guild-buildings",
+          "text": "Guild buildings: 6 colour stacks; shuffle the 6 marked-corner tiles onto the 2 left columns, the other 3 of each colour on top in random order",
+          "ref": "Setup, Town Hall Board"
+        },
+        {
+          "id": "public-buildings",
+          "text": "Green, silver and yellow patrician buildings: shuffle each colour, stack at the end of its row",
+          "ref": "Setup, Town Hall Board"
+        },
+        {
+          "id": "kh-board",
+          "text": "Kutná Hora board on its {side} side",
+          "amounts": {
+            "side": {
+              "default": "side with more squares",
+              "byPlayers": {
+                "2": "side with fewer squares"
+              }
+            }
+          },
+          "ref": "Setup, Kutná Hora Board"
+        },
+        {
+          "id": "rocks",
+          "text": "Draw a random mine setup card; rock tiles facedown on its spaces, then flip them",
+          "ref": "Setup, Kutná Hora Board"
+        },
+        {
+          "id": "stands",
+          "text": "Card stands with arms far left; population 0-19 and ore 0-14 in order, 0 in front, turn-over card at the back",
+          "ref": "Setup, Card Stands"
+        },
+        {
+          "id": "cathedral",
+          "text": "St. Barbara's Cathedral: tiles 1-5 bottom, 6-10 middle, 11 on top",
+          "ref": "Setup, St. Barbara's Cathedral"
+        },
+        {
+          "id": "bank",
+          "text": "Bank: coins, pelican tokens and exactly 3 patrician tokens of each colour",
+          "ref": "Setup, Bank"
+        },
+        {
+          "id": "tech",
+          "text": "4 mining technology tiles facedown in order, 1 on top",
+          "ref": "Setup, Mines"
+        },
+        {
+          "id": "mine-stack",
+          "text": "Mine tiles: shuffle by back; stack I on top, II, III at the bottom, on the prospecting board",
+          "note": "Leave the discard space empty",
+          "ref": "Setup, Mines"
+        }
+      ]
+    },
+    {
+      "id": "events",
+      "title": "Event cards",
+      "condition": {
+        "modules": [
+          "events"
+        ]
+      },
+      "steps": [
+        {
+          "id": "event-decks",
+          "text": "Shuffle event decks A and B; deal 1 facedown above each round except the last: A before the red-patrician stack, B after",
+          "ref": "Setup, Two-Player Game"
+        },
+        {
+          "id": "event-reveal",
+          "text": "Reveal the round 1 event; a tax symbol on it raises the tax counter now",
+          "ref": "Setup, Two-Player Game"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "pieces",
+          "text": "Player board in your colour; 3 plot markers and 12 house tokens",
+          "ref": "Setup, Player Setup"
+        },
+        {
+          "id": "production",
+          "text": "4 production markers at 0; 2 spare beside the board for income over 10",
+          "ref": "Setup, Player Setup"
+        },
+        {
+          "id": "miners",
+          "text": "1 miner in your pool, the other 8 in the waiting zone",
+          "ref": "Setup, Player Setup"
+        },
+        {
+          "id": "tracks",
+          "text": "Reputation marker on 0; score counter on 0 of the Kutná Hora board",
+          "ref": "Setup, Player Setup"
+        },
+        {
+          "id": "cards",
+          "text": "Your 6 action cards in hand (they are open information)",
+          "ref": "Setup, Player Setup"
+        },
+        {
+          "id": "groschen",
+          "text": "Starting groschen by seat: {g}",
+          "amounts": {
+            "g": {
+              "byPlayers": {
+                "2": "40 / 41",
+                "3": "40 / 41 / 42",
+                "4": "40 / 41 / 42 / 43"
+              }
+            }
+          },
+          "ref": "Setup, Player Setup"
+        },
+        {
+          "id": "guilds",
+          "text": "Random guild setup card (first game: card 1); in reverse seat order each player picks a set of 3 guilds",
+          "ref": "Setup, Guild Setup"
+        },
+        {
+          "id": "guild-rows",
+          "text": "In seat order, place your guild tiles in the rows of your board",
+          "ref": "Setup, Guild Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "two-cards",
+          "text": "Turns 1 and 2: play 2 action cards; turn 3: play 1",
+          "ref": "Gameplay"
+        },
+        {
+          "id": "advance",
+          "text": "Advancing a price deck: slide the front card to the back without flipping it",
+          "ref": "Prices"
+        },
+        {
+          "id": "refill",
+          "text": "Refill your miner pool only as the first step of a Mine action",
+          "ref": "Rules Reminders"
+        },
+        {
+          "id": "taxes",
+          "text": "End of each round: pay taxes or take the reputation penalty",
+          "ref": "Gameplay"
+        },
+        {
+          "id": "own-guild",
+          "text": "You can take guild buildings only for your own guilds",
+          "ref": "Rules Reminders"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Starting player marker to whoever was most recently underground (or random)",
+          "ref": "Setup, Player Setup"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "gameId": 271321,
+  "aliasGameIds": [
+    73664
+  ],
+  "gameName": "CABO (Second Edition)",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "CABO (Second Edition) rules (Bezier Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "round",
+      "title": "Each round",
+      "steps": [
+        {
+          "id": "deal",
+          "text": "Shuffle; deal each player 4 cards facedown in a line",
+          "ref": "Setup"
+        },
+        {
+          "id": "piles",
+          "text": "Deck facedown in the middle; flip its top card to start the discard pile",
+          "ref": "Setup"
+        },
+        {
+          "id": "peek",
+          "text": "Each player secretly looks at any 2 of their own cards, once",
+          "note": "Cards in your line never change places",
+          "ref": "Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "abilities",
+          "text": "Only cards drawn from the deck use abilities: 7-8 peek, 9-10 spy, 11-12 swap",
+          "ref": "Card Special Abilities"
+        },
+        {
+          "id": "cabo-call",
+          "text": "Calling CABO: lowest sum scores 0; otherwise your sum +10",
+          "ref": "Scoring"
+        },
+        {
+          "id": "kamikaze",
+          "text": "Kamikaze: exactly two 12s and two 13s scores 0 and everyone else 50",
+          "ref": "Kamikaze"
+        },
+        {
+          "id": "reset",
+          "text": "Landing on exactly 100 resets you to 50, once per game; over 100 ends the game",
+          "ref": "Score Reset / Game End"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Random start player; then the round's lowest scorer starts the next round",
+          "ref": "Setup / Round End"
+        }
+      ]
+    }
+  ]
+}

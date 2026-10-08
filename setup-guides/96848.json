@@ -1,8 +1,11 @@
 {
   "schemaVersion": 1,
   "gameId": 96848,
+  "aliasGameIds": [
+    248562
+  ],
   "gameName": "Mage Knight Board Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",

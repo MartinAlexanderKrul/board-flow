@@ -1,8 +1,11 @@
 {
   "schemaVersion": 1,
   "gameId": 14996,
+  "aliasGameIds": [
+    329841
+  ],
   "gameName": "Ticket to Ride: Europe",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",

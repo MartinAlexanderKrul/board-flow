@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "gameId": 368305,
+  "gameName": "Life of the Amazonia",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Life of the Amazonia rulebook (Bad Comet, via Tabletopia)",
+      "Life of the Amazonia rules (via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "lightning",
+      "name": "Lightning Mode (shorter game)",
+      "players": {
+        "min": 2,
+        "max": 4
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "table",
+      "title": "Table",
+      "steps": [
+        {
+          "id": "waterfall",
+          "text": "Waterfall of Life in view; 2 Token Vaults in reach with every token in its section",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "scenario",
+          "text": "Solo: choose a scenario card (p.20-21); first time, Scenario 1",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Solo Mode"
+        },
+        {
+          "id": "animal-set",
+          "text": "Animal Refuge: pick a Base Animal set A-D (first game: A; solo: as the scenario says) and lay out its 8 cards; box the others",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "meeples",
+          "text": "Animal meeples by their cards: {m}",
+          "amounts": {
+            "m": {
+              "byPlayers": {
+                "1": "Woodpecker, Leaf Frog, Tamarin 6 each; Toucan 4; Macaw, Caiman 4 each; Otter, Jaguar 3 each",
+                "2": "Woodpecker, Leaf Frog, Tamarin 6 each; Toucan 4; Macaw, Caiman 4 each; Otter, Jaguar 3 each",
+                "3": "Woodpecker, Leaf Frog, Tamarin 9 each; Toucan 6; Macaw, Caiman 5 each; Otter, Jaguar 4 each",
+                "4": "Woodpecker, Leaf Frog, Tamarin 12 each; Toucan 8; Macaw, Caiman 6 each; Otter, Jaguar 5 each"
+              },
+              "cases": [
+                {
+                  "when": {
+                    "players": [
+                      2
+                    ],
+                    "modules": [
+                      "lightning"
+                    ]
+                  },
+                  "value": "Woodpecker, Leaf Frog, Tamarin 5 each; Toucan 3; Macaw, Caiman 3 each; Otter 3; Jaguar 3"
+                },
+                {
+                  "when": {
+                    "players": [
+                      3
+                    ],
+                    "modules": [
+                      "lightning"
+                    ]
+                  },
+                  "value": "Woodpecker, Leaf Frog, Tamarin 7 each; Toucan 5; Macaw, Caiman 4 each; Otter 4; Jaguar 3"
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "lightning"
+                    ]
+                  },
+                  "value": "Woodpecker, Leaf Frog, Tamarin 9 each; Toucan 6; Macaw, Caiman 5 each; Otter 4; Jaguar 4"
+                }
+              ]
+            }
+          },
+          "ref": "Life of the Amazonia rulebook p.5 / Lightning Mode"
+        },
+        {
+          "id": "tokens",
+          "text": "Complete tokens and the End Game Bonus token near the Animal cards",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "terrain",
+          "text": "Shuffle the Terrain tiles (not the starting tiles) facedown; 3 faceup as the Terrain Tile Pool",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "supply",
+          "text": "Seeds, Trees, Aquatic Flowers and Special Terrain tiles as the supply",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "nature",
+          "text": "Insect and Scenery decks shuffled facedown, 3 faceup from each, room for each discard pile",
+          "ref": "Life of the Amazonia rulebook p.5"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "start-tile",
+          "text": "A random starting Terrain tile in front of you (leave lots of room); box the rest",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "bag",
+          "text": "Pick a colour: Resource Bag with 3 one-Currency, 2 two-Currency, 2 one-Leaf, 2 one-Water and 1 two-Fruit token",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "boat",
+          "text": "Discard Pile Boat in your colour",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "markers",
+          "text": "4 Player Markers on the leftmost space of the 4 Waterfall tracks",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "unique",
+          "text": "Deal 2 Unique Animal cards, keep 1 faceup with its meeple on it (a Starting Seed icon gives 1 Seed); box the rest",
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "seeds",
+          "text": "The 3rd and 4th players get 1 Seed",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Life of the Amazonia rulebook p.5"
+        },
+        {
+          "id": "draw",
+          "text": "Draw 5 Resource tokens from your bag into your Play Area",
+          "ref": "Life of the Amazonia rulebook p.5"
+        }
+      ]
+    },
+    {
+      "id": "black-comet",
+      "title": "Solo: Black Comet",
+      "condition": {
+        "players": [
+          1
+        ]
+      },
+      "steps": [
+        {
+          "id": "automa-card",
+          "text": "Automa card with the scenario's side up",
+          "ref": "Solo Mode, Game Setup Changes"
+        },
+        {
+          "id": "automa-bag",
+          "text": "A second Resource Bag with 8 Automa tokens, and its Discard Pile Boat",
+          "ref": "Solo Mode, Game Setup Changes"
+        },
+        {
+          "id": "automa-markers",
+          "text": "In its colour: 1 marker on START of the Automa card, 1 each on the Tree and Flower tracks; box its other markers",
+          "ref": "Solo Mode, Game Setup Changes"
+        },
+        {
+          "id": "extra",
+          "text": "Do the scenario's Additional Setup, if any",
+          "ref": "Solo Mode, Scenarios"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "two-for-one",
+          "text": "Any 2 Resource tokens can pay as 1 resource of value 1",
+          "ref": "Rules Regarding Actions"
+        },
+        {
+          "id": "no-change",
+          "text": "Overpaying gives no change, and one payment buys one type of Action",
+          "ref": "Rules Regarding Actions"
+        },
+        {
+          "id": "connect",
+          "text": "A new Terrain tile must touch your Jungle on at least 2 hexes",
+          "ref": "Place a Terrain Tile"
+        },
+        {
+          "id": "end",
+          "text": "When 5 of the 8 Base Animal cards are used up, everyone else gets 1 more turn",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Game Structure"
+        },
+        {
+          "id": "lightning-end",
+          "text": "Lightning: before scoring, each player places 1 Tree, 1 Flower and 1 Special Terrain tile for free",
+          "condition": {
+            "modules": [
+              "lightning"
+            ]
+          },
+          "ref": "Lightning Mode"
+        },
+        {
+          "id": "solo-turns",
+          "text": "Solo: 20 turns; move Black Comet's marker after each Clean-up; lightning spaces draw an Automa token",
+          "condition": {
+            "players": [
+              1
+            ]
+          },
+          "ref": "Solo Mode, Gameplay Changes"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Whoever most recently watched a nature documentary goes first; play goes clockwise",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Life of the Amazonia rulebook p.5"
+        }
+      ]
+    }
+  ]
+}

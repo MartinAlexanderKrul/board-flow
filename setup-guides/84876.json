@@ -1,8 +1,11 @@
 {
   "schemaVersion": 1,
   "gameId": 84876,
+  "aliasGameIds": [
+    271320
+  ],
   "gameName": "The Castles of Burgundy",
-  "version": 3,
+  "version": 4,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
