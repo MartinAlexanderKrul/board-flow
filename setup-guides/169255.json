@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "gameId": 169255,
   "gameName": "A Game of Thrones: The Card Game (Second Edition)",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "A Game of Thrones: The Card Game 2nd ed. Learn to Play (FFG, via RulesPal)"
+      "A Game of Thrones: The Card Game 2nd ed. Learn to Play (FFG, via RulesPal)",
+      "A Game of Thrones: The Card Game 2nd ed. Rules Reference (FFG)"
     ]
   },
   "players": {
@@ -62,8 +63,8 @@
         },
         {
           "id": "faction",
-          "text": "Each player puts their faction card faceup in their play area",
-          "ref": "Tutorial Joust Game Setup"
+          "text": "Each player puts their faction card faceup in their play area (and any agenda card beside it)",
+          "ref": "Tutorial Joust Game Setup / Rules Reference, Agenda"
         },
         {
           "id": "treasury",

@@ -2,25 +2,141 @@
   "schemaVersion": 2,
   "gameId": 77130,
   "gameName": "Sid Meier's Civilization: The Board Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Sid Meier's Civilization rulebook (FFG, via RulesPal)"
+      "Sid Meier's Civilization rulebook (FFG)",
+      "Fame and Fortune rulebook (FFG)",
+      "Wisdom and Warfare rulebook (FFG)"
     ]
   },
   "players": {
     "min": 2,
-    "max": 4
+    "max": 5
   },
   "modules": [
     {
       "id": "learning",
-      "name": "Learning game (first play)"
+      "name": "Learning game (first play)",
+      "players": {
+        "min": 2,
+        "max": 4
+      }
+    },
+    {
+      "id": "ff",
+      "name": "Fame and Fortune",
+      "bggId": 108415,
+      "extendsMaxPlayers": 5,
+      "forcedAtPlayers": [
+        5
+      ]
+    },
+    {
+      "id": "great-people",
+      "name": "Fame and Fortune: great person deck",
+      "requires": [
+        "ff"
+      ]
+    },
+    {
+      "id": "investments",
+      "name": "Fame and Fortune: investments",
+      "requires": [
+        "ff"
+      ]
+    },
+    {
+      "id": "ww",
+      "name": "Wisdom and Warfare",
+      "bggId": 142708
     }
   ],
   "sections": [
+    {
+      "id": "expansions",
+      "title": "Fame and Fortune first",
+      "condition": {
+        "modules": [
+          "ff"
+        ]
+      },
+      "steps": [
+        {
+          "id": "ff-civs",
+          "text": "Add its 4 civilizations and culture level markers, 4 techs to each tech deck, metropolis markers and military reference cards",
+          "ref": "Fame and Fortune rulebook (FFG) p.5"
+        },
+        {
+          "id": "ff-map",
+          "text": "Add its home tiles, shuffle in its neutral tiles; add its huts, villages and relic markers",
+          "ref": "Fame and Fortune rulebook (FFG) p.5"
+        },
+        {
+          "id": "ff-cards",
+          "text": "Shuffle its wonders and culture events into their decks; replace Flight and Angkor Wat with the new cards",
+          "ref": "Fame and Fortune rulebook (FFG) p.5"
+        },
+        {
+          "id": "ff-great",
+          "text": "Great person deck (all agree): great person markers faceup sorted by type, the deck shuffled beside them",
+          "condition": {
+            "modules": [
+              "great-people"
+            ]
+          },
+          "ref": "Fame and Fortune rulebook (FFG) p.11"
+        },
+        {
+          "id": "ff-invest",
+          "text": "Investments (all agree; required if Arabia plays): each player gets their 4 investment cards",
+          "condition": {
+            "modules": [
+              "investments"
+            ]
+          },
+          "ref": "Fame and Fortune rulebook (FFG) p.13"
+        }
+      ]
+    },
+    {
+      "id": "expansions-ww",
+      "title": "Wisdom and Warfare first",
+      "condition": {
+        "modules": [
+          "ww"
+        ]
+      },
+      "steps": [
+        {
+          "id": "ww-civs",
+          "text": "Add its 6 civilizations; add its 6 techs to each tech deck and remove Metal Casting and Railroad",
+          "ref": "Wisdom and Warfare rulebook (FFG) p.4"
+        },
+        {
+          "id": "ww-cards",
+          "text": "Shuffle its wonders and culture events into their decks; add its home tiles, neutral tiles, huts, villages and relics",
+          "ref": "Wisdom and Warfare rulebook (FFG) p.4"
+        },
+        {
+          "id": "ww-replace",
+          "text": "Replace all unit, combat and government cards with the new ones (and Leonidas and Endowment for the Arts if you have Fame and Fortune)",
+          "ref": "Wisdom and Warfare rulebook (FFG) p.3-4"
+        },
+        {
+          "id": "ww-buildings",
+          "text": "Add the Shipyards; market overlay over the Harbor space",
+          "ref": "Wisdom and Warfare rulebook (FFG) p.4-5"
+        },
+        {
+          "id": "ww-policies",
+          "text": "Each player gets a deck of social policy cards; city-state markers shuffled in a pile",
+          "ref": "Wisdom and Warfare rulebook (FFG) p.5"
+        }
+      ]
+    },
     {
       "id": "general",
       "title": "General",
@@ -65,11 +181,40 @@
           "text": "Wonder deck: modern facedown, medieval on top; 4 ancient wonders faceup below it, each with its marker",
           "condition": {
             "notModules": [
-              "learning"
+              "learning",
+              "ff",
+              "ww"
             ]
           },
           "note": "Egypt first takes a random ancient wonder; a medieval one fills the gap",
           "ref": "General Setup 3D-E"
+        },
+        {
+          "id": "wonders-exp",
+          "text": "Wonder deck: 4 random modern, 4 medieval on top, 4 ancient on top; Egypt takes the top card, then 4 faceup with their markers",
+          "condition": {
+            "modules": [
+              "ff"
+            ],
+            "notModules": [
+              "learning"
+            ]
+          },
+          "ref": "Fame and Fortune rulebook (FFG) p.5"
+        },
+        {
+          "id": "wonders-ww",
+          "text": "Wonder deck: 4 random modern, 4 medieval on top, 4 ancient on top; Egypt takes the top card, then 4 faceup with their markers",
+          "condition": {
+            "modules": [
+              "ww"
+            ],
+            "notModules": [
+              "learning",
+              "ff"
+            ]
+          },
+          "ref": "Wisdom and Warfare rulebook (FFG) p.5"
         },
         {
           "id": "culture",
@@ -84,7 +229,8 @@
               "byPlayers": {
                 "2": 2,
                 "3": 3,
-                "4": 4
+                "4": 4,
+                "5": 5
               }
             }
           },
@@ -92,13 +238,28 @@
         },
         {
           "id": "map",
-          "text": "Home tiles faceup in front of their owners as the diagram shows; deal the neutral tiles facedown to complete the map",
-          "ref": "General Setup 5"
+          "text": "Home tiles faceup in front of their owners as the diagram shows (5 players: the Fame and Fortune diagram); deal the neutral tiles facedown to complete the map",
+          "ref": "General Setup 5 / Fame and Fortune rulebook (FFG) p.6"
         },
         {
           "id": "random-markers",
           "text": "Great people, huts and villages: three facedown mixed piles",
+          "condition": {
+            "notModules": [
+              "great-people"
+            ]
+          },
           "ref": "General Setup 6"
+        },
+        {
+          "id": "random-markers-gp",
+          "text": "Huts and villages: two facedown mixed piles",
+          "condition": {
+            "modules": [
+              "great-people"
+            ]
+          },
+          "ref": "General Setup 6 / Fame and Fortune rulebook (FFG) p.11"
         },
         {
           "id": "banks",
@@ -158,7 +319,7 @@
           "text": "America",
           "ref": "Player Setup 2",
           "details": [
-            "Great person: a random one, placed in your capital's outskirts at the end of setup"
+            "Great person: a random one, placed in your capital's outskirts at the end of setup (great person deck: also draw a card)"
           ]
         },
         {
@@ -210,6 +371,137 @@
           "details": [
             "Extra army: the white army figure, placed with your others",
             "Communism: start with Communism instead of Despotism"
+          ]
+        },
+        {
+          "id": "arabia",
+          "text": "Arabia",
+          "condition": {
+            "modules": [
+              "ff"
+            ]
+          },
+          "ref": "Fame and Fortune rulebook (FFG) p.6",
+          "details": [
+            "Resources: 1 incense, 1 iron, 1 silk, 1 wheat",
+            "Mathematics: artillery military marker at rank 2"
+          ]
+        },
+        {
+          "id": "greece",
+          "text": "Greece",
+          "condition": {
+            "modules": [
+              "ff"
+            ]
+          },
+          "ref": "Fame and Fortune rulebook (FFG) p.6",
+          "details": [
+            "Democracy: start with Democracy; infantry military marker at rank 2"
+          ]
+        },
+        {
+          "id": "india",
+          "text": "India",
+          "condition": {
+            "modules": [
+              "ff"
+            ]
+          },
+          "ref": "Fame and Fortune rulebook (FFG) p.6",
+          "details": [
+            "Metropolis: start with a metropolis on 2 side-by-side centre squares instead of a capital"
+          ]
+        },
+        {
+          "id": "spain",
+          "text": "Spain",
+          "condition": {
+            "modules": [
+              "ff"
+            ]
+          },
+          "ref": "Fame and Fortune rulebook (FFG) p.6",
+          "details": [
+            "Extra scout: the white scout figure, placed with your others (stacking limit still 2)"
+          ]
+        },
+        {
+          "id": "aztecs",
+          "text": "Aztecs",
+          "condition": {
+            "modules": [
+              "ww"
+            ]
+          },
+          "ref": "Wisdom and Warfare rulebook (FFG) p.5",
+          "details": [
+            "None: only the starting tech (one centre square is water)"
+          ]
+        },
+        {
+          "id": "english",
+          "text": "English",
+          "condition": {
+            "modules": [
+              "ww"
+            ]
+          },
+          "ref": "Wisdom and Warfare rulebook (FFG) p.5",
+          "details": [
+            "None: only the starting tech"
+          ]
+        },
+        {
+          "id": "french",
+          "text": "French",
+          "condition": {
+            "modules": [
+              "ww"
+            ]
+          },
+          "ref": "Wisdom and Warfare rulebook (FFG) p.5",
+          "details": [
+            "Policies: 1 extra social policy, and the maximum is 1 higher"
+          ]
+        },
+        {
+          "id": "japanese",
+          "text": "Japanese",
+          "condition": {
+            "modules": [
+              "ww"
+            ]
+          },
+          "ref": "Wisdom and Warfare rulebook (FFG) p.5",
+          "details": [
+            "Feudalism: start with Feudalism; mounted military marker at rank 2"
+          ]
+        },
+        {
+          "id": "mongols",
+          "text": "Mongols",
+          "condition": {
+            "modules": [
+              "ww"
+            ]
+          },
+          "ref": "Wisdom and Warfare rulebook (FFG) p.5",
+          "details": [
+            "Horsemen: 2 extra mounted units in your standing forces; travel speed 3"
+          ]
+        },
+        {
+          "id": "zulu",
+          "text": "Zulu",
+          "condition": {
+            "modules": [
+              "ww"
+            ]
+          },
+          "ref": "Wisdom and Warfare rulebook (FFG) p.5",
+          "details": [
+            "Troops: 2 extra artillery units in your standing forces"
           ]
         }
       ]

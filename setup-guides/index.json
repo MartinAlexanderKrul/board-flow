@@ -1901,7 +1901,7 @@
       "gameId": 274364,
       "gameName": "Watergate",
       "gameIds": [274364],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "274364.json"
     },
@@ -1916,8 +1916,8 @@
     {
       "gameId": 319910,
       "gameName": "Pagan: Fate of Roanoke",
-      "gameIds": [319910],
-      "version": 1,
+      "gameIds": [319910, 349606],
+      "version": 2,
       "schemaVersion": 1,
       "path": "319910.json"
     },
@@ -1964,8 +1964,8 @@
     {
       "gameId": 223321,
       "gameName": "Detective: A Modern Crime Board Game",
-      "gameIds": [223321],
-      "version": 1,
+      "gameIds": [223321, 264005],
+      "version": 2,
       "schemaVersion": 2,
       "path": "223321.json"
     },
@@ -1973,7 +1973,7 @@
       "gameId": 93260,
       "gameName": "Summoner Wars: Master Set",
       "gameIds": [93260],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "93260.json"
     },
@@ -1996,8 +1996,8 @@
     {
       "gameId": 176189,
       "gameName": "Zombicide: Black Plague",
-      "gameIds": [176189],
-      "version": 1,
+      "gameIds": [176189, 178485],
+      "version": 2,
       "schemaVersion": 1,
       "path": "176189.json"
     },
@@ -2005,7 +2005,7 @@
       "gameId": 169255,
       "gameName": "A Game of Thrones: The Card Game (Second Edition)",
       "gameIds": [169255],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "169255.json"
     },
@@ -2068,8 +2068,8 @@
     {
       "gameId": 77130,
       "gameName": "Sid Meier's Civilization: The Board Game",
-      "gameIds": [77130],
-      "version": 1,
+      "gameIds": [77130, 108415, 142708],
+      "version": 2,
       "schemaVersion": 2,
       "path": "77130.json"
     },

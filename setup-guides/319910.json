@@ -2,18 +2,33 @@
   "schemaVersion": 1,
   "gameId": 319910,
   "gameName": "Pagan: Fate of Roanoke",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Pagan: Fate of Roanoke rules (Kosmos / Capstone, via RulesPal)"
+      "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone)",
+      "Pagan: Beyond the Palisades rulebook (Wyrmgold)"
     ]
   },
   "players": {
     "min": 2,
     "max": 2
   },
+  "modules": [
+    {
+      "id": "factions",
+      "name": "Advanced: choose villager factions"
+    },
+    {
+      "id": "palisades",
+      "name": "Beyond the Palisades",
+      "bggId": 349606,
+      "requires": [
+        "factions"
+      ]
+    }
+  ],
   "sections": [
     {
       "id": "table",
@@ -22,48 +37,98 @@
         {
           "id": "roles",
           "text": "Decide who plays the Witch and who plays the Hunter",
-          "ref": "Game Setup"
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
         },
         {
           "id": "witch",
           "text": "Witch: 3 Action pawns (2 regular, 1 Familiar), Witch board, green Influence disc",
-          "ref": "Game Setup"
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
         },
         {
           "id": "hunter",
           "text": "Hunter: 3 Action pawns, Hunter board, red Influence disc",
-          "ref": "Game Setup"
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
         },
         {
           "id": "village",
           "text": "3-part village board in the middle (1st, 2nd, 3rd); Enchantment board beside it",
-          "ref": "Game Setup"
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
+        },
+        {
+          "id": "factions",
+          "text": "Villagers: the Witch picks the red faction, the Hunter the blue; green comes from the scenario (no scenario: agree, or use the Caretakers)",
+          "condition": {
+            "modules": [
+              "factions"
+            ]
+          },
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.25, Advanced Rules"
+        },
+        {
+          "id": "household",
+          "text": "Green faction: The Household (The Tainted on the other side)",
+          "condition": {
+            "modules": [
+              "palisades"
+            ]
+          },
+          "ref": "Pagan: Beyond the Palisades rulebook (Wyrmgold) p.5"
         },
         {
           "id": "villagers",
           "text": "The 9 villagers on their matching spaces (symbol and colour)",
-          "ref": "Game Setup"
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
         },
         {
           "id": "suspect",
-          "text": "Shuffle the 9 Suspects; the Witch secretly draws 1: the true Witch",
-          "ref": "Game Setup"
+          "text": "Shuffle the 9 matching Suspects; the Witch secretly draws 1: the true Witch",
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
         },
         {
           "id": "decks",
           "text": "Each player shuffles their 50-card deck",
-          "ref": "Game Setup"
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
+        },
+        {
+          "id": "palisades-decks",
+          "text": "Use the Beyond the Palisades 50-card decks (or build decks: 50 cards, max 2 copies, 10+ of each card type)",
+          "condition": {
+            "modules": [
+              "palisades"
+            ]
+          },
+          "ref": "Pagan: Beyond the Palisades rulebook (Wyrmgold) p.2 / Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.26"
         },
         {
           "id": "supply",
           "text": "Clues, Evidence, Secrets and Favors in the general supply",
-          "ref": "Game Setup"
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
+        },
+        {
+          "id": "gloom",
+          "text": "The 30 Gloom tokens in the general supply",
+          "condition": {
+            "modules": [
+              "palisades"
+            ]
+          },
+          "ref": "Pagan: Beyond the Palisades rulebook (Wyrmgold) p.2"
+        },
+        {
+          "id": "scenario",
+          "text": "Optional: a scenario card (Beyond the Palisades has 4); its rules beat the standard ones",
+          "condition": {
+            "modules": [
+              "palisades"
+            ]
+          },
+          "ref": "Pagan: Beyond the Palisades rulebook (Wyrmgold) p.5"
         },
         {
           "id": "hands",
           "text": "Each player draws 3 cards and sets their Influence disc to 2",
           "note": "First game: a player aid next to each board",
-          "ref": "Game Setup"
+          "ref": "Pagan: Fate of Roanoke rulebook (Wyrmgold / Capstone) p.4"
         }
       ]
     },
@@ -86,6 +151,16 @@
           "id": "hand-limit",
           "text": "Upkeep: discard down to 7 cards; Hunter pays Ally upkeep in Influence",
           "ref": "Upkeep phase"
+        },
+        {
+          "id": "gloom-cards",
+          "text": "Gloom cards cannot be removed by choice; with no Gloom left they are cleansed and discarded",
+          "condition": {
+            "modules": [
+              "palisades"
+            ]
+          },
+          "ref": "Pagan: Beyond the Palisades rulebook (Wyrmgold) p.3-4"
         }
       ]
     },

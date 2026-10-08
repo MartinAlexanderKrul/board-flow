@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 274364,
   "gameName": "Watergate",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -51,7 +51,7 @@
         },
         {
           "id": "bag",
-          "text": "Evidence tokens into the bag",
+          "text": "The 30 evidence tokens into the bag",
           "ref": "Set Up"
         }
       ]

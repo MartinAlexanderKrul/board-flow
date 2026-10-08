@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 93260,
   "gameName": "Summoner Wars: Master Set",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Summoner Wars Master Set rules (Plaid Hat Games, via RulesPal)"
+      "Summoner Wars Master Set rulebook v2 (Plaid Hat Games)"
     ]
   },
   "players": {
@@ -66,6 +66,11 @@
           "id": "draw-pile",
           "text": "Shuffle the rest facedown on your Draw Pile space; start with no cards in hand",
           "ref": "Game Setup"
+        },
+        {
+          "id": "vine-walls",
+          "text": "If your Reference Card lists Vine Walls, keep that many in a Vine Wall pile off the Battlefield (not in the deck)",
+          "ref": "Vine Walls"
         }
       ]
     },

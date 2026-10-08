@@ -2,18 +2,26 @@
   "schemaVersion": 1,
   "gameId": 176189,
   "gameName": "Zombicide: Black Plague",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Zombicide: Black Plague rules (CMON, via RulesPal)"
+      "Zombicide: Black Plague rulebook (CMON)",
+      "Zombicide: Black Plague - Wulfsburg rulebook (CMON)"
     ]
   },
   "players": {
     "min": 1,
     "max": 6
   },
+  "modules": [
+    {
+      "id": "wulfsburg",
+      "name": "Wulfsburg",
+      "bggId": 178485
+    }
+  ],
   "sections": [
     {
       "id": "board",
@@ -30,6 +38,16 @@
           "ref": "Setup"
         },
         {
+          "id": "wulfsburg-cards",
+          "text": "Add all Wulfsburg Equipment and Zombie cards (#55-62) to their piles, unless the Quest says otherwise",
+          "condition": {
+            "modules": [
+              "wulfsburg"
+            ]
+          },
+          "ref": "Zombicide: Black Plague - Wulfsburg rulebook (CMON) p.3"
+        },
+        {
           "id": "decks",
           "text": "Shuffle the Zombie cards and the Equipment cards into 2 facedown decks by the board",
           "ref": "Setup"
@@ -42,7 +60,7 @@
       "steps": [
         {
           "id": "pick",
-          "text": "Split 6 Survivors among the players (new players: 1 each)",
+          "text": "Split 6 Survivors among the players (new players: 1 each); Wulfsburg adds Theo, Ariane, Morrigan and Karl",
           "note": "All players are one team",
           "ref": "Setup / Game Overview"
         },
@@ -55,6 +73,16 @@
           "id": "aside",
           "text": "Set aside the grey-backed Starting Equipment (Hammer, Mana Blast, Short Bow, 3 Short Swords) and the blue Vault cards (Inferno, Orcish Crossbow)",
           "ref": "Setup"
+        },
+        {
+          "id": "wulfsburg-start",
+          "text": "Wulfsburg starting Equipment (Mana Blast, Short Bow, 2 Short Swords) joins the starting pool",
+          "condition": {
+            "modules": [
+              "wulfsburg"
+            ]
+          },
+          "ref": "Zombicide: Black Plague - Wulfsburg rulebook (CMON) p.2"
         },
         {
           "id": "equipment",
