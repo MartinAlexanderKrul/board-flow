@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "gameId": 264220,
+  "gameName": "Tainted Grail: The Fall of Avalon",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Tainted Grail: The Fall of Avalon rulebook v2.0 (Awaken Realms, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "sections": [
+    {
+      "id": "characters",
+      "title": "Each character",
+      "steps": [
+        {
+          "id": "mode",
+          "text": "Choose Story, Standard or Challenge mode (Challenge only after Chapter 1); Story and Challenge put their Help card out",
+          "ref": "Character Setup I"
+        },
+        {
+          "id": "character",
+          "text": "Choose a Character: its Tile and the Tray of the same colour",
+          "ref": "Character Setup II"
+        },
+        {
+          "id": "tracks",
+          "text": "Markers on the Energy and Terror slots with the two red chevrons; T-shaped Health marker on its chevron slot",
+          "ref": "Character Setup III-IV"
+        },
+        {
+          "id": "attributes",
+          "text": "Mark the starting Attributes and Resources from the back of the Tile",
+          "ref": "Character Setup V-VI"
+        },
+        {
+          "id": "starter",
+          "text": "Starter decks: the 15 basic Combat and 15 basic Diplomacy cards with your Tray-colour banner (1-15), Combat left of the Tray, Diplomacy right",
+          "ref": "Character Setup VIII"
+        },
+        {
+          "id": "pools",
+          "text": "Advancement Pools: your 15 named advanced cards plus the other 10 basic cards, per type, shuffled and stored (25 each)",
+          "ref": "Character Setup IX"
+        },
+        {
+          "id": "tile",
+          "text": "Tile on the Tray, Character Action side up",
+          "ref": "Character Setup X"
+        },
+        {
+          "id": "letter",
+          "text": "Read your introductory Letter (its Character Number breaks ties); take your Adventure Map",
+          "ref": "Character Setup XI-XII"
+        }
+      ]
+    },
+    {
+      "id": "world",
+      "title": "World",
+      "steps": [
+        {
+          "id": "start",
+          "text": "Starting Location 101 in the middle with all Character models",
+          "ref": "World Setup I"
+        },
+        {
+          "id": "menhir",
+          "text": "A Menhir on it with a Dial set to {n} days",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "1": 8,
+                "2": 7,
+                "3": 6,
+                "4": 5
+              }
+            }
+          },
+          "ref": "World Setup II"
+        },
+        {
+          "id": "map",
+          "text": "Attach Locations 102 (top), 103 (left), 104 (right) and 105 (bottom)",
+          "ref": "World Setup III"
+        },
+        {
+          "id": "encounters",
+          "text": "Encounters sorted by colour into 4 piles of 31 (with the Your First Encounter card)",
+          "ref": "World Setup IV"
+        },
+        {
+          "id": "secrets",
+          "text": "Secrets sorted by number; Item deck shuffled",
+          "ref": "World Setup V"
+        },
+        {
+          "id": "save",
+          "text": "A fresh Save sheet",
+          "ref": "World Setup VI"
+        },
+        {
+          "id": "help",
+          "text": "Each player: Icon Guide and Turn Order card; the Combat/Diplomacy Help card on the table",
+          "ref": "World Setup VII"
+        },
+        {
+          "id": "chronicler",
+          "text": "Optional (2-4 players): a Chronicler reads paragraphs and handles upkeep",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Chronicler"
+        },
+        {
+          "id": "chapter",
+          "text": "Follow the Chapter I Setup card to build the Event and Encounter decks; shuffle the Random Events aside",
+          "ref": "World Setup IX"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "returning",
+          "text": "Returning to a campaign: use the Saving the Game rules instead of a full setup",
+          "ref": "Campaign Setup"
+        },
+        {
+          "id": "events",
+          "text": "Draw from the Event deck, never the Random Event pile, unless told otherwise",
+          "ref": "World Setup IX"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "explore",
+          "text": "Day 1 begins: exploring your home Location is a good first step",
+          "ref": "World Setup X"
+        }
+      ]
+    }
+  ]
+}

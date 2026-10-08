@@ -1,0 +1,302 @@
+{
+  "schemaVersion": 2,
+  "gameId": 72125,
+  "gameName": "Eclipse: New Dawn for the Galaxy",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Eclipse rulebook (Lautapelit.fi, 1st edition, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 6
+  },
+  "modules": [
+    {
+      "id": "aliens",
+      "name": "Alien species",
+      "note": "Recommended from the second game on."
+    }
+  ],
+  "sections": [
+    {
+      "id": "supply",
+      "title": "Supply board",
+      "steps": [
+        {
+          "id": "parts",
+          "text": "Ship Part tiles and the Round marker on the Supply board",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "tech",
+          "text": "Shuffle the Technology tiles in a bag; draw {n} onto the Research tracks, stacking matching tiles",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 12,
+                "3": 14,
+                "4": 16,
+                "5": 18,
+                "6": 20
+              }
+            }
+          },
+          "ref": "Game Setup / Tech Tiles"
+        },
+        {
+          "id": "reputation",
+          "text": "Reputation tiles in the other bag",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "discovery",
+          "text": "Discovery tiles shuffled facedown on their spot; Ancient Ships, Orbitals and Monoliths, Damage cubes and the Traitor card on the board",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "galaxy",
+      "title": "Galaxy",
+      "steps": [
+        {
+          "id": "center",
+          "text": "Galactic Center in the middle: a facedown Discovery tile and the Defense System tile on it",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "stacks",
+          "text": "Sector hexes facedown in 3 stacks: all Inner (I), all Middle (II), {n} random Outer (III)",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 5,
+                "3": 10,
+                "4": 14,
+                "5": 16,
+                "6": 18
+              }
+            }
+          },
+          "ref": "Game Setup / Outer Sectors"
+        },
+        {
+          "id": "first",
+          "text": "Starting Player marker to whoever has spent the least time on Terra",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "species",
+          "text": "With aliens: from the starting player's right, counterclockwise, each picks a species (choosing Terrans removes one alien species)",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Alien Species"
+        },
+        {
+          "id": "start-hex",
+          "text": "From the starting player clockwise: take a start hex and its Player Board; place it on the nearest start spot two hexes from the Center",
+          "condition": {
+            "notModules": [
+              "aliens"
+            ]
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "start-hex-aliens",
+          "text": "In the same order place your species' start hex on the nearest start spot two hexes from the Center",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Alien Species"
+        },
+        {
+          "id": "box",
+          "text": "Box the unused start hexes and boards",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "pieces",
+          "text": "All Ships, Ambassadors, discs and cubes of your colour, 3 Colony Ships (Planta: 4) and a Summary card (Action side up)",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "influence",
+          "text": "An Influence Disc on every circle of the Influence track (Eridani: leave the 2 rightmost empty)",
+          "ref": "Game Setup / Alien Species"
+        },
+        {
+          "id": "population",
+          "text": "A Population cube on every square of the 3 Population tracks except the lighter rightmost one",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "storage",
+          "text": "Storage markers: Money 2, Science 3, Materials 3 (aliens: their species' values)",
+          "ref": "Game Setup / Alien Species"
+        },
+        {
+          "id": "home",
+          "text": "On your start hex: 1 Interceptor (Orion: a Cruiser), a cube on each normal Population square from its track, 1 Influence Disc from your track",
+          "ref": "Game Setup / Alien Species"
+        }
+      ]
+    },
+    {
+      "id": "aliens-box",
+      "title": "Alien species",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "eridani",
+          "text": "Eridani Empire",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Alien Species",
+          "details": [
+            "Start: 26 Money, 2 Science, 4 Materials; hex 222; Gauss Shield, Fusion Drive, Plasma Cannon",
+            "Reputation: draws 2 random Reputation tiles at the start",
+            "Influence: 2 fewer discs",
+            "Trade: 3:1; own ship blueprints"
+          ]
+        },
+        {
+          "id": "hydran",
+          "text": "Hydran Progress",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Alien Species",
+          "details": [
+            "Start: 2 Money, 5 Science, 2 Materials; hex 224; Advanced Labs",
+            "Setup: an extra cube on the Advanced Science square of the start hex",
+            "Research: may buy 2 Technologies per action",
+            "Trade: 3:1"
+          ]
+        },
+        {
+          "id": "planta",
+          "text": "Planta",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Alien Species",
+          "details": [
+            "Start: 4 Money, 4 Science, 4 Materials; hex 226; Starbase; 4 Colony Ships",
+            "Explore: may explore 2 hexes per action",
+            "Fragile: enemy Ships destroy their Population cubes after combat",
+            "Growth: 1 extra VP per controlled hex at game end",
+            "Trade: 3:1; own ship blueprints"
+          ]
+        },
+        {
+          "id": "draco",
+          "text": "Descendants of Draco",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Alien Species",
+          "details": [
+            "Start: 2 Money, 4 Science, 3 Materials; hex 228",
+            "Explore: turn 2 hexes and keep one, or discard both",
+            "Ancients: 1 VP per Ancient Ship left on the board at game end",
+            "Trade: 3:1"
+          ]
+        },
+        {
+          "id": "mechanema",
+          "text": "Mechanema",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Alien Species",
+          "details": [
+            "Start: 3 Money, 3 Science, 3 Materials; hex 230; Positron Computer",
+            "Upgrade: up to 3 Ship Part tiles per action",
+            "Build: up to 3 Ships or Structures per action, at lower cost",
+            "Trade: 3:1"
+          ]
+        },
+        {
+          "id": "orion",
+          "text": "Orion Hegemony",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Alien Species",
+          "details": [
+            "Start: 3 Money, 3 Science, 5 Materials; hex 232; Neutron Bombs, Gauss Shield; a Cruiser instead of an Interceptor",
+            "Trade: 4:1; own ship blueprints"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "move-two",
+          "text": "Move: Terrans make 3 Ship movements, every alien species only 2",
+          "condition": {
+            "modules": [
+              "aliens"
+            ]
+          },
+          "ref": "Move / Alien Species"
+        },
+        {
+          "id": "upkeep",
+          "text": "Upkeep: pay the Money shown on the leftmost empty Influence circle",
+          "ref": "Influence Discs"
+        },
+        {
+          "id": "limits",
+          "text": "Ships, cubes, discs and tiles are limited; Ship Parts, Orbitals and Damage cubes are not",
+          "ref": "Component limitations"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "starting",
+          "text": "The starting player takes the first action",
+          "ref": "Game Setup"
+        }
+      ]
+    }
+  ]
+}

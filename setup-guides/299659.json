@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "gameId": 299659,
+  "gameName": "Clash of Cultures: Monumental Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Clash of Cultures: Monumental Edition rulebook (Sand Castle Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "civilizations",
+      "name": "Civilizations expansion (in the Monumental box)"
+    },
+    {
+      "id": "short",
+      "name": "Shorter game (4 Ages)"
+    }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Board",
+      "steps": [
+        {
+          "id": "map",
+          "text": "Lay out the map for your player count: starting Regions faceup (mind the Mountain side), the other Regions random and facedown",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "civ-region",
+          "text": "Civilizations with their own starting Region use it instead (Plains in the usual place)",
+          "condition": {
+            "modules": [
+              "civilizations"
+            ]
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "seats",
+          "text": "Random seating around the board",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "round-track",
+          "text": "Round track beside the board (7-Age side only for Variable End Game); Round marker on Age 1, Round 1",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "supply",
+          "text": "Barbarian settlements and units, Culture and Mood tokens and dice in a common supply",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "black-ships",
+          "text": "Black (pirate) ships in the common supply",
+          "condition": {
+            "modules": [
+              "civilizations"
+            ]
+          },
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Decks",
+      "steps": [
+        {
+          "id": "expansion-cards",
+          "text": "Add the expansion-icon Event and Objective cards (otherwise box them)",
+          "condition": {
+            "modules": [
+              "civilizations"
+            ]
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "decks",
+          "text": "Shuffle the Objective, Event, Action and Wonder decks facedown",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "hand",
+          "text": "Each player draws 1 Action and 1 Objective card (hidden)",
+          "ref": "Game Setup"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "colour",
+          "text": "Pick a colour: Player board, Player aid and a supply of cubes",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "cities",
+          "text": "City pieces: 7 Settlements, 5 Temples, 5 Academies, 5 Fortresses, 5 Ports",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "civ-cities",
+          "text": "Also 5 Obelisks, 5 Markets, 5 Observatories",
+          "condition": {
+            "modules": [
+              "civilizations"
+            ]
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "units",
+          "text": "Units: 16 Infantry, 4 Ships, 4 Settlers",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "civ-units",
+          "text": "Also 4 Elephants, 4 Cavalry and 1 Leader",
+          "condition": {
+            "modules": [
+              "civilizations"
+            ]
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "civ-board",
+          "text": "A random Civilization board and its 3 Leader cards; box the others",
+          "condition": {
+            "modules": [
+              "civilizations"
+            ]
+          },
+          "ref": "Game Setup"
+        },
+        {
+          "id": "resources",
+          "text": "Resource markers: Food on 2, Wood, Ore, Ideas and Gold on 0",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "advances",
+          "text": "A cube on the Farming and Mining Advances; 3 cubes on the Event tracker",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "first-city",
+          "text": "A Settlement on the Plains of your starting Region with a Happy Mood token and a Settler beside it",
+          "ref": "Game Setup"
+        },
+        {
+          "id": "short",
+          "text": "Shorter game: start with 2 Settlers",
+          "condition": {
+            "modules": [
+              "short"
+            ]
+          },
+          "ref": "Variants, Shorter Game"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "three-actions",
+          "text": "Each turn: 3 Main Actions; 3 Rounds per Age, then a Status Phase",
+          "ref": "Game Structure"
+        },
+        {
+          "id": "short-end",
+          "text": "Shorter game: 2 free Advances per Status Phase; the game ends after Age IV",
+          "condition": {
+            "modules": [
+              "short"
+            ]
+          },
+          "ref": "Variants, Shorter Game"
+        },
+        {
+          "id": "next-first",
+          "text": "After each Age the most Mood plus Culture tokens decides the next first player",
+          "ref": "Determine First Player"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Random first player takes the First Player marker",
+          "ref": "Game Setup"
+        }
+      ]
+    }
+  ]
+}

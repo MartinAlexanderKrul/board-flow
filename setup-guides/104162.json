@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "gameId": 104162,
+  "gameName": "Descent: Journeys in the Dark (Second Edition)",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Descent 2nd ed. rulebook (FFG, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "modules": [
+    {
+      "id": "campaign",
+      "name": "Campaign (Heirs of Blood)",
+      "excludes": [
+        "epic"
+      ]
+    },
+    {
+      "id": "epic",
+      "name": "Epic Play (Advanced or Expert level)",
+      "excludes": [
+        "campaign"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "general",
+      "title": "General",
+      "steps": [
+        {
+          "id": "quest",
+          "text": "Choose a quest from the Quest Guide (first game: Acolyte of Saradyn)",
+          "ref": "General Setup"
+        },
+        {
+          "id": "campaign-quest",
+          "text": "Campaign: start with Acolyte of Saradyn in the Act I Quest Guide",
+          "condition": {
+            "modules": [
+              "campaign"
+            ]
+          },
+          "ref": "Campaign Rules, Quests in a Campaign"
+        },
+        {
+          "id": "act1",
+          "text": "Campaign: put the Act II Shop Items, Monster and Lieutenant cards back in the box",
+          "condition": {
+            "modules": [
+              "campaign"
+            ]
+          },
+          "ref": "Campaign Rules"
+        },
+        {
+          "id": "map",
+          "text": "Build the map from the quest's Encounter 1 diagram, with its doors",
+          "ref": "General Setup"
+        },
+        {
+          "id": "roles",
+          "text": "Pick the overlord (the most experienced player is suggested; die roll if you disagree); everyone else plays heroes",
+          "ref": "General Setup"
+        },
+        {
+          "id": "tokens",
+          "text": "Damage, fatigue, hero and condition tokens in piles in reach",
+          "ref": "General Setup"
+        },
+        {
+          "id": "search",
+          "text": "Shuffle the Search deck facedown by the heroes; Condition cards in piles by type",
+          "ref": "General Setup"
+        }
+      ]
+    },
+    {
+      "id": "heroes",
+      "title": "Heroes",
+      "steps": [
+        {
+          "id": "reference",
+          "text": "Each hero player: a Reference card and the hero tokens of its colour",
+          "ref": "Hero Setup"
+        },
+        {
+          "id": "hero",
+          "text": "Agree who plays which hero; take the Hero sheet and figure",
+          "note": "2 players: the hero player runs 2 heroes",
+          "ref": "Hero Setup"
+        },
+        {
+          "id": "class",
+          "text": "Each hero picks a Class deck matching their archetype (Warrior, Healer, Mage, Scout), no class twice; box the unused ones",
+          "ref": "Hero Setup"
+        },
+        {
+          "id": "skills",
+          "text": "Keep the basic skill (no XP icon) and starting equipment; box the other skills",
+          "condition": {
+            "notModules": [
+              "campaign",
+              "epic"
+            ]
+          },
+          "ref": "Hero Setup"
+        },
+        {
+          "id": "skills-campaign",
+          "text": "Keep the basic skill and starting equipment; keep the rest of the Class deck facedown for later",
+          "condition": {
+            "modules": [
+              "campaign"
+            ]
+          },
+          "ref": "Campaign Rules, Starting a New Campaign"
+        },
+        {
+          "id": "epic-heroes",
+          "text": "Epic Play: each hero gets {xp} XP of Class cards and {gold} gold of Shop Items (gold may be shared)",
+          "amounts": {
+            "xp": "3 (Advanced) or 6 (Expert)",
+            "gold": "150 Act I (Advanced) or 250 Act I/II (Expert)"
+          },
+          "condition": {
+            "modules": [
+              "epic"
+            ]
+          },
+          "ref": "Epic Play"
+        },
+        {
+          "id": "place",
+          "text": "Hero figures on the quest's hero start area (usually an entrance)",
+          "ref": "Hero Setup"
+        }
+      ]
+    },
+    {
+      "id": "overlord",
+      "title": "Overlord",
+      "steps": [
+        {
+          "id": "monsters",
+          "text": "Take the Act I Monster cards and figures of the monster groups chosen from the quest's options",
+          "ref": "Overlord Setup"
+        },
+        {
+          "id": "lieutenant",
+          "text": "If the quest has a lieutenant, take its Act I Lieutenant card and token",
+          "ref": "Overlord Setup"
+        },
+        {
+          "id": "quest-setup",
+          "text": "Follow the quest's Setup: monsters, objective, search and villager tokens",
+          "ref": "Overlord Setup"
+        },
+        {
+          "id": "deck",
+          "text": "Shuffle the 15 basic Overlord cards as the Overlord deck (box the others)",
+          "condition": {
+            "notModules": [
+              "epic"
+            ]
+          },
+          "ref": "Overlord Setup"
+        },
+        {
+          "id": "epic-overlord",
+          "text": "Epic Play: the overlord gets {xp} XP of Overlord cards (Expert also uses Act II Monster and Lieutenant cards)",
+          "amounts": {
+            "xp": "4 (Advanced) or 8 (Expert)"
+          },
+          "condition": {
+            "modules": [
+              "epic"
+            ]
+          },
+          "ref": "Epic Play"
+        },
+        {
+          "id": "draw",
+          "text": "Draw Overlord cards equal to the number of heroes",
+          "ref": "Overlord Setup"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "golden",
+          "text": "Quest rules beat cards, and cards beat the rulebook",
+          "ref": "The Golden Rules"
+        },
+        {
+          "id": "permanent",
+          "text": "Campaign: heroes and classes are fixed for the whole campaign",
+          "condition": {
+            "modules": [
+              "campaign"
+            ]
+          },
+          "ref": "Campaign Rules, Starting a New Campaign"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "heroes-first",
+          "text": "Heroes go first, in an order they agree each round (else clockwise from the overlord's left); then the overlord",
+          "ref": "Playing the Game"
+        }
+      ]
+    }
+  ]
+}

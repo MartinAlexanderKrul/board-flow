@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "gameId": 281655,
+  "gameName": "High Frontier 4 All",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "High Frontier 4 All core rules (Ion Game Design, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 5
+  },
+  "sections": [
+    {
+      "id": "setup",
+      "title": "Core setup",
+      "steps": [
+        {
+          "id": "learn",
+          "text": "New players: start with the introductory games (Space Diamonds, Starship Builder, Race For Glory)",
+          "ref": "A3. Introductory Games"
+        },
+        {
+          "id": "seniority",
+          "text": "Sol Sunspot Cycle placard on its CORE GAME side; 4 translucent red disks over the Sol icon",
+          "ref": "C1"
+        },
+        {
+          "id": "crew",
+          "text": "Deal each player a random Crew; each secretly picks which side to play",
+          "note": "Norse Astronauts / SpaceX: borrow an unused colour as your grey",
+          "ref": "C2"
+        },
+        {
+          "id": "playmat",
+          "text": "Each player: a playmat with the Crew faceup in the LEO slot",
+          "ref": "C3"
+        },
+        {
+          "id": "reserve",
+          "text": "Reserve in your colour: 2 Rockets, 1 Dry Mass and 1 Wet Mass chit, 7 Factory cubes, 7 Colony domes, 9 Claim disks, 2 Outpost chits",
+          "ref": "C3"
+        },
+        {
+          "id": "patents",
+          "text": "Shuffle the 6 patent decks (thruster, robonaut, refinery, generator, reactor, radiator) separately, White-Side up",
+          "ref": "C4"
+        },
+        {
+          "id": "aquas",
+          "text": "6 Aqua beads into each player's LEO slot (one per patent deck)",
+          "ref": "C5"
+        },
+        {
+          "id": "exploitation",
+          "text": "A blue bead on each of the 6 starting spaces of the Exploitation Tracks",
+          "ref": "C6"
+        },
+        {
+          "id": "glory",
+          "text": "1 glory chit, 1 VP side up, on each Heliocentric Zone: Mercury, Venus, Earth, Mars, Ceres, Jupiter, Saturn, Uranus, Neptune",
+          "ref": "C7"
+        },
+        {
+          "id": "heroism",
+          "text": "A heroism chit on each of the 4 heroism spots",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "C7"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "white-side",
+          "text": "Use only White-Sides of patents until you build your first Factory",
+          "ref": "B2. Patent Cards"
+        },
+        {
+          "id": "seniority-cross",
+          "text": "Remove a red disk each time the seniority threshold is crossed (each 12-year cycle)",
+          "ref": "C1"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Best clout (A highest) is 1st Player: they put a cube on the Sunspot Cycle start and take the first turn",
+          "ref": "C8"
+        }
+      ]
+    }
+  ]
+}

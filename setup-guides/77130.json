@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 2,
+  "gameId": 77130,
+  "gameName": "Sid Meier's Civilization: The Board Game",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "Sid Meier's Civilization rulebook (FFG, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "learning",
+      "name": "Learning game (first play)"
+    }
+  ],
+  "sections": [
+    {
+      "id": "general",
+      "title": "General",
+      "steps": [
+        {
+          "id": "learning",
+          "text": "Learning game: box Egypt, Rome and all wonders; the game ends when someone builds their third city",
+          "condition": {
+            "modules": [
+              "learning"
+            ]
+          },
+          "ref": "Preparing for the First Game"
+        },
+        {
+          "id": "civs",
+          "text": "Deal civilization sheets at random (or pick, if all agree); each player picks a colour",
+          "ref": "General Setup 1"
+        },
+        {
+          "id": "components",
+          "text": "Each: 6 armies, 2 scouts, 3 city markers, 4 military tech markers, 36 tech cards, a reference sheet, a setup card and 4 government cards",
+          "ref": "General Setup 2"
+        },
+        {
+          "id": "units",
+          "text": "Market board at one end: shuffle the 4 unit decks onto it; give each player 1 artillery, 1 infantry, 1 mounted facedown as standing forces",
+          "ref": "General Setup 3A"
+        },
+        {
+          "id": "military-markers",
+          "text": "Each player's artillery, infantry and mounted markers one-stripe side up below those decks; aircraft marker star side down",
+          "ref": "General Setup 3B"
+        },
+        {
+          "id": "buildings",
+          "text": "Building markers sorted onto their spaces",
+          "ref": "General Setup 3C"
+        },
+        {
+          "id": "wonders",
+          "text": "Wonder deck: modern facedown, medieval on top; 4 ancient wonders faceup below it, each with its marker",
+          "condition": {
+            "notModules": [
+              "learning"
+            ]
+          },
+          "note": "Egypt first takes a random ancient wonder; a medieval one fills the gap",
+          "ref": "General Setup 3D-E"
+        },
+        {
+          "id": "culture",
+          "text": "Culture event decks (ancient, medieval, modern) shuffled below the culture track; each leader marker on its start space",
+          "ref": "General Setup 3F-G"
+        },
+        {
+          "id": "resources",
+          "text": "{n} of each market resource token by the board; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 2,
+                "3": 3,
+                "4": 4
+              }
+            }
+          },
+          "ref": "General Setup 4"
+        },
+        {
+          "id": "map",
+          "text": "Home tiles faceup in front of their owners as the diagram shows; deal the neutral tiles facedown to complete the map",
+          "ref": "General Setup 5"
+        },
+        {
+          "id": "random-markers",
+          "text": "Great people, huts and villages: three facedown mixed piles",
+          "ref": "General Setup 6"
+        },
+        {
+          "id": "banks",
+          "text": "Culture, wound and coin tokens in piles; combat bonus cards, Space Flight and disaster markers faceup nearby",
+          "ref": "General Setup 7-8"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "capital",
+          "text": "Capital on one of the 4 centre squares of your home tile (first game: the starting arrow), unwalled side up",
+          "ref": "Player Setup 1"
+        },
+        {
+          "id": "figures",
+          "text": "1 army and 1 scout in your capital's outskirts (not on water)",
+          "ref": "Player Setup 3"
+        },
+        {
+          "id": "tech",
+          "text": "Starting tech from your civilization sheet faceup as the base of your tech pyramid",
+          "ref": "Player Setup 4"
+        },
+        {
+          "id": "government",
+          "text": "Government cards stacked with Despotism faceup on top",
+          "ref": "Player Setup 5"
+        },
+        {
+          "id": "trade",
+          "text": "Trade dial: the trade symbols in your capital's 8 outskirts squares",
+          "ref": "Player Setup 6"
+        },
+        {
+          "id": "economy",
+          "text": "Economy dial on 0 (or the coins you already have)",
+          "ref": "Player Setup 7"
+        },
+        {
+          "id": "unbuilt",
+          "text": "1 city marker, 5 armies and 1 scout beside your sheet; the last city waits for Irrigation",
+          "ref": "Player Setup 8"
+        }
+      ]
+    },
+    {
+      "id": "civilizations",
+      "title": "Starting bonuses",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "america",
+          "text": "America",
+          "ref": "Player Setup 2",
+          "details": [
+            "Great person: a random one, placed in your capital's outskirts at the end of setup"
+          ]
+        },
+        {
+          "id": "china",
+          "text": "China",
+          "ref": "Player Setup 2",
+          "details": [
+            "Walls: capital starts walled side up"
+          ]
+        },
+        {
+          "id": "egypt",
+          "text": "Egypt",
+          "condition": {
+            "notModules": [
+              "learning"
+            ]
+          },
+          "ref": "Player Setup 2",
+          "details": [
+            "Wonder: a random ancient wonder, its marker in your capital's outskirts"
+          ]
+        },
+        {
+          "id": "germany",
+          "text": "Germany",
+          "ref": "Player Setup 2",
+          "details": [
+            "Troops: 2 extra infantry units in your standing forces"
+          ]
+        },
+        {
+          "id": "rome",
+          "text": "Rome",
+          "condition": {
+            "notModules": [
+              "learning"
+            ]
+          },
+          "ref": "Player Setup 2",
+          "details": [
+            "Republic: start with Republic instead of Despotism"
+          ]
+        },
+        {
+          "id": "russia",
+          "text": "Russia",
+          "ref": "Player Setup 2",
+          "details": [
+            "Extra army: the white army figure, placed with your others",
+            "Communism: start with Communism instead of Despotism"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "trade-again",
+          "text": "You collect trade again on the first turn",
+          "ref": "Player Setup 6"
+        },
+        {
+          "id": "pyramid",
+          "text": "Each new tech level must sit on two techs of the level below",
+          "ref": "The Tech Pyramid"
+        },
+        {
+          "id": "first-turn",
+          "text": "The first player marker does not pass on turn 1",
+          "ref": "Start of Turn"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "First player: whoever traces their family back the furthest (or random)",
+          "ref": "General Setup 9"
+        }
+      ]
+    }
+  ]
+}

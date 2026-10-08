@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "gameId": 356080,
+  "gameName": "The Elder Scrolls: Betrayal of the Second Era",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Elder Scrolls: Betrayal of the Second Era rulebook (Chip Theory Games, via RulesPal)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "jailbreak",
+      "name": "Jailbreak Introduction (first game)"
+    }
+  ],
+  "sections": [
+    {
+      "id": "province",
+      "title": "Province",
+      "steps": [
+        {
+          "id": "province",
+          "text": "Choose a province (first campaign: Black Marsh; later the one your last session set); at least 3' x 4' of table",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "map",
+          "text": "Its overland map to one side; its gazetteer set aside for reference",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "trays",
+          "text": "Dice and chip trays nearby; sort attribute, stat and overland tokens by type; pegs aside; all skill line tokens in the trainer bag",
+          "note": "Solo: remove duplicate copies of each skill line token",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "enemies",
+          "text": "Enemy chips by level into the bags: level 1/5 and level 10/20 (province-coded enemies only in their province)",
+          "note": "Jailbreak Introduction: only the level 1 enemies it lists",
+          "ref": "Setup Procedure"
+        }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Decks and tiles",
+      "steps": [
+        {
+          "id": "sheets",
+          "text": "Skill line reference sheets in the card tray",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "side-quests",
+          "text": "Shuffle the side quest cards",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "overland",
+          "text": "Peaceful and Conflict decks: draw 4 of the 10 general cards of each type and shuffle them with the province's 8, story side up",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "delve",
+          "text": "Delve deck: the province's delve cards without SP cards, shuffled with all general delve cards (plus the gazetteer's delve setup)",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "items",
+          "text": "Shuffle the Common and Legendary item decks",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "tiles",
+          "text": "Map tiles sorted by shape; clash tile and green entrance tile aside; delve tiles shuffled facedown per shape",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "dials",
+          "text": "XP and Day Dials in the chip holder: XP on {xp}; the Day Dial stays unset",
+          "amounts": {
+            "xp": {
+              "default": "2",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "jailbreak"
+                    ]
+                  },
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "difficulty",
+          "text": "Choose Apprentice, Adept or Expert difficulty",
+          "ref": "Difficulty Levels"
+        }
+      ]
+    },
+    {
+      "id": "adventurers",
+      "title": "Adventurers (first session)",
+      "steps": [
+        {
+          "id": "leader",
+          "text": "Choose a party leader to keep the campaign journal",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "race",
+          "text": "Pick a race sheet and chip: sheet beside your mat, chip in the art area",
+          "ref": "Adventurer Creation"
+        },
+        {
+          "id": "stats",
+          "text": "Health, Stamina and Magicka tokens from the race sheet; flip Health to its value; square stat tokens to the starting values",
+          "ref": "Adventurer Creation"
+        },
+        {
+          "id": "combat-line",
+          "text": "Combat skill line token in an open slot with the race's Combat dice",
+          "ref": "Adventurer Creation"
+        },
+        {
+          "id": "second-line",
+          "text": "One more skill line with 2 level 1 dice (first game: Bow, Destruction Staff, One Hand and Shield or Two Handed)",
+          "ref": "Adventurer Creation"
+        },
+        {
+          "id": "pegs",
+          "text": "Pegs: battle form of that line, the race's Cooldown stat, leftmost tenacity and Saved XP",
+          "ref": "Adventurer Creation"
+        },
+        {
+          "id": "class",
+          "text": "Class sheet novice side up opposite the race sheet (Jailbreak decides class options)",
+          "ref": "Adventurer Creation"
+        },
+        {
+          "id": "continuing",
+          "text": "Continuing a campaign: set up adventurers as saved; full HP, no tenacity, dice back in their rows",
+          "ref": "Continuing a Campaign"
+        }
+      ]
+    },
+    {
+      "id": "quest",
+      "title": "Guild quest",
+      "steps": [
+        {
+          "id": "guild",
+          "text": "First session: draw 3 Guild cards, pick 1 faceup near the map; box the others",
+          "ref": "Setup Procedure"
+        },
+        {
+          "id": "quest-step",
+          "text": "Read the quest's first step in the gazetteer; set aside its unit chips; party token and overland tokens on their start spaces",
+          "ref": "Setup Procedure"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "jailbreak",
+          "text": "First game: play the Jailbreak Introduction encounter first, then return to setup",
+          "condition": {
+            "modules": [
+              "jailbreak"
+            ]
+          },
+          "ref": "Setup Procedure"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "day-one",
+          "text": "Begin the first day of the session",
+          "ref": "Setup Procedure"
+        }
+      ]
+    }
+  ]
+}
