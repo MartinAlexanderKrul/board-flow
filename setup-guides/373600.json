@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 373600,
   "gameName": "Cthulhu: Death May Die – Fear of the Unknown",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Cthulhu: Death May Die - Fear of the Unknown rulebook (CMON, via RulesPal)"
+      "Cthulhu: Death May Die - Fear of the Unknown rulebook (CMON)"
     ]
   },
   "players": {
@@ -36,43 +36,43 @@
         {
           "id": "story-board",
           "text": "Story board, tokens and dice out",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "elder-one",
           "text": "Choose an Elder One: figure on the start of the Summoning track; its Minions card on the Story board; its 8 Mythos cards and tokens out",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "stages",
           "text": "Its Stage cards faceup on the Story board in order, Stage I on top",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "episode",
           "text": "Choose an Episode: its 8 Mythos cards, 15 Discovery cards, Episode card and tokens; Monster cards on the Story board",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "figures",
           "text": "Take all figures of the enemies on the reference cards",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "board",
           "text": "Build the board from the back of the Episode card, with its enemies and tokens; then flip the card onto the Story board",
           "note": "Unplaced Cultists and monsters wait beside the Story board",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "mythos",
           "text": "Shuffle the 16 Mythos cards facedown",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "discovery",
           "text": "Shuffle the Episode's Discovery deck facedown",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         }
       ]
     },
@@ -84,17 +84,17 @@
           "id": "pick",
           "text": "Each player picks an investigator board and figure (with a coloured base); figures on the Episode's starting space",
           "note": "Solo: pick 2 investigators and alternate their turns",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "trackers",
           "text": "6 tentacle markers of your colour: 3 on the first level of your skills, 3 at the left of the wound, stress and sanity tracks",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         },
         {
           "id": "insanity",
           "text": "Deal each investigator 1 insanity card faceup; box the rest",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         }
       ]
     },
@@ -110,7 +110,7 @@
         {
           "id": "unknown-board",
           "text": "Unknown Board right of the Story board",
-          "ref": "Unknown Rules, Additional Setup"
+          "ref": "Unknown Rules, Additional Setup p.21"
         },
         {
           "id": "unknown-monsters",
@@ -130,22 +130,22 @@
               ]
             }
           },
-          "ref": "Unknown Rules, Additional Setup"
+          "ref": "Unknown Rules, Additional Setup p.21"
         },
         {
           "id": "unknown-summon",
           "text": "Each Unknown Monster summons 1 figure at a different random Gate (Random Location tokens without the Starting space); follow any extra setup on its card",
-          "ref": "Unknown Rules, Additional Setup"
+          "ref": "Unknown Rules, Additional Setup p.21"
         },
         {
           "id": "unknown-mythos",
           "text": "Shuffle the 4 Unknown Mythos cards into the Mythos deck",
-          "ref": "Unknown Rules, Additional Setup"
+          "ref": "Unknown Rules, Additional Setup p.21"
         },
         {
           "id": "relics",
           "text": "Draw as many Unknown Relics as investigators; from the starting player clockwise each picks 1, regular side up",
-          "ref": "Unknown Rules, Additional Setup"
+          "ref": "Unknown Rules, Additional Setup p.21"
         }
       ]
     },
@@ -189,7 +189,7 @@
         {
           "id": "first",
           "text": "Random starting player takes the Mythos deck and goes first",
-          "ref": "Set Up"
+          "ref": "Setup p.10"
         }
       ]
     }

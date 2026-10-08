@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "gameId": 77130,
   "gameName": "Sid Meier's Civilization: The Board Game",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -14,7 +14,7 @@
   },
   "players": {
     "min": 2,
-    "max": 5
+    "max": 4
   },
   "modules": [
     {

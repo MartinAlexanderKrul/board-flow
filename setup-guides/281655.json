@@ -2,18 +2,42 @@
   "schemaVersion": 1,
   "gameId": 281655,
   "gameName": "High Frontier 4 All",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "High Frontier 4 All core rules (Ion Game Design, via RulesPal)"
+      "High Frontier 4 All core rules (Ion Game Design)",
+      "HF4A Module 1: Terawatt rules",
+      "HF4A Module 2: Colonization rules",
+      "HF4A Module 3: Conflict rules"
     ]
   },
   "players": {
     "min": 2,
     "max": 5
   },
+  "modules": [
+    {
+      "id": "m1",
+      "name": "Module 1: Terawatt & Futures",
+      "bggId": 304511
+    },
+    {
+      "id": "m2",
+      "name": "Module 2: Colonization",
+      "bggId": 304512
+    },
+    {
+      "id": "m3",
+      "name": "Module 3: Conflict",
+      "bggId": 305726,
+      "extendsMaxPlayers": 6,
+      "forcedAtPlayers": [
+        6
+      ]
+    }
+  ],
   "sections": [
     {
       "id": "setup",
@@ -22,48 +46,156 @@
         {
           "id": "learn",
           "text": "New players: start with the introductory games (Space Diamonds, Starship Builder, Race For Glory)",
-          "ref": "A3. Introductory Games"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) A3"
+        },
+        {
+          "id": "modules",
+          "text": "Decide on Modules and variants (quick start V1 is recommended for 4+ players)",
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C"
         },
         {
           "id": "seniority",
           "text": "Sol Sunspot Cycle placard on its CORE GAME side; 4 translucent red disks over the Sol icon",
-          "ref": "C1"
+          "condition": {
+            "notModules": [
+              "m2",
+              "m3"
+            ]
+          },
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C1"
+        },
+        {
+          "id": "seniority-m2",
+          "text": "Seniority disks for the game length: 4 short (48 years), 5 medium (60), 7 with Futures (84)",
+          "condition": {
+            "modules": [
+              "m2"
+            ],
+            "notModules": [
+              "m3"
+            ]
+          },
+          "ref": "HF4A Module 2: Colonization rules 2A2d"
+        },
+        {
+          "id": "seniority-m3",
+          "text": "Module 3 Political Assembly placard: 4 seniority disks on its centre (5 intermediate, 7 with Futures)",
+          "condition": {
+            "modules": [
+              "m3"
+            ]
+          },
+          "ref": "HF4A Module 3: Conflict rules 3A2a"
         },
         {
           "id": "crew",
           "text": "Deal each player a random Crew; each secretly picks which side to play",
+          "condition": {
+            "notModules": [
+              "m3"
+            ]
+          },
           "note": "Norse Astronauts / SpaceX: borrow an unused colour as your grey",
-          "ref": "C2"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C2"
+        },
+        {
+          "id": "blocs",
+          "text": "Split into Independence and Loyalist blocs (at least 1 player each); each bloc assigns its factions",
+          "condition": {
+            "modules": [
+              "m3"
+            ]
+          },
+          "ref": "HF4A Module 3: Conflict rules 3A2b"
         },
         {
           "id": "playmat",
           "text": "Each player: a playmat with the Crew faceup in the LEO slot",
-          "ref": "C3"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C3"
         },
         {
           "id": "reserve",
           "text": "Reserve in your colour: 2 Rockets, 1 Dry Mass and 1 Wet Mass chit, 7 Factory cubes, 7 Colony domes, 9 Claim disks, 2 Outpost chits",
-          "ref": "C3"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C3"
+        },
+        {
+          "id": "freighter-cube",
+          "text": "Also your big wooden cube for your Freighter",
+          "condition": {
+            "modules": [
+              "m1"
+            ]
+          },
+          "ref": "HF4A Module 1: Terawatt rules 1A2"
+        },
+        {
+          "id": "bernals",
+          "text": "Also 2 Bernal figures and 1 extra yellow/grey Wet Mass chit",
+          "condition": {
+            "modules": [
+              "m2"
+            ]
+          },
+          "ref": "HF4A Module 2: Colonization rules 2A2c,f"
+        },
+        {
+          "id": "m3-reserve",
+          "text": "Also {n} bribes (black disks) and your dropstone on its playmat spot",
+          "amounts": {
+            "n": {
+              "default": "3",
+              "byPlayers": {
+                "5": "2",
+                "6": "2"
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "m3"
+            ]
+          },
+          "ref": "HF4A Module 3: Conflict rules 3A2d-e"
         },
         {
           "id": "patents",
           "text": "Shuffle the 6 patent decks (thruster, robonaut, refinery, generator, reactor, radiator) separately, White-Side up",
-          "ref": "C4"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C4"
+        },
+        {
+          "id": "m1-decks",
+          "text": "Add the Freighter and GW/TW thruster decks, Black-Side up",
+          "condition": {
+            "modules": [
+              "m1"
+            ]
+          },
+          "ref": "HF4A Module 1: Terawatt rules 1A2"
+        },
+        {
+          "id": "m2-decks",
+          "text": "Add the Bernal deck White-Side up; shuffle all colonists into a queue, Purple-Side down (not for auction)",
+          "condition": {
+            "modules": [
+              "m2"
+            ]
+          },
+          "ref": "HF4A Module 2: Colonization rules 2A2a-b"
         },
         {
           "id": "aquas",
-          "text": "6 Aqua beads into each player's LEO slot (one per patent deck)",
-          "ref": "C5"
+          "text": "Aqua beads into each LEO slot: one per patent deck in play (quick start: none)",
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C5"
         },
         {
           "id": "exploitation",
           "text": "A blue bead on each of the 6 starting spaces of the Exploitation Tracks",
-          "ref": "C6"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C6"
         },
         {
           "id": "glory",
           "text": "1 glory chit, 1 VP side up, on each Heliocentric Zone: Mercury, Venus, Earth, Mars, Ceres, Jupiter, Saturn, Uranus, Neptune",
-          "ref": "C7"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C7"
         },
         {
           "id": "heroism",
@@ -71,7 +203,27 @@
           "condition": {
             "minPlayers": 3
           },
-          "ref": "C7"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C7"
+        },
+        {
+          "id": "propaganda",
+          "text": "Propaganda chits on the assembly: freedom, individuality, equality Independence side up; honor, unity, authority Loyalist side up",
+          "condition": {
+            "modules": [
+              "m3"
+            ]
+          },
+          "ref": "HF4A Module 3: Conflict rules 3A2f"
+        },
+        {
+          "id": "extremists",
+          "text": "Each player's delegate on the propaganda chit of their ideology colour (extremist)",
+          "condition": {
+            "modules": [
+              "m3"
+            ]
+          },
+          "ref": "HF4A Module 3: Conflict rules 3A2g"
         }
       ]
     },
@@ -83,12 +235,22 @@
         {
           "id": "white-side",
           "text": "Use only White-Sides of patents until you build your first Factory",
-          "ref": "B2. Patent Cards"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) B2"
         },
         {
           "id": "seniority-cross",
           "text": "Remove a red disk each time the seniority threshold is crossed (each 12-year cycle)",
-          "ref": "C1"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C1"
+        },
+        {
+          "id": "m1-entry",
+          "text": "Freighters and GW/TW thrusters can only enter the map via ET production",
+          "condition": {
+            "modules": [
+              "m1"
+            ]
+          },
+          "ref": "HF4A Module 1: Terawatt rules 1A2a"
         }
       ]
     },
@@ -100,7 +262,7 @@
         {
           "id": "first",
           "text": "Best clout (A highest) is 1st Player: they put a cube on the Sunspot Cycle start and take the first turn",
-          "ref": "C8"
+          "ref": "High Frontier 4 All core rules (Ion Game Design) C8"
         }
       ]
     }

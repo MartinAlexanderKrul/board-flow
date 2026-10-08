@@ -2,12 +2,13 @@
   "schemaVersion": 2,
   "gameId": 72125,
   "gameName": "Eclipse: New Dawn for the Galaxy",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Eclipse rulebook (Lautapelit.fi, 1st edition, via RulesPal)"
+      "Eclipse rulebook (Lautapelit.fi, 1st edition)",
+      "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi)"
     ]
   },
   "players": {
@@ -19,6 +20,79 @@
       "id": "aliens",
       "name": "Alien species",
       "note": "Recommended from the second game on."
+    },
+    {
+      "id": "rota",
+      "name": "Rise of the Ancients",
+      "bggId": 125898,
+      "extendsMaxPlayers": 9,
+      "forcedAtPlayers": [
+        7,
+        8,
+        9
+      ],
+      "note": "Modular: turn on the parts you want. Planta and Descendants are not recommended for 7-9 players."
+    },
+    {
+      "id": "rare",
+      "name": "RotA: Rare Technologies",
+      "requires": [
+        "rota"
+      ]
+    },
+    {
+      "id": "developments",
+      "name": "RotA: Developments",
+      "requires": [
+        "rota"
+      ]
+    },
+    {
+      "id": "homeworlds",
+      "name": "RotA: Ancient Homeworlds",
+      "requires": [
+        "rota"
+      ]
+    },
+    {
+      "id": "dreadnought",
+      "name": "RotA: Ancient Dreadnought",
+      "requires": [
+        "rota"
+      ]
+    },
+    {
+      "id": "hives-warp",
+      "name": "RotA: Ancient Hives and Warp Portals",
+      "requires": [
+        "rota"
+      ]
+    },
+    {
+      "id": "alliances",
+      "name": "RotA: Alliances",
+      "requires": [
+        "rota"
+      ],
+      "players": {
+        "min": 4,
+        "max": 9
+      }
+    },
+    {
+      "id": "rota-species",
+      "name": "RotA: new species",
+      "requires": [
+        "rota",
+        "aliens"
+      ]
+    },
+    {
+      "id": "simultaneous",
+      "name": "RotA: simultaneous play",
+      "requires": [
+        "rota"
+      ]
     }
   ],
   "sections": [
@@ -41,11 +115,56 @@
                 "3": 14,
                 "4": 16,
                 "5": 18,
-                "6": 20
+                "6": 20,
+                "7": "as the 7-9 player table says",
+                "8": "as the 7-9 player table says",
+                "9": "as the 7-9 player table says"
               }
             }
           },
           "ref": "Game Setup / Tech Tiles"
+        },
+        {
+          "id": "rare",
+          "text": "Rare Technology tiles into the bag too; any drawn go beside the Supply and don't count toward the draw",
+          "condition": {
+            "modules": [
+              "rare"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.4"
+        },
+        {
+          "id": "extra-tech",
+          "text": "7-9 players: add the 18 Extra Technology tiles to the bag and the Extra Reputation tiles to theirs",
+          "condition": {
+            "minPlayers": 7
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.12"
+        },
+        {
+          "id": "developments",
+          "text": "{n} random Development tiles beside the Supply; box the rest",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "2": 3,
+                "3": 4,
+                "4": 5,
+                "5": 6,
+                "6": 7,
+                "7": 8,
+                "8": 8,
+                "9": 8
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "developments"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.5"
         },
         {
           "id": "reputation",
@@ -66,7 +185,32 @@
         {
           "id": "center",
           "text": "Galactic Center in the middle: a facedown Discovery tile and the Defense System tile on it",
+          "condition": {
+            "notModules": [
+              "dreadnought"
+            ]
+          },
           "ref": "Game Setup"
+        },
+        {
+          "id": "dreadnought",
+          "text": "Galactic Center: a facedown Discovery tile with the Ancient Dreadnought (random side) instead of the Defense System",
+          "condition": {
+            "modules": [
+              "dreadnought"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.6"
+        },
+        {
+          "id": "mix-hexes",
+          "text": "Shuffle the Ancient Hive and/or Warp Sector hexes into the Middle and Outer stacks before building them",
+          "condition": {
+            "modules": [
+              "hives-warp"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.7-8"
         },
         {
           "id": "stacks",
@@ -78,11 +222,32 @@
                 "3": 10,
                 "4": 14,
                 "5": 16,
-                "6": 18
+                "6": 18,
+                "7": 22,
+                "8": 24,
+                "9": 24
               }
             }
           },
           "ref": "Game Setup / Outer Sectors"
+        },
+        {
+          "id": "rings",
+          "text": "7-9 players: lay the Inner and Middle hexes facedown in rings around the Center to find the start spots",
+          "condition": {
+            "minPlayers": 7
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.12"
+        },
+        {
+          "id": "homeworlds",
+          "text": "A random Ancient Homeworld on each Homeworld spot of the diagram, with a facedown Discovery tile and an Ancient Cruiser on it",
+          "condition": {
+            "modules": [
+              "homeworlds"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.6"
         },
         {
           "id": "first",
@@ -120,6 +285,14 @@
           "ref": "Alien Species"
         },
         {
+          "id": "big-start",
+          "text": "7-9 players: from the starting player's right, counterclockwise, each picks a species and places it on the next start spot, at least one wormhole facing a Middle hex",
+          "condition": {
+            "minPlayers": 7
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.12"
+        },
+        {
           "id": "box",
           "text": "Box the unused start hexes and boards",
           "ref": "Game Setup"
@@ -149,6 +322,14 @@
           "id": "storage",
           "text": "Storage markers: Money 2, Science 3, Materials 3 (aliens: their species' values)",
           "ref": "Game Setup / Alien Species"
+        },
+        {
+          "id": "discard-cube",
+          "text": "7-9 players: each player removes 1 Population cube from a track of their choice",
+          "condition": {
+            "minPlayers": 7
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.12"
         },
         {
           "id": "home",
@@ -260,10 +441,126 @@
       ]
     },
     {
+      "id": "rota-species",
+      "title": "Rise of the Ancients species",
+      "kind": "CHARACTERS",
+      "steps": [
+        {
+          "id": "magellan",
+          "text": "Keepers, Sentinels or Wardens of Magellan",
+          "condition": {
+            "modules": [
+              "rota-species"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.14",
+          "details": [
+            "Start: hex 233, 235 or 237; Fusion Source",
+            "Revelation: the first time any track reaches 4 Technologies, take a free Discovery tile",
+            "Colony Ships: Influence may flip 1 Colony Ship faceup; unused ones can be flipped for 1 free Resource each",
+            "Relics: 1 VP per Discovery tile discarded or used as a Ship Part"
+          ]
+        },
+        {
+          "id": "exiles",
+          "text": "The Exiles",
+          "condition": {
+            "modules": [
+              "rota-species"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.14",
+          "details": [
+            "Start: hex 234 with an Orbital; Cloaking Device, Orbital",
+            "Orbital ships: Orbitals with your cube are Ships with their own blueprint; no Starbases",
+            "Score: 1 VP per Orbital with your cube"
+          ]
+        },
+        {
+          "id": "syndicate",
+          "text": "Rho Indi Syndicate",
+          "condition": {
+            "modules": [
+              "rota-species"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.15",
+          "details": [
+            "Start: hex 236 with 2 Interceptors; Starbase, Gauss Shield",
+            "Move: up to 4 Ship activations",
+            "Pillage: after drawing Reputation tiles, take Money equal to the tiles drawn minus 1",
+            "Trade: Money 3:2, others 3:1"
+          ]
+        },
+        {
+          "id": "enlightened",
+          "text": "Enlightened of Lyra",
+          "condition": {
+            "modules": [
+              "rota-species"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.15",
+          "details": [
+            "Start: hex 238; Distortion Shield",
+            "Shrines: at the start of Upkeep build 1 Shrine next to a matching planet in a hex you control; a full set of 3 gives its bonus tile"
+          ]
+        }
+      ]
+    },
+    {
       "id": "reminders",
       "title": "Easy to forget",
       "kind": "REMINDERS",
       "steps": [
+        {
+          "id": "alliances",
+          "text": "Alliances (4+ players): two players with Diplomatic Relations may found one; allies can't attack each other and fight together",
+          "condition": {
+            "modules": [
+              "alliances"
+            ],
+            "minPlayers": 4
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.10"
+        },
+        {
+          "id": "hive-roll",
+          "text": "End of Cleanup: roll for each Ancient Hive and move one Ancient Ship out of it",
+          "condition": {
+            "modules": [
+              "hives-warp"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.7"
+        },
+        {
+          "id": "big-cleanup",
+          "text": "7-9 players: Cleanup draws {n} new Technology tiles",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "7": 10,
+                "8": 11,
+                "9": 11
+              }
+            }
+          },
+          "condition": {
+            "minPlayers": 7
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.13"
+        },
+        {
+          "id": "simultaneous",
+          "text": "Simultaneous play: Primary Action marker to the starting player, Secondary to the player opposite; only Primary may Research",
+          "condition": {
+            "modules": [
+              "simultaneous"
+            ]
+          },
+          "ref": "Eclipse: Rise of the Ancients rulebook (Lautapelit.fi) p.13"
+        },
         {
           "id": "move-two",
           "text": "Move: Terrans make 3 Ship movements, every alien species only 2",

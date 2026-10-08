@@ -2,18 +2,110 @@
   "schemaVersion": 1,
   "gameId": 295785,
   "gameName": "Euthia: Torment of Resurrection",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Euthia: Torment of Resurrection rulebook (Steamforged / Galaxy Games, via RulesPal)"
+      "Euthia rulebook 2.0 (Steamforged Games)",
+      "Euthia Scenario Book 2.0",
+      "Fierce Powers & Crawling Shadows rulebook (Steamforged Games)"
     ]
   },
   "players": {
     "min": 1,
     "max": 4
   },
+  "modules": [
+    {
+      "id": "elite",
+      "name": "Elite Monsters"
+    },
+    {
+      "id": "fpcs",
+      "name": "Fierce Powers & Crawling Shadows",
+      "bggId": 357220,
+      "note": "Modular: turn on the parts you want below."
+    },
+    {
+      "id": "rotunda",
+      "name": "FP&CS: Rotunda starting tile",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "new-fixed",
+      "name": "FP&CS: new Fixed Map tiles",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "corruption",
+      "name": "FP&CS: Corruption tiles, Minions, Corrupted Elemental",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "new-encounters",
+      "name": "FP&CS: new Encounters",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "eltrea",
+      "name": "FP&CS: Eltrea (new Hero)",
+      "requires": [
+        "fpcs",
+        "new-hero-tiles"
+      ]
+    },
+    {
+      "id": "new-hero-tiles",
+      "name": "FP&CS: new Hero tiles",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "new-monsters",
+      "name": "FP&CS: new Monster cards",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "rotting",
+      "name": "FP&CS: Rotting Fly and Worm cards",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "secrets",
+      "name": "FP&CS: Map Secrets",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "new-treasures",
+      "name": "FP&CS: new Treasures",
+      "requires": [
+        "fpcs"
+      ]
+    },
+    {
+      "id": "rituals",
+      "name": "FP&CS: Faer Rituals and the Pegasus",
+      "requires": [
+        "fpcs"
+      ]
+    }
+  ],
   "sections": [
     {
       "id": "map",
@@ -22,17 +114,67 @@
         {
           "id": "scenario",
           "text": "Pick a Scenario from the Scenario book (first game: The Hunt)",
-          "ref": "Scenario Selection"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.5"
         },
         {
           "id": "start-tile",
           "text": "The Scenario's starting Map tile in the middle (usually the Church without a Priest)",
-          "ref": "Map"
+          "condition": {
+            "notModules": [
+              "rotunda"
+            ]
+          },
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.5"
+        },
+        {
+          "id": "rotunda",
+          "text": "Rotunda starting tile in the middle instead of the Church one (only in Scenarios that use the Church without a Priest)",
+          "condition": {
+            "modules": [
+              "rotunda"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Rotunda"
+        },
+        {
+          "id": "priest-tile",
+          "text": "Return the Church with the Priest tile (Chapter I) to the box unless the Scenario uses it",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.5"
         },
         {
           "id": "sort",
-          "text": "Sort Map tiles by Chapter (back numeral), then by arrow type: Fixed, Encounter, Scenario, Other",
-          "ref": "Map"
+          "text": "Sort the other Map tiles by Chapter (back numeral), then by arrow type: Fixed, Encounter, Scenario, Other",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.5"
+        },
+        {
+          "id": "new-fixed",
+          "text": "Fixed tiles: use either the base set or the expansion set, never mixed",
+          "condition": {
+            "modules": [
+              "new-fixed"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Fixed Map Tiles"
+        },
+        {
+          "id": "corruption",
+          "text": "Shuffle the Corruption tiles into the Other tiles of Chapters II-IV",
+          "condition": {
+            "modules": [
+              "corruption"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Corruption Map Tiles"
+        },
+        {
+          "id": "new-encounters",
+          "text": "Shuffle the new Encounter tiles into the Encounter tiles of Chapters I-III; their Encounter cards into the Encounter pile",
+          "condition": {
+            "modules": [
+              "new-encounters"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Encounters"
         },
         {
           "id": "fixed",
@@ -40,27 +182,37 @@
           "condition": {
             "minPlayers": 2
           },
-          "ref": "Map"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.5"
         },
         {
           "id": "fixed-solo",
-          "text": "Solo: use only the 2 Fixed tiles per Chapter shown for the Solo Game",
+          "text": "Solo: use only the 2 Fixed tiles per Chapter with the one-player icon",
           "condition": {
             "players": [
               1
             ]
           },
-          "ref": "The Solo Game"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.31"
         },
         {
           "id": "random",
-          "text": "Add the Scenario's tiles and the number of facedown Encounter and Other tiles its preparation table gives for your player count",
-          "ref": "Map"
+          "text": "Add the Scenario's tiles and the number of facedown Encounter and Other tiles its Map Setup table gives for your player count",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.5"
         },
         {
           "id": "stack",
           "text": "Shuffle each Chapter facedown; stack them with the highest Chapter at the bottom and Chapter I on top",
-          "ref": "Map"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.5"
+        },
+        {
+          "id": "rituals",
+          "text": "Faer Rituals: shuffle each used Chapter's Ritual tile into it; Ritual Reward tiles by colour facedown; Ritual card faceup",
+          "condition": {
+            "modules": [
+              "rituals"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Faer Rituals and the Pegasus"
         }
       ]
     },
@@ -72,64 +224,129 @@
           "id": "pick",
           "text": "Each player picks a Hero (Ael, Dral, Keleia, Maeldur, Skoldur, Taesiri) and takes its board and components",
           "note": "First time with a Hero: read its Hero sheet",
-          "ref": "Choosing and Preparing a Hero"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.6"
+        },
+        {
+          "id": "eltrea",
+          "text": "Eltrea is also available; she adds a Familiar board with 5 Familiar cards (one Alignment, Leaf or Moon, Will o' Wisp on top), Familiar standees and Wound tokens",
+          "condition": {
+            "modules": [
+              "eltrea"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Eltrea"
         },
         {
           "id": "health",
           "text": "Maximum Health token above the highest blood-red slot; a Hero token next to it as current Health",
-          "ref": "Hero Board"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.7"
         },
         {
           "id": "tokens",
           "text": "Beside your board: Hero, Action, Trade, Interaction and Damage tokens and your 2 Hero dice",
-          "ref": "Hero Board"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.7"
         },
         {
           "id": "start-tiles",
           "text": "Starting Hero tile(s) faceup on the slot with the matching icon",
-          "ref": "Hero Board"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.7"
+        },
+        {
+          "id": "new-hero-tiles",
+          "text": "New Hero tiles (required with Eltrea): add each Hero's 6 expansion tiles; pick 1 of its 2 new Starting tiles to add (Taesiri: see the rulebook)",
+          "condition": {
+            "modules": [
+              "new-hero-tiles"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Hero Tiles"
         },
         {
           "id": "hero-stack",
           "text": "Other Hero tiles facedown, lowest Reputation on top (only those for your player count)",
-          "ref": "Hero Board"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.7"
         },
         {
           "id": "gaar",
           "text": "4 Gaar tokens on your Gaar slots; your standee beside the board",
-          "ref": "Hero Board"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.7"
         }
       ]
     },
     {
       "id": "boards",
-      "title": "Boards",
+      "title": "Boards and decks",
       "steps": [
         {
           "id": "scenario-board",
-          "text": "Scenario board aside: random starting player's Hero token on Round 1; everyone's Hero token on Reputation 0",
-          "ref": "Scenario Board"
+          "text": "Scenario/Trade board aside: random starting player's Hero token on Round 1; everyone's Hero token on Reputation 0; Reputation tokens nearby",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.7-8"
         },
         {
           "id": "trade",
-          "text": "Trade board: Dragonslayer, Alchemist and Merchant tiles each in 2 facedown stacks with 4 faceup beside them",
-          "ref": "Trade Board"
+          "text": "Merchant, Alchemist and Dragonslayer tiles: one shuffled facedown stack each above the board, 4 faceup in each column",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
         },
         {
           "id": "potions",
-          "text": "Healing Potion and Grey Sack tiles near the Trade board; room on its left for discards",
-          "ref": "Trade Board"
+          "text": "Healing Potion and Grey Sack tiles beside the board; room below it for discards",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
         },
         {
           "id": "shii",
-          "text": "Shii's Intervention card with the Die of Hope on blank; Reference cards nearby",
-          "ref": "Other Setup"
+          "text": "Reference sheet nearby; Shii's Intervention card with the Die of Hope beside it on blank",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
         },
         {
-          "id": "decks",
-          "text": "Encounter cards in a deck (by type); Natural Resource and Treasure tiles shuffled by back; Monster decks by difficulty; Silver and Gold decks",
-          "note": "Leave out cards with the one-player icon unless playing solo",
-          "ref": "Other Setup"
+          "id": "encounters",
+          "text": "Encounter cards in a pile nearby, ordered by type",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
+        },
+        {
+          "id": "resources",
+          "text": "Natural Resource and Treasure tiles shuffled facedown in stacks by back",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
+        },
+        {
+          "id": "new-treasures",
+          "text": "Shuffle the new Treasure tiles into their stacks",
+          "condition": {
+            "modules": [
+              "new-treasures"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Treasures"
+        },
+        {
+          "id": "monsters",
+          "text": "Monster cards in decks by difficulty, shuffled facedown",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
+        },
+        {
+          "id": "new-monsters",
+          "text": "New Monster cards: Hard swaps one of the two cards of each Monster, Heroic replaces all 3 decks",
+          "condition": {
+            "modules": [
+              "new-monsters"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Monster Cards"
+        },
+        {
+          "id": "silver-gold",
+          "text": "Silver and Gold decks shuffled facedown",
+          "note": "Leave out one-player-icon cards unless playing solo",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
+        },
+        {
+          "id": "rotting",
+          "text": "Silver and Gold: choose 3 types of each (8 cards per type) from base and expansion cards",
+          "condition": {
+            "modules": [
+              "rotting"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Silver and Gold Cards"
         },
         {
           "id": "control",
@@ -137,7 +354,7 @@
           "condition": {
             "minPlayers": 3
           },
-          "ref": "Other Setup"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
         },
         {
           "id": "no-control",
@@ -145,7 +362,60 @@
           "condition": {
             "maxPlayers": 2
           },
-          "ref": "Other Setup / The Solo Game"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8 / p.31"
+        },
+        {
+          "id": "components",
+          "text": "Nearby: Gem, Gaar, Essence, Chaos, Move and Global Effect tokens, Gold tokens and the Elemental cards faceup",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
+        },
+        {
+          "id": "combat-cards",
+          "text": "Combat cards back in the box (solo and co-op only)",
+          "condition": {
+            "minPlayers": 2
+          },
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
+        },
+        {
+          "id": "minions",
+          "text": "Minion cards faceup by type with the Reward card (Minion Rewards side up)",
+          "condition": {
+            "modules": [
+              "corruption"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Corruption Map Tiles"
+        },
+        {
+          "id": "corrupted",
+          "text": "Corrupted Elemental card, its Global Effect token and the Corrupted Essence tokens nearby",
+          "condition": {
+            "modules": [
+              "corruption"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Corrupted Elemental"
+        },
+        {
+          "id": "secrets",
+          "text": "Map Secrets: pick a Secret card faceup; its Object tokens beside it (shuffle any Bird, Wolf, Bear or Deer tokens)",
+          "condition": {
+            "modules": [
+              "secrets"
+            ]
+          },
+          "ref": "Fierce Powers & Crawling Shadows rulebook (Steamforged Games), Map Secrets"
+        },
+        {
+          "id": "elite",
+          "text": "Elite Monsters: per difficulty level take players + 2 random Bounty cards; stack them highest level at the bottom; reveal the top one and its Elite Monster",
+          "condition": {
+            "modules": [
+              "elite"
+            ]
+          },
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.30"
         },
         {
           "id": "solo",
@@ -155,12 +425,13 @@
               1
             ]
           },
-          "ref": "The Solo Game"
+          "note": "Playing with Fire and Fellowship modes: see the Fierce Powers rulebook",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.31"
         },
         {
           "id": "scenario-setup",
           "text": "Do the Scenario's own setup",
-          "ref": "Other Setup"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
         }
       ]
     },
@@ -170,14 +441,24 @@
       "kind": "REMINDERS",
       "steps": [
         {
+          "id": "church",
+          "text": "At the start of your first turn, put your Hero on the Church at the centre of the starting tile (or the Rotunda)",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.9"
+        },
+        {
           "id": "round-start",
           "text": "Each round: put out 1 Mining, Trade and Combat Action token, ready Items and Abilities, flip Gems active",
-          "ref": "Gameplay"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.9"
+        },
+        {
+          "id": "fourth",
+          "text": "End of turn: you may keep 1 unused Action token on your 4th slot for next turn",
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.9"
         },
         {
           "id": "fixed-start",
           "text": "The starting player never changes",
-          "ref": "Scenario Board"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.8"
         }
       ]
     },
@@ -189,7 +470,7 @@
         {
           "id": "first",
           "text": "The starting player takes the first turn; then clockwise",
-          "ref": "Gameplay"
+          "ref": "Euthia rulebook 2.0 (Steamforged Games) p.9"
         }
       ]
     }

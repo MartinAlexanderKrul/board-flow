@@ -2052,8 +2052,8 @@
     {
       "gameId": 72125,
       "gameName": "Eclipse: New Dawn for the Galaxy",
-      "gameIds": [72125],
-      "version": 1,
+      "gameIds": [72125, 125898],
+      "version": 2,
       "schemaVersion": 2,
       "path": "72125.json"
     },
@@ -2069,7 +2069,7 @@
       "gameId": 77130,
       "gameName": "Sid Meier's Civilization: The Board Game",
       "gameIds": [77130, 108415, 142708],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 2,
       "path": "77130.json"
     },
@@ -2077,15 +2077,15 @@
       "gameId": 373600,
       "gameName": "Cthulhu: Death May Die – Fear of the Unknown",
       "gameIds": [373600],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "373600.json"
     },
     {
       "gameId": 295785,
       "gameName": "Euthia: Torment of Resurrection",
-      "gameIds": [295785],
-      "version": 1,
+      "gameIds": [295785, 357220],
+      "version": 2,
       "schemaVersion": 1,
       "path": "295785.json"
     },
@@ -2093,15 +2093,15 @@
       "gameId": 299659,
       "gameName": "Clash of Cultures: Monumental Edition",
       "gameIds": [299659],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "299659.json"
     },
     {
       "gameId": 281655,
       "gameName": "High Frontier 4 All",
-      "gameIds": [281655],
-      "version": 1,
+      "gameIds": [281655, 304511, 304512, 305726],
+      "version": 2,
       "schemaVersion": 1,
       "path": "281655.json"
     },
