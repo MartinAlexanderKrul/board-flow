@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 434654,
   "gameName": "Toy Battle",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Toy Battle rules (Repos Production, via RulesPal)"
+      "Toy Battle rules (Repos Production)"
     ]
   },
   "players": {

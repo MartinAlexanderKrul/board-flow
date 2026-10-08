@@ -2,18 +2,118 @@
   "schemaVersion": 1,
   "gameId": 188920,
   "gameName": "This War of Mine: The Board Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms, via RulesPal)"
+      "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms)",
+      "This War of Mine: Tales from the Ruined City rulebook",
+      "This War of Mine: Days of the Siege rulebook"
     ]
   },
   "players": {
     "min": 1,
     "max": 6
   },
+  "modules": [
+    {
+      "id": "normal",
+      "name": "Normal difficulty",
+      "group": "Difficulty",
+      "defaultEnabled": true
+    },
+    {
+      "id": "hard",
+      "name": "Hard mode",
+      "group": "Difficulty"
+    },
+    {
+      "id": "hardcore",
+      "name": "Hardcore mode",
+      "group": "Difficulty"
+    },
+    {
+      "id": "back",
+      "name": "Back of the board (advanced Shelter)",
+      "excludes": [
+        "war"
+      ]
+    },
+    {
+      "id": "tales",
+      "name": "Tales from the Ruined City",
+      "bggId": 247665
+    },
+    {
+      "id": "emira",
+      "name": "Emira, the 13th Character",
+      "requires": [
+        "tales"
+      ]
+    },
+    {
+      "id": "cat",
+      "name": "The Cat in the Shelter",
+      "requires": [
+        "tales"
+      ],
+      "excludes": [
+        "dog"
+      ]
+    },
+    {
+      "id": "desperate",
+      "name": "Desperate Measures",
+      "requires": [
+        "tales"
+      ]
+    },
+    {
+      "id": "farmers",
+      "name": "Farmers and Market",
+      "requires": [
+        "tales"
+      ]
+    },
+    {
+      "id": "sewers",
+      "name": "Sewers (advanced)",
+      "requires": [
+        "tales"
+      ]
+    },
+    {
+      "id": "siege",
+      "name": "Days of the Siege",
+      "bggId": 288901
+    },
+    {
+      "id": "orphans",
+      "name": "Orphans of War",
+      "requires": [
+        "siege"
+      ]
+    },
+    {
+      "id": "dog",
+      "name": "The Dog in the Shelter",
+      "requires": [
+        "siege"
+      ]
+    },
+    {
+      "id": "war",
+      "name": "War Campaign (Forlorn Hope)",
+      "requires": [
+        "siege"
+      ],
+      "excludes": [
+        "hard",
+        "hardcore"
+      ]
+    }
+  ],
   "sections": [
     {
       "id": "board",
@@ -21,54 +121,239 @@
       "steps": [
         {
           "id": "board",
-          "text": "Board in the middle of the table",
-          "ref": "Setup"
+          "text": "Board in the middle of the table (the back is a smaller, harder Shelter)",
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         },
         {
           "id": "events",
           "text": "Events deck, unseen, from the bottom: 3 shuffled Ending Events, Chapter III, 4 random Events, Chapter II, 3 random Events, Chapter I on top",
+          "condition": {
+            "notModules": [
+              "war"
+            ]
+          },
           "note": "Unused Event cards go in the Waste bag",
-          "ref": "Setup"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
+        },
+        {
+          "id": "hard",
+          "text": "Hard mode: 1 more Event card in Chapter I and in Chapter II",
+          "condition": {
+            "modules": [
+              "hard"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Raising Game Difficulty"
+        },
+        {
+          "id": "hardcore",
+          "text": "Hardcore mode: 2 more Event cards in Chapter I and in Chapter II",
+          "condition": {
+            "modules": [
+              "hardcore"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Raising Game Difficulty"
+        },
+        {
+          "id": "new-locations",
+          "text": "Shuffle the 13 new Location cards into the Locations deck",
+          "condition": {
+            "modules": [
+              "siege"
+            ],
+            "notModules": [
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: Days of the Siege rulebook, Other Game Components"
         },
         {
           "id": "locations",
           "text": "Locations: 3 cards on Far, Distant and Close at random; the rest shuffled on the Locations space",
-          "ref": "Setup"
+          "condition": {
+            "notModules": [
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         },
         {
           "id": "red-corners",
           "text": "Residents and Night Raids: set aside the 5 red-corner (!) cards of each; shuffle the rest onto their spaces",
-          "ref": "Setup"
+          "condition": {
+            "notModules": [
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         },
         {
           "id": "decks",
-          "text": "Shuffle Exploration, Findings, Visitors, Characters, Fate, Narrative Actions and Colors decks onto their spaces",
-          "ref": "Setup"
+          "text": "Shuffle Exploration, Findings, Visitors, Characters, Fate, Narrative Actions and Colors decks onto their spaces; the Unknown space stays empty",
+          "condition": {
+            "notModules": [
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
+        },
+        {
+          "id": "tales-cards",
+          "text": "Shuffle the Tales cards (Chapter Objectives, Narrative Action and the rest) into their decks",
+          "condition": {
+            "modules": [
+              "tales"
+            ]
+          },
+          "ref": "This War of Mine: Tales from the Ruined City rulebook, Other Game Components"
         },
         {
           "id": "objectives",
           "text": "Objectives deck: all Chapter Objectives and the Final Objective (Chapter I sorts them)",
-          "ref": "Setup"
+          "condition": {
+            "notModules": [
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         },
         {
           "id": "fittings",
           "text": "Green-corner Fittings on the Fittings space; orange-corner ones as the Ideas deck",
-          "ref": "Setup"
+          "condition": {
+            "notModules": [
+              "back",
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
+        },
+        {
+          "id": "fittings-all",
+          "text": "All Fitting cards on the Fittings space; there is no Ideas deck",
+          "condition": {
+            "modules": [
+              "back"
+            ],
+            "notModules": [
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Back of the Board"
         },
         {
           "id": "shelter",
-          "text": "The 19 Shelter cards, blue-corner side down and unseen, each on its matching Shelter space",
-          "ref": "Setup"
+          "text": "Shuffle the 19 Shelter cards blue-corner side down, unseen; each on the Shelter space with its name",
+          "condition": {
+            "notModules": [
+              "back",
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
+        },
+        {
+          "id": "shelter-back",
+          "text": "Furniture cards shuffled on the Furniture space, blue corner down; the other Shelter cards on their spaces, 2 Rubble stacked on the \"2 x Rubble\" space",
+          "condition": {
+            "modules": [
+              "back"
+            ],
+            "notModules": [
+              "war"
+            ]
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Back of the Board"
         },
         {
           "id": "dice",
           "text": "Combat dice, black die and Noise marker near the board; tokens and resources in their box compartments",
-          "ref": "Setup"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         },
         {
           "id": "storage",
-          "text": "On Storage: Lockpick, Shovel, 3 Raw Food, 4 Components, 4 Wood, 2 Water",
-          "ref": "Setup"
+          "text": "On Storage: Lockpick, Shovel, {food} Raw Food, 4 Components, 4 Wood, 2 Water",
+          "amounts": {
+            "food": {
+              "default": "3",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "cat"
+                    ]
+                  },
+                  "value": "no"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "dog"
+                    ]
+                  },
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
+        }
+      ]
+    },
+    {
+      "id": "war-setup",
+      "title": "War Campaign (first playthrough)",
+      "condition": {
+        "modules": [
+          "war"
+        ]
+      },
+      "steps": [
+        {
+          "id": "war-remove",
+          "text": "Remove the Events, Objectives and Fate decks; the Duty Narrative Action; every Reality Impact card; Soldiers and Rebels Residents; Central Square, Old Town and Sniper Junction Locations",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
+        },
+        {
+          "id": "war-decks",
+          "text": "Soldier Patrol into Exploration; the new Locations into Locations; War Fate on the Fate space; Story Characters by the board, 2-space track up",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
+        },
+        {
+          "id": "war-fittings",
+          "text": "All Fitting cards (green and orange) on the Fittings space; no Ideas, no New Idea action",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
+        },
+        {
+          "id": "war-map",
+          "text": "Pogoren Map beside the board, Shelter marker in District 10; Location markers: the big one covers the number by each Location space, the small one on the space",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
+        },
+        {
+          "id": "war-tokens",
+          "text": "Pool of Exploration, Script, Completion, Favor and Airdrop tokens; Story tokens facedown beside the board",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
+        },
+        {
+          "id": "war-locations",
+          "text": "Plundered Old Town on the Map; the 9 Map Locations shuffled above it, 2 drawn under it with an Exploration token each; Special Locations deck facedown",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
+        },
+        {
+          "id": "war-location-deck",
+          "text": "Shuffle the rest as the Locations deck; reveal 1 on any Location space, roll for its District (10: re-roll), marker on the Map and an Exploration token on the card",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
+        },
+        {
+          "id": "war-shelter",
+          "text": "Shelter (no Closed Doors): Bars on its space, 2 random Furniture and 1 random Heap on theirs, 2 Rubble; box the rest",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
+        },
+        {
+          "id": "war-act",
+          "text": "Final Act Objective faceup on Objectives; 3 Soldiers on white discs by the Map; read Act I: Home and do its setup",
+          "ref": "This War of Mine: Days of the Siege rulebook, War Campaign Setup"
         }
       ]
     },
@@ -79,27 +364,123 @@
         {
           "id": "draw",
           "text": "From the Character deck keep the first red-bordered and the first 2 black-bordered cards",
-          "ref": "Setup"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
+        },
+        {
+          "id": "emira",
+          "text": "Emira: shuffle her card into the Character deck before drawing; her miniature stays in the box until she appears",
+          "condition": {
+            "modules": [
+              "emira"
+            ]
+          },
+          "ref": "This War of Mine: Tales from the Ruined City rulebook, Emira"
         },
         {
           "id": "save",
           "text": "Write their names on the Save Sheet",
-          "ref": "Setup"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         },
         {
           "id": "figures",
           "text": "Their figures (each in a coloured disk) on the Guard space; matching colour token by each card",
-          "ref": "Setup"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         },
         {
           "id": "hunger",
           "text": "A Hunger 2 token by each Character",
-          "ref": "Setup"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         },
         {
           "id": "rest",
           "text": "Shuffle the other Character cards onto the Characters space",
-          "ref": "Setup"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
+        },
+        {
+          "id": "cat",
+          "text": "The Cat starts in the Shelter: its card and miniature",
+          "condition": {
+            "modules": [
+              "cat"
+            ]
+          },
+          "ref": "This War of Mine: Tales from the Ruined City rulebook, The Cat"
+        },
+        {
+          "id": "dog",
+          "text": "The Dog starts in the Shelter: its card and miniature",
+          "condition": {
+            "modules": [
+              "dog"
+            ]
+          },
+          "ref": "This War of Mine: Days of the Siege rulebook, The Dog"
+        }
+      ]
+    },
+    {
+      "id": "modules",
+      "title": "Modules",
+      "steps": [
+        {
+          "id": "desperate",
+          "text": "Desperate Measures: the 7 cards beside the board; they unlock once a Character dies or leaves",
+          "condition": {
+            "modules": [
+              "desperate"
+            ]
+          },
+          "ref": "This War of Mine: Tales from the Ruined City rulebook, Desperate Measures"
+        },
+        {
+          "id": "farmers",
+          "text": "Farmers: place the 2 Fitting cards from the module as their backs say; shuffle the other cards into their decks; Farmers and Thugs wait in the box",
+          "condition": {
+            "modules": [
+              "farmers"
+            ]
+          },
+          "ref": "This War of Mine: Tales from the Ruined City rulebook, Farmers and Market"
+        },
+        {
+          "id": "market",
+          "text": "Market: set it up as its sheet says (basic side of the board)",
+          "condition": {
+            "modules": [
+              "farmers"
+            ]
+          },
+          "ref": "This War of Mine: Tales from the Ruined City rulebook, Farmers and Market"
+        },
+        {
+          "id": "sewers",
+          "text": "Sewers: Rooms and Corridors decks facedown; the 8 Map tiles shuffled in a pile with the Starting Zone tile on top and the Exploring Party token beside it",
+          "condition": {
+            "modules": [
+              "sewers"
+            ]
+          },
+          "ref": "This War of Mine: Tales from the Ruined City rulebook, Sewers"
+        },
+        {
+          "id": "orphan",
+          "text": "Orphans of War: draw 1 Orphan card, its miniatures on any Shelter space, Happiness token on its track",
+          "condition": {
+            "modules": [
+              "orphans"
+            ]
+          },
+          "ref": "This War of Mine: Days of the Siege rulebook, Orphans of War"
+        },
+        {
+          "id": "kids-room",
+          "text": "Kid's Room Fitting placed as its back says; the other Kid Fittings into the Fittings deck; Kid Actions deck beside the board",
+          "condition": {
+            "modules": [
+              "orphans"
+            ]
+          },
+          "ref": "This War of Mine: Days of the Siege rulebook, Orphans of War"
         }
       ]
     },
@@ -111,17 +492,37 @@
         {
           "id": "scripts",
           "text": "Never read a script in the Book of Scripts until the game sends you there",
-          "ref": "The Book of Scripts"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), The Book of Scripts"
         },
         {
           "id": "leader",
           "text": "The Leader has the final word, after hearing everyone",
-          "ref": "Shared Experience and the Leader"
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Shared Experience and the Leader"
         },
         {
-          "id": "shared",
-          "text": "Characters belong to nobody: the group runs them together",
-          "ref": "The Characters"
+          "id": "four",
+          "text": "Never more than 4 Characters in the group",
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), The 4-Characters Limit"
+        },
+        {
+          "id": "tales-scripts",
+          "text": "Module scripts are in Wartime Diary I; never open the lettered envelopes until a Scenario says so",
+          "condition": {
+            "modules": [
+              "tales"
+            ]
+          },
+          "ref": "This War of Mine: Tales from the Ruined City rulebook, Envelopes"
+        },
+        {
+          "id": "siege-scripts",
+          "text": "Orphans of War and War Campaign scripts are in Wartime Diary II",
+          "condition": {
+            "modules": [
+              "siege"
+            ]
+          },
+          "ref": "This War of Mine: Days of the Siege rulebook"
         }
       ]
     },
@@ -132,8 +533,8 @@
       "steps": [
         {
           "id": "leader-pick",
-          "text": "Pick a random Leader; they take the first player token. Begin with the Morning phase",
-          "ref": "Setup"
+          "text": "Pick a random Leader; they take the first player miniature. Begin with the Morning phase",
+          "ref": "This War of Mine: The Board Game rulebook (2nd edition, Awaken Realms), Setup"
         }
       ]
     }

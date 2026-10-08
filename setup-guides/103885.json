@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 103885,
   "gameName": "Star Wars: X-Wing Miniatures Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "X-Wing Miniatures Game core rules (FFG, 1st edition, via RulesPal)"
+      "X-Wing Miniatures Game rulebook (FFG, 1st edition core set)"
     ]
   },
   "players": {

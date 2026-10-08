@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 356080,
   "gameName": "The Elder Scrolls: Betrayal of the Second Era",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "The Elder Scrolls: Betrayal of the Second Era rulebook (Chip Theory Games, via RulesPal)"
+      "The Elder Scrolls: Betrayal of the Second Era rulebook (Chip Theory Games)"
     ]
   },
   "players": {
@@ -106,6 +106,7 @@
         {
           "id": "difficulty",
           "text": "Choose Apprentice, Adept or Expert difficulty",
+          "note": "Apprentice: rest removes 2 cooldown dice and heals 2 HP. Expert: 2 fatigue per extra engage and discard an item to rest",
           "ref": "Difficulty Levels"
         }
       ]
@@ -146,7 +147,7 @@
         },
         {
           "id": "class",
-          "text": "Class sheet novice side up opposite the race sheet (Jailbreak decides class options)",
+          "text": "Class sheet novice side up opposite the race sheet: Jailbreak decides the class options, otherwise open choice (permanent)",
           "ref": "Adventurer Creation"
         },
         {
@@ -162,7 +163,7 @@
       "steps": [
         {
           "id": "guild",
-          "text": "First session: draw 3 Guild cards, pick 1 faceup near the map; box the others",
+          "text": "First session: draw 3 Guild cards, read the snapshot and complexity (1-3) in the gazetteer, keep 1 faceup near the map; box the others",
           "ref": "Setup Procedure"
         },
         {

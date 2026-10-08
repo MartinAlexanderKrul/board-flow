@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 385610,
   "gameName": "Kutná Hora: The City of Silver",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Kutná Hora: The City of Silver rules (Czech Games Edition, via RulesPal)"
+      "Kutná Hora: The City of Silver rules (Czech Games Edition)"
     ]
   },
   "players": {

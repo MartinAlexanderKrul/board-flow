@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 101721,
   "gameName": "Mage Wars Arena",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Mage Wars Arena rules (Arcane Wonders, via RulesPal)"
+      "Mage Wars Arena rules (Arcane Wonders)"
     ]
   },
   "players": {

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 104162,
   "gameName": "Descent: Journeys in the Dark (Second Edition)",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Descent 2nd ed. rulebook (FFG, via RulesPal)"
+      "Descent 2nd ed. rulebook (FFG)"
     ]
   },
   "players": {

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 339789,
   "gameName": "Welcome to the Moon",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Welcome to the Moon rules (Blue Cocker, via RulesPal)"
+      "Welcome to the Moon rules (Blue Cocker)"
     ]
   },
   "players": {

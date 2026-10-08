@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 274364,
   "gameName": "Watergate",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Watergate rules (Frosted Games / Capstone, via RulesPal)"
+      "Watergate rules (Frosted Games / Capstone)"
     ]
   },
   "players": {

@@ -2,13 +2,16 @@
   "schemaVersion": 1,
   "gameId": 37111,
   "gameName": "Battlestar Galactica: The Board Game",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
       "BSG rulebook (FFG)",
-      "Esoteric Order of Gamers BSG summary v4.4 (core, Pegasus, Exodus, Daybreak)"
+      "BSG: Pegasus rulebook (FFG)",
+      "BSG: Exodus rulebook (FFG)",
+      "BSG: Daybreak rulebook (FFG)",
+      "Esoteric Order of Gamers BSG summary v4.4"
     ]
   },
   "players": {
@@ -67,16 +70,24 @@
       ]
     },
     {
-      "id": "leaders",
-      "name": "Cylon Leaders (Daybreak rules)",
+      "id": "conflicted",
+      "name": "Exodus: Conflicted Loyalties option",
       "requires": [
-        "daybreak"
-      ],
+        "exodus"
+      ]
+    },
+    {
+      "id": "leaders",
+      "name": "A Cylon Leader (needs Pegasus or Daybreak)",
       "players": {
         "min": 4,
-        "max": 6
+        "max": 7
       },
-      "note": "Only one Cylon Leader per game."
+      "extendsMaxPlayers": 7,
+      "forcedAtPlayers": [
+        7
+      ],
+      "note": "Only one Cylon Leader per game; with Daybreak use its Cylon Leader rules. 7 players need a Cylon Leader."
     }
   ],
   "sections": [
@@ -100,7 +111,7 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+          "ref": "BSG: Pegasus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "pegasus-board-db",
@@ -111,7 +122,7 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus and Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Combining Pegasus and Daybreak"
         },
         {
           "id": "daybreak-overlays",
@@ -121,7 +132,7 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Expansion Setup"
         },
         {
           "id": "reserves",
@@ -130,13 +141,13 @@
         },
         {
           "id": "cylon-fleet-board",
-          "text": "Cylon Fleet board beside the main board, pursuit marker on Start; 2 vipers from Reserves to the box; 4 viper Mk VIIs in Damaged Vipers; add the 4 new raiders",
+          "text": "Cylon Fleet board left of the main board, pursuit marker on Start; 2 vipers from Reserves to the box; 4 viper Mk VIIs in Damaged Vipers; add the 4 new raiders",
           "condition": {
             "modules": [
               "cylon-fleet"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Cylon Fleet Option Setup"
         },
         {
           "id": "assault-raptor",
@@ -146,7 +157,7 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Expansion Setup"
         },
         {
           "id": "tokens",
@@ -155,13 +166,13 @@
         },
         {
           "id": "pegasus-damage",
-          "text": "Keep the Pegasus damage tokens apart from Galactica's",
+          "text": "Scar and Pegasus damage tokens beside the board (Pegasus damage apart from Galactica's)",
           "condition": {
             "modules": [
               "pegasus"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+          "ref": "BSG: Pegasus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "exodus-nuke",
@@ -171,7 +182,7 @@
               "exodus"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "nebula-tokens",
@@ -181,17 +192,17 @@
               "nebula"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Ionian Nebula Option Setup"
         },
         {
           "id": "demetrius",
-          "text": "Demetrius board left of the main board (leave room for the Rebel Basestar board)",
+          "text": "Demetrius board left of the main board (leave room for the Rebel Basestar board further left)",
           "condition": {
             "modules": [
               "search-home"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Search for Home Setup"
         }
       ]
     },
@@ -212,7 +223,7 @@
               "pegasus"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+          "ref": "BSG: Pegasus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "characters-exodus",
@@ -222,7 +233,7 @@
               "exodus"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "characters-daybreak",
@@ -232,7 +243,7 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Choosing Characters"
         },
         {
           "id": "choose",
@@ -252,7 +263,7 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Expansion Setup"
         },
         {
           "id": "titles",
@@ -267,7 +278,17 @@
               "cylon-fleet"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Cylon Fleet Option Setup"
+        },
+        {
+          "id": "nc-titles",
+          "text": "New Caprica: use the Pegasus President and Admiral title cards instead",
+          "condition": {
+            "modules": [
+              "new-caprica"
+            ]
+          },
+          "ref": "BSG: Pegasus rulebook (FFG), Components"
         },
         {
           "id": "quorum",
@@ -275,14 +296,28 @@
           "ref": "BSG rulebook (FFG) p.5 step 5"
         },
         {
-          "id": "cylon-leader",
-          "text": "A Cylon Leader player takes the Infiltration card and 2 Motive cards; shuffle the other Motives aside",
+          "id": "cylon-leader-p",
+          "text": "The Cylon Leader takes the Infiltration card; split the Agenda cards into Sympathetic and Hostile decks",
           "condition": {
             "modules": [
               "leaders"
+            ],
+            "notModules": [
+              "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Pegasus rulebook (FFG), Expansion Setup"
+        },
+        {
+          "id": "cylon-leader",
+          "text": "The Cylon Leader takes the Infiltration card; shuffle the Motive cards beside the board",
+          "condition": {
+            "modules": [
+              "leaders",
+              "daybreak"
+            ]
+          },
+          "ref": "BSG: Daybreak rulebook (FFG), Expansion Setup"
         }
       ]
     },
@@ -292,7 +327,7 @@
       "steps": [
         {
           "id": "organize",
-          "text": "Remove the Sympathizer card; split the Not a Cylon and Cylon cards and shuffle the Cylon pile",
+          "text": "Box the Sympathizer card; split the Not a Cylon and Cylon cards into 2 piles and shuffle each",
           "condition": {
             "notModules": [
               "daybreak"
@@ -301,14 +336,50 @@
           "ref": "BSG rulebook (FFG) p.6"
         },
         {
+          "id": "organize-db",
+          "text": "Box the Sympathizer card and set the Mutineer card by the board; split the Not a Cylon and Cylon cards into 2 piles and shuffle each",
+          "condition": {
+            "modules": [
+              "daybreak"
+            ]
+          },
+          "ref": "BSG: Daybreak rulebook (FFG), Creating the Loyalty Deck"
+        },
+        {
+          "id": "pegasus-loyalty",
+          "text": "Include the Pegasus You Are a Cylon card (the Sympathetic Cylon card is only for its variant)",
+          "condition": {
+            "modules": [
+              "pegasus"
+            ],
+            "notModules": [
+              "daybreak"
+            ]
+          },
+          "ref": "BSG: Pegasus rulebook (FFG), Components"
+        },
+        {
           "id": "exodus-piles",
-          "text": "Include the Exodus Loyalty cards in both piles and shuffle both",
+          "text": "Include the Exodus Loyalty cards in both piles; box Personal Goal and Final Five cards",
           "condition": {
             "modules": [
               "exodus"
+            ],
+            "notModules": [
+              "conflicted"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Creating the Loyalty Deck"
+        },
+        {
+          "id": "conflicted",
+          "text": "Conflicted Loyalties: include the Exodus Loyalty cards; shuffle the Personal Goal and/or Final Five cards (your choice) into the Not a Cylon pile",
+          "condition": {
+            "modules": [
+              "conflicted"
+            ]
+          },
+          "ref": "BSG: Exodus rulebook (FFG), Conflicted Loyalties Option Setup"
         },
         {
           "id": "build",
@@ -325,24 +396,14 @@
                 {
                   "when": {
                     "players": [
-                      3
-                    ],
-                    "modules": [
-                      "exodus"
-                    ]
-                  },
-                  "value": "1 Cylon + 6 Not a Cylon"
-                },
-                {
-                  "when": {
-                    "players": [
                       4
                     ],
                     "modules": [
-                      "exodus"
+                      "daybreak",
+                      "leaders"
                     ]
                   },
-                  "value": "1 Cylon + 7 Not a Cylon"
+                  "value": "1 Cylon + 5 Not a Cylon"
                 },
                 {
                   "when": {
@@ -350,10 +411,11 @@
                       5
                     ],
                     "modules": [
-                      "exodus"
+                      "daybreak",
+                      "leaders"
                     ]
                   },
-                  "value": "2 Cylon + 9 Not a Cylon"
+                  "value": "1 Cylon + 7 Not a Cylon + the Mutineer"
                 },
                 {
                   "when": {
@@ -361,7 +423,108 @@
                       6
                     ],
                     "modules": [
-                      "exodus"
+                      "daybreak",
+                      "leaders"
+                    ]
+                  },
+                  "value": "2 Cylon + 8 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      7
+                    ],
+                    "modules": [
+                      "daybreak",
+                      "leaders"
+                    ]
+                  },
+                  "value": "2 Cylon + 10 Not a Cylon + the Mutineer"
+                },
+                {
+                  "when": {
+                    "players": [
+                      3
+                    ],
+                    "modules": [
+                      "daybreak"
+                    ]
+                  },
+                  "value": "1 Cylon + 5 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "daybreak"
+                    ]
+                  },
+                  "value": "1 Cylon + 7 Not a Cylon + the Mutineer"
+                },
+                {
+                  "when": {
+                    "players": [
+                      5
+                    ],
+                    "modules": [
+                      "daybreak"
+                    ]
+                  },
+                  "value": "2 Cylon + 8 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      6
+                    ],
+                    "modules": [
+                      "daybreak"
+                    ]
+                  },
+                  "value": "2 Cylon + 10 Not a Cylon + the Mutineer"
+                },
+                {
+                  "when": {
+                    "players": [
+                      4
+                    ],
+                    "modules": [
+                      "leaders"
+                    ]
+                  },
+                  "value": "1 Cylon + 5 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      5
+                    ],
+                    "modules": [
+                      "leaders"
+                    ]
+                  },
+                  "value": "1 Cylon + 7 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      6
+                    ],
+                    "modules": [
+                      "leaders"
+                    ]
+                  },
+                  "value": "2 Cylon + 8 Not a Cylon"
+                },
+                {
+                  "when": {
+                    "players": [
+                      7
+                    ],
+                    "modules": [
+                      "leaders"
                     ]
                   },
                   "value": "2 Cylon + 10 Not a Cylon"
@@ -369,43 +532,74 @@
               ]
             }
           },
+          "ref": "BSG rulebook (FFG) p.6 / BSG: Pegasus rulebook (FFG), Cylon Leader / BSG: Daybreak rulebook (FFG), Loyalty Deck Chart"
+        },
+        {
+          "id": "exodus-extra",
+          "text": "Exodus: 1 more Not a Cylon card",
           "condition": {
+            "modules": [
+              "exodus"
+            ]
+          },
+          "ref": "BSG: Exodus rulebook (FFG) / BSG: Daybreak rulebook (FFG), Combining"
+        },
+        {
+          "id": "adjust",
+          "text": "+1 Not a Cylon for each Sharon \"Boomer\" Valerii or Gaius Baltar in play (not the alternate Baltar)",
+          "ref": "BSG rulebook (FFG) p.6 / BSG: Daybreak rulebook (FFG), Creating the Loyalty Deck"
+        },
+        {
+          "id": "agenda",
+          "text": "Deal the Cylon Leader {a} Agenda card instead of a Loyalty card",
+          "amounts": {
+            "a": {
+              "default": "a Sympathetic",
+              "cases": [
+                {
+                  "when": {
+                    "players": [
+                      5
+                    ]
+                  },
+                  "value": "a Hostile"
+                },
+                {
+                  "when": {
+                    "players": [
+                      7
+                    ]
+                  },
+                  "value": "a Hostile"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "modules": [
+              "leaders"
+            ],
             "notModules": [
               "daybreak"
             ]
           },
-          "ref": "BSG rulebook (FFG) p.6 / Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Pegasus rulebook (FFG), Cylon Leader"
         },
         {
-          "id": "build-daybreak",
-          "text": "Box the Sympathizer, set the Mutineer card by the board; build the deck from the Daybreak chart",
+          "id": "motives",
+          "text": "Deal the Cylon Leader 2 Motive cards instead of a Loyalty card",
           "condition": {
             "modules": [
+              "leaders",
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
-        },
-        {
-          "id": "exodus-daybreak",
-          "text": "Add 1 more Not a Cylon card for Exodus",
-          "condition": {
-            "modules": [
-              "daybreak",
-              "exodus"
-            ]
-          },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
-        },
-        {
-          "id": "adjust",
-          "text": "+1 Not a Cylon for each Sharon Valerii or Gaius Baltar in play (not the alternate Baltar)",
-          "ref": "BSG rulebook (FFG) p.6 / Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Creating the Loyalty Deck"
         },
         {
           "id": "deal",
           "text": "Shuffle; deal 1 facedown to each player (original Baltar gets 2, a Cylon Leader none)",
-          "ref": "BSG rulebook (FFG) p.6 / Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG rulebook (FFG) p.6 / BSG: Daybreak rulebook (FFG), Creating the Loyalty Deck"
         },
         {
           "id": "sympathizer",
@@ -416,15 +610,31 @@
               6
             ],
             "notModules": [
-              "daybreak"
+              "daybreak",
+              "leaders"
             ]
           },
           "ref": "BSG rulebook (FFG) p.6"
         },
         {
           "id": "box-rest",
-          "text": "Loyalty deck beside the board; box unused Loyalty cards unseen (Exodus: keep the Not a Cylon pile by the board)",
-          "ref": "BSG rulebook (FFG) p.6 / Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "text": "Loyalty deck beside the board; box unused Loyalty cards unseen",
+          "condition": {
+            "notModules": [
+              "exodus"
+            ]
+          },
+          "ref": "BSG rulebook (FFG) p.6"
+        },
+        {
+          "id": "box-rest-exodus",
+          "text": "Loyalty deck beside the board with the rest of the Not a Cylon pile apart from it; box the unused Cylon cards unseen",
+          "condition": {
+            "modules": [
+              "exodus"
+            ]
+          },
+          "ref": "BSG: Exodus rulebook (FFG), Creating the Loyalty Deck"
         }
       ]
     },
@@ -434,23 +644,23 @@
       "steps": [
         {
           "id": "cards-pegasus",
-          "text": "Shuffle the Pegasus Crisis, Skill and Destination cards into their decks; box the core Investigative Committee cards",
+          "text": "Shuffle the Pegasus Crisis, Quorum, Super Crisis, Skill and Destination cards into their decks; box the core Investigative Committee cards",
           "condition": {
             "modules": [
               "pegasus"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+          "ref": "BSG: Pegasus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "cards-exodus",
-          "text": "Shuffle the Exodus Crisis, Quorum, Super Crisis, Skill and Destination cards into their decks",
+          "text": "Shuffle the Exodus Crisis, Quorum, Super Crisis, Skill and Destination cards into their decks (the CAG Chooses cards only with the Cylon Fleet)",
           "condition": {
             "modules": [
               "exodus"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "cards-daybreak",
@@ -460,17 +670,17 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Expansion Setup"
         },
         {
           "id": "cylon-fleet-cards",
-          "text": "Box all Cylon attack Crisis and Super Crisis cards",
+          "text": "Box all Cylon attack Crisis and Super Crisis cards (Daybreak ones too)",
           "condition": {
             "modules": [
               "cylon-fleet"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Cylon Fleet Option Setup"
         },
         {
           "id": "decks",
@@ -484,7 +694,7 @@
         },
         {
           "id": "treachery",
-          "text": "Shuffle the Treachery cards by the marked area of the Pegasus board",
+          "text": "Shuffle the Treachery cards below the marked area of the Pegasus board",
           "condition": {
             "modules": [
               "pegasus"
@@ -493,17 +703,17 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+          "ref": "BSG: Pegasus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "treachery-daybreak",
-          "text": "Shuffle the Daybreak Treachery cards right of the Engineering deck (box the Pegasus ones)",
+          "text": "Shuffle the Daybreak Treachery cards right of the Engineering deck; box the Pegasus Treachery, overlay, Infiltration and Agenda cards",
           "condition": {
             "modules": [
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Expansion Setup / Combining"
         },
         {
           "id": "mutiny",
@@ -513,7 +723,7 @@
               "daybreak"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Expansion Setup"
         },
         {
           "id": "objective",
@@ -529,23 +739,23 @@
         },
         {
           "id": "objective-nc",
-          "text": "New Caprica Objective instead of Kobol; New Caprica board and its Crisis cards set aside for later",
+          "text": "New Caprica Objective instead of Kobol; New Caprica board, its shuffled Crisis cards and occupation forces tokens set aside for later",
           "condition": {
             "modules": [
               "new-caprica"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus"
+          "ref": "BSG: Pegasus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "objective-nebula",
-          "text": "Ionian Nebula Objective instead of Kobol; shuffle the Crossroads cards",
+          "text": "Ionian Nebula Objective instead of Kobol; Crossroads cards shuffled and set aside",
           "condition": {
             "modules": [
               "nebula"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Ionian Nebula Option Setup"
         },
         {
           "id": "allies",
@@ -555,7 +765,7 @@
               "nebula"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Ionian Nebula Option Setup"
         },
         {
           "id": "trauma-deal",
@@ -565,7 +775,7 @@
               "nebula"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Exodus"
+          "ref": "BSG: Exodus rulebook (FFG), Ionian Nebula Option Setup"
         },
         {
           "id": "objective-earth",
@@ -575,7 +785,7 @@
               "search-home"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Search for Home Setup"
         },
         {
           "id": "receive",
@@ -601,7 +811,7 @@
               "pegasus"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Pegasus / Daybreak"
+          "ref": "BSG: Pegasus rulebook (FFG), Expansion Setup"
         },
         {
           "id": "destiny-treachery-db",
@@ -614,7 +824,7 @@
               "pegasus"
             ]
           },
-          "ref": "Esoteric Order of Gamers BSG summary v4.4, Daybreak"
+          "ref": "BSG: Daybreak rulebook (FFG), Expansion Setup"
         },
         {
           "id": "ships",

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "gameId": 391163,
   "gameName": "Forest Shuffle",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Forest Shuffle rules (Lookout, via RulesPal)",
+      "Forest Shuffle rules (Lookout)",
       "Forest Shuffle: Alpine rules (Lookout, 2024)",
       "Forest Shuffle: Woodland Edge rules (Lookout, 2024)",
       "Forest Shuffle: Exploration rules (Lookout, 2025)"

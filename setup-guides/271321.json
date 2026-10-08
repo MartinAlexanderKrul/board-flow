@@ -5,12 +5,12 @@
     73664
   ],
   "gameName": "CABO (Second Edition)",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "CABO (Second Edition) rules (Bezier Games, via RulesPal)"
+      "CABO (Second Edition) rules (Bezier Games, 2019 rules sheet)"
     ]
   },
   "players": {

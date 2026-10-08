@@ -2,12 +2,12 @@
   "schemaVersion": 2,
   "gameId": 91312,
   "gameName": "Discworld: Ankh-Morpork",
-  "version": 1,
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Discworld: Ankh-Morpork rules (Treefrog Games, via RulesPal)"
+      "Discworld: Ankh-Morpork rules (Treefrog Games)"
     ]
   },
   "players": {

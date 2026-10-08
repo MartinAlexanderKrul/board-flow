@@ -1869,7 +1869,7 @@
       "gameId": 271321,
       "gameName": "CABO (Second Edition)",
       "gameIds": [271321, 73664],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "271321.json"
     },
@@ -1877,7 +1877,7 @@
       "gameId": 434654,
       "gameName": "Toy Battle",
       "gameIds": [434654],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "434654.json"
     },
@@ -1885,7 +1885,7 @@
       "gameId": 391163,
       "gameName": "Forest Shuffle",
       "gameIds": [391163, 412576, 424129, 438231],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "391163.json"
     },
@@ -1893,7 +1893,7 @@
       "gameId": 385610,
       "gameName": "Kutná Hora: The City of Silver",
       "gameIds": [385610],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "385610.json"
     },
@@ -1901,7 +1901,7 @@
       "gameId": 274364,
       "gameName": "Watergate",
       "gameIds": [274364],
-      "version": 2,
+      "version": 3,
       "schemaVersion": 1,
       "path": "274364.json"
     },
@@ -1909,7 +1909,7 @@
       "gameId": 339789,
       "gameName": "Welcome to the Moon",
       "gameIds": [339789],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "339789.json"
     },
@@ -1957,7 +1957,7 @@
       "gameId": 91312,
       "gameName": "Discworld: Ankh-Morpork",
       "gameIds": [91312],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 2,
       "path": "91312.json"
     },
@@ -1981,7 +1981,7 @@
       "gameId": 101721,
       "gameName": "Mage Wars Arena",
       "gameIds": [101721],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "101721.json"
     },
@@ -1989,7 +1989,7 @@
       "gameId": 37111,
       "gameName": "Battlestar Galactica: The Board Game",
       "gameIds": [37111, 43539, 85905, 141648],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "37111.json"
     },
@@ -2029,15 +2029,15 @@
       "gameId": 103885,
       "gameName": "Star Wars: X-Wing Miniatures Game",
       "gameIds": [103885],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "103885.json"
     },
     {
       "gameId": 188920,
       "gameName": "This War of Mine: The Board Game",
-      "gameIds": [188920],
-      "version": 1,
+      "gameIds": [188920, 247665, 288901],
+      "version": 2,
       "schemaVersion": 1,
       "path": "188920.json"
     },
@@ -2061,7 +2061,7 @@
       "gameId": 104162,
       "gameName": "Descent: Journeys in the Dark (Second Edition)",
       "gameIds": [104162],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "104162.json"
     },
@@ -2117,7 +2117,7 @@
       "gameId": 356080,
       "gameName": "The Elder Scrolls: Betrayal of the Second Era",
       "gameIds": [356080],
-      "version": 1,
+      "version": 2,
       "schemaVersion": 1,
       "path": "356080.json"
     },
