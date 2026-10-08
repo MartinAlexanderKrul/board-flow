@@ -1,0 +1,533 @@
+{
+  "schemaVersion": 1,
+  "gameId": 363622,
+  "gameName": "The Castles of Burgundy: Special Edition",
+  "version": 1,
+  "provenance": {
+    "origin": "BOARDFLOW",
+    "author": "BoardFlow",
+    "sources": [
+      "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea)"
+    ]
+  },
+  "players": {
+    "min": 1,
+    "max": 4
+  },
+  "modules": [
+    {
+      "id": "duchies-11-18",
+      "name": "Duchy boards 11-18 (1st expansion)",
+      "excludes": [
+        "border-posts"
+      ]
+    },
+    {
+      "id": "tiles",
+      "name": "4 additional hex tiles (2nd expansion)"
+    },
+    {
+      "id": "border-posts",
+      "name": "The Border Posts (4th expansion)",
+      "excludes": [
+        "duchies-11-18"
+      ]
+    },
+    {
+      "id": "white-castles",
+      "name": "The White Castles (5th expansion)"
+    },
+    {
+      "id": "inns",
+      "name": "The Inns (6th expansion)"
+    },
+    {
+      "id": "trade-routes",
+      "name": "The Trade Routes (8th expansion)"
+    },
+    {
+      "id": "shields",
+      "name": "The Shields"
+    },
+    {
+      "id": "vineyards",
+      "name": "Vineyards"
+    },
+    {
+      "id": "team",
+      "name": "The Team Game (9th expansion)",
+      "players": {
+        "min": 4,
+        "max": 4
+      }
+    },
+    {
+      "id": "solo",
+      "name": "Solo game (10th expansion)",
+      "group": "Solo mode",
+      "players": {
+        "min": 1,
+        "max": 1
+      }
+    },
+    {
+      "id": "chateauma",
+      "name": "Châteauma (automated opponent)",
+      "group": "Solo mode",
+      "players": {
+        "min": 1,
+        "max": 1
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "board",
+      "title": "Game board",
+      "steps": [
+        {
+          "id": "board",
+          "text": "Game board on its {side} side",
+          "amounts": {
+            "side": {
+              "byPlayers": {
+                "1": "2-player",
+                "2": "2-player",
+                "3": "3-4 player",
+                "4": "3-4 player"
+              }
+            }
+          },
+          "note": "Châteauma counts as a player for the board side",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "supply",
+          "text": "24 silver coins, 26 workers and the white die beside the board",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "bags",
+          "text": "Sort hex tiles by back: livestock, buildings, monasteries and black-backed tiles into their bags",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "piles",
+          "text": "Castles, ships and mines in faceup piles by the board",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "expansion-tiles",
+          "text": "Mix the 4 extra hex tiles (2nd expansion) into the monastery and black supplies",
+          "condition": {
+            "modules": [
+              "tiles"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.13"
+        },
+        {
+          "id": "white-castles",
+          "text": "Mix the White Castles into the building, monastery and black supplies",
+          "condition": {
+            "modules": [
+              "white-castles"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.14"
+        },
+        {
+          "id": "goods",
+          "text": "Shuffle the 42 goods tiles facedown; 5 stacks of 5 on phase spaces A-E; the other 17 aside",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "bonus",
+          "text": "Bonus tiles: 2 per colour on their spaces, the 5/6/7 tile on top",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "border-bonus",
+          "text": "Border post bonus tile on its slot",
+          "condition": {
+            "modules": [
+              "border-posts"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.14"
+        },
+        {
+          "id": "shields",
+          "text": "Shields facedown on the depots' goods spaces, then flip them: {n}",
+          "amounts": {
+            "n": {
+              "default": "2 per depot",
+              "byPlayers": {
+                "1": "1 per depot",
+                "2": "1 per depot",
+                "3": "1 in depots 1, 3, 5; 2 in depots 2, 4, 6"
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "shields"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.17"
+        },
+        {
+          "id": "vineyard-store",
+          "text": "Vineyard depot by the board with the vineyard store beneath it (2-3 players: the side marked for them); double hex tiles in their bag",
+          "condition": {
+            "modules": [
+              "vineyards"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.19"
+        }
+      ]
+    },
+    {
+      "id": "players",
+      "title": "Each player",
+      "steps": [
+        {
+          "id": "pieces",
+          "text": "Player board, 2 dice, turn order marker, VP marker and VP tile in your colour; a help sheet",
+          "condition": {
+            "notModules": [
+              "team"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "duchy",
+          "text": "A random duchy board{d}, side of your choice, on your player board under an overlay (first game: board 1 or 2 for everyone)",
+          "amounts": {
+            "d": {
+              "default": "",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "duchies-11-18"
+                    ]
+                  },
+                  "value": " numbered 11-18"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "border-posts"
+                    ]
+                  },
+                  "value": " numbered 23-30"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "notModules": [
+              "team",
+              "solo"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5 / p.13-14"
+        },
+        {
+          "id": "goods-start",
+          "text": "3 random goods from the 17 aside onto your goods spaces (stack matching numbers); box the rest",
+          "condition": {
+            "notModules": [
+              "team"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "coin",
+          "text": "1 silver coin on your board",
+          "condition": {
+            "notModules": [
+              "team",
+              "solo"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "vp",
+          "text": "VP markers on the start of the track (between 1 and 100)",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "castle",
+          "text": "Everyone places 1 castle on a burgundy space of their duchy (first game with board 1 or 2: the space numbered 6)",
+          "condition": {
+            "notModules": [
+              "team",
+              "solo"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "trade-routes",
+          "text": "{n} random trade route tiles below your board in a row",
+          "amounts": {
+            "n": {
+              "default": "3",
+              "byPlayers": {
+                "1": "5",
+                "2": "5",
+                "3": "4"
+              }
+            }
+          },
+          "condition": {
+            "modules": [
+              "trade-routes"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.14"
+        },
+        {
+          "id": "vine-bonus",
+          "text": "A vineyard board and 1 random vine bonus tile (from one set of 6)",
+          "condition": {
+            "modules": [
+              "vineyards"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.19"
+        }
+      ]
+    },
+    {
+      "id": "team-setup",
+      "title": "Team game",
+      "condition": {
+        "modules": [
+          "team"
+        ]
+      },
+      "steps": [
+        {
+          "id": "team-board",
+          "text": "Teams of 2 (seated together): a team board from halves 31a and 32a (advanced: 31b and 32b)",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        },
+        {
+          "id": "team-castle",
+          "text": "Castle on the central burgundy space (advanced side: space 1 or 6)",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        },
+        {
+          "id": "team-goods",
+          "text": "3 random goods on the team goods spaces; 2 silver per team; workers: first team 3, second team 5",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        },
+        {
+          "id": "team-pieces",
+          "text": "Each player still takes 2 dice, a turn order marker, VP marker and VP tile",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        },
+        {
+          "id": "team-order",
+          "text": "Round 1 turn order: A1, B1, A2, B2",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        }
+      ]
+    },
+    {
+      "id": "solo-setup",
+      "title": "Solo game",
+      "condition": {
+        "modules": [
+          "solo"
+        ]
+      },
+      "steps": [
+        {
+          "id": "solo-start",
+          "text": "1 silver, 2 workers, 3 random goods beside your board; the white die is yours",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        },
+        {
+          "id": "solo-duchy",
+          "text": "Solo duchy board (side 33 beginner, 34 advanced); a castle on any burgundy space",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        },
+        {
+          "id": "target",
+          "text": "Your turn order marker on space 50 of the VP track as the target",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        }
+      ]
+    },
+    {
+      "id": "chateauma-setup",
+      "title": "Châteauma",
+      "condition": {
+        "modules": [
+          "chateauma"
+        ]
+      },
+      "steps": [
+        {
+          "id": "ch-goods",
+          "text": "Keep 1 goods tile of each type aside for Châteauma",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.22"
+        },
+        {
+          "id": "ch-board",
+          "text": "Châteauma duchy board (side 35) by the main board, with one colour's pieces (it uses 1 die)",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.22"
+        },
+        {
+          "id": "ch-level",
+          "text": "Pick its difficulty (first game: Midweight, no modifiers)",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.22"
+        },
+        {
+          "id": "ch-cards",
+          "text": "County cards 1-9 (Vineyards: 1 and 10-17): flip until one with a castle space, under the 1-4 slot; shuffle the rest under the leftmost slot and flip 1 under 5-6",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.22 / p.24"
+        },
+        {
+          "id": "ch-castle",
+          "text": "A castle on the 1-4 card's castle space; 1 goods of each type on its goods spaces; 1 silver; no workers",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.22"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "workers",
+          "text": "Workers change a die by 1 each (1 and 6 wrap around)",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.6"
+        },
+        {
+          "id": "phase",
+          "text": "Each phase: clear the depots, refill hex tiles, put the phase's 5 goods on the round spaces",
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.6"
+        },
+        {
+          "id": "four-only",
+          "text": "Depot spaces marked 4 are filled only with 4 players; 3BD gets a mine in phases B and D with 3 players",
+          "condition": {
+            "minPlayers": 3
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.6"
+        },
+        {
+          "id": "inn",
+          "text": "Inns: put 1 next to the black depot each phase; max 1 inn per colour area",
+          "condition": {
+            "modules": [
+              "inns"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.14"
+        },
+        {
+          "id": "tribute",
+          "text": "Shields cost 1 silver each at the end of every phase",
+          "condition": {
+            "modules": [
+              "shields"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.17"
+        },
+        {
+          "id": "vine-refill",
+          "text": "Before each phase refill the vineyard depot and store from the bag",
+          "condition": {
+            "modules": [
+              "vineyards"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.19"
+        },
+        {
+          "id": "solo-win",
+          "text": "Solo: fill all 37 spaces within 25 rounds",
+          "condition": {
+            "modules": [
+              "solo"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.16"
+        },
+        {
+          "id": "ch-last",
+          "text": "Châteauma always plays last",
+          "condition": {
+            "modules": [
+              "chateauma"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.22"
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": "Start playing",
+      "kind": "START",
+      "steps": [
+        {
+          "id": "first",
+          "text": "Roll for start player (highest); workers by seat: 1, 2, 3, 4; turn order markers stacked in order; the start player takes the white die",
+          "condition": {
+            "minPlayers": 2,
+            "notModules": [
+              "team"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.5"
+        },
+        {
+          "id": "solo-first",
+          "text": "Roll all 3 dice to begin round 1",
+          "condition": {
+            "modules": [
+              "solo"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.16"
+        },
+        {
+          "id": "ch-first",
+          "text": "You start; workers: 1 for you",
+          "condition": {
+            "players": [
+              1
+            ],
+            "modules": [
+              "chateauma"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.22 / p.5"
+        },
+        {
+          "id": "team-first",
+          "text": "Player A1 starts",
+          "condition": {
+            "modules": [
+              "team"
+            ]
+          },
+          "ref": "The Castles of Burgundy: Special Edition rulebook (Awaken Realms / alea) p.15"
+        }
+      ]
+    }
+  ]
+}

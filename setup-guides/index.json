@@ -2136,6 +2136,14 @@
       "version": 1,
       "schemaVersion": 1,
       "path": "17392.json"
+    },
+    {
+      "gameId": 363622,
+      "gameName": "The Castles of Burgundy: Special Edition",
+      "gameIds": [363622],
+      "version": 1,
+      "schemaVersion": 1,
+      "path": "363622.json"
     }
   ]
 }
