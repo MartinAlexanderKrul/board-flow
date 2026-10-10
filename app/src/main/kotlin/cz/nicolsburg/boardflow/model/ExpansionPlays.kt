@@ -65,32 +65,44 @@ object ExpansionPlays {
     }
 
     /**
-     * True when [candidate] names an expansion of [base]: "Root: Sub" or "Root Sub" where Root
-     * is the base name or the part of it before its own subtitle separator.
+     * True when [candidate] names an expansion of [base]: the base's whole name followed by a
+     * subtitle ("Dune: Imperium – Bloodlines", "Wingspan Asia"), or a sibling title sharing the
+     * base's own root ("Tainted Grail: The Last Knight" next to "Tainted Grail: The Fall of
+     * Avalon"). The first reads one way only; siblings match both ways, so only the BGG type
+     * tells which of two siblings is the expansion.
      */
     fun extendsName(candidate: String, base: String): Boolean {
         val c = candidate.trim()
         val b = base.trim()
         if (c.isEmpty() || b.isEmpty() || c.equals(b, ignoreCase = true)) return false
-        val candidateRoot = separatorIndex(c)?.let { c.substring(0, it).trim() }
-            ?: return c.lowercase().startsWith(b.lowercase() + " ")
-        val baseRoot = separatorIndex(b)?.let { b.substring(0, it).trim() }
-        return candidateRoot.equals(b, ignoreCase = true) || candidateRoot.equals(baseRoot, ignoreCase = true)
+        if (subtitleAfter(c, b) != null) return true
+        // The base's name extends the candidate's: the candidate is the base game here.
+        if (subtitleAfter(b, c) != null) return false
+        val candidateRoot = separatorIndex(c)?.let { c.substring(0, it).trim() } ?: return false
+        val baseRoot = separatorIndex(b)?.let { b.substring(0, it).trim() } ?: return false
+        return candidateRoot.equals(baseRoot, ignoreCase = true)
     }
 
     /** The expansion's name without its base game's name: "Wingspan: European Expansion" -> "European Expansion". */
     fun shortName(expansionName: String, baseName: String): String {
         val name = expansionName.trim()
-        val sep = separatorIndex(name) ?: return name.removePrefixIgnoreCase(baseName.trim() + " ").ifBlank { name }
-        val root = name.substring(0, sep).trim()
+        subtitleAfter(name, baseName.trim())?.let { return it }
+        val sep = separatorIndex(name) ?: return name
         val baseRoot = separatorIndex(baseName.trim())?.let { baseName.trim().substring(0, it).trim() }
-        return if (root.equals(baseName.trim(), ignoreCase = true) || root.equals(baseRoot, ignoreCase = true)) {
-            name.substring(sep).trimStart(':', ' ', '–', '—', '-').ifBlank { name }
+        return if (name.substring(0, sep).trim().equals(baseRoot, ignoreCase = true)) {
+            name.substring(sep).trimStart(*SEPARATOR_CHARS).ifBlank { name }
         } else name
     }
 
-    private fun String.removePrefixIgnoreCase(prefix: String): String =
-        if (startsWith(prefix, ignoreCase = true)) substring(prefix.length) else this
+    /** What follows [prefix] in [name] when [name] is "[prefix]: ...", "[prefix] - ..." or "[prefix] ...". */
+    private fun subtitleAfter(name: String, prefix: String): String? {
+        if (prefix.isEmpty() || name.length <= prefix.length || !name.startsWith(prefix, ignoreCase = true)) return null
+        val rest = name.substring(prefix.length)
+        if (rest.first() != ' ' && rest.first() != ':') return null
+        return rest.trimStart(*SEPARATOR_CHARS).ifBlank { null }
+    }
+
+    private val SEPARATOR_CHARS = charArrayOf(':', ' ', '–', '—', '-')
 
     private fun separatorIndex(s: String): Int? = listOf(
         s.indexOf(':').takeIf { it > 0 },

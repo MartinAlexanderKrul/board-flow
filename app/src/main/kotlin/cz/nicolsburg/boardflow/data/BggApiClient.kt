@@ -112,7 +112,11 @@ class BggApiClient(private val xmlApiToken: String = "") {
         val maxplayers: String = "",
         val playingtime: String = "",
         val minplaytime: String = "",
-        val maxplaytime: String = ""
+        val maxplaytime: String = "",
+        /** BGG's item type: "boardgame", "boardgameexpansion", ... */
+        val type: String = "",
+        /** For an expansion: the games it expands (BGG id to name). */
+        val baseGames: List<Pair<Int, String>> = emptyList()
     )
 
     data class BggGame(
@@ -408,11 +412,15 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
                 }
 
                 val linkElements = item.getElementsByTagName("link")
+                val baseGames = mutableListOf<Pair<Int, String>>()
                 for (j in 0 until linkElements.length) {
                     val link = linkElements.item(j) as? Element ?: continue
-                    if (link.getAttribute("type") == "boardgamelanguagedependence") {
-                        bgglanguagedependence = link.getAttribute("value")
-                        break
+                    when {
+                        link.getAttribute("type") == "boardgamelanguagedependence" && bgglanguagedependence.isEmpty() ->
+                            bgglanguagedependence = link.getAttribute("value")
+                        // On an expansion, the inbound expansion links name the games it expands.
+                        link.getAttribute("type") == "boardgameexpansion" && link.getAttribute("inbound") == "true" ->
+                            link.getAttribute("id").toIntOrNull()?.let { baseGames += it to link.getAttribute("value") }
                     }
                 }
 
@@ -431,7 +439,9 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
                     maxplayers = maxplayers,
                     playingtime = playingtime,
                     minplaytime = minplaytime,
-                    maxplaytime = maxplaytime
+                    maxplaytime = maxplaytime,
+                    type = item.getAttribute("type"),
+                    baseGames = baseGames
                 )
                 Log.i(TAG, "ThingDetail id=$id weight=$avgweight best=$bggbestplayers rec=$bggrecplayers notRec=$bggnotrecplayers age=$bggrecagerange lang=$bgglanguagedependence")
             }

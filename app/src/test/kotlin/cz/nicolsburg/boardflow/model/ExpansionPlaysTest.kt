@@ -117,6 +117,16 @@ class ExpansionPlaysTest {
     }
 
     @Test
+    fun expansionOfABaseWithAColonInItsNameLinksOneWay() {
+        val linked = ExpansionPlays.link(
+            listOf(play("1", 331106, "The Witcher: Old World"), play("2", 340000, "The Witcher: Old World – Adventure Pack"))
+        )
+        assertEquals("1", linked.single { it.id == "2" }.expansionOf)
+        assertEquals("Adventure Pack", ExpansionPlays.shortName("The Witcher: Old World – Adventure Pack", "The Witcher: Old World"))
+        assertFalse(ExpansionPlays.extendsName("The Witcher: Old World", "The Witcher: Old World – Adventure Pack"))
+    }
+
+    @Test
     fun extendsNameNeedsTheBaseAsRoot() {
         assertTrue(ExpansionPlays.extendsName("Wingspan: European Expansion", "Wingspan"))
         assertTrue(ExpansionPlays.extendsName("Wingspan Asia", "Wingspan"))

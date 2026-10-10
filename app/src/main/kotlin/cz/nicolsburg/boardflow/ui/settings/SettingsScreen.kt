@@ -192,6 +192,7 @@ fun SettingsScreen(
     val cachedCollection by syncViewModel.collectionGames.collectAsState()
 
     var showSheetModal by remember { mutableStateOf(false) }
+    var showBasePlayFixes by remember { mutableStateOf(false) }
     var showImportConfirm by remember { mutableStateOf<String?>(null) }
     var includeSensitiveBackup by remember { mutableStateOf(false) }
     var modelListLoading by remember { mutableStateOf(false) }
@@ -323,6 +324,16 @@ fun SettingsScreen(
                 onSignOut()
             },
             onDismiss = { showGoogleSignOutConfirm = false }
+        )
+    }
+
+    if (showBasePlayFixes) {
+        BasePlayFixesDialog(
+            viewModel = viewModel,
+            onDismiss = { showBasePlayFixes = false },
+            onDone = { count ->
+                messenger.show(if (count == 0) "No plays changed" else "Added $count base-game play${if (count == 1) "" else "s"}")
+            }
         )
     }
 
@@ -829,6 +840,17 @@ fun SettingsScreen(
                             title = "Import data",
                             detail = "Replace this phone's data with a backup",
                             onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }
+                        )
+                    }
+                }
+                item { BoardFlowSectionTitle(title = "Plays") }
+                item {
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Extension,
+                            title = "Add missing base games",
+                            detail = "Expansion plays logged without their base game get a base-game play",
+                            onClick = { showBasePlayFixes = true }
                         )
                     }
                 }

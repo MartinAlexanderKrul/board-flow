@@ -23,6 +23,9 @@ import cz.nicolsburg.boardflow.model.syncedCollectionEntry
 import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.ExpansionPlays
+import cz.nicolsburg.boardflow.model.BasePlayFix
+import cz.nicolsburg.boardflow.model.BasePlayFixes
+import cz.nicolsburg.boardflow.model.trimMemorySuffix
 import cz.nicolsburg.boardflow.model.expansionGameIds
 import cz.nicolsburg.boardflow.model.includesGame
 import cz.nicolsburg.boardflow.model.sessionPlays
@@ -2899,6 +2902,71 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun setupPlayAgainFromPlay(play: LoggedPlay) = setupPlayAgainFromSession(listOf(play))
+
+    // --- Missing base-game plays (Settings > Data) ---
+
+    /**
+     * Expansion plays with no base-game play of their sitting. BGG decides which played games
+     * are expansions and what they expand; games the collection lists as base games are not asked.
+     */
+    suspend fun findBasePlayFixes(): Result<List<BasePlayFix>> = runCatching {
+        val plays = historyPlays.value
+        val collection = _collectionItems.value
+        val baseGameIds = collection.mapNotNullTo(hashSetOf()) { item ->
+            val type = item.spreadsheetValues["objecttype"] ?: item.bggValues["objecttype"]
+            item.objectId.toIntOrNull()?.takeIf { type.equals("boardgame", ignoreCase = true) }
+        }
+        val ids = plays.filter { it.expansionOf == null && it.gameId != 0 && it.gameId !in baseGameIds }
+            .map { it.gameId }.distinct()
+        val details = withContext(Dispatchers.IO) {
+            BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(ids.map { it.toString() })
+        }
+        val baseGamesOf = details.values
+            .filter { it.type == "boardgameexpansion" && it.baseGames.isNotEmpty() }
+            .associate { detail -> detail.objectid.toInt() to detail.baseGames.map { (id, name) -> BggGame(id, name, null, null) } }
+        val known = collection.filter { it.isOwned }.mapNotNullTo(hashSetOf()) { it.objectId.toIntOrNull() } +
+            plays.map { it.gameId }
+        BasePlayFixes.find(plays, baseGamesOf, known)
+    }
+
+    /**
+     * Adds a base-game play for each chosen fix (posted to BGG like any new play) and gives an
+     * existing base play the expansion play's result where the fix says so. Reports how many plays changed.
+     */
+    fun applyBasePlayFixes(choices: List<Pair<BasePlayFix, BggGame?>>, onDone: (Int) -> Unit) {
+        viewModelScope.launch {
+            val store = container.canonicalCollectionStore
+            val added = choices.mapNotNull { (fix, base) ->
+                if (fix.existingBasePlay != null || base == null) null
+                else BasePlayFixes.basePlayFor(fix.expansionPlay, base, UUID.randomUUID().toString())
+            }
+            added.forEach { store.saveLoggedPlay(it) }
+            _playHistory.value = store.getLoggedPlays()
+            val matched = choices.mapNotNull { (fix, _) -> fix.existingBasePlay?.let { it to fix.expansionPlay } }
+            matched.forEach { (basePlay, expansionPlay) ->
+                editPlay(
+                    play = basePlay,
+                    date = expansionPlay.date,
+                    durationMinutes = expansionPlay.durationMinutes,
+                    location = expansionPlay.location,
+                    comments = basePlay.comments.trimMemorySuffix(),
+                    players = expansionPlay.players,
+                    onSuccess = {},
+                    onError = {}
+                )
+            }
+            if (added.isNotEmpty()) {
+                val creds = if (isOnline()) prefs.getCredentials() else null
+                if (creds != null) {
+                    _expectedPostedPlayIds.value = _expectedPostedPlayIds.value + added.map { it.id }
+                    postPlaysInBackground(added.map { it.id }, creds)
+                } else {
+                    container.scheduleUnpostedPlayPost()
+                }
+            }
+            onDone(added.size + matched.size)
+        }
+    }
 
     fun setupLogPlayById(gameId: Int, gameName: String, thumbnailUrl: String?) {
         val game = gameForLogPlay(gameId, gameName, thumbnailUrl)
