@@ -34,12 +34,26 @@ class ExpansionPlaysTest {
     }
 
     @Test
-    fun knownExpansionTypeLinksEvenWhenTheNameDoesNotExtendTheBase() {
+    fun knownExpansionLoggedTogetherLinksEvenWhenTheNameDoesNotExtendTheBase() {
         val linked = ExpansionPlays.link(
-            listOf(play("1", 100, "Sky Team"), play("2", 200, "Turbulence")),
+            listOf(play("1", 100, "Sky Team", sessionId = "s"), play("2", 200, "Turbulence", sessionId = "s")),
             expansionGameIds = setOf(200)
         )
         assertEquals("1", linked.single { it.id == "2" }.expansionOf)
+    }
+
+    @Test
+    fun bulkPlayedEntriesWithoutANameLinkStaySeparate() {
+        val noResult = listOf(PlayerResult("Martin", "", false))
+        val linked = ExpansionPlays.link(
+            listOf(
+                play("1", 366161, "Wingspan Asia", date = "2023-01-01", players = noResult),
+                play("2", 287954, "Dune: Imperium – Rise of Ix", date = "2023-01-01", players = noResult),
+                play("3", 278039, "The Witcher: Old World – Skellige", date = "2023-01-01", players = noResult)
+            ),
+            expansionGameIds = setOf(287954, 278039)
+        )
+        assertTrue(linked.all { it.expansionOf == null && it.expansions.isEmpty() })
     }
 
     @Test

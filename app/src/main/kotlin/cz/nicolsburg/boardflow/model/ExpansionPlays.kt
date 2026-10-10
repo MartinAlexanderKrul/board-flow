@@ -54,7 +54,12 @@ object ExpansionPlays {
         val (expansions, bases) = group.partition(::isExpansion)
         if (bases.isEmpty()) return
         expansions.forEach { expansion ->
-            val base = bases.firstOrNull { extendsName(expansion.gameName, it.gameName) } ?: bases.singleOrNull() ?: return@forEach
+            // Without a name link only plays logged together (one session id) are trusted: bulk
+            // "played" entries share a date and an empty result but are not one sitting.
+            val loggedTogether = sessionIds.size == 1 && group.all { it.sessionId == sessionIds.single() }
+            val base = bases.firstOrNull { extendsName(expansion.gameName, it.gameName) }
+                ?: bases.singleOrNull()?.takeIf { loggedTogether }
+                ?: return@forEach
             baseOf[expansion.id] = base.id
         }
     }
