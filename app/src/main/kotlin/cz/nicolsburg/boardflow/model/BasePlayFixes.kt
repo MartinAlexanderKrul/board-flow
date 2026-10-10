@@ -3,9 +3,10 @@ package cz.nicolsburg.boardflow.model
 /**
  * An expansion play with no base-game play of its sitting (see [ExpansionPlays]).
  *
- * When the base game was logged the same day with the same players but a different result
- * ([existingBasePlay]), the fix is to give that play the expansion play's result, so the two
- * become one sitting. Otherwise the fix is a new play of one of [baseOptions] with the
+ * When the base game was logged the same day with the same players but no result yet (no
+ * scores, no winner: [existingBasePlay]), the fix is to give that play the expansion play's
+ * result, so the two become one sitting. A base play with a result of its own is a different
+ * sitting and is never overwritten. Otherwise the fix is a new play of one of [baseOptions] with the
  * expansion play's date, players, scores, length and location.
  */
 data class BasePlayFix(
@@ -33,7 +34,7 @@ object BasePlayFixes {
             val optionIds = options.mapTo(hashSetOf()) { it.id }
             val existing = plays.firstOrNull { other ->
                 other.id != play.id && other.expansionOf == null && other.gameId in optionIds &&
-                    other.date == play.date && other.playerNames() == play.playerNames()
+                    other.date == play.date && other.playerNames() == play.playerNames() && !other.hasResult()
             }
             val suggested = if (existing != null) null else suggestBase(play.gameName, options, knownGameIds)
             BasePlayFix(
@@ -69,6 +70,9 @@ object BasePlayFixes {
     )
 
     private fun LoggedPlay.playerNames(): Set<String> = players.mapTo(hashSetOf()) { it.name.trim().lowercase() }
+
+    private fun LoggedPlay.hasResult(): Boolean =
+        players.any { it.isWinner || (it.score.isNotBlank() && it.score != "0") }
 
     private fun LoggedPlay.looksLikeASitting(): Boolean =
         players.size > 1 || durationMinutes > 0 || players.any { it.score.isNotBlank() && it.score != "0" }

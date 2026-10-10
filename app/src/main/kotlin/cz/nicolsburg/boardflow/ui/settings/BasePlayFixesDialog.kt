@@ -163,7 +163,7 @@ private fun FixRow(
                 val existing = fix.existingBasePlay
                 if (existing != null) {
                     Text(
-                        "${existing.gameName} was logged that day with a different result: it gets this play's length, scores and winner",
+                        "${existing.gameName} was logged that day with no result: it gets this play's length, scores and winner",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )

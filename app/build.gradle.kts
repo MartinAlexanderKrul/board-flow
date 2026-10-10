@@ -27,8 +27,8 @@ android {
         applicationId = "cz.nicolsburg.boardflow"
         minSdk = 26
         targetSdk = 36
-        versionCode = 610
-        versionName = "6.1.0"
+        versionCode = 611
+        versionName = "6.1.1"
 
         buildConfigField(
             "String",

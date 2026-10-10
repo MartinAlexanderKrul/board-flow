@@ -56,6 +56,21 @@ class BasePlayFixesTest {
     }
 
     @Test
+    fun anotherBaseGamePlayedThatDayWithItsOwnResultIsNeverOverwritten() {
+        val nordic = play("n", 31627, "Ticket to Ride: Nordic Countries", date = "2026-05-21", minutes = 15,
+            players = listOf(PlayerResult("Yotam", "142", true), PlayerResult("Martin", "124", false)))
+        val maps = play("m", 300001, "Ticket to Ride Map Collection 2: India & Switzerland", date = "2026-05-21", minutes = 15,
+            players = listOf(PlayerResult("Martin", "182", true), PlayerResult("Yotam", "168", false)))
+        val fix = BasePlayFixes.find(
+            listOf(nordic, maps),
+            mapOf(300001 to listOf(BggGame(9209, "Ticket to Ride", null, null), BggGame(31627, "Ticket to Ride: Nordic Countries", null, null))),
+            knownGameIds = setOf(9209, 31627)
+        ).single()
+        assertNull(fix.existingBasePlay)
+        assertEquals(9209, fix.suggestedBase?.id)
+    }
+
+    @Test
     fun linkedExpansionPlaysAndBulkPlayedMarksAreLeftAlone() {
         val linked = play("1", 290837, "Wingspan: Oceania Expansion").copy(expansionOf = "x")
         val bulk = play("2", 287954, "Dune: Imperium – Rise of Ix", date = "2023-01-01", minutes = 0,
