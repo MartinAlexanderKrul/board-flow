@@ -2906,17 +2906,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // --- Missing base-game plays (Settings > Data) ---
 
     /**
-     * Expansion plays with no base-game play of their sitting. BGG decides which played games
-     * are expansions and what they expand; games the collection lists as base games are not asked.
+     * Expansion plays with no base-game play of their sitting. BGG's thing data decides which
+     * played games are expansions and what they expand. Every unpaired played game is asked:
+     * BGG's collection lists owned expansions as "boardgame", so the collection cannot rule any out.
      */
     suspend fun findBasePlayFixes(): Result<List<BasePlayFix>> = runCatching {
         val plays = historyPlays.value
         val collection = _collectionItems.value
-        val baseGameIds = collection.mapNotNullTo(hashSetOf()) { item ->
-            val type = item.spreadsheetValues["objecttype"] ?: item.bggValues["objecttype"]
-            item.objectId.toIntOrNull()?.takeIf { type.equals("boardgame", ignoreCase = true) }
-        }
-        val ids = plays.filter { it.expansionOf == null && it.gameId != 0 && it.gameId !in baseGameIds }
+        val ids = plays.filter { it.expansionOf == null && it.expansions.isEmpty() && it.gameId != 0 }
             .map { it.gameId }.distinct()
         val details = withContext(Dispatchers.IO) {
             BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(ids.map { it.toString() })

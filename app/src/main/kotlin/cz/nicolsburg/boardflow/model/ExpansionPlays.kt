@@ -127,7 +127,10 @@ fun List<LoggedPlay>.sessionPlays(): List<LoggedPlay> = filter { it.expansionOf 
 /** True when this play is of [gameId] or included it as an expansion. */
 fun LoggedPlay.includesGame(gameId: Int?): Boolean = gameId != null && (this.gameId == gameId || expansions.any { it.gameId == gameId })
 
-/** BGG ids of the collection entries BGG lists as expansions. */
+/**
+ * BGG ids of the collection entries BGG lists as expansions. BGG's collection reports owned
+ * expansions as "boardgame", so this is often empty and pairing then rests on the names.
+ */
 fun List<GameItem>.expansionGameIds(): Set<Int> = mapNotNullTo(hashSetOf()) { item ->
     val type = item.spreadsheetValues["objecttype"] ?: item.bggValues["objecttype"]
     if (type?.trim().equals("boardgameexpansion", ignoreCase = true)) item.objectId.toIntOrNull() else null
