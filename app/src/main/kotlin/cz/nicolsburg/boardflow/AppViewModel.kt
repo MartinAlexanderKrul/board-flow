@@ -1176,14 +1176,18 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         .toSet()
                     val effectiveStart = challenge.startDate
                         ?: LocalDate.ofEpochDay(challenge.createdAt / 86_400_000L).toString()
-                    val playedBefore = history.filter { it.date < effectiveStart }.map { it.gameId }.toSet()
-                    val matchingPlays = plays.filter { it.gameId in ownedIds && it.gameId !in playedBefore }
-                    val count = matchingPlays.map { it.gameId }.distinct().size
+                    // An expansion played with its base game is a first play of that expansion too.
+                    fun LoggedPlay.gamesPlayed() = listOf(gameId to gameName) + expansions.map { it.gameId to it.gameName }
+                    val playedBefore = history.filter { it.date < effectiveStart }
+                        .flatMap { it.gamesPlayed() }.mapTo(hashSetOf()) { (id, _) -> id }
+                    val firstPlays = plays.flatMap { it.gamesPlayed() }
+                        .filter { (id, _) -> id in ownedIds && id !in playedBefore }
+                        .distinctBy { (id, _) -> id }
                     ChallengeProgress(
                         challenge = challenge,
-                        currentCount = count,
+                        currentCount = firstPlays.size,
                         goalCount = challenge.targetCount,
-                        countedGameNames = matchingPlays.countedGameNames()
+                        countedGameNames = firstPlays.map { (_, name) -> name.trim() }.filter { it.isNotBlank() }
                     )
                 }
             }
