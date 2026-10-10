@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.widget
 
+import cz.nicolsburg.boardflow.model.includesGame
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -26,7 +27,7 @@ class StatsGlanceWidget : SessionGlanceWidget() {
     override suspend fun computeSnapshot(context: Context): Pair<WidgetSnapshot, List<WidgetSnapshot>> {
         return runCatching {
             val store = CanonicalCollectionStore.getInstance(context)
-            val plays = withContext(Dispatchers.IO) { store.getLoggedPlays() }
+            val plays = withContext(Dispatchers.IO) { store.getLoggedSessionPlays() }
             val challenges = withContext(Dispatchers.IO) { store.getChallenges() }
             val today = LocalDate.now()
             val monthStart = today.withDayOfMonth(1).toString()
@@ -125,7 +126,7 @@ class StatsGlanceWidget : SessionGlanceWidget() {
             ChallengeType.PLAY_N_TIMES ->
                 filtered.sumOf { it.quantity.coerceAtLeast(1) }
             ChallengeType.PLAY_SPECIFIC_GAME ->
-                filtered.filter { it.gameId == challenge.gameId }.sumOf { it.quantity.coerceAtLeast(1) }
+                filtered.filter { it.includesGame(challenge.gameId) }.sumOf { it.quantity.coerceAtLeast(1) }
             ChallengeType.PLAY_N_DISTINCT ->
                 filtered.map { it.gameId }.distinct().size
             ChallengeType.PLAY_WITH_GROUP_N_TIMES ->

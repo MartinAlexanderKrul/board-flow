@@ -2,6 +2,7 @@
 
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.CloudOff
@@ -184,6 +185,7 @@ fun SettingsScreen(
     val recommendationsEnabled by viewModel.recommendationsEnabled.collectAsState()
     val chronicleEnabled by viewModel.chronicleEnabled.collectAsState()
     val showPlayerAvatarsInPlays by viewModel.showPlayerAvatarsInPlays.collectAsState()
+    val expansionPlaysInWinStats by viewModel.expansionPlaysInWinStats.collectAsState()
     val googleAccount by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
     val spreadsheetTitle by syncViewModel.spreadsheetTitle.collectAsState()
@@ -516,6 +518,18 @@ fun SettingsScreen(
                             androidx.compose.material3.Switch(
                                 checked = showPlayerAvatarsInPlays,
                                 onCheckedChange = { viewModel.setShowPlayerAvatarsInPlays(it) }
+                            )
+                        }
+                        BoardFlowFormDivider()
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Extension,
+                            title = "Expansion plays in BGG win stats",
+                            detail = "An expansion logged with its base game is its own play on BGG. Off marks it \"don't count win stats\" so wins are not counted twice",
+                            onClick = { viewModel.setExpansionPlaysInWinStats(!expansionPlaysInWinStats) }
+                        ) {
+                            androidx.compose.material3.Switch(
+                                checked = expansionPlaysInWinStats,
+                                onCheckedChange = { viewModel.setExpansionPlaysInWinStats(it) }
                             )
                         }
                         BoardFlowFormDivider()

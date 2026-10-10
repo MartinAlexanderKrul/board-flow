@@ -22,6 +22,10 @@ import cz.nicolsburg.boardflow.model.hasSyncedCollectionStatus
 import cz.nicolsburg.boardflow.model.syncedCollectionEntry
 import cz.nicolsburg.boardflow.model.BggCredentials
 import cz.nicolsburg.boardflow.model.BggGame
+import cz.nicolsburg.boardflow.model.ExpansionPlays
+import cz.nicolsburg.boardflow.model.expansionGameIds
+import cz.nicolsburg.boardflow.model.includesGame
+import cz.nicolsburg.boardflow.model.sessionPlays
 import cz.nicolsburg.boardflow.model.Challenge
 import cz.nicolsburg.boardflow.model.ChallengeProgress
 import cz.nicolsburg.boardflow.model.ChallengeStatus
@@ -138,6 +142,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun setShowPlayerAvatarsInPlays(show: Boolean) {
         _showPlayerAvatarsInPlays.value = show
         prefs.showPlayerAvatarsInPlays = show
+    }
+
+    private val _expansionPlaysInWinStats = MutableStateFlow(prefs.expansionPlaysInWinStats)
+    val expansionPlaysInWinStats: StateFlow<Boolean> = _expansionPlaysInWinStats.asStateFlow()
+
+    fun setExpansionPlaysInWinStats(count: Boolean) {
+        _expansionPlaysInWinStats.value = count
+        prefs.expansionPlaysInWinStats = count
     }
 
     private val _chronicleEnabled = MutableStateFlow(prefs.chronicleEnabled)
@@ -1060,7 +1072,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun getChallengeProgressList(): List<ChallengeProgress> {
-        val history = _playHistory.value
+        val history = ExpansionPlays.link(_playHistory.value, _collectionItems.value.expansionGameIds()).sessionPlays()
         val roster = _players.value
         return _challenges.value.map { challenge ->
             val plays = history.filter { play ->
@@ -1079,7 +1091,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     )
                 }
                 ChallengeType.PLAY_SPECIFIC_GAME -> {
-                    val matchingPlays = plays.filter { it.gameId == challenge.gameId }
+                    val matchingPlays = plays.filter { it.includesGame(challenge.gameId) }
                     val count = matchingPlays.sumOf { it.quantity.coerceAtLeast(1) }
                     ChallengeProgress(
                         challenge = challenge,
@@ -1500,10 +1512,17 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // expected outcome, and drop back into the unposted outbox only if the post fails.
     private val _expectedPostedPlayIds = MutableStateFlow<Set<String>>(emptySet())
 
-    val historyPlays: StateFlow<List<LoggedPlay>> = combine(_playHistory, _bggPlays, _expectedPostedPlayIds) { local, remote, expected ->
+    // Every play, with expansion plays linked to the base-game play of the same sitting
+    // (see ExpansionPlays). Per-game counts read this list.
+    val historyPlays: StateFlow<List<LoggedPlay>> = combine(_playHistory, _bggPlays, _expectedPostedPlayIds, _collectionItems) { local, remote, expected, collection ->
         val shown = if (expected.isEmpty()) local else local.map { if (it.id in expected) it.copy(postedToBgg = true) else it }
-        mergeHistorySources(shown, remote)
+        ExpansionPlays.link(mergeHistorySources(shown, remote), collection.expansionGameIds())
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** One play per sitting: the Journal, stats and challenges count a base game and its expansions once. */
+    val sessionPlays: StateFlow<List<LoggedPlay>> = historyPlays
+        .map { it.sessionPlays() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private data class StatsInputs(
         val plays: List<LoggedPlay>,
@@ -1515,7 +1534,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // Stats read the merged history, not just local plays: on a fresh install every play
     // lives in the BGG cache and the local table is empty.
     val playStats: StateFlow<PlayStats?> = combine(
-        historyPlays, _players, _statsTimeRange, _statsPlayScope
+        sessionPlays, _players, _statsTimeRange, _statsPlayScope
     ) { plays, roster, range, scope -> StatsInputs(plays, roster, range, scope) }
         .mapLatest { inputs ->
             val scopedPlays = when (inputs.scope) {
@@ -2041,6 +2060,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     incomplete = incomplete,
                     nowInStats = nowInStats
                 )
+            }.let { logged ->
+                // An expansion logged with its base game is a second BGG play of the same sitting;
+                // keep it out of BGG win stats unless the user wants it counted.
+                ExpansionPlays.link(logged, _collectionItems.value.expansionGameIds()).map { play ->
+                    val counted = if (play.expansionOf != null) nowInStats && prefs.expansionPlaysInWinStats else play.nowInStats
+                    play.copy(nowInStats = counted, expansionOf = null, expansions = emptyList())
+                }
             }
             plays.forEach { container.canonicalCollectionStore.saveLoggedPlay(it) }
             val mainPlay = plays.first()
@@ -2170,6 +2196,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
+        // The expansion plays of this sitting take the same edits, so they stay one sitting.
+        historyPlays.value.filter { it.expansionOf == play.id }.forEach { expansionPlay ->
+            editPlay(expansionPlay, date, durationMinutes, location, comments, players, onSuccess = {}, onError = {})
+        }
         val normalizedPlayers = normalizePlayersForPosting(players)
         val resolvedDate = date.toFlexibleLocalDateOrNull()
             ?: play.date.toFlexibleLocalDateOrNull()
@@ -2411,6 +2441,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             _recommendationsEnabled.value = prefs.recommendationsEnabled
             _chronicleEnabled.value = prefs.chronicleEnabled
             _showPlayerAvatarsInPlays.value = prefs.showPlayerAvatarsInPlays
+            _expansionPlaysInWinStats.value = prefs.expansionPlaysInWinStats
             try {
                 _sleevePreferredManufacturer.value = SleeveManufacturer.valueOf(prefs.sleevePreferredManufacturer)
             } catch (_: Exception) {
@@ -2958,7 +2989,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun getRecentPlayers(excludeNames: Set<String>): List<Player> {
         val lowerExclude = excludeNames.map { it.lowercase().trim() }.toSet()
         val seen = hashSetOf<String>()
-        return historyPlays.value
+        return sessionPlays.value
             .take(20)
             .flatMap { it.players }
             .mapNotNull { pr ->

@@ -586,7 +586,7 @@ private fun QrPlayImportReview(
                         Switch(checked = incomplete, onCheckedChange = { incomplete = it })
                     }
                     BoardFlowFormDivider()
-                    BoardFlowFormRow(label = "Count in BGG stats", labelWidth = null) {
+                    BoardFlowFormRow(label = "Count in BGG win stats", labelWidth = null) {
                         Switch(checked = nowInStats, onCheckedChange = { nowInStats = it })
                     }
                 }

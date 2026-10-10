@@ -191,7 +191,8 @@ class BggRepository {
                 add("location", location); add("comments", comments)
                 add("quantity", quantity.coerceAtLeast(1).toString())
                 add("incomplete", if (incomplete) "1" else "0")
-                add("nowinstats", if (nowInStats) "1" else "0")
+                // BGG's flag is "don't count win stats": 1 keeps the play out of win/loss stats.
+                add("nowinstats", if (nowInStats) "0" else "1")
                 if (playId != null) add("playid", playId)
                 players.forEachIndexed { index, player ->
                     val position = index + 1
@@ -420,7 +421,7 @@ class BggRepository {
                         location = parser.getAttributeValue(null, "location") ?: ""
                         quantity = parser.getAttributeValue(null, "quantity")?.toIntOrNull() ?: 1
                         incomplete = parser.getAttributeValue(null, "incomplete") == "1"
-                        nowInStats = parser.getAttributeValue(null, "nowinstats") != "0"
+                        nowInStats = parser.getAttributeValue(null, "nowinstats") != "1"
                         gameName = null; gameId = null; players = mutableListOf(); comments = ""
                     }
                     "item"     -> { gameName = parser.getAttributeValue(null, "name"); gameId = parser.getAttributeValue(null, "objectid")?.toIntOrNull() }

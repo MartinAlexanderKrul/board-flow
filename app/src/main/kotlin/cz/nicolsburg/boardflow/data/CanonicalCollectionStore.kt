@@ -1,5 +1,7 @@
 package cz.nicolsburg.boardflow.data
 
+import cz.nicolsburg.boardflow.model.expansionGameIds
+import cz.nicolsburg.boardflow.model.sessionPlays
 import androidx.room.ColumnInfo
 import android.content.Context
 import androidx.room.Dao
@@ -110,6 +112,10 @@ class CanonicalCollectionStore private constructor(
             if (entries.isNotEmpty()) dao.insertAllSleeveTracking(entries)
         }
     }
+
+    /** Local plays, one per sitting: expansion plays logged with their base game are left out (see ExpansionPlays). */
+    suspend fun getLoggedSessionPlays(): List<LoggedPlay> =
+        cz.nicolsburg.boardflow.model.ExpansionPlays.link(getLoggedPlays(), getAllGames().expansionGameIds()).sessionPlays()
 
     suspend fun getLoggedPlays(): List<LoggedPlay> = withContext(Dispatchers.IO) {
         val memories = dao.getAllPlayMemories().associate { it.id to it.memoryJson }

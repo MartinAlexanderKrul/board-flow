@@ -16,7 +16,8 @@ BoardFlow currently supports all of the following:
 - offline-first local play saving
 - unposted local plays post automatically when the device is online (`BggPlayPostWorker`), or by hand from History
 - edit and delete play flows
-- play quantity, incomplete flag, and nowInStats toggle
+- play quantity, incomplete flag, and nowInStats toggle ("Count in BGG win stats"; BGG's `nowinstats` flag means "don't count win stats", so `nowInStats = true` posts `nowinstats=0`)
+- expansion plays: BGG has no base-plus-expansion play, so an expansion logged with its base game is its own play. `model/ExpansionPlays.link` pairs it with the base-game play of the same sitting (same date, location, length, quantity, incomplete flag, players, scores and wins; expansion by collection BGG type or by name, e.g. "Finspan: Sharks & Reefs" next to "Finspan") and sets `LoggedPlay.expansionOf` / `expansions` (derived, never stored). `AppViewModel.historyPlays` is every play (per-game counts, the unposted outbox, game detail); `sessionPlays` is one play per sitting (Journal list, stats, challenges, session hub; widgets and `ChallengeNotificationWorker` use `CanonicalCollectionStore.getLoggedSessionPlays`). The Journal row shows "+ expansion", a play-a-game challenge counts a sitting that included the game, editing or deleting a base play does the same to its expansion plays, and Settings > Preferences > Logging plays > "Expansion plays in BGG win stats" (`expansion_plays_in_win_stats`, default off) posts expansion plays as "don't count win stats"
 - AI score extraction from images with Gemini (with model fallback/cycling), preceded by a local non-blocking scan quality warning for obviously dark, blurry, low-resolution, or too-far images; malformed responses automatically trigger a silent background retry — if it succeeds while the user is still on `LogPlayScreen`, a non-blocking banner offers to apply the cleaner result
 - the model name used for a scan is stored on `ExtractedPlay.modelUsed` and shown below the "Raw AI response" label in the AI output card
 - AI game recognition from scan: auto-identify the game using saved recognition templates (title similarity + category fingerprint matching, two-gate autoswitch: TITLE_GATE >= 0.90 or TEMPLATE_CATEGORY_GATE >= 0.75 with >= 3 category matches)
@@ -187,6 +188,7 @@ It stores:
 - per-game insight key cache
 - chronicle enabled flag (`chronicle_enabled`; boolean; default true)
 - player avatars in plays (`show_player_avatars_in_plays`; boolean; default true; Settings > Preferences > Logging plays; provided to play rows as `LocalShowPlayerAvatarsInPlays`)
+- expansion plays in BGG win stats (`expansion_plays_in_win_stats`; boolean; default false; Settings > Preferences > Logging plays)
 - custom mood templates (`custom_moods`; JSON array of user-defined mood label strings)
 - challenges (legacy; still written for backup compatibility; Room is authoritative at runtime)
 

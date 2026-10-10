@@ -25,7 +25,7 @@ class DailyInsightGlanceWidget : SessionGlanceWidget() {
     ): Pair<SessionGlanceWidget.WidgetSnapshot, List<SessionGlanceWidget.WidgetSnapshot>> {
         return runCatching {
             val plays = withContext(Dispatchers.IO) {
-                CanonicalCollectionStore.getInstance(context).getLoggedPlays()
+                CanonicalCollectionStore.getInstance(context).getLoggedSessionPlays()
             }
             val observations = plays.buildSmartObservations()
             if (observations.isEmpty()) {

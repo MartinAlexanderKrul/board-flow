@@ -298,7 +298,11 @@ data class LoggedPlay(
     val quantity: Int = 1,
     val incomplete: Boolean = false,
     val nowInStats: Boolean = true,
-    val memory: SessionMemory? = null
+    val memory: SessionMemory? = null,
+    /** Set on an expansion play logged next to its base-game play: that play's id. Derived by [ExpansionPlays], never stored. */
+    val expansionOf: String? = null,
+    /** Expansions played in this play (their own plays carry [expansionOf]). Derived by [ExpansionPlays], never stored. */
+    val expansions: List<PlayedExpansion> = emptyList()
 )
 
 data class PlaySession(

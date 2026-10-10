@@ -147,6 +147,8 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIcons
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.model.LoggedPlay
+import cz.nicolsburg.boardflow.model.includesGame
+import cz.nicolsburg.boardflow.model.ExpansionPlays
 import cz.nicolsburg.boardflow.model.Challenge
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
@@ -258,7 +260,10 @@ fun HistoryScreen(
     onOpenQuickSetup: (gameId: Int) -> Unit = {},
     onMarkAsPlayed: (gameId: Int, gameName: String) -> Unit = { _, _ -> }
 ) {
-    val historyPlays by viewModel.historyPlays.collectAsState()
+    // One play per sitting: an expansion played with its base game rides on the base play.
+    val historyPlays by viewModel.sessionPlays.collectAsState()
+    // Every play, expansion plays included: per-game counts and the unposted outbox.
+    val allPlays by viewModel.historyPlays.collectAsState()
     val collection by viewModel.collection.collectAsState()
     val collectionItems by viewModel.collectionItems.collectAsState()
     val historyThumbnailCache by viewModel.historyThumbnailCache.collectAsState()
@@ -352,8 +357,8 @@ fun HistoryScreen(
     val statsListState = rememberLazyListState()
     // Stats has two sources: your plays and your collection. One tab, one switch.
     var statsShowsCollection by rememberSaveable { mutableStateOf(false) }
-    val historyPlayCounts = remember(historyPlays) {
-        historyPlays.groupBy { it.gameId }.mapValues { (_, plays) -> plays.sumOf { it.quantity.coerceAtLeast(1) } }
+    val historyPlayCounts = remember(allPlays) {
+        allPlays.groupBy { it.gameId }.mapValues { (_, plays) -> plays.sumOf { it.quantity.coerceAtLeast(1) } }
     }
     val playersListState = rememberLazyListState()
     val challengesListState = rememberLazyListState()
@@ -366,7 +371,7 @@ fun HistoryScreen(
     val filteredPlays = remember(historyPlays, searchQuery, filterGameId, sortMode, filterDateRange, filterPlayers, players) {
         var result = historyPlays
 
-        filterGameId?.let { id -> result = result.filter { it.gameId == id } }
+        filterGameId?.let { id -> result = result.filter { it.includesGame(id) } }
 
         if (searchQuery.isNotBlank()) {
             val query = searchQuery.trim().lowercase()
@@ -420,8 +425,8 @@ fun HistoryScreen(
             HistorySortMode.DURATION -> result.sortedByDescending { it.durationMinutes }
         }
     }
-    val localPendingPlays by remember(historyPlays) {
-        derivedStateOf { historyPlays.filter { !it.postedToBgg } }
+    val localPendingPlays by remember(allPlays) {
+        derivedStateOf { allPlays.filter { !it.postedToBgg } }
     }
 
     var activeTab by rememberSaveable { mutableStateOf(HistoryTab.PLAYS) }
@@ -507,7 +512,7 @@ fun HistoryScreen(
             activeTab = HistoryTab.PLAYS
             nav.gameId?.let { id ->
                 filterGameId = id
-                filterGameName = historyPlays.firstOrNull { it.gameId == id }?.gameName
+                filterGameName = allPlays.firstOrNull { it.gameId == id }?.gameName
             }
             nav.playerFilter?.let { filterPlayers = listOf(it) }
         }
@@ -516,7 +521,8 @@ fun HistoryScreen(
 
     LaunchedEffect(pendingHistoryNavigation, historyPlays) {
         val playId = pendingHistoryNavigation?.openEditPlayId ?: return@LaunchedEffect
-        val play = historyPlays.find { it.id == playId } ?: return@LaunchedEffect
+        val target = allPlays.find { it.id == playId } ?: return@LaunchedEffect
+        val play = target.expansionOf?.let { baseId -> historyPlays.find { it.id == baseId } } ?: target
         selectedPlay = play
         viewModel.consumePendingHistoryFilter()
     }
@@ -541,20 +547,30 @@ fun HistoryScreen(
         }
     }
 
+    // Expansion plays belong to their base play's sitting, so they go with it.
+    fun expansionPlaysOf(play: LoggedPlay) = allPlays.filter { it.expansionOf == play.id }
+    fun deleteExpansionPlaysOf(play: LoggedPlay) = expansionPlaysOf(play).forEach { expansionPlay ->
+        if (expansionPlay.postedToBgg) viewModel.deleteBggPlay(expansionPlay) else viewModel.deleteLocalPlay(expansionPlay.id)
+    }
+
     playToDelete?.let { play ->
-        val isRemotePlay = play.postedToBgg
+        val isRemotePlay = play.postedToBgg || expansionPlaysOf(play).any { it.postedToBgg }
+        val expansionNote = expansionPlaysOf(play).takeIf { it.isNotEmpty() }
+            ?.joinToString(prefix = " Its expansion play (", postfix = ") is deleted too.") { it.gameName }
+            .orEmpty()
         BoardFlowConfirmationDialog(
             title = "Delete play?",
             message = if (isRemotePlay) {
-                "Delete this play from BGG? This also removes it from the local cached history."
+                "Delete this play from BGG? This also removes it from the local cached history.$expansionNote"
             } else {
-                "Delete this local play from this device?"
+                "Delete this local play from this device?$expansionNote"
             },
             confirmLabel = "Delete",
             dismissLabel = "Cancel",
             kind = BoardFlowConfirmationKind.DESTRUCTIVE,
             onConfirm = {
-                if (isRemotePlay) {
+                deleteExpansionPlaysOf(play)
+                if (play.postedToBgg) {
                     viewModel.deleteBggPlay(
                         play = play,
                         onSuccess = {
@@ -598,14 +614,18 @@ fun HistoryScreen(
             onDismiss = { selectedPlay = null },
             onEdit = { editingPlay = play; selectedPlay = null },
             onDeletePlay = {
-                if (play.postedToBgg) {
+                val expansionPlays = expansionPlaysOf(play)
+                if (play.postedToBgg || expansionPlays.any { it.postedToBgg }) {
                     playToDelete = play
                 } else {
+                    deleteExpansionPlaysOf(play)
                     viewModel.deleteLocalPlay(
                         playId = play.id,
                         onSuccess = {
                             selectedPlay = null
-                            messenger.show("Play deleted", "Undo") { viewModel.restoreLocalPlay(play) }
+                            messenger.show("Play deleted", "Undo") {
+                                (listOf(play) + expansionPlays).forEach { viewModel.restoreLocalPlay(it.copy(expansionOf = null, expansions = emptyList())) }
+                            }
                         },
                         onError = { deleteError = it }
                     )
@@ -673,7 +693,7 @@ fun HistoryScreen(
         GameDetailsDialog(
             game = g,
             onDismiss = { selectedGame = null; viewModel.clearCollectionStatus() },
-            historyPlays = historyPlays,
+            historyPlays = allPlays,
             players = players,
             personalRating = personalRating,
             onRateGame = { rating ->
@@ -1538,6 +1558,15 @@ private fun PlayHistoryCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
+                    if (play.expansions.isNotEmpty()) {
+                        Text(
+                            play.expansions.joinToString(prefix = "+ ") { ExpansionPlays.shortName(it.gameName, play.gameName) },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                     Text(
                         listOfNotNull(
                             formatDisplayDate(play.date),
@@ -1945,6 +1974,9 @@ private fun PlayDetailsDialog(
 
                 val visibleComments = play.comments.trimMemorySuffix().takeIf { it.isNotBlank() }
                 val detailRows = buildList {
+                    if (play.expansions.isNotEmpty()) {
+                        add("Expansions" to play.expansions.joinToString(", ") { ExpansionPlays.shortName(it.gameName, play.gameName) })
+                    }
                     if (visibleComments != null) add("Notes" to visibleComments)
                 }
                 if (detailRows.isNotEmpty()) {

@@ -888,7 +888,7 @@ private fun SessionDetailsCard(
                         Switch(checked = incomplete, onCheckedChange = onIncompleteChange)
                     }
                     BoardFlowFormDivider()
-                    BoardFlowFormRow(label = "Count in BGG stats", labelWidth = null) {
+                    BoardFlowFormRow(label = "Count in BGG win stats", labelWidth = null) {
                         Switch(checked = nowInStats, onCheckedChange = onNowInStatsChange)
                     }
                 }

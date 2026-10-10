@@ -73,6 +73,11 @@ class SecurePreferences(context: Context) {
         get() = prefs.getBoolean(KEY_SHOW_PLAYER_AVATARS_IN_PLAYS, true)
         set(value) = prefs.edit().putBoolean(KEY_SHOW_PLAYER_AVATARS_IN_PLAYS, value).apply()
 
+    /** Whether an expansion play logged next to its base game counts in BGG win stats (off: "don't count win stats"). */
+    var expansionPlaysInWinStats: Boolean
+        get() = prefs.getBoolean(KEY_EXPANSION_PLAYS_IN_WIN_STATS, false)
+        set(value) = prefs.edit().putBoolean(KEY_EXPANSION_PLAYS_IN_WIN_STATS, value).apply()
+
     /** Set once the roster was seeded from BGG history (or already existed), so it never re-seeds. */
     var rosterSeededFromHistory: Boolean
         get() = prefs.getBoolean(KEY_ROSTER_SEEDED_FROM_HISTORY, false)
@@ -792,6 +797,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_MOOD_USAGE_ORDER         = "mood_usage_order"
         private const val KEY_CHRONICLE_ENABLED       = "chronicle_enabled"
         private const val KEY_SHOW_PLAYER_AVATARS_IN_PLAYS = "show_player_avatars_in_plays"
+        private const val KEY_EXPANSION_PLAYS_IN_WIN_STATS = "expansion_plays_in_win_stats"
         private const val KEY_ROSTER_SEEDED_FROM_HISTORY = "roster_seeded_from_history"
         private const val KEY_RECOMMENDATIONS_ENABLED = "recommendations_enabled"
         private const val KEY_GEMINI_EXTRA_KEYS          = "gemini_api_keys_extra"

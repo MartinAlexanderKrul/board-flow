@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.data
 
+import cz.nicolsburg.boardflow.model.includesGame
 import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
@@ -38,7 +39,7 @@ class ChallengeNotificationWorker(
 
         val store = CanonicalCollectionStore.getInstance(applicationContext)
         val challenges = store.getChallenges()
-        val plays = store.getLoggedPlays()
+        val plays = store.getLoggedSessionPlays()
         val prefs = applicationContext.getSharedPreferences("challenge_notif", Context.MODE_PRIVATE)
         val today = LocalDate.now()
 
@@ -106,7 +107,7 @@ class ChallengeNotificationWorker(
             ChallengeType.PLAY_N_TIMES ->
                 plays.sumOf { it.quantity.coerceAtLeast(1) }
             ChallengeType.PLAY_SPECIFIC_GAME ->
-                plays.filter { it.gameId == challenge.gameId }.sumOf { it.quantity.coerceAtLeast(1) }
+                plays.filter { it.includesGame(challenge.gameId) }.sumOf { it.quantity.coerceAtLeast(1) }
             ChallengeType.PLAY_N_DISTINCT ->
                 plays.map { it.gameId }.distinct().size
             ChallengeType.PLAY_WITH_GROUP_N_TIMES ->

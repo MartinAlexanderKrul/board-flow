@@ -352,7 +352,7 @@ open class SessionGlanceWidget : GlanceAppWidget() {
 
     internal open suspend fun computeSnapshot(context: Context): Pair<WidgetSnapshot, List<WidgetSnapshot>> {
         return runCatching {
-            val plays      = withContext(Dispatchers.IO) { CanonicalCollectionStore.getInstance(context).getLoggedPlays() }
+            val plays      = withContext(Dispatchers.IO) { CanonicalCollectionStore.getInstance(context).getLoggedSessionPlays() }
             val datedPlays = plays.mapNotNull { play -> parseDate(play)?.let { it to play } }
             val snapshot   = lastSession(datedPlays, LocalDate.now())
                 ?: WidgetSnapshot(header = "Last Session", primaryText = "No plays logged yet.", accentColor = NEUTRAL)
