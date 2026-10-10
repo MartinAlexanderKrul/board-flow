@@ -328,6 +328,7 @@ fun GameDetailsDialog(
                     item {
                         YourStatsCard(
                             stats = myStats,
+                            onViewPlays = { gameObjectId?.let(onViewHistory) },
                             onViewHistoryPlayer = { playerName ->
                                 gameObjectId?.let { onViewHistoryPlayer(it, playerName) }
                             },
@@ -836,6 +837,7 @@ private fun HeaderSection(
 @Composable
 private fun YourStatsCard(
     stats: GameHistoryStats,
+    onViewPlays: () -> Unit = {},
     onViewHistoryPlayer: (playerName: String) -> Unit = {},
     onViewPlayers: (playerName: String) -> Unit = {}
 ) {
@@ -879,7 +881,10 @@ private fun YourStatsCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.Top
             ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Column(
+                    modifier = Modifier.weight(1f).clip(BoardFlowShape.Control).clickable(onClick = onViewPlays),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                ) {
                     Text(
                         text = "${stats.plays}",
                         style = MaterialTheme.typography.displaySmall,

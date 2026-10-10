@@ -431,6 +431,43 @@ fun HistoryScreen(
     }
 
     var activeTab by rememberSaveable { mutableStateOf(HistoryTab.PLAYS) }
+
+    // Every game and play the Journal shows opens. A game opens its detail dialog on top of
+    // whatever is open; a game that is not in the collection shows its plays instead.
+    fun openGame(gameId: Int, gameName: String) {
+        val item = collectionItems.firstOrNull { it.objectId.toIntOrNull() == gameId }
+        if (item != null) {
+            selectedGame = item
+            return
+        }
+        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayers, searchQuery)
+        selectedPlay = null
+        viewingPlayerFromStats = null
+        activeTab = HistoryTab.PLAYS
+        filterGameId = gameId
+        filterGameName = gameName
+        filterPlayers = emptyList()
+        searchQuery = ""
+    }
+
+    // Games some stats name without an id ("Often: Azul", counted games of a challenge).
+    fun openGameNamed(gameName: String) {
+        val name = gameName.trim()
+        val play = allPlays.firstOrNull { it.gameName.trim().equals(name, ignoreCase = true) }
+        if (play != null) {
+            openGame(play.gameId, play.gameName)
+        } else {
+            collectionItems.firstOrNull { it.name.trim().equals(name, ignoreCase = true) }?.let { selectedGame = it }
+        }
+    }
+
+    // An expansion play opens the base-game play it belongs to.
+    fun openPlay(play: LoggedPlay) {
+        selectedPlay = historyPlays.firstOrNull { it.id == play.id }
+            ?: play.expansionOf?.let { baseId -> historyPlays.firstOrNull { it.id == baseId } }
+            ?: play
+    }
+
     val visibleTabs = HistoryTab.entries
     val showHeaderActions = activeTab == HistoryTab.PLAYS && !controlsVisible
     var showAddPlayerDialog by rememberSaveable { mutableStateOf(false) }
@@ -640,6 +677,8 @@ fun HistoryScreen(
             },
             onEditPlayer = { editingPlayer = it; selectedPlay = null },
             onViewGame = { g -> selectedGame = g },
+            onOpenGameById = { id, name -> openGame(id, name) },
+            onOpenPlay = { openPlay(it) },
             customMoods = customMoods,
             moodUsageOrder = moodUsageOrder,
             isChroniclePending = chroniclePendingPlayIds.contains(play.id),
@@ -838,15 +877,9 @@ fun HistoryScreen(
                     filterGameName = null
                     searchQuery = ""
                 },
-                onViewGame = { gameId, gameName ->
-                    viewingPlayerFromStats = null
-                    navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayers, searchQuery)
-                    activeTab = HistoryTab.PLAYS
-                    filterGameId = gameId
-                    filterGameName = gameName
-                    searchQuery = ""
-                },
-                onViewRival = { rival -> viewingPlayerFromStats = rival }
+                onViewGame = { gameId, gameName -> openGame(gameId, gameName) },
+                onViewRival = { rival -> viewingPlayerFromStats = rival },
+                onViewPlay = { openPlay(it) }
             )
         } else { viewingPlayerFromStats = null }
     }
@@ -1125,7 +1158,7 @@ fun HistoryScreen(
                     )
                 }
                 if (statsShowsCollection) {
-                    CollectionStatsTab(collectionItems, onMarkAsPlayed, historyPlayCounts)
+                    CollectionStatsTab(collectionItems, onMarkAsPlayed, historyPlayCounts, onGameTapped = { selectedGame = it })
                 } else StatsContent(
                     stats = playStats,
                     statsTimeRange = statsTimeRange,
@@ -1137,14 +1170,9 @@ fun HistoryScreen(
                     modifier = Modifier.fillMaxSize(),
                     players = players,
                     sourcePlays = historyPlays,
-                    onGameTapped = { gameId, gameName ->
-                        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayers, searchQuery)
-                        activeTab = HistoryTab.PLAYS
-                        filterGameId = gameId
-                        filterGameName = gameName
-                        filterPlayers = emptyList()
-                        searchQuery = ""
-                    },
+                    onGameTapped = { gameId, gameName -> openGame(gameId, gameName) },
+                    onPlayTapped = { openPlay(it) },
+                    onGameNameTapped = { openGameNamed(it) },
                     onPlayerTapped = { playerName ->
                         val found = players.find { p ->
                             (listOf(p.displayName) + p.aliases).any { it.equals(playerName, ignoreCase = true) }
@@ -1189,16 +1217,22 @@ fun HistoryScreen(
                         filterPlayers = listOf(playerName)
                     },
                     onViewPlayerGame = { gameId, gameName, sourcePlayerId ->
-                        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayers, searchQuery, viewingPlayerId = sourcePlayerId.ifBlank { null })
-                        activeTab = HistoryTab.PLAYS
-                        filterGameId = gameId
-                        filterGameName = gameName
-                        searchQuery = ""
+                        if (collectionItems.any { it.objectId.toIntOrNull() == gameId }) {
+                            openGame(gameId, gameName)
+                        } else {
+                            navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayers, searchQuery, viewingPlayerId = sourcePlayerId.ifBlank { null })
+                            activeTab = HistoryTab.PLAYS
+                            filterGameId = gameId
+                            filterGameName = gameName
+                            searchQuery = ""
+                        }
                     },
+                    onViewPlayerPlay = { openPlay(it) },
                     modifier = Modifier.fillMaxSize()
                 )
                 HistoryTab.CHALLENGES -> ChallengesTabContent(
                     progressList = challengeProgressList,
+                    onOpenGame = { openGameNamed(it) },
                     onEdit = { editingChallenge = it },
                     onPause = { id ->
                         viewModel.pauseChallenge(id)
@@ -1866,7 +1900,10 @@ private fun PlayDetailsDialog(
     customMoods: List<String> = emptyList(),
     moodUsageOrder: List<String> = emptyList(),
     isChroniclePending: Boolean = false,
-    chronicleEnabled: Boolean = true
+    chronicleEnabled: Boolean = true,
+    // The game title opens the game even when it is not in the collection (its plays then).
+    onOpenGameById: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
+    onOpenPlay: (LoggedPlay) -> Unit = {}
 ) {
     var viewingPlayer by remember { mutableStateOf<Player?>(null) }
     var viewingRival by remember { mutableStateOf<Player?>(null) }
@@ -1879,8 +1916,10 @@ private fun PlayDetailsDialog(
     }
 
     val sessionHub = remember(play, historyPlays) { historyPlays.deriveSessionHub(play) }
-    val canOpenGame = game != null && onViewGame != null
-    val openGame: () -> Unit = { if (game != null && onViewGame != null) onViewGame(game) }
+    val canOpenGame = play.gameId > 0
+    val openGame: () -> Unit = {
+        if (game != null && onViewGame != null) onViewGame(game) else onOpenGameById(play.gameId, play.gameName)
+    }
     AnimatedDialog(
         onDismissRequest = onDismiss,
         backdrop = {
@@ -1974,10 +2013,35 @@ private fun PlayDetailsDialog(
                 }
 
                 val visibleComments = play.comments.trimMemorySuffix().takeIf { it.isNotBlank() }
-                val detailRows = buildList {
-                    if (play.expansions.isNotEmpty()) {
-                        add("Expansions" to play.expansions.joinToString(", ") { ExpansionPlays.shortName(it.gameName, play.gameName) })
+                if (play.expansions.isNotEmpty()) {
+                    item {
+                        DialogGroup {
+                            BoardFlowFormRow(label = "Expansions") {
+                                FlowRow(
+                                    modifier = Modifier.weight(1f).padding(vertical = Spacing.sm),
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                                ) {
+                                    play.expansions.forEach { expansion ->
+                                        Surface(
+                                            onClick = { onOpenGameById(expansion.gameId, expansion.gameName) },
+                                            shape = BoardFlowShape.Pill,
+                                            color = MaterialTheme.colorScheme.surfaceContainerHighest
+                                        ) {
+                                            Text(
+                                                ExpansionPlays.shortName(expansion.gameName, play.gameName),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.padding(horizontal = Spacing.md, vertical = 6.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
+                }
+                val detailRows = buildList {
                     if (visibleComments != null) add("Notes" to visibleComments)
                 }
                 if (detailRows.isNotEmpty()) {
@@ -2045,10 +2109,13 @@ private fun PlayDetailsDialog(
                 player = livePlayer,
                 stats = stats,
                 rivalries = rivalries,
+                sourcePlays = historyPlays,
                 allPlayers = players,
                 onDismiss = { viewingPlayer = null },
                 onEdit = { viewingPlayer = null; onEditPlayer(livePlayer) },
-                onViewRival = { rival -> viewingRival = rival }
+                onViewGame = { id, name -> onOpenGameById(id, name) },
+                onViewRival = { rival -> viewingRival = rival },
+                onViewPlay = { other -> viewingPlayer = null; viewingRival = null; onOpenPlay(other) }
             )
         } else {
             viewingPlayer = null
@@ -2064,10 +2131,13 @@ private fun PlayDetailsDialog(
                 player = liveRival,
                 stats = stats,
                 rivalries = rivalries,
+                sourcePlays = historyPlays,
                 allPlayers = players,
                 onDismiss = { viewingRival = null },
                 onEdit = { viewingRival = null; onEditPlayer(liveRival) },
-                onViewRival = { rival -> viewingRival = rival }
+                onViewGame = { id, name -> onOpenGameById(id, name) },
+                onViewRival = { rival -> viewingRival = rival },
+                onViewPlay = { other -> viewingPlayer = null; viewingRival = null; onOpenPlay(other) }
             )
         } else {
             viewingRival = null

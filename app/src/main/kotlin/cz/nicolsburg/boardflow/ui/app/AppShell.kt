@@ -445,6 +445,18 @@ fun BoardFlowApp(
         }
     }
 
+    // A game tapped outside the Journal (Quick Setup, ...) opens on the Collection tab.
+    var collectionOpenGameId by rememberSaveable { mutableStateOf<Int?>(null) }
+    fun openGameInCollection(gameId: Int) {
+        if (gameId <= 0) return
+        collectionOpenGameId = gameId
+        navController.navigate(AppRoutes.COLLECTION) {
+            popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     // A guide that only exists in the remote catalog and was not downloaded yet cannot open
     // offline; say so instead of opening an empty screen. Everything bundled or downloaded opens.
     fun openQuickSetup(gameId: Int) {
@@ -699,6 +711,8 @@ fun BoardFlowApp(
                     },
                     onClearCollectionStatus = { appViewModel.clearCollectionStatus() },
                     onMarkAsPlayed = ::markGameAsPlayed,
+                    openGameId = collectionOpenGameId,
+                    onOpenGameConsumed = { collectionOpenGameId = null },
                 )
             }
 
@@ -821,6 +835,7 @@ fun BoardFlowApp(
                     onEditGuide = { gameId ->
                         navController.navigate(AppRoutes.guideEditor(gameId)) { launchSingleTop = true }
                     },
+                    onOpenGame = ::openGameInCollection,
                     onClose = { navController.popBackStack() }
                 )
             }

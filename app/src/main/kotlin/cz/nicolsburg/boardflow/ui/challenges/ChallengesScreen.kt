@@ -145,7 +145,8 @@ fun ChallengesTabContent(
     onRestore: (String) -> Unit,
     onDelete: (String) -> Unit,
     modifier: Modifier = Modifier,
-    listState: LazyListState = rememberLazyListState()
+    listState: LazyListState = rememberLazyListState(),
+    onOpenGame: (gameName: String) -> Unit = {}
 ) {
     val activeProgress = remember(progressList) { progressList.filter { it.isActive } }
     val pausedProgress = remember(progressList) { progressList.filter { it.isPaused && !it.isArchived && !it.isComplete && !it.isFailed } }
@@ -191,6 +192,7 @@ fun ChallengesTabContent(
                 }
                 items(activeProgress, key = { it.challenge.id }) { progress ->
                     ChallengeCard(
+                        onOpenGame = onOpenGame,
                         progress = progress,
                         onEdit = { onEdit(progress.challenge) },
                         onPause = { onPause(progress.challenge.id) },
@@ -224,6 +226,7 @@ fun ChallengesTabContent(
                 if (pausedExpanded) {
                     items(pausedProgress, key = { it.challenge.id }) { progress ->
                         ChallengeCard(
+                            onOpenGame = onOpenGame,
                             progress = progress,
                             onEdit = { onEdit(progress.challenge) },
                             onPause = { onPause(progress.challenge.id) },
@@ -249,6 +252,7 @@ fun ChallengesTabContent(
                 if (failedExpanded) {
                     items(failedProgress, key = { it.challenge.id }) { progress ->
                         ChallengeCard(
+                            onOpenGame = onOpenGame,
                             progress = progress,
                             onEdit = { onEdit(progress.challenge) },
                             onPause = { onPause(progress.challenge.id) },
@@ -274,6 +278,7 @@ fun ChallengesTabContent(
                 if (completedExpanded) {
                     items(completedProgress, key = { it.challenge.id }) { progress ->
                         ChallengeCard(
+                            onOpenGame = onOpenGame,
                             progress = progress,
                             onEdit = { onEdit(progress.challenge) },
                             onPause = { onPause(progress.challenge.id) },
@@ -299,6 +304,7 @@ fun ChallengesTabContent(
                 if (archivedExpanded) {
                     items(archivedProgress, key = { it.challenge.id }) { progress ->
                         ChallengeCard(
+                            onOpenGame = onOpenGame,
                             progress = progress,
                             onEdit = { onEdit(progress.challenge) },
                             onPause = { onPause(progress.challenge.id) },
@@ -323,7 +329,8 @@ private fun ChallengeCard(
     onResume: () -> Unit,
     onArchive: () -> Unit,
     onRestore: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onOpenGame: (gameName: String) -> Unit = {}
 ) {
     val challenge = progress.challenge
     var showActionsSheet by remember { mutableStateOf(false) }
@@ -486,7 +493,7 @@ private fun ChallengeCard(
                 )
 
                 if (hasGames) {
-                    ChallengeCountedGamesRow(gameNames = progress.countedGameNames, expanded = detailsExpanded)
+                    ChallengeCountedGamesRow(gameNames = progress.countedGameNames, expanded = detailsExpanded, onOpenGame = onOpenGame)
                 }
             }
         }
@@ -495,7 +502,7 @@ private fun ChallengeCard(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ChallengeCountedGamesRow(gameNames: List<String>, expanded: Boolean) {
+private fun ChallengeCountedGamesRow(gameNames: List<String>, expanded: Boolean, onOpenGame: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Text(
@@ -516,7 +523,11 @@ private fun ChallengeCountedGamesRow(gameNames: List<String>, expanded: Boolean)
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 gameNames.forEach { gameName ->
-                    Surface(shape = BoardFlowShape.Pill, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                    Surface(
+                        onClick = { onOpenGame(gameName) },
+                        shape = BoardFlowShape.Pill,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ) {
                         Text(
                             text = gameName,
                             style = MaterialTheme.typography.labelMedium,

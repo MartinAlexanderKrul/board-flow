@@ -432,6 +432,7 @@ fun PlayersTabContent(
     onOpenPlayerConsumed: () -> Unit = {},
     onViewPlayerPlays: (playerName: String, sourcePlayerId: String) -> Unit = { _, _ -> },
     onViewPlayerGame: (gameId: Int, gameName: String, sourcePlayerId: String) -> Unit = { _, _, _ -> },
+    onViewPlayerPlay: (LoggedPlay) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var viewingPlayer by remember { mutableStateOf<Player?>(null) }
@@ -463,8 +464,9 @@ fun PlayersTabContent(
                 onDismiss = { viewingPlayer = null },
                 onEdit = { onEditPlayer(livePlayer); viewingPlayer = null },
                 onViewPlays = { val id = vp.id; viewingPlayer = null; onViewPlayerPlays(livePlayer.displayName, id) },
-                onViewGame = { gameId, gameName -> val id = vp.id; viewingPlayer = null; onViewPlayerGame(gameId, gameName, id) },
-                onViewRival = { rival -> viewingRival = rival }
+                onViewGame = { gameId, gameName -> onViewPlayerGame(gameId, gameName, vp.id) },
+                onViewRival = { rival -> viewingRival = rival },
+                onViewPlay = onViewPlayerPlay
             )
         } else { viewingPlayer = null }
     }
@@ -484,8 +486,9 @@ fun PlayersTabContent(
                 onDismiss = { viewingRival = null },
                 onEdit = { onEditPlayer(liveRival); viewingRival = null },
                 onViewPlays = { val id = rv.id; viewingRival = null; onViewPlayerPlays(liveRival.displayName, id) },
-                onViewGame = { gameId, gameName -> val id = rv.id; viewingRival = null; onViewPlayerGame(gameId, gameName, id) },
-                onViewRival = { rival -> viewingRival = rival }
+                onViewGame = { gameId, gameName -> onViewPlayerGame(gameId, gameName, rv.id) },
+                onViewRival = { rival -> viewingRival = rival },
+                onViewPlay = onViewPlayerPlay
             )
         } else { viewingRival = null }
     }
@@ -574,7 +577,8 @@ internal fun PlayerDetailDialog(
     onEdit: () -> Unit,
     onViewPlays: (() -> Unit)? = null,
     onViewGame: ((gameId: Int, gameName: String) -> Unit)? = null,
-    onViewRival: ((Player) -> Unit)? = null
+    onViewRival: ((Player) -> Unit)? = null,
+    onViewPlay: ((LoggedPlay) -> Unit)? = null
 ) {
     // True when the dialog is showing the app user's own profile — enables "You" framing in rivalries
     val isCurrentPlayer = currentPlayerName != null &&
@@ -652,6 +656,7 @@ internal fun PlayerDetailDialog(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .then(if (onViewPlay != null) Modifier.clickable { onViewPlay(play) } else Modifier)
                                             .heightIn(min = Dimens.MinTouchTarget)
                                             .padding(horizontal = Spacing.lg),
                                         horizontalArrangement = Arrangement.spacedBy(Spacing.md),
@@ -660,7 +665,7 @@ internal fun PlayerDetailDialog(
                                         Text(
                                             play.gameName,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurface,
+                                            color = if (onViewPlay != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                             modifier = Modifier.weight(1f)

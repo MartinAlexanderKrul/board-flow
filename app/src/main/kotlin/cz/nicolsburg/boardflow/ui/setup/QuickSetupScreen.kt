@@ -99,7 +99,9 @@ fun QuickSetupScreen(
     onClose: () -> Unit,
     onEditGuide: (gameId: Int) -> Unit = {},
     thumbnailFor: (gameId: Int) -> String? = { null },
-    gameNameFor: (gameId: Int) -> String? = { null }
+    gameNameFor: (gameId: Int) -> String? = { null },
+    // Tapping the game's cover or name opens it in the collection.
+    onOpenGame: (gameId: Int) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val drafting by viewModel.drafting.collectAsStateWithLifecycle()
@@ -146,7 +148,8 @@ fun QuickSetupScreen(
                 viewModel.markReviewed()
                 messenger.show("Guide marked as reviewed")
             },
-            thumbnailUrl = thumbnailFor(s.loaded.guide.gameId)
+            thumbnailUrl = thumbnailFor(s.loaded.guide.gameId),
+            onOpenGame = { onOpenGame(s.loaded.guide.gameId) }
         )
     }
 }
@@ -165,7 +168,8 @@ private fun QuickSetupContent(
     onUseStandardGuide: () -> Unit,
     onKeepUserGuide: () -> Unit,
     onMarkReviewed: () -> Unit,
-    thumbnailUrl: String? = null
+    thumbnailUrl: String? = null,
+    onOpenGame: () -> Unit = {}
 ) {
     val guide = state.loaded.guide
     var showUseStandardConfirm by rememberSaveable { mutableStateOf(false) }
@@ -231,7 +235,7 @@ private fun QuickSetupContent(
             contentPadding = PaddingValues(top = 14.dp, bottom = 14.dp)
         ) {
             item(key = "header") {
-                SetupHeader(state = state, thumbnailUrl = thumbnailUrl, onReset = { showResetConfirm = true }, onMarkReviewed = onMarkReviewed)
+                SetupHeader(state = state, thumbnailUrl = thumbnailUrl, onReset = { showResetConfirm = true }, onMarkReviewed = onMarkReviewed, onOpenGame = onOpenGame)
             }
             if (state.loaded.upstreamUpdated) {
                 item(key = "upstream-update") {
@@ -383,7 +387,13 @@ private fun QuickSetupContent(
 }
 
 @Composable
-private fun SetupHeader(state: QuickSetupUiState.Ready, thumbnailUrl: String?, onReset: () -> Unit, onMarkReviewed: () -> Unit) {
+private fun SetupHeader(
+    state: QuickSetupUiState.Ready,
+    thumbnailUrl: String?,
+    onReset: () -> Unit,
+    onMarkReviewed: () -> Unit,
+    onOpenGame: () -> Unit
+) {
     val progress by animateFloatAsState(
         targetValue = if (state.totalSteps == 0) 0f else state.doneSteps.toFloat() / state.totalSteps,
         label = "setupProgress"
@@ -393,24 +403,30 @@ private fun SetupHeader(state: QuickSetupUiState.Ready, thumbnailUrl: String?, o
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            GameCover(name = state.loaded.guide.gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
-            Column(Modifier.weight(1f)) {
-                Text(
-                    "Quick setup",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    state.loaded.guide.gameName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    if (state.isComplete) "Table is ready" else "${state.doneSteps} / ${state.totalSteps} steps",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (state.isComplete) BoardFlowColors.Success
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Row(
+                modifier = Modifier.weight(1f).clip(BoardFlowShape.Control).clickable(onClick = onOpenGame),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                GameCover(name = state.loaded.guide.gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Quick setup",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        state.loaded.guide.gameName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        if (state.isComplete) "Table is ready" else "${state.doneSteps} / ${state.totalSteps} steps",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (state.isComplete) BoardFlowColors.Success
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             if (state.doneSteps > 0) {
                 BoardFlowInlineAction(onClick = onReset, icon = Icons.Default.RestartAlt) {

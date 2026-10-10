@@ -162,6 +162,9 @@ fun CollectionScreen(
     onClearCollectionStatus: () -> Unit = {},
     setupGuideAvailability: Map<Int, SetupGuideAvailability> = emptyMap(),
     onOpenQuickSetup: (gameId: Int) -> Unit = {},
+    // A game another screen asked to show: its detail dialog opens once the collection is loaded.
+    openGameId: Int? = null,
+    onOpenGameConsumed: () -> Unit = {},
 ) {
     val account by syncViewModel.account.collectAsState()
     val spreadsheetId by syncViewModel.spreadsheetId.collectAsState()
@@ -253,6 +256,19 @@ fun CollectionScreen(
 
     LaunchedEffect(tabMode) {
         controlsVisible = true
+    }
+
+    LaunchedEffect(openGameId, allGames, loading) {
+        val gameId = openGameId ?: return@LaunchedEffect
+        val game = allGames.firstOrNull { it.objectId.toIntOrNull() == gameId }
+        when {
+            game != null -> { selectedGame = game; onOpenGameConsumed() }
+            !loading && allGames.isNotEmpty() -> {
+                val name = historyPlays.firstOrNull { it.gameId == gameId }?.gameName ?: "This game"
+                messenger.show("$name is not in your collection")
+                onOpenGameConsumed()
+            }
+        }
     }
 
     val playedGameIds = remember(historyPlays) { historyPlays.map { it.gameId }.toSet() }

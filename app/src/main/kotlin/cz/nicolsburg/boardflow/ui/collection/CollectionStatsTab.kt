@@ -131,6 +131,7 @@ fun CollectionStatsTab(
     games: List<GameItem>,
     onMarkAsPlayed: (gameId: Int, gameName: String) -> Unit = { _, _ -> },
     historyPlayCounts: Map<Int, Int> = emptyMap(),
+    onGameTapped: (GameItem) -> Unit = {},
 ) {
     var markedObjectIds by remember(games) { mutableStateOf(emptySet<String>()) }
     val stats = remember(games, markedObjectIds, historyPlayCounts) {
@@ -177,11 +178,11 @@ fun CollectionStatsTab(
             item { SleeveCard(stats) }
         }
         if (stats.topPlayed.isNotEmpty()) {
-            item { TopPlayedCard(stats) }
+            item { TopPlayedCard(stats, onGameTapped) }
         }
         if (stats.neverPlayedGames.isNotEmpty()) {
             item {
-                UnplayedShelfCard(stats) { game ->
+                UnplayedShelfCard(stats, onGameTapped = onGameTapped) { game ->
                     markedObjectIds = markedObjectIds + game.objectId
                     game.objectId.toIntOrNull()?.let { id -> onMarkAsPlayed(id, game.name) }
                 }
@@ -301,12 +302,16 @@ private fun SleeveCard(stats: CollectionStats) {
 }
 
 @Composable
-private fun TopPlayedCard(stats: CollectionStats) {
+private fun TopPlayedCard(stats: CollectionStats, onGameTapped: (GameItem) -> Unit) {
     SectionCard {
         CardTitle("Most played")
         stats.topPlayed.forEach { game ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(BoardFlowShape.Control)
+                    .clickable { onGameTapped(game) }
+                    .heightIn(min = Dimens.MinTouchTarget),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             ) {
@@ -314,7 +319,7 @@ private fun TopPlayedCard(stats: CollectionStats) {
                 Text(
                     game.name,
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -332,6 +337,7 @@ private fun TopPlayedCard(stats: CollectionStats) {
 @Composable
 private fun UnplayedShelfCard(
     stats: CollectionStats,
+    onGameTapped: (GameItem) -> Unit,
     onMarkGame: (GameItem) -> Unit,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -367,7 +373,11 @@ private fun UnplayedShelfCard(
             Column {
                 stats.neverPlayedGames.forEach { game ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.MinTouchTarget),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(BoardFlowShape.Control)
+                            .clickable { onGameTapped(game) }
+                            .heightIn(min = Dimens.MinTouchTarget),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                     ) {
@@ -375,7 +385,7 @@ private fun UnplayedShelfCard(
                         Text(
                             game.name,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.primary,
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f),
