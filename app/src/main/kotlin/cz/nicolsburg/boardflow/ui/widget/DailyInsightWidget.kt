@@ -25,7 +25,7 @@ class DailyInsightGlanceWidget : SessionGlanceWidget() {
     ): Pair<SessionGlanceWidget.WidgetSnapshot, List<SessionGlanceWidget.WidgetSnapshot>> {
         return runCatching {
             val plays = withContext(Dispatchers.IO) {
-                CanonicalCollectionStore.getInstance(context).getLoggedSessionPlays()
+                CanonicalCollectionStore.getInstance(context).getLoggedSessionPlays(cz.nicolsburg.boardflow.core.di.AppContainer.get(context).securePreferences.getExpansionBaseGames())
             }
             val observations = plays.buildSmartObservations()
             if (observations.isEmpty()) {

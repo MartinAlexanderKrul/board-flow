@@ -27,7 +27,7 @@ class StatsGlanceWidget : SessionGlanceWidget() {
     override suspend fun computeSnapshot(context: Context): Pair<WidgetSnapshot, List<WidgetSnapshot>> {
         return runCatching {
             val store = CanonicalCollectionStore.getInstance(context)
-            val plays = withContext(Dispatchers.IO) { store.getLoggedSessionPlays() }
+            val plays = withContext(Dispatchers.IO) { store.getLoggedSessionPlays(cz.nicolsburg.boardflow.core.di.AppContainer.get(context).securePreferences.getExpansionBaseGames()) }
             val challenges = withContext(Dispatchers.IO) { store.getChallenges() }
             val today = LocalDate.now()
             val monthStart = today.withDayOfMonth(1).toString()

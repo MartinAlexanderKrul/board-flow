@@ -1075,7 +1075,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun getChallengeProgressList(): List<ChallengeProgress> {
-        val history = ExpansionPlays.link(_playHistory.value, _collectionItems.value.expansionGameIds()).sessionPlays()
+        val history = ExpansionPlays.link(_playHistory.value, _collectionItems.value.expansionGameIds(), _expansionBaseGames.value).sessionPlays()
         val roster = _players.value
         return _challenges.value.map { challenge ->
             val plays = history.filter { play ->
@@ -1515,11 +1515,23 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     // expected outcome, and drop back into the unposted outbox only if the post fails.
     private val _expectedPostedPlayIds = MutableStateFlow<Set<String>>(emptySet())
 
+    // Expansion -> base games BGG named in thing data (Add missing base games, history thumbnails).
+    private val _expansionBaseGames = MutableStateFlow(prefs.getExpansionBaseGames())
+
+    private fun rememberExpansionBaseGames(details: Collection<BggApiClient.ThingDetail>) {
+        val links = details.filter { it.type == "boardgameexpansion" && it.baseGames.isNotEmpty() }
+            .mapNotNull { detail -> detail.objectid.toIntOrNull()?.let { it to detail.baseGames.mapTo(hashSetOf()) { (id, _) -> id } } }
+            .toMap()
+        if (links.isEmpty()) return
+        prefs.addExpansionBaseGames(links)
+        _expansionBaseGames.value = prefs.getExpansionBaseGames()
+    }
+
     // Every play, with expansion plays linked to the base-game play of the same sitting
     // (see ExpansionPlays). Per-game counts read this list.
-    val historyPlays: StateFlow<List<LoggedPlay>> = combine(_playHistory, _bggPlays, _expectedPostedPlayIds, _collectionItems) { local, remote, expected, collection ->
+    val historyPlays: StateFlow<List<LoggedPlay>> = combine(_playHistory, _bggPlays, _expectedPostedPlayIds, _collectionItems, _expansionBaseGames) { local, remote, expected, collection, baseGamesOf ->
         val shown = if (expected.isEmpty()) local else local.map { if (it.id in expected) it.copy(postedToBgg = true) else it }
-        ExpansionPlays.link(mergeHistorySources(shown, remote), collection.expansionGameIds())
+        ExpansionPlays.link(mergeHistorySources(shown, remote), collection.expansionGameIds(), baseGamesOf)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** One play per sitting: the Journal, stats and challenges count a base game and its expansions once. */
@@ -1622,6 +1634,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             try {
                 val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
                 val details = client.fetchThingDetails(missingIds)
+                withContext(Dispatchers.Main) { rememberExpansionBaseGames(details.values) }
                 val toSave = details.entries
                     .mapNotNull { (idStr, detail) -> idStr.toIntOrNull()?.let { id -> id to (detail.name to detail.thumbnailUrl) } }
                     .toMap()
@@ -2066,7 +2079,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             }.let { logged ->
                 // An expansion logged with its base game is a second BGG play of the same sitting;
                 // keep it out of BGG win stats unless the user wants it counted.
-                ExpansionPlays.link(logged, _collectionItems.value.expansionGameIds()).map { play ->
+                ExpansionPlays.link(logged, _collectionItems.value.expansionGameIds(), _expansionBaseGames.value).map { play ->
                     val counted = if (play.expansionOf != null) nowInStats && prefs.expansionPlaysInWinStats else play.nowInStats
                     play.copy(nowInStats = counted, expansionOf = null, expansions = emptyList())
                 }
@@ -2918,12 +2931,15 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val details = withContext(Dispatchers.IO) {
             BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(ids.map { it.toString() })
         }
+        rememberExpansionBaseGames(details.values)
         val baseGamesOf = details.values
             .filter { it.type == "boardgameexpansion" && it.baseGames.isNotEmpty() }
             .associate { detail -> detail.objectid.toInt() to detail.baseGames.map { (id, name) -> BggGame(id, name, null, null) } }
         val known = collection.filter { it.isOwned }.mapNotNullTo(hashSetOf()) { it.objectId.toIntOrNull() } +
             plays.map { it.gameId }
-        BasePlayFixes.find(plays, baseGamesOf, known)
+        // Pair again with the links just learned: sibling names (Uprising and Bloodlines) only pair through them.
+        val relinked = ExpansionPlays.link(plays, collection.expansionGameIds(), _expansionBaseGames.value)
+        BasePlayFixes.find(relinked, baseGamesOf, known)
     }
 
     /**

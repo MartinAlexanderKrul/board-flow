@@ -127,6 +127,18 @@ class ExpansionPlaysTest {
     }
 
     @Test
+    fun siblingNamesPairThroughTheBaseGamesBggNames() {
+        val noScores = listOf(PlayerResult("Martin", "0", false), PlayerResult("Yotam", "0", false))
+        val plays = listOf(
+            play("u", 397598, "Dune: Imperium – Uprising", date = "2025-03-29", players = noScores),
+            play("b", 426129, "Dune: Imperium – Bloodlines", date = "2025-03-29", players = noScores)
+        )
+        assertEquals(2, ExpansionPlays.link(plays).sessionPlays().size)
+        val linked = ExpansionPlays.link(plays, baseGamesOf = mapOf(426129 to setOf(316554, 397598)))
+        assertEquals("u", linked.single { it.id == "b" }.expansionOf)
+    }
+
+    @Test
     fun extendsNameNeedsTheBaseAsRoot() {
         assertTrue(ExpansionPlays.extendsName("Wingspan: European Expansion", "Wingspan"))
         assertTrue(ExpansionPlays.extendsName("Wingspan Asia", "Wingspan"))

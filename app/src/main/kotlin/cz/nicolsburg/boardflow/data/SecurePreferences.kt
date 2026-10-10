@@ -152,6 +152,29 @@ class SecurePreferences(context: Context) {
         if (current.remove(model)) saveAvailableModels(current)
     }
 
+    // --- Expansion -> base game links learned from BGG thing data ---
+    /** For each expansion BGG id, the BGG ids of the games it expands (see ExpansionPlays). */
+    fun getExpansionBaseGames(): Map<Int, Set<Int>> {
+        val raw = prefs.getString(KEY_EXPANSION_BASE_GAMES, "{}") ?: "{}"
+        return try {
+            val obj = JSONObject(raw)
+            buildMap {
+                obj.keys().forEach { key ->
+                    val ids = obj.getJSONArray(key)
+                    key.toIntOrNull()?.let { put(it, (0 until ids.length()).mapTo(hashSetOf()) { i -> ids.getInt(i) }) }
+                }
+            }
+        } catch (_: Exception) { emptyMap() }
+    }
+
+    fun addExpansionBaseGames(links: Map<Int, Set<Int>>) {
+        if (links.isEmpty()) return
+        val merged = getExpansionBaseGames() + links
+        val json = JSONObject()
+        merged.forEach { (expansion, bases) -> json.put(expansion.toString(), JSONArray(bases.sorted())) }
+        prefs.edit().putString(KEY_EXPANSION_BASE_GAMES, json.toString()).apply()
+    }
+
     // --- Model exhaustion with TTL (resets after quota period, default 24h) ---
     fun markModelExhausted(model: String, ttlMs: Long = 86_400_000L) {
         val current = getExhaustedModels().toMutableMap()
@@ -798,6 +821,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_CHRONICLE_ENABLED       = "chronicle_enabled"
         private const val KEY_SHOW_PLAYER_AVATARS_IN_PLAYS = "show_player_avatars_in_plays"
         private const val KEY_EXPANSION_PLAYS_IN_WIN_STATS = "expansion_plays_in_win_stats"
+        private const val KEY_EXPANSION_BASE_GAMES = "expansion_base_games"
         private const val KEY_ROSTER_SEEDED_FROM_HISTORY = "roster_seeded_from_history"
         private const val KEY_RECOMMENDATIONS_ENABLED = "recommendations_enabled"
         private const val KEY_GEMINI_EXTRA_KEYS          = "gemini_api_keys_extra"

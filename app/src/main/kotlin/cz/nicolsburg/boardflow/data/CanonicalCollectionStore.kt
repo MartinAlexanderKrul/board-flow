@@ -113,9 +113,12 @@ class CanonicalCollectionStore private constructor(
         }
     }
 
-    /** Local plays, one per sitting: expansion plays logged with their base game are left out (see ExpansionPlays). */
-    suspend fun getLoggedSessionPlays(): List<LoggedPlay> =
-        cz.nicolsburg.boardflow.model.ExpansionPlays.link(getLoggedPlays(), getAllGames().expansionGameIds()).sessionPlays()
+    /**
+     * Local plays, one per sitting: expansion plays logged with their base game are left out (see
+     * ExpansionPlays). [baseGamesOf] is SecurePreferences.getExpansionBaseGames().
+     */
+    suspend fun getLoggedSessionPlays(baseGamesOf: Map<Int, Set<Int>>): List<LoggedPlay> =
+        cz.nicolsburg.boardflow.model.ExpansionPlays.link(getLoggedPlays(), getAllGames().expansionGameIds(), baseGamesOf).sessionPlays()
 
     suspend fun getLoggedPlays(): List<LoggedPlay> = withContext(Dispatchers.IO) {
         val memories = dao.getAllPlayMemories().associate { it.id to it.memoryJson }

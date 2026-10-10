@@ -849,7 +849,7 @@ fun SettingsScreen(
                         BoardFlowSettingRow(
                             icon = Icons.Default.Extension,
                             title = "Add missing base games",
-                            detail = "Expansion plays logged without their base game get a base-game play",
+                            detail = "Checks your plays on BGG, pairs expansion plays with their base game and adds a base-game play where one is missing",
                             onClick = { showBasePlayFixes = true }
                         )
                     }

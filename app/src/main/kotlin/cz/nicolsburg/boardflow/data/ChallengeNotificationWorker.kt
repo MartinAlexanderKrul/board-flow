@@ -39,7 +39,7 @@ class ChallengeNotificationWorker(
 
         val store = CanonicalCollectionStore.getInstance(applicationContext)
         val challenges = store.getChallenges()
-        val plays = store.getLoggedSessionPlays()
+        val plays = store.getLoggedSessionPlays(cz.nicolsburg.boardflow.core.di.AppContainer.get(applicationContext).securePreferences.getExpansionBaseGames())
         val prefs = applicationContext.getSharedPreferences("challenge_notif", Context.MODE_PRIVATE)
         val today = LocalDate.now()
 

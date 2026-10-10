@@ -13,21 +13,22 @@ data class PlayedExpansion(val playId: String, val gameId: Int, val gameName: St
  *
  * Two plays belong to the same sitting when they share the date, location, length, quantity,
  * incomplete flag and players with the same scores and wins. Within a sitting a play is an
- * expansion when its game is a known expansion ([expansionGameIds], from the collection's BGG
- * type) or its name extends another game's name there ("Wingspan: European Expansion" next to
- * "Wingspan"). An expansion attaches to the base game its name extends, otherwise to the only
- * base game of the sitting; when neither exists it stays a play of its own.
+ * expansion when BGG says so ([expansionGameIds] from the collection's type, or [baseGamesOf]:
+ * expansion -> the games it expands, learned from BGG thing data) or its name extends another
+ * game's name there ("Wingspan: European Expansion" next to "Wingspan"). An expansion attaches
+ * to a base game BGG names for it, else to the base game its name extends, else to the only
+ * base game of plays logged together; when none exists it stays a play of its own.
  */
 object ExpansionPlays {
 
-    fun link(plays: List<LoggedPlay>, expansionGameIds: Set<Int> = emptySet()): List<LoggedPlay> {
+    fun link(plays: List<LoggedPlay>, expansionGameIds: Set<Int> = emptySet(), baseGamesOf: Map<Int, Set<Int>> = emptyMap()): List<LoggedPlay> {
         val clean = plays.map {
             if (it.expansionOf == null && it.expansions.isEmpty()) it else it.copy(expansionOf = null, expansions = emptyList())
         }
         val baseOf = mutableMapOf<String, String>()
         clean.groupBy { it.sittingKey() }.values
             .filter { group -> group.size > 1 && group.map { it.gameId }.distinct().size > 1 }
-            .forEach { group -> attachWithinSitting(group, expansionGameIds, baseOf) }
+            .forEach { group -> attachWithinSitting(group, expansionGameIds + baseGamesOf.keys, baseGamesOf, baseOf) }
         if (baseOf.isEmpty()) return clean
 
         val expansionsByBase = clean.filter { it.id in baseOf }
@@ -41,7 +42,12 @@ object ExpansionPlays {
         }
     }
 
-    private fun attachWithinSitting(group: List<LoggedPlay>, expansionGameIds: Set<Int>, baseOf: MutableMap<String, String>) {
+    private fun attachWithinSitting(
+        group: List<LoggedPlay>,
+        expansionGameIds: Set<Int>,
+        baseGamesOf: Map<Int, Set<Int>>,
+        baseOf: MutableMap<String, String>
+    ) {
         // Two sessions that happen to match (different session ids) are not one sitting.
         val sessionIds = group.mapNotNull { it.sessionId?.takeIf(String::isNotBlank) }.distinct()
         if (sessionIds.size > 1) return
@@ -57,7 +63,8 @@ object ExpansionPlays {
             // Without a name link only plays logged together (one session id) are trusted: bulk
             // "played" entries share a date and an empty result but are not one sitting.
             val loggedTogether = sessionIds.size == 1 && group.all { it.sessionId == sessionIds.single() }
-            val base = bases.firstOrNull { extendsName(expansion.gameName, it.gameName) }
+            val base = bases.firstOrNull { it.gameId in baseGamesOf[expansion.gameId].orEmpty() }
+                ?: bases.firstOrNull { extendsName(expansion.gameName, it.gameName) }
                 ?: bases.singleOrNull()?.takeIf { loggedTogether }
                 ?: return@forEach
             baseOf[expansion.id] = base.id
