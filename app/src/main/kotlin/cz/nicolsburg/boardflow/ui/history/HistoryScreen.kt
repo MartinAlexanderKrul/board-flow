@@ -377,6 +377,7 @@ fun HistoryScreen(
             val query = searchQuery.trim().lowercase()
             result = result.filter {
                 it.gameName.lowercase().contains(query) ||
+                    it.expansions.any { expansion -> expansion.gameName.lowercase().contains(query) } ||
                     it.date.matchesHistorySearchQuery(query) ||
                     it.location.lowercase().contains(query) ||
                     it.players.any { p -> p.name.lowercase().contains(query) }
