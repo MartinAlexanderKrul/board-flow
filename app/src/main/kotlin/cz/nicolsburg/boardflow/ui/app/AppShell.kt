@@ -97,6 +97,8 @@ import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.PlayTimer
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.ui.collection.CollectionScreen
+import cz.nicolsburg.boardflow.ui.collection.GameDetailsDialog
+import cz.nicolsburg.boardflow.model.CollectionStatusUiState
 import java.time.LocalDate
 import java.util.UUID
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
@@ -445,16 +447,17 @@ fun BoardFlowApp(
         }
     }
 
-    // A game tapped outside the Journal (Quick Setup, ...) opens on the Collection tab.
-    var collectionOpenGameId by rememberSaveable { mutableStateOf<Int?>(null) }
-    fun openGameInCollection(gameId: Int) {
+    // A game tapped outside the Journal and the Collection (the Quick Setup header) opens its
+    // detail dialog over the screen it was tapped on, so back returns there.
+    var overlayGameId by rememberSaveable { mutableStateOf<Int?>(null) }
+    fun openGameOverlay(gameId: Int) {
         if (gameId <= 0) return
-        collectionOpenGameId = gameId
-        navController.navigate(AppRoutes.COLLECTION) {
-            popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
-            launchSingleTop = true
-            restoreState = true
+        if (collectionGames.none { it.objectId.toIntOrNull() == gameId }) {
+            val name = historyPlays.firstOrNull { it.gameId == gameId }?.gameName ?: "This game"
+            messenger.show("$name is not in your collection")
+            return
         }
+        overlayGameId = gameId
     }
 
     // A guide that only exists in the remote catalog and was not downloaded yet cannot open
@@ -711,8 +714,6 @@ fun BoardFlowApp(
                     },
                     onClearCollectionStatus = { appViewModel.clearCollectionStatus() },
                     onMarkAsPlayed = ::markGameAsPlayed,
-                    openGameId = collectionOpenGameId,
-                    onOpenGameConsumed = { collectionOpenGameId = null },
                 )
             }
 
@@ -835,7 +836,7 @@ fun BoardFlowApp(
                     onEditGuide = { gameId ->
                         navController.navigate(AppRoutes.guideEditor(gameId)) { launchSingleTop = true }
                     },
-                    onOpenGame = ::openGameInCollection,
+                    onOpenGame = ::openGameOverlay,
                     onClose = { navController.popBackStack() }
                 )
             }
@@ -955,6 +956,62 @@ fun BoardFlowApp(
                     }
                 )
             }
+        }
+    }
+
+    overlayGameId?.let { gameId ->
+        val game = collectionGames.firstOrNull { it.objectId.toIntOrNull() == gameId }
+        if (game == null) {
+            overlayGameId = null
+        } else {
+            fun closeAnd(action: () -> Unit) {
+                overlayGameId = null
+                appViewModel.clearCollectionStatus()
+                action()
+            }
+            fun showHistory(filter: () -> Unit) = closeAnd {
+                filter()
+                navController.navigate(AppRoutes.HISTORY) {
+                    popUpTo(AppRoutes.NEW_PLAY) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            GameDetailsDialog(
+                game = game,
+                onDismiss = { closeAnd {} },
+                historyPlays = historyPlays,
+                players = players,
+                personalRating = personalRatings[game.objectId],
+                onRateGame = { rating -> appViewModel.rateGame(gameId, game.objectId, rating) },
+                onClearRating = { appViewModel.clearGameRating(game.objectId) },
+                collectionStatus = collectionStatus.takeIf { it.gameId == gameId } ?: CollectionStatusUiState(),
+                onLoadCollectionStatus = { appViewModel.loadCollectionStatus(gameId) },
+                onSaveCollectionStatus = { status ->
+                    appViewModel.saveCollectionStatus(gameId, status)
+                    messenger.show("Collection status saved")
+                },
+                onRemoveFromCollection = {
+                    appViewModel.removeFromCollection(gameId)
+                    messenger.show("Removed from your BGG collection")
+                },
+                onLogPlay = {
+                    closeAnd {
+                        appViewModel.setupLogPlayById(gameId, game.name, game.thumbnailUrl)
+                        appViewModel.setExtractedPlayManual()
+                        navController.navigate(AppRoutes.LOG_PLAY)
+                    }
+                },
+                quickSetup = setupGuideAvailability[gameId],
+                onOpenQuickSetup = { closeAnd { openQuickSetup(gameId) } },
+                onViewHistory = { id -> showHistory { appViewModel.setPendingHistoryFilter(gameId = id) } },
+                onViewHistoryPlayer = { id, playerName ->
+                    showHistory { appViewModel.setPendingHistoryFilter(gameId = id, playerFilter = playerName) }
+                },
+                onViewPlayers = { playerName ->
+                    showHistory { appViewModel.setPendingHistoryFilter(playerFilter = playerName, showPlayersTab = true) }
+                }
+            )
         }
     }
 

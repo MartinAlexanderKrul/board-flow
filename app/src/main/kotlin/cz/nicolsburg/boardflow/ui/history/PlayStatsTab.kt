@@ -112,9 +112,7 @@ internal fun StatsContent(
     onPlayerTapped: (String) -> Unit = {},
     onPlaysFilter: ((recentDays: Int) -> Unit)? = null,
     thumbnailFor: (Int) -> String? = { null },
-    onPlayTapped: (LoggedPlay) -> Unit = {},
-    // A game named without its id ("Often: Azul" in rivalries and head to head).
-    onGameNameTapped: (String) -> Unit = {}
+    onPlayTapped: (LoggedPlay) -> Unit = {}
 ) {
     if (stats == null || !stats.hasSourcePlays) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -258,12 +256,12 @@ internal fun StatsContent(
 
             // ── Great Rivalries ───────────────────────────────────────────────
             if (stats.rivalryPairs.isNotEmpty()) {
-                item { RivalryPairsSection(stats.rivalryPairs, onPlayerTapped = onPlayerTapped, onGameNameTapped = onGameNameTapped) }
+                item { RivalryPairsSection(stats.rivalryPairs, onPlayerTapped = onPlayerTapped) }
             }
 
             // ── Head to Head picker ───────────────────────────────────────────
             if (visiblePlayers.size >= 2) {
-                item { HeadToHeadSection(players = visiblePlayers, sourcePlays = sourcePlays, onPlayerTapped = onPlayerTapped, onGameNameTapped = onGameNameTapped) }
+                item { HeadToHeadSection(players = visiblePlayers, sourcePlays = sourcePlays, onPlayerTapped = onPlayerTapped) }
             }
 
             // ── Top players ───────────────────────────────────────────────────
@@ -1009,8 +1007,7 @@ private fun StatBar(fraction: Float, color: Color, innerFraction: Float? = null)
 private fun HeadToHeadSection(
     players: List<Player>,
     sourcePlays: List<LoggedPlay>,
-    onPlayerTapped: (String) -> Unit = {},
-    onGameNameTapped: (String) -> Unit = {}
+    onPlayerTapped: (String) -> Unit = {}
 ) {
     var selectedA by remember { mutableStateOf<Player?>(null) }
     var selectedB by remember { mutableStateOf<Player?>(null) }
@@ -1103,11 +1100,10 @@ private fun HeadToHeadSection(
                                 Text(
                                     "Often: $it",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp)
-                                        .clip(BoardFlowShape.Control).clickable { onGameNameTapped(it) },
+                                    modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp),
                                     textAlign = TextAlign.End
                                 )
                             }
@@ -1199,19 +1195,18 @@ private fun HeadToHeadSection(
 @Composable
 private fun RivalryPairsSection(
     pairs: List<RivalryPair>,
-    onPlayerTapped: (String) -> Unit = {},
-    onGameNameTapped: (String) -> Unit = {}
+    onPlayerTapped: (String) -> Unit = {}
 ) {
     SectionCard {
         StatsCardHeader(title = "Great rivalries", subtitle = "At your table")
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            pairs.forEach { pair -> RivalryPairRow(pair, onPlayerTapped, onGameNameTapped) }
+            pairs.forEach { pair -> RivalryPairRow(pair, onPlayerTapped) }
         }
     }
 }
 
 @Composable
-private fun RivalryPairRow(pair: RivalryPair, onPlayerTapped: (String) -> Unit, onGameNameTapped: (String) -> Unit) {
+private fun RivalryPairRow(pair: RivalryPair, onPlayerTapped: (String) -> Unit) {
     val totalDecisive = pair.aWins + pair.bWins
     val aFraction = if (totalDecisive > 0) pair.aWins.toFloat() / totalDecisive else 0.5f
     val aFractionAnim by animateFloatAsState(
@@ -1285,11 +1280,10 @@ private fun RivalryPairRow(pair: RivalryPair, onPlayerTapped: (String) -> Unit, 
                 Text(
                     "Often: $game",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp)
-                        .clip(BoardFlowShape.Control).clickable { onGameNameTapped(game) },
+                    modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp),
                     textAlign = TextAlign.End
                 )
             }

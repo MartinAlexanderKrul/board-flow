@@ -1170,9 +1170,15 @@ fun HistoryScreen(
                     modifier = Modifier.fillMaxSize(),
                     players = players,
                     sourcePlays = historyPlays,
-                    onGameTapped = { gameId, gameName -> openGame(gameId, gameName) },
+                    onGameTapped = { gameId, gameName ->
+                        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayers, searchQuery)
+                        activeTab = HistoryTab.PLAYS
+                        filterGameId = gameId
+                        filterGameName = gameName
+                        filterPlayers = emptyList()
+                        searchQuery = ""
+                    },
                     onPlayTapped = { openPlay(it) },
-                    onGameNameTapped = { openGameNamed(it) },
                     onPlayerTapped = { playerName ->
                         val found = players.find { p ->
                             (listOf(p.displayName) + p.aliases).any { it.equals(playerName, ignoreCase = true) }
