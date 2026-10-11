@@ -26,10 +26,18 @@ object BggThingDetailJson {
         put("minplaytime", detail.minplaytime)
         put("maxplaytime", detail.maxplaytime)
         put("type", detail.type)
-        put("baseGames", JSONArray().apply {
-            detail.baseGames.forEach { (id, name) -> put(JSONObject().put("id", id).put("name", name)) }
-        })
+        put("baseGames", detail.baseGames.toJsonArray())
+        detail.expansions?.let { put("expansions", it.toJsonArray()) }
     }.toString()
+
+    private fun List<Pair<Int, String>>.toJsonArray() = JSONArray().apply {
+        forEach { (id, name) -> put(JSONObject().put("id", id).put("name", name)) }
+    }
+
+    private fun JSONArray.toGameList(): List<Pair<Int, String>> = (0 until length()).map { i ->
+        val game = getJSONObject(i)
+        game.getInt("id") to game.optString("name")
+    }
 
     fun fromJson(json: String): BggApiClient.ThingDetail? = runCatching {
         val obj = JSONObject(json)
@@ -51,10 +59,8 @@ object BggThingDetailJson {
             minplaytime = obj.optString("minplaytime"),
             maxplaytime = obj.optString("maxplaytime"),
             type = obj.optString("type"),
-            baseGames = if (bases == null) emptyList() else (0 until bases.length()).map { i ->
-                val base = bases.getJSONObject(i)
-                base.getInt("id") to base.optString("name")
-            }
+            baseGames = bases?.toGameList().orEmpty(),
+            expansions = obj.optJSONArray("expansions")?.toGameList()
         )
     }.getOrNull()
 }

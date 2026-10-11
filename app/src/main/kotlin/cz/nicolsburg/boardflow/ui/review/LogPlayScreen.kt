@@ -10,6 +10,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
+import cz.nicolsburg.boardflow.ui.common.ExpansionPickerSheet
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Place
@@ -166,6 +167,7 @@ fun LogPlayScreen(
     val scanRecognitionResult by viewModel.scanRecognitionResult.collectAsState()
     val scanStartedWithGame   by viewModel.scanStartedWithGame.collectAsState()
     val scanRetryResult       by viewModel.scanRetryResult.collectAsState()
+    var showExpansionPicker   by rememberSaveable { mutableStateOf(false) }
 
     // Read prefill once on first composition (consumed from ViewModel).
     val prefill = remember { viewModel.takePrefill() }
@@ -226,6 +228,21 @@ fun LogPlayScreen(
 
     // Quick scan + "Enter manually" reaches this screen without a game.
     val hasGame = (viewModel.selectedGame?.id ?: 0) != 0
+    if (showExpansionPicker) {
+        val game = viewModel.selectedGame
+        if (game == null) {
+            showExpansionPicker = false
+        } else {
+            ExpansionPickerSheet(
+                gameName = game.name,
+                load = { viewModel.expansionsOf(game.id) },
+                ownedIds = remember { viewModel.ownedGameIds() },
+                selectedIds = additionalGames.mapTo(hashSetOf()) { it.id },
+                onToggle = { viewModel.toggleAdditionalGame(it) },
+                onDismiss = { showExpansionPicker = false }
+            )
+        }
+    }
     val gameName = viewModel.selectedGame?.name ?: "No game selected"
     val headerGameName = if (additionalGames.isEmpty()) gameName
         else (listOf(gameName) + additionalGames.map { it.name }).joinToString(" + ")
@@ -513,16 +530,14 @@ fun LogPlayScreen(
                     )
                 }
 
-                gameRelations?.let { relations ->
-                    val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
-                    if (relatedGames.isNotEmpty()) {
-                        item {
-                            RelatedGamesBanner(
-                                relations = relations,
-                                additionalGames = additionalGames,
-                                onToggleGame = { viewModel.toggleAdditionalGame(it) }
-                            )
-                        }
+                if (hasGame) {
+                    item {
+                        RelatedGamesBanner(
+                            relations = gameRelations,
+                            additionalGames = additionalGames,
+                            onToggleGame = { viewModel.toggleAdditionalGame(it) },
+                            onAddExpansion = { showExpansionPicker = true }
+                        )
                     }
                 }
 
@@ -1914,17 +1929,20 @@ private fun GameSuggestionBanner(
 
 @Composable
 private fun RelatedGamesBanner(
-    relations: GameRelations,
+    relations: GameRelations?,
     additionalGames: List<BggGame>,
-    onToggleGame: (BggGame) -> Unit
+    onToggleGame: (BggGame) -> Unit,
+    onAddExpansion: () -> Unit
 ) {
-    val relatedGames = if (relations.isExpansion) relations.baseGames else relations.expansions
-    val anySelected = relatedGames.any { game -> additionalGames.any { it.id == game.id } }
+    // Name-related games from the collection, then anything picked through "Add expansion".
+    val suggested = relations?.let { if (it.isExpansion) it.baseGames else it.expansions }.orEmpty()
+    val relatedGames = suggested + additionalGames.filter { added -> suggested.none { it.id == added.id } }
+    val anySelected = additionalGames.isNotEmpty()
 
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Text(
             if (anySelected) "Also logging, with the same players and scores"
-            else if (relations.isExpansion) "Also log the base game"
+            else if (relations?.isExpansion == true && suggested.isNotEmpty()) "Also log the base game"
             else "Also log an expansion",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1940,6 +1958,12 @@ private fun RelatedGamesBanner(
                     label = { Text(game.name) }
                 )
             }
+            BoardFlowFilterChip(
+                selected = false,
+                onClick = onAddExpansion,
+                label = { Text("Add expansion") },
+                leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.IconSmall)) }
+            )
         }
     }
 }

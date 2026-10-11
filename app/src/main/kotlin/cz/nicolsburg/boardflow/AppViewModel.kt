@@ -2215,12 +2215,22 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         comments: String,
         players: List<PlayerResult>,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
+        // The expansions played with it after the edit; null leaves them as they are.
+        expansions: List<BggGame>? = null
     ) {
         // The expansion plays of this sitting take the same edits, so they stay one sitting.
-        historyPlays.value.filter { it.expansionOf == play.id }.forEach { expansionPlay ->
-            editPlay(expansionPlay, date, durationMinutes, location, comments, players, onSuccess = {}, onError = {})
+        // Expansions taken off the play lose their play; new ones get one with the edited result.
+        val attached = historyPlays.value.filter { it.expansionOf == play.id }
+        val keptIds = expansions?.mapTo(hashSetOf()) { it.id }
+        attached.forEach { expansionPlay ->
+            if (keptIds != null && expansionPlay.gameId !in keptIds) {
+                if (expansionPlay.postedToBgg) deleteBggPlay(expansionPlay) else deleteLocalPlay(expansionPlay.id)
+            } else {
+                editPlay(expansionPlay, date, durationMinutes, location, comments, players, onSuccess = {}, onError = {})
+            }
         }
+        val added = expansions.orEmpty().filter { expansion -> attached.none { it.gameId == expansion.id } }
         val normalizedPlayers = normalizePlayersForPosting(players)
         val resolvedDate = date.toFlexibleLocalDateOrNull()
             ?: play.date.toFlexibleLocalDateOrNull()
@@ -2266,6 +2276,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 return@launch
             }
 
+            if (added.isNotEmpty()) addExpansionPlays(updatedPlay, added)
             onSuccess()
 
             // BGG sync runs in the background — the dialog is already closed.
@@ -2303,6 +2314,37 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             }.onFailure { e ->
                 _bggEditError.value = e.message ?: "BGG sync failed. Local changes saved."
             }
+        }
+    }
+
+    /**
+     * New plays of [expansions] for the sitting of [basePlay] (same date, players, scores,
+     * length and location), saved locally and posted like a new play. They follow the
+     * "Expansion plays in BGG win stats" setting.
+     */
+    private suspend fun addExpansionPlays(basePlay: LoggedPlay, expansions: List<BggGame>) {
+        val store = container.canonicalCollectionStore
+        val plays = expansions.map { expansion ->
+            basePlay.copy(
+                id = UUID.randomUUID().toString(),
+                gameId = expansion.id,
+                gameName = expansion.name,
+                postedToBgg = false,
+                comments = "",
+                memory = null,
+                nowInStats = basePlay.nowInStats && prefs.expansionPlaysInWinStats,
+                expansionOf = null,
+                expansions = emptyList()
+            )
+        }
+        plays.forEach { store.saveLoggedPlay(it) }
+        _playHistory.value = store.getLoggedPlays()
+        val creds = if (isOnline()) prefs.getCredentials() else null
+        if (creds != null) {
+            _expectedPostedPlayIds.value = _expectedPostedPlayIds.value + plays.map { it.id }
+            postPlaysInBackground(plays.map { it.id }, creds)
+        } else {
+            container.scheduleUnpostedPlayPost()
         }
     }
 
@@ -2920,6 +2962,35 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun setupPlayAgainFromPlay(play: LoggedPlay) = setupPlayAgainFromSession(listOf(play))
+
+    // --- Expansions of a game (Log Play and Edit play "Add expansion") ---
+
+    /**
+     * The expansions BGG lists for [gameId], owned ones first. Stored details first
+     * (bgg_game_details), BGG once otherwise; null when neither has them (offline, first time).
+     */
+    suspend fun expansionsOf(gameId: Int): List<BggGame>? {
+        if (gameId <= 0) return null
+        val store = container.canonicalCollectionStore
+        val detail = store.getBggGameDetails(listOf(gameId))[gameId]?.takeIf { it.expansions != null }
+            ?: runCatching {
+                withContext(Dispatchers.IO) {
+                    BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(listOf(gameId.toString()))[gameId.toString()]
+                }
+            }.getOrNull()?.also { store.saveBggGameDetails(listOf(it)) }
+        // The base game's list is also an expansion -> base link for pairing their plays.
+        detail?.expansions?.takeIf { it.isNotEmpty() }?.let { list ->
+            prefs.addExpansionBaseGames(list.associate { (id, _) -> id to setOf(gameId) })
+            _expansionBaseGames.value = prefs.getExpansionBaseGames()
+        }
+        val owned = ownedGameIds()
+        return detail?.expansions
+            ?.map { (id, name) -> gameForLogPlay(id, name) }
+            ?.sortedWith(compareByDescending<BggGame> { it.id in owned }.thenBy { it.name.lowercase() })
+    }
+
+    fun ownedGameIds(): Set<Int> =
+        _collectionItems.value.filter { it.isOwned }.mapNotNullTo(hashSetOf()) { it.objectId.toIntOrNull() }
 
     // --- Missing base-game plays (Settings > Data) ---
 

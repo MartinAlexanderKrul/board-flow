@@ -149,6 +149,8 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.model.LoggedPlay
 import cz.nicolsburg.boardflow.model.includesGame
 import cz.nicolsburg.boardflow.model.ExpansionPlays
+import cz.nicolsburg.boardflow.ui.common.ExpansionPickerSheet
+import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.Challenge
 import cz.nicolsburg.boardflow.model.Player
 import cz.nicolsburg.boardflow.model.PlayerResult
@@ -816,7 +818,9 @@ fun HistoryScreen(
             thumbnailUrl = collection.firstOrNull { it.id == play.gameId }?.thumbnailUrl
                 ?: historyThumbnailCache[play.gameId],
             onDismiss = { editingPlay = null; editError = null },
-            onSave = { date, durationMinutes, location, comments, players ->
+            loadExpansions = { viewModel.expansionsOf(play.gameId) },
+            ownedGameIds = remember { viewModel.ownedGameIds() },
+            onSave = { date, durationMinutes, location, comments, players, expansions ->
                 editError = null
                 viewModel.editPlay(
                     play = play,
@@ -825,6 +829,7 @@ fun HistoryScreen(
                     location = location,
                     comments = comments,
                     players = players,
+                    expansions = expansions,
                     onSuccess = {
                         editError = null
                         editingPlay = null
@@ -2287,7 +2292,9 @@ private fun EditPlayDialog(
     isLoading: Boolean,
     onDismiss: () -> Unit,
     thumbnailUrl: String? = null,
-    onSave: (date: String, durationMinutes: Int, location: String, comments: String, players: List<PlayerResult>) -> Unit
+    loadExpansions: suspend () -> List<BggGame>? = { null },
+    ownedGameIds: Set<Int> = emptySet(),
+    onSave: (date: String, durationMinutes: Int, location: String, comments: String, players: List<PlayerResult>, expansions: List<BggGame>) -> Unit
 ) {
     var date by rememberSaveable(play.id) { mutableStateOf(play.date) }
     var duration by rememberSaveable(play.id) { mutableStateOf(if (play.durationMinutes > 0) play.durationMinutes.toString() else "") }
@@ -2298,6 +2305,25 @@ private fun EditPlayDialog(
     var playerRowKeys by rememberSaveable(play.id) { mutableStateOf(List(play.players.size) { java.util.UUID.randomUUID().toString() }) }
     var showDatePicker by rememberSaveable(play.id) { mutableStateOf(false) }
     var nameFieldFocusIndex by remember { mutableStateOf(-1) }
+    // Expansions played with it: a removed one loses its play on save, an added one gets one.
+    var editExpansions by remember(play.id) {
+        mutableStateOf(play.expansions.map { BggGame(it.gameId, it.gameName, null, null) })
+    }
+    var showExpansionPicker by remember(play.id) { mutableStateOf(false) }
+    fun toggleExpansion(game: BggGame) {
+        editExpansions = if (editExpansions.any { it.id == game.id }) editExpansions.filter { it.id != game.id }
+            else editExpansions + game
+    }
+    if (showExpansionPicker) {
+        ExpansionPickerSheet(
+            gameName = play.gameName,
+            load = loadExpansions,
+            ownedIds = ownedGameIds,
+            selectedIds = editExpansions.mapTo(hashSetOf()) { it.id },
+            onToggle = ::toggleExpansion,
+            onDismiss = { showExpansionPicker = false }
+        )
+    }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -2431,6 +2457,34 @@ private fun EditPlayDialog(
                 }
 
                 item {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        BoardFlowSectionTitle(
+                            title = "Expansions",
+                            supporting = if (editExpansions.isEmpty()) "Played with the same players and scores"
+                                else "Tap one to take it off this play"
+                        )
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            editExpansions.forEach { expansion ->
+                                BoardFlowFilterChip(
+                                    selected = true,
+                                    onClick = { toggleExpansion(expansion) },
+                                    label = { Text(ExpansionPlays.shortName(expansion.name, play.gameName)) }
+                                )
+                            }
+                            BoardFlowFilterChip(
+                                selected = false,
+                                onClick = { showExpansionPicker = true },
+                                label = { Text("Add expansion") },
+                                leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.IconSmall)) }
+                            )
+                        }
+                    }
+                }
+
+                item {
                     BoardFlowSectionTitle(
                         title = "Players",
                         supporting = "Tap the trophy to mark the winner"
@@ -2483,7 +2537,7 @@ private fun EditPlayDialog(
                 BoardFlowInlineAction(onClick = onDismiss, enabled = !isLoading, neutral = true, large = true) { Text("Cancel") }
                 BoardFlowButton(
                     onClick = {
-                        onSave(date, duration.toIntOrNull() ?: 0, location, comments, editPlayers.toList())
+                        onSave(date, duration.toIntOrNull() ?: 0, location, comments, editPlayers.toList(), editExpansions)
                     },
                     enabled = !isLoading
                 ) {

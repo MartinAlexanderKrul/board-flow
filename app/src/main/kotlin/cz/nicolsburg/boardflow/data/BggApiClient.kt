@@ -116,7 +116,9 @@ class BggApiClient(private val xmlApiToken: String = "") {
         /** BGG's item type: "boardgame", "boardgameexpansion", ... */
         val type: String = "",
         /** For an expansion: the games it expands (BGG id to name). */
-        val baseGames: List<Pair<Int, String>> = emptyList()
+        val baseGames: List<Pair<Int, String>> = emptyList(),
+        /** The expansions BGG lists for this game (BGG id to name); null when not read (older stored details). */
+        val expansions: List<Pair<Int, String>>? = null
     )
 
     data class BggGame(
@@ -413,6 +415,7 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
 
                 val linkElements = item.getElementsByTagName("link")
                 val baseGames = mutableListOf<Pair<Int, String>>()
+                val expansions = mutableListOf<Pair<Int, String>>()
                 for (j in 0 until linkElements.length) {
                     val link = linkElements.item(j) as? Element ?: continue
                     when {
@@ -421,6 +424,9 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
                         // On an expansion, the inbound expansion links name the games it expands.
                         link.getAttribute("type") == "boardgameexpansion" && link.getAttribute("inbound") == "true" ->
                             link.getAttribute("id").toIntOrNull()?.let { baseGames += it to link.getAttribute("value") }
+                        // On a base game, the outbound expansion links are its published expansions.
+                        link.getAttribute("type") == "boardgameexpansion" ->
+                            link.getAttribute("id").toIntOrNull()?.let { expansions += it to link.getAttribute("value") }
                     }
                 }
 
@@ -441,7 +447,8 @@ suspend fun fetchCollection(username: String, password: String? = null): List<Bg
                     minplaytime = minplaytime,
                     maxplaytime = maxplaytime,
                     type = item.getAttribute("type"),
-                    baseGames = baseGames
+                    baseGames = baseGames,
+                    expansions = expansions
                 )
                 Log.i(TAG, "ThingDetail id=$id weight=$avgweight best=$bggbestplayers rec=$bggrecplayers notRec=$bggnotrecplayers age=$bggrecagerange lang=$bgglanguagedependence")
             }

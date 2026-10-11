@@ -169,7 +169,8 @@ class SecurePreferences(context: Context) {
 
     fun addExpansionBaseGames(links: Map<Int, Set<Int>>) {
         if (links.isEmpty()) return
-        val merged = getExpansionBaseGames() + links
+        val current = getExpansionBaseGames()
+        val merged = current + links.mapValues { (expansion, bases) -> current[expansion].orEmpty() + bases }
         val json = JSONObject()
         merged.forEach { (expansion, bases) -> json.put(expansion.toString(), JSONArray(bases.sorted())) }
         prefs.edit().putString(KEY_EXPANSION_BASE_GAMES, json.toString()).apply()

@@ -26,6 +26,16 @@ class BggThingDetailJsonTest {
     }
 
     @Test
+    fun aBaseGamesExpansionListIsKeptAndAMissingOneStaysUnknown() {
+        val wingspan = BggApiClient.ThingDetail(
+            objectid = "266192", name = "Wingspan", type = "boardgame",
+            expansions = listOf(290837 to "Wingspan: Oceania Expansion")
+        )
+        assertEquals(wingspan, BggThingDetailJson.fromJson(BggThingDetailJson.toJson(wingspan)))
+        assertNull(BggThingDetailJson.fromJson(BggThingDetailJson.toJson(BggApiClient.ThingDetail(objectid = "1")))?.expansions)
+    }
+
+    @Test
     fun missingThumbnailStaysNull() {
         val detail = BggApiClient.ThingDetail(objectid = "1", name = "Azul")
         assertNull(BggThingDetailJson.fromJson(BggThingDetailJson.toJson(detail))?.thumbnailUrl)

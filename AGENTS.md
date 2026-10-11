@@ -230,6 +230,7 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - AI extraction may prefill players/scores
 - `ScanScreen` runs `ScanImageQualityAnalyzer` before sending an image to Gemini; poor scans show a non-blocking "This scan may be hard to read." warning with a reason and "Use anyway" / "Retake" actions
 - expansion / sibling titles detected from name patterns and shown alongside base game
+- Log Play always shows an expansions row for the selected game: name-related collection games, expansions already added, and an `Add expansion` chip opening `ui/common/ExpansionPickerSheet` with the expansions BGG lists for the game (`AppViewModel.expansionsOf`: outbound `boardgameexpansion` links, `ThingDetail.expansions`, stored in `bgg_game_details`; owned first, filter over 8). Picking one also saves the expansion -> base link for pairing. Edit play has the same `Expansions` section: a removed expansion loses its play on save (local delete or BGG delete), an added one gets a new play with the edited result (`AppViewModel.addExpansionPlays`, posted like a new play, following the win-stats setting)
 - the search field has a trailing camera (`CameraAlt`) icon button that triggers the quick scan flow via `onScanQuick`; tapping it exits any active correction mode and navigates directly to `ScanScreen`
 
 ### Quick Scan Correction Flow
