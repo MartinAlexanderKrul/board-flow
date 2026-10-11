@@ -1591,7 +1591,7 @@ private fun PlayHistoryCard(
                             play.expansions.joinToString(prefix = "+ ") { ExpansionPlays.shortName(it.gameName, play.gameName) },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 2,
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
@@ -2025,6 +2025,8 @@ private fun PlayDetailsDialog(
                                                 ExpansionPlays.shortName(expansion.gameName, play.gameName),
                                                 style = MaterialTheme.typography.labelLarge,
                                                 color = MaterialTheme.colorScheme.primary,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.padding(horizontal = Spacing.md, vertical = 6.dp)
                                             )
                                         }
@@ -2472,7 +2474,7 @@ private fun EditPlayDialog(
                                 BoardFlowFilterChip(
                                     selected = true,
                                     onClick = { toggleExpansion(expansion) },
-                                    label = { Text(ExpansionPlays.shortName(expansion.name, play.gameName)) }
+                                    label = { Text(ExpansionPlays.shortName(expansion.name, play.gameName), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                                 )
                             }
                             BoardFlowFilterChip(

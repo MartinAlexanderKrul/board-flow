@@ -96,6 +96,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.widthIn
+import cz.nicolsburg.boardflow.model.ExpansionPlays
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -534,6 +536,7 @@ fun LogPlayScreen(
                 if (hasGame) {
                     item {
                         RelatedGamesBanner(
+                            baseGameName = gameName,
                             relations = gameRelations,
                             additionalGames = additionalGames,
                             onToggleGame = { viewModel.toggleAdditionalGame(it) },
@@ -1930,6 +1933,7 @@ private fun GameSuggestionBanner(
 
 @Composable
 private fun RelatedGamesBanner(
+    baseGameName: String,
     relations: GameRelations?,
     additionalGames: List<BggGame>,
     onToggleGame: (BggGame) -> Unit,
@@ -1956,7 +1960,15 @@ private fun RelatedGamesBanner(
                 BoardFlowFilterChip(
                     selected = additionalGames.any { it.id == game.id },
                     onClick = { onToggleGame(game) },
-                    label = { Text(game.name) }
+                    // One line: the expansion without the base game's name, cut short if still too long.
+                    label = {
+                        Text(
+                            ExpansionPlays.shortName(game.name, baseGameName),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 220.dp)
+                        )
+                    }
                 )
             }
             BoardFlowFilterChip(

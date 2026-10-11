@@ -120,7 +120,7 @@ fun ExpansionPickerSheet(
                                 ExpansionPlays.shortName(expansion.name, gameName),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                maxLines = 2,
+                                maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f)
                             )
