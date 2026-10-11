@@ -2010,10 +2010,10 @@ private fun PlayDetailsDialog(
                     item {
                         DialogGroup {
                             BoardFlowFormRow(label = "Expansions") {
+                                // Each pill keeps its 48dp tap area, which already spaces the lines.
                                 FlowRow(
-                                    modifier = Modifier.weight(1f).padding(vertical = Spacing.sm),
-                                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                                    modifier = Modifier.weight(1f).padding(vertical = Spacing.xs),
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                                 ) {
                                     play.expansions.forEach { expansion ->
                                         Surface(
@@ -2027,7 +2027,7 @@ private fun PlayDetailsDialog(
                                                 color = MaterialTheme.colorScheme.primary,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
-                                                modifier = Modifier.padding(horizontal = Spacing.md, vertical = 6.dp)
+                                                modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)
                                             )
                                         }
                                     }
@@ -2466,10 +2466,8 @@ private fun EditPlayDialog(
                             supporting = if (editExpansions.isEmpty()) "Played with the same players and scores"
                                 else "Tap one to take it off this play"
                         )
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-                        ) {
+                        // The chips' 48dp tap areas already space the lines.
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                             editExpansions.forEach { expansion ->
                                 BoardFlowFilterChip(
                                     selected = true,
