@@ -162,6 +162,7 @@ fun LogPlayScreen(
     val additionalGames by viewModel.additionalGames.collectAsState()
     val rosterPlayers   by viewModel.players.collectAsState()
     val historyPlays    by viewModel.historyPlays.collectAsState()
+    val sessionPlays    by viewModel.sessionPlays.collectAsState()
     val recommendationsEnabled by viewModel.recommendationsEnabled.collectAsState()
     val gameCandidates        by viewModel.gameCandidates.collectAsState()
     val scanRecognitionResult by viewModel.scanRecognitionResult.collectAsState()
@@ -699,7 +700,7 @@ fun LogPlayScreen(
 
     sessionHubInfo?.let { info ->
         SessionHubDialog(
-            session = historyPlays.deriveSessionHub(info.anchorPlay, sessionHubTitle),
+            session = sessionPlays.deriveSessionHub(info.anchorPlay, sessionHubTitle),
             players = rosterPlayers,
             onDismiss = { sessionHubInfo = null },
             onRenameSession = { sessionId, title ->

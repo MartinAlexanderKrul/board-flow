@@ -227,6 +227,7 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - lists longer than 20 items show a draggable fast-scroll bar on the right edge (`NewPlayScreen.FastScrollBar`): amber pill thumb, animated opacity (idle 20% / scrolling 65% / dragging 80%), floating letter bubble that leads the thumb position, and haptic feedback (`HapticFeedbackType.TextHandleMove`) per letter section change
 - selecting a game opens `LogPlayScreen` directly (form first); scanning is the `Scan scores` button on the form, which returns to the same form with the typed details intact (`AppViewModel.prepareScanFromLogPlay`, `AppShell.scanOpenedFromForm`)
 - session context may prefill players/location
+- every Play again (Journal play or session, post-save sheet, continue-session banner) opens the same form as picking a game: `setExtractedPlayManual()` (ready player cards fold to one line) and the expansions played with it (`LoggedPlay.expansions`, or the session's last play of the game)
 - AI extraction may prefill players/scores
 - `ScanScreen` runs `ScanImageQualityAnalyzer` before sending an image to Gemini; poor scans show a non-blocking "This scan may be hard to read." warning with a reason and "Use anyway" / "Retake" actions
 - expansion / sibling titles detected from name patterns and shown alongside base game

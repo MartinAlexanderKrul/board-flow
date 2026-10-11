@@ -2931,12 +2931,18 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         return BggGame(gameId, gameName, known?.yearPublished, art)
     }
 
+    // Play again opens the same form as picking a game: a manual entry (so ready player cards
+    // fold to one line), with the expansions that were played with it.
     fun setupPlayAgain(ctx: SessionContext) {
         val game = gameForLogPlay(ctx.gameId, ctx.gameName)
         selectedGame = game
         _editablePlayers.value = ctx.players.map { it.copy(score = "0", isWinner = false) }
-        _extractedPlay.value = null
-        _additionalGames.value = emptyList()
+        setExtractedPlayManual()
+        // The session context does not keep expansions: take them from its last play of the game.
+        val lastSitting = historyPlays.value
+            .filter { it.gameId == ctx.gameId && (ctx.sessionId.isBlank() || it.sessionId == ctx.sessionId) }
+            .maxByOrNull { it.playedAt ?: 0L }
+        _additionalGames.value = lastSitting?.expansions.orEmpty().map { gameForLogPlay(it.gameId, it.gameName) }
         _gameRelations.value = findRelatedGames(game, _allGames.value)
         _logPlayPrefill = LogPlayPrefill(location = ctx.location)
         _logPlayHasUnsavedChanges.value = false
@@ -2952,10 +2958,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val primaryGame = gameForLogPlay(first.gameId, first.gameName)
         selectedGame = primaryGame
         _editablePlayers.value = first.players.map { it.copy(score = "0", isWinner = false) }
-        _extractedPlay.value = null
-        _additionalGames.value = plays.drop(1)
-            .distinctBy { it.gameId }
-            .map { gameForLogPlay(it.gameId, it.gameName) }
+        setExtractedPlayManual()
+        val expansions = first.expansions.map { gameForLogPlay(it.gameId, it.gameName) }
+        _additionalGames.value = (expansions + plays.drop(1).map { gameForLogPlay(it.gameId, it.gameName) })
+            .filter { it.id != primaryGame.id }
+            .distinctBy { it.id }
         _gameRelations.value = findRelatedGames(primaryGame, _allGames.value)
         _logPlayPrefill = LogPlayPrefill(location = first.location)
         _logPlayHasUnsavedChanges.value = false
