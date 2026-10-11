@@ -1387,11 +1387,13 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         _collectionGames.value.firstOrNull { it.objectId == id.toString() }?.let { return onReady(it) }
         stagedShelfGames[id]?.let { return onReady(it) }
         viewModelScope.launch {
-            val detail = runCatching {
-                withContext(Dispatchers.IO) {
-                    BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(listOf(id.toString()))[id.toString()]
-                }
-            }.getOrNull()
+            // Stored details first (bgg_game_details); BGG is asked only for a game seen the first time.
+            val detail = collectionStore.getBggGameDetails(listOf(id))[id]
+                ?: runCatching {
+                    withContext(Dispatchers.IO) {
+                        BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(listOf(id.toString()))[id.toString()]
+                    }
+                }.getOrNull()?.also { collectionStore.saveBggGameDetails(listOf(it)) }
             val item = gameItemFromBgg(
                 id = id,
                 name = detail?.name?.ifBlank { null } ?: name,

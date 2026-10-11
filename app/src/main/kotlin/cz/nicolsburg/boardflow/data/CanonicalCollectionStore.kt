@@ -223,6 +223,24 @@ class CanonicalCollectionStore private constructor(
     suspend fun getThumbnailCache(): Map<Int, Pair<String, String?>> =
         dao.getAllThumbnailCache().associate { it.gameId to (it.gameName to it.thumbnailUrl) }
 
+    /** BGG details stored for games outside the collection, fetched at most [maxAgeMs] ago. */
+    suspend fun getBggGameDetails(ids: Collection<Int>, maxAgeMs: Long = BGG_DETAILS_MAX_AGE_MS): Map<Int, BggApiClient.ThingDetail> {
+        if (ids.isEmpty()) return emptyMap()
+        val oldest = System.currentTimeMillis() - maxAgeMs
+        return ids.distinct().chunked(500).flatMap { chunk -> dao.getBggGameDetails(chunk) }
+            .filter { it.fetchedAt >= oldest }
+            .mapNotNull { entity -> BggThingDetailJson.fromJson(entity.detailJson)?.let { entity.gameId to it } }
+            .toMap()
+    }
+
+    suspend fun saveBggGameDetails(details: Collection<BggApiClient.ThingDetail>) {
+        if (details.isEmpty()) return
+        val now = System.currentTimeMillis()
+        dao.upsertBggGameDetails(details.mapNotNull { detail ->
+            detail.objectid.toIntOrNull()?.let { BggGameDetailEntity(it, BggThingDetailJson.toJson(detail), now) }
+        })
+    }
+
     suspend fun saveThumbnailCache(entries: Map<Int, Pair<String, String?>>) {
         if (entries.isEmpty()) return
         val now = System.currentTimeMillis()
@@ -392,7 +410,7 @@ class CanonicalCollectionStore private constructor(
                         CanonicalCollectionDatabase::class.java,
                         "boardflow_collection.db"
                     )
-                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
                         .build()
                 ).also { INSTANCE = it }
             }
@@ -485,6 +503,12 @@ private interface CanonicalCollectionDao {
 
     @Query("SELECT gameId FROM game_thumbnail_cache")
     suspend fun getThumbnailCacheGameIds(): List<Int>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertBggGameDetails(entries: List<BggGameDetailEntity>)
+
+    @Query("SELECT * FROM bgg_game_details WHERE gameId IN (:ids)")
+    suspend fun getBggGameDetails(ids: List<Int>): List<BggGameDetailEntity>
 
     // Players
     @Query("SELECT * FROM players ORDER BY displayName COLLATE NOCASE")
@@ -616,9 +640,10 @@ private interface CanonicalCollectionDao {
         GameSleeveTrackingEntity::class,
         SleeveInventoryEntity::class,
         SetupGuideEntity::class,
-        SetupGuideCatalogEntity::class
+        SetupGuideCatalogEntity::class,
+        BggGameDetailEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(CanonicalCollectionConverters::class)
@@ -669,6 +694,17 @@ private data class GameThumbnailCacheEntity(
     val thumbnailUrl: String?,
     val cachedAt: Long
 )
+
+/** BGG thing details of a game outside the collection (BggThingDetailJson), so it opens without a request. */
+@Entity(tableName = "bgg_game_details")
+private data class BggGameDetailEntity(
+    @PrimaryKey val gameId: Int,
+    val detailJson: String,
+    val fetchedAt: Long
+)
+
+/** How long stored BGG details stay in use before a game asks BGG again. */
+private const val BGG_DETAILS_MAX_AGE_MS = 90L * 24 * 60 * 60 * 1000
 
 @Entity(tableName = "game_sleeve_tracking")
 private data class GameSleeveTrackingEntity(
@@ -854,6 +890,21 @@ private data class SetupGuideCatalogEntity(
             version = entry.version,
             schemaVersion = entry.schemaVersion,
             path = entry.path
+        )
+    }
+}
+
+private val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `bgg_game_details` (
+                `gameId` INTEGER NOT NULL,
+                `detailJson` TEXT NOT NULL,
+                `fetchedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`gameId`)
+            )
+            """.trimIndent()
         )
     }
 }

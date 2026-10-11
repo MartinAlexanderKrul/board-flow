@@ -1638,6 +1638,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             try {
                 val client = BggApiClient(BuildConfig.BGG_XML_API_TOKEN)
                 val details = client.fetchThingDetails(missingIds)
+                container.canonicalCollectionStore.saveBggGameDetails(details.values)
                 withContext(Dispatchers.Main) { rememberExpansionBaseGames(details.values) }
                 val toSave = details.entries
                     .mapNotNull { (idStr, detail) -> idStr.toIntOrNull()?.let { id -> id to (detail.name to detail.thumbnailUrl) } }
@@ -2932,9 +2933,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val collection = _collectionItems.value
         val ids = plays.filter { it.expansionOf == null && it.expansions.isEmpty() && it.gameId != 0 }
             .map { it.gameId }.distinct()
-        val details = withContext(Dispatchers.IO) {
-            BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(ids.map { it.toString() })
+        // Stored details first; BGG is asked only for games without them.
+        val store = container.canonicalCollectionStore
+        val stored = store.getBggGameDetails(ids).mapKeys { (id, _) -> id.toString() }
+        val fetched = withContext(Dispatchers.IO) {
+            BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(ids.map { it.toString() }.filter { it !in stored })
         }
+        store.saveBggGameDetails(fetched.values)
+        val details = stored + fetched
         rememberExpansionBaseGames(details.values)
         val baseGamesOf = details.values
             .filter { it.type == "boardgameexpansion" && it.baseGames.isNotEmpty() }
