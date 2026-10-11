@@ -2314,16 +2314,6 @@ private fun EditPlayDialog(
         editExpansions = if (editExpansions.any { it.id == game.id }) editExpansions.filter { it.id != game.id }
             else editExpansions + game
     }
-    if (showExpansionPicker) {
-        ExpansionPickerSheet(
-            gameName = play.gameName,
-            load = loadExpansions,
-            ownedIds = ownedGameIds,
-            selectedIds = editExpansions.mapTo(hashSetOf()) { it.id },
-            onToggle = ::toggleExpansion,
-            onDismiss = { showExpansionPicker = false }
-        )
-    }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -2361,6 +2351,17 @@ private fun EditPlayDialog(
             GameBackdrop(imageUrl = thumbnailUrl, height = 180.dp, baseBlur = 1.5.dp)
         }
     ) {
+        // Inside the dialog's content: a sheet composed outside it opens behind the dialog.
+        if (showExpansionPicker) {
+            ExpansionPickerSheet(
+                gameName = play.gameName,
+                load = loadExpansions,
+                ownedIds = ownedGameIds,
+                selectedIds = editExpansions.mapTo(hashSetOf()) { it.id },
+                onToggle = ::toggleExpansion,
+                onDismiss = { showExpansionPicker = false }
+            )
+        }
         Column {
             LazyColumn(
                 modifier = Modifier.weight(1f, fill = false),
