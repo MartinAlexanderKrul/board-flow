@@ -1371,21 +1371,35 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     fun openBggSearchResult(result: cz.nicolsburg.boardflow.model.BggGame, onReady: (GameItem) -> Unit) {
         _collectionGames.value.firstOrNull { it.objectId == result.id.toString() }?.let { return onReady(it) }
         shelfBggSearch.setOpening(result.id)
+        loadGameItem(result.id, result.name, result.thumbnailUrl) { item ->
+            shelfBggSearch.setOpening(null)
+            onReady(item)
+        }
+    }
+
+    /**
+     * A game for its detail dialog wherever it is tapped: the collection's entry, or one built
+     * from BGG's thing details for a game outside the collection. The built game is staged like
+     * a shelf search result, so a status edit adds it to the collection. Offline it opens with
+     * the name it was tapped with.
+     */
+    fun loadGameItem(id: Int, name: String, thumbnailUrl: String? = null, onReady: (GameItem) -> Unit) {
+        _collectionGames.value.firstOrNull { it.objectId == id.toString() }?.let { return onReady(it) }
+        stagedShelfGames[id]?.let { return onReady(it) }
         viewModelScope.launch {
             val detail = runCatching {
                 withContext(Dispatchers.IO) {
-                    BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(listOf(result.id.toString()))[result.id.toString()]
+                    BggApiClient(BuildConfig.BGG_XML_API_TOKEN).fetchThingDetails(listOf(id.toString()))[id.toString()]
                 }
             }.getOrNull()
             val item = gameItemFromBgg(
-                id = result.id,
-                name = detail?.name?.ifBlank { null } ?: result.name,
+                id = id,
+                name = detail?.name?.ifBlank { null } ?: name,
                 detail = detail,
-                thumbnailUrl = detail?.thumbnailUrl ?: result.thumbnailUrl,
+                thumbnailUrl = detail?.thumbnailUrl ?: thumbnailUrl,
                 playCount = null
             )
-            stagedShelfGames[result.id] = item
-            shelfBggSearch.setOpening(null)
+            if (detail != null) stagedShelfGames[id] = item
             onReady(item)
         }
     }

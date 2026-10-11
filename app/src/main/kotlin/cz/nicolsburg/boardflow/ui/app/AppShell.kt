@@ -98,6 +98,7 @@ import cz.nicolsburg.boardflow.model.PlayTimer
 import cz.nicolsburg.boardflow.model.PlayerResult
 import cz.nicolsburg.boardflow.ui.collection.CollectionScreen
 import cz.nicolsburg.boardflow.ui.collection.GameDetailsDialog
+import cz.nicolsburg.boardflow.model.GameItem
 import cz.nicolsburg.boardflow.model.CollectionStatusUiState
 import java.time.LocalDate
 import java.util.UUID
@@ -449,15 +450,13 @@ fun BoardFlowApp(
 
     // A game tapped outside the Journal and the Collection (the Quick Setup header) opens its
     // detail dialog over the screen it was tapped on, so back returns there.
-    var overlayGameId by rememberSaveable { mutableStateOf<Int?>(null) }
+    // A game outside the collection opens too, built from BGG (SyncViewModel.loadGameItem).
+    var overlayGame by remember { mutableStateOf<GameItem?>(null) }
+    fun gameNameFor(gameId: Int): String =
+        historyPlays.firstOrNull { it.gameId == gameId }?.gameName ?: appViewModel.knownGameName(gameId) ?: "Game"
     fun openGameOverlay(gameId: Int) {
         if (gameId <= 0) return
-        if (collectionGames.none { it.objectId.toIntOrNull() == gameId }) {
-            val name = historyPlays.firstOrNull { it.gameId == gameId }?.gameName ?: "This game"
-            messenger.show("$name is not in your collection")
-            return
-        }
-        overlayGameId = gameId
+        syncViewModel.loadGameItem(gameId, gameNameFor(gameId)) { overlayGame = it }
     }
 
     // A guide that only exists in the remote catalog and was not downloaded yet cannot open
@@ -620,6 +619,7 @@ fun BoardFlowApp(
             composable(AppRoutes.HISTORY) {
                 HistoryScreen(
                     viewModel = appViewModel,
+                    loadGame = { id, name, onReady -> syncViewModel.loadGameItem(id, name, onReady = onReady) },
                     onActiveTabChange = { activeTabLabel = it },
                     onHeaderActionsStateChange = { visible, hasActiveFilters, onImportQrClick, onFilterClick ->
                         historyHeaderActionsVisible = visible
@@ -959,13 +959,13 @@ fun BoardFlowApp(
         }
     }
 
-    overlayGameId?.let { gameId ->
-        val game = collectionGames.firstOrNull { it.objectId.toIntOrNull() == gameId }
-        if (game == null) {
-            overlayGameId = null
-        } else {
+    overlayGame?.let { opened ->
+        val gameId = opened.objectId.toIntOrNull() ?: 0
+        // The collection's copy once a status edit adds the game, so the dialog follows it.
+        val game = collectionGames.firstOrNull { it.objectId == opened.objectId } ?: opened
+        run {
             fun closeAnd(action: () -> Unit) {
-                overlayGameId = null
+                overlayGame = null
                 appViewModel.clearCollectionStatus()
                 action()
             }
@@ -989,7 +989,8 @@ fun BoardFlowApp(
                 onLoadCollectionStatus = { appViewModel.loadCollectionStatus(gameId) },
                 onSaveCollectionStatus = { status ->
                     appViewModel.saveCollectionStatus(gameId, status)
-                    messenger.show("Collection status saved")
+                    val wasInCollection = collectionStatus.takeIf { it.gameId == gameId }?.inCollection != false
+                    messenger.show(if (wasInCollection) "Collection status saved" else "Added to your BGG collection")
                 },
                 onRemoveFromCollection = {
                     appViewModel.removeFromCollection(gameId)

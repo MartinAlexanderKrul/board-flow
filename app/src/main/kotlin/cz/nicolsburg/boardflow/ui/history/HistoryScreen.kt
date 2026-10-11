@@ -246,6 +246,8 @@ private enum class HistoryTab(val label: String) {
 @Composable
 fun HistoryScreen(
     viewModel: AppViewModel,
+    // A game outside the collection, built from BGG for its detail dialog (SyncViewModel.loadGameItem).
+    loadGame: (gameId: Int, gameName: String, onReady: (GameItem) -> Unit) -> Unit = { _, _, _ -> },
     onActiveTabChange: (String?) -> Unit = {},
     onHeaderActionsStateChange: (
         visible: Boolean,
@@ -433,21 +435,11 @@ fun HistoryScreen(
     var activeTab by rememberSaveable { mutableStateOf(HistoryTab.PLAYS) }
 
     // Every game and play the Journal shows opens. A game opens its detail dialog on top of
-    // whatever is open; a game that is not in the collection shows its plays instead.
+    // whatever is open, also when it is not in the collection (built from BGG then).
     fun openGame(gameId: Int, gameName: String) {
         val item = collectionItems.firstOrNull { it.objectId.toIntOrNull() == gameId }
-        if (item != null) {
-            selectedGame = item
-            return
-        }
-        navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayers, searchQuery)
-        selectedPlay = null
-        viewingPlayerFromStats = null
-        activeTab = HistoryTab.PLAYS
-        filterGameId = gameId
-        filterGameName = gameName
-        filterPlayers = emptyList()
-        searchQuery = ""
+        if (item != null) selectedGame = item
+        else if (gameId > 0) loadGame(gameId, gameName) { selectedGame = it }
     }
 
     // Games some stats name without an id ("Often: Azul", counted games of a challenge).
@@ -1222,17 +1214,7 @@ fun HistoryScreen(
                         activeTab = HistoryTab.PLAYS
                         filterPlayers = listOf(playerName)
                     },
-                    onViewPlayerGame = { gameId, gameName, sourcePlayerId ->
-                        if (collectionItems.any { it.objectId.toIntOrNull() == gameId }) {
-                            openGame(gameId, gameName)
-                        } else {
-                            navHistory = navHistory + HistoryNavState(activeTab, filterGameId, filterGameName, filterPlayers, searchQuery, viewingPlayerId = sourcePlayerId.ifBlank { null })
-                            activeTab = HistoryTab.PLAYS
-                            filterGameId = gameId
-                            filterGameName = gameName
-                            searchQuery = ""
-                        }
-                    },
+                    onViewPlayerGame = { gameId, gameName, _ -> openGame(gameId, gameName) },
                     onViewPlayerPlay = { openPlay(it) },
                     modifier = Modifier.fillMaxSize()
                 )
