@@ -3220,7 +3220,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun getLogPlayRecommendations(): List<RecommendationLane> {
         val now = System.currentTimeMillis()
         val dismissed = _recommendationDismissals.value.filterValues { it > now }.keys
-        val owned = _collectionItems.value.filter { it.isOwned && it.objectId.toIntOrNull() !in dismissed }
+        val slot = PickTimeSlot.at(LocalDateTime.now())
+        // In the evening and at night no lane suggests a game over that time's length or weight.
+        val owned = _collectionItems.value.filter {
+            it.isOwned && it.objectId.toIntOrNull() !in dismissed && slot.allows(it.weight, it.longestPlayTime())
+        }
         if (owned.isEmpty()) return emptyList()
 
         val pendingNames = _pendingPlayers.value
@@ -3234,7 +3238,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val gameById = _allGames.value.associateBy { it.id }
         val stats = playStatsByGame(history)
         val lanes = buildList {
-            buildTimeOfDayLane(owned, gameById, playerCount, stats)?.let(::add)
+            buildTimeOfDayLane(slot, owned, gameById, playerCount, stats)?.let(::add)
             buildBestForTonightLane(owned, gameById, playerCount, stats)?.let(::add)
             buildGroupFavoritesLane(owned, gameById, groupNames, playerCount)?.let(::add)
             buildNeverPlayedLane(owned, gameById, playerCount, stats)?.let(::add)
@@ -3380,7 +3384,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val candidates = owned.mapNotNull { item ->
             val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
             if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
-            val time = item.playingTime ?: return@mapNotNull null
+            val time = item.longestPlayTime() ?: return@mapNotNull null
             if (time <= 0 || time > QUICK_PICK_MINUTES.last()) return@mapNotNull null
             val playedThisWeek = stats[id]?.lastPlayed?.isAfter(weekAgo) == true
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
@@ -3398,17 +3402,17 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     /** Heavier games on a weekend afternoon, light and quick ones in the evening ([PickTimeSlot]). */
     private fun buildTimeOfDayLane(
+        slot: PickTimeSlot,
         owned: List<GameItem>,
         gameById: Map<Int, BggGame>,
         playerCount: Int?,
         stats: Map<Int, GamePlayStats>
     ): RecommendationLane? {
-        val slot = PickTimeSlot.at(LocalDateTime.now())
         val weekAgo = LocalDate.now().minusDays(7)
         val candidates = owned.mapNotNull { item ->
             val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
             if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
-            if (!slot.matches(item.weight, item.playingTime)) return@mapNotNull null
+            if (!slot.matches(item.weight, item.longestPlayTime())) return@mapNotNull null
             val playedThisWeek = stats[id]?.lastPlayed?.isAfter(weekAgo) == true
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
             val reason = listOfNotNull(
@@ -3444,17 +3448,26 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         return RecommendationLane("never_played", "Never played", "Still waiting on your shelf", picks)
     }
 
+    /** BGG's playing time, or its upper bound when that is longer (a "30-90 min" game counts as 90). */
+    private fun GameItem.longestPlayTime(): Int? =
+        listOfNotNull(playingTime, maxPlayTime).filter { it > 0 }.maxOrNull()
+
     /** "about 45 min, complexity 2.4", either part left out when BGG has no value. */
     private fun gameLengthAndWeight(item: GameItem): String? = listOfNotNull(
         item.playingTime?.takeIf { it > 0 }?.let { "about $it min" },
         item.weight?.takeIf { it > 0.0 }?.let { "complexity ${String.format(Locale.US, "%.1f", it)}" }
     ).joinToString(", ").ifBlank { null }
 
-    /** Highest score first; equal scores in a random order that stays the same for this app run. */
+    /**
+     * Highest score first; equal scores in a random order that stays the same for this app run.
+     * Each game gets its own random rank (from the run's seed and its id) instead of shuffling the
+     * list, so hiding one game leaves the others where they were and only its spot is refilled.
+     */
     private fun shuffledPicks(candidates: List<ScoredRecommendation>): List<RecommendationPick> =
-        candidates.sortedBy { it.game.id }
-            .shuffled(kotlin.random.Random(quickPickSeed))
-            .sortedByDescending { it.score }
+        candidates.sortedWith(
+            compareByDescending<ScoredRecommendation> { it.score }
+                .thenBy { java.util.Random(quickPickSeed xor it.game.id.toLong()).nextLong() }
+        )
             .take(LANE_CANDIDATES)
             .map { RecommendationPick(it.game, it.reason) }
 

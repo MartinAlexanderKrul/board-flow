@@ -13,19 +13,32 @@ enum class PickTimeSlot(
     val minWeight: Double?,
     val maxWeight: Double?,
     val minMinutes: Int?,
-    val maxMinutes: Int?
+    val maxMinutes: Int?,
+    /** The weight and length caps also apply to every other lane (no long game is suggested at night). */
+    val capsAllLanes: Boolean
 ) {
     /** Saturday or Sunday, 6:00 - 16:59: time for something big. */
-    WEEKEND_DAY("Weekend deep dive", "Heavier games for a free afternoon", 3.0, null, 60, null),
+    WEEKEND_DAY("Weekend deep dive", "Heavier games for a free afternoon", 3.0, null, 60, null, false),
 
     /** Monday - Friday, 6:00 - 16:59: planning a weeknight game. */
-    WEEKDAY_DAY("Weeknight picks", "Medium games that fit an evening", 2.0, 3.0, null, 90),
+    WEEKDAY_DAY("Weeknight picks", "Medium games that fit an evening", 2.0, 3.0, null, 90, false),
 
     /** Any day, 17:00 - 21:59: casual and quick. */
-    EVENING("Easy evening", "Light games that wrap up tonight", null, 2.3, null, 60),
+    EVENING("Easy evening", "Light games that wrap up tonight", null, 2.3, null, 60, true),
 
     /** 22:00 - 5:59: a filler before bed. */
-    LATE_NIGHT("One more before bed", "Fillers of half an hour or less", null, 2.0, null, 30);
+    LATE_NIGHT("One more before bed", "Fillers of half an hour or less", null, 2.0, null, 30, true);
+
+    /**
+     * For the other lanes when [capsAllLanes]: a game over the length cap or the weight cap is left
+     * out, but one BGG has no value for is kept (those lanes are not about length or weight).
+     */
+    fun allows(weight: Double?, minutes: Int?): Boolean {
+        if (!capsAllLanes) return true
+        if (maxWeight != null && weight != null && weight > 0.0 && weight > maxWeight) return false
+        if (maxMinutes != null && minutes != null && minutes > 0 && minutes > maxMinutes) return false
+        return true
+    }
 
     fun matches(weight: Double?, minutes: Int?): Boolean {
         if (minWeight != null || maxWeight != null) {

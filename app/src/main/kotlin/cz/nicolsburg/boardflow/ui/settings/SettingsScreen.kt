@@ -386,6 +386,41 @@ fun SettingsScreen(
         )
     }
 
+    // Sheets opened from rows of a lazy list live out here: inside an item they only exist
+    // while that item is composed, so a sheet in an off-screen item opened late.
+    if (statsScopeExpanded) {
+        BoardFlowPickerSheet(
+            title = "Choose stats source",
+            options = StatsPlayScope.entries,
+            selectedOption = currentStatsPlayScope,
+            optionLabel = { it.label },
+            onSelect = { scope ->
+                viewModel.setStatsPlayScope(scope)
+                statsScopeExpanded = false
+            },
+            onDismiss = { statsScopeExpanded = false }
+        )
+    }
+    if (manufacturerExpanded) {
+        BoardFlowPickerSheet(
+            title = "Choose sleeve brand",
+            options = SleeveManufacturer.entries,
+            selectedOption = currentManufacturer,
+            optionLabel = { it.label },
+            onSelect = { manufacturer ->
+                viewModel.setSleevePreferredManufacturer(manufacturer)
+                manufacturerExpanded = false
+            },
+            onDismiss = { manufacturerExpanded = false }
+        )
+    }
+    if (showCustomMoodsDialog) {
+        CustomMoodsDialog(
+            viewModel = viewModel,
+            onDismiss = { showCustomMoodsDialog = false }
+        )
+    }
+
     if (showSetupGuide) {
         AnimatedDialog(onDismissRequest = { showSetupGuide = false }) {
             androidx.compose.foundation.lazy.LazyColumn(
@@ -631,38 +666,6 @@ fun SettingsScreen(
                             title = "Setup guide",
                             detail = "How to connect BGG, Google and Gemini",
                             onClick = { showSetupGuide = true }
-                        )
-                    }
-                    if (statsScopeExpanded) {
-                        BoardFlowPickerSheet(
-                            title = "Choose stats source",
-                            options = StatsPlayScope.entries,
-                            selectedOption = currentStatsPlayScope,
-                            optionLabel = { it.label },
-                            onSelect = { scope ->
-                                viewModel.setStatsPlayScope(scope)
-                                statsScopeExpanded = false
-                            },
-                            onDismiss = { statsScopeExpanded = false }
-                        )
-                    }
-                    if (manufacturerExpanded) {
-                        BoardFlowPickerSheet(
-                            title = "Choose sleeve brand",
-                            options = SleeveManufacturer.entries,
-                            selectedOption = currentManufacturer,
-                            optionLabel = { it.label },
-                            onSelect = { manufacturer ->
-                                viewModel.setSleevePreferredManufacturer(manufacturer)
-                                manufacturerExpanded = false
-                            },
-                            onDismiss = { manufacturerExpanded = false }
-                        )
-                    }
-                    if (showCustomMoodsDialog) {
-                        CustomMoodsDialog(
-                            viewModel = viewModel,
-                            onDismiss = { showCustomMoodsDialog = false }
                         )
                     }
                 }

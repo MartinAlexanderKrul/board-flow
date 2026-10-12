@@ -40,4 +40,14 @@ class PickTimeSlotTest {
         assertFalse(PickTimeSlot.EVENING.matches(1.8, 90))
         assertFalse(PickTimeSlot.LATE_NIGHT.matches(1.5, null))
     }
+
+    @Test
+    fun eveningCapsOtherLanes() {
+        assertFalse(PickTimeSlot.EVENING.allows(1.8, 90))
+        assertFalse(PickTimeSlot.EVENING.allows(3.2, 45))
+        assertTrue(PickTimeSlot.EVENING.allows(2.0, 60))
+        assertTrue(PickTimeSlot.EVENING.allows(null, null))
+        assertFalse(PickTimeSlot.LATE_NIGHT.allows(1.5, 40))
+        assertTrue(PickTimeSlot.WEEKEND_DAY.allows(4.5, 240))
+    }
 }
