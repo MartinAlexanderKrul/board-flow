@@ -14,6 +14,7 @@ import cz.nicolsburg.boardflow.data.GeminiModels
 import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
 import cz.nicolsburg.boardflow.data.chronicle.ChronicleAiConfig
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
+import cz.nicolsburg.boardflow.model.PickTimeSlot
 import cz.nicolsburg.boardflow.model.BggCollectionEntry
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.CollectionStatusUiState
@@ -79,6 +80,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.time.temporal.WeekFields
@@ -89,6 +91,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     companion object {
         private const val CANONICAL_SNAPSHOT_ID = "__canonical_collection__"
         private const val RECOMMENDATION_DISMISS_DAYS = 7
+        private val QUICK_PICK_MINUTES = listOf(30, 45, 60)
+        private const val PICKS_PER_LANE = 2
+        /** Candidates each lane hands over, so it still has [PICKS_PER_LANE] after games shown in an earlier lane are dropped. */
+        private const val LANE_CANDIDATES = 12
         private const val TAG_SCAN = "QuickScan"
         private const val TAG_AUTO_SWITCH = "AutoSwitch"
         private const val TAG_PLAYER = "PlayerRecognition"
@@ -3228,12 +3234,21 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val gameById = _allGames.value.associateBy { it.id }
         val stats = playStatsByGame(history)
         val lanes = buildList {
+            buildTimeOfDayLane(owned, gameById, playerCount, stats)?.let(::add)
             buildBestForTonightLane(owned, gameById, playerCount, stats)?.let(::add)
             buildGroupFavoritesLane(owned, gameById, groupNames, playerCount)?.let(::add)
+            buildNeverPlayedLane(owned, gameById, playerCount, stats)?.let(::add)
             buildNeglectedFavoritesLane(owned, gameById, playerCount, stats)?.let(::add)
             buildQuickOptionLane(owned, gameById, playerCount, stats)?.let(::add)
         }
-        return lanes.filter { it.picks.isNotEmpty() }
+        // A game shows in one lane only: the first that lists it. Lanes bring spare candidates
+        // so a lane further down still fills up after its duplicates are dropped.
+        val shown = mutableSetOf<Int>()
+        return lanes.map { lane ->
+            val picks = lane.picks.filter { it.game.id !in shown }.take(PICKS_PER_LANE)
+            shown += picks.map { it.game.id }
+            lane.copy(picks = picks)
+        }.filter { it.picks.isNotEmpty() }
     }
 
     fun getPostSaveRecommendations(anchorPlay: LoggedPlay, limit: Int = 3): List<RecommendationPick> {
@@ -3309,7 +3324,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             val reason = "${recommendationReasonForPlayerCount(item, playerCount)}, ${lastPlayedClause(stats[id])}"
             ScoredRecommendation(game, score, reason)
         }.sortedByDescending { it.score }
-            .take(3)
+            .take(LANE_CANDIDATES)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
         return RecommendationLane("best_tonight", "Best for tonight", "$playerCount players at the table", picks)
@@ -3324,7 +3339,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         if (groupNames.isEmpty()) return null
         val picks = scoreGamesForGroup(owned, groupNames, playerCount)
             .sortedByDescending { it.score }
-            .take(3)
+            .take(LANE_CANDIDATES)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
         return RecommendationLane("group_favorites", "Great with this group", "Based on your shared history", picks)
@@ -3349,7 +3364,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
             ScoredRecommendation(game, score, "Last played ${daysAgoText(daysSince)}, ${playsText(gameStats.plays)}")
         }.sortedByDescending { it.score }
-            .take(3)
+            .take(LANE_CANDIDATES)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
         return RecommendationLane("neglected_favorites", "Neglected favorites", "Loved before, due for a return", picks)
@@ -3362,24 +3377,86 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         stats: Map<Int, GamePlayStats>
     ): RecommendationLane? {
         val weekAgo = LocalDate.now().minusDays(7)
-        // Any short game that fits will do, so shuffle them (once per app run) and only
-        // move the ones played this past week to the back.
-        val picks = owned.mapNotNull { item ->
+        val candidates = owned.mapNotNull { item ->
             val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
             if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
             val time = item.playingTime ?: return@mapNotNull null
-            if (time <= 0 || time > 60) return@mapNotNull null
+            if (time <= 0 || time > QUICK_PICK_MINUTES.last()) return@mapNotNull null
             val playedThisWeek = stats[id]?.lastPlayed?.isAfter(weekAgo) == true
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
-            ScoredRecommendation(game, if (playedThisWeek) 0.0 else 1.0, "About $time min, ${lastPlayedClause(stats[id])}")
-        }.sortedBy { it.game.id }
-            .shuffled(kotlin.random.Random(quickPickSeed))
-            .sortedByDescending { it.score }
-            .take(3)
-            .map { RecommendationPick(it.game, it.reason) }
+            time to ScoredRecommendation(game, if (playedThisWeek) 0.0 else 1.0, "About $time min, ${lastPlayedClause(stats[id])}")
+        }
+        // Up to 30 minutes, widened to 45 and then 60 only when too few games fit.
+        // Every game in that range is equally quick, so shuffle them (once per app run) and
+        // only move the ones played this past week to the back.
+        val limit = QUICK_PICK_MINUTES.firstOrNull { limit -> candidates.count { it.first <= limit } >= PICKS_PER_LANE }
+            ?: QUICK_PICK_MINUTES.last()
+        val picks = shuffledPicks(candidates.filter { it.first <= limit }.map { it.second })
         if (picks.isEmpty()) return null
         return RecommendationLane("quick_option", "Quick to table", "Shorter picks for this group size", picks)
     }
+
+    /** Heavier games on a weekend afternoon, light and quick ones in the evening ([PickTimeSlot]). */
+    private fun buildTimeOfDayLane(
+        owned: List<GameItem>,
+        gameById: Map<Int, BggGame>,
+        playerCount: Int?,
+        stats: Map<Int, GamePlayStats>
+    ): RecommendationLane? {
+        val slot = PickTimeSlot.at(LocalDateTime.now())
+        val weekAgo = LocalDate.now().minusDays(7)
+        val candidates = owned.mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
+            if (!slot.matches(item.weight, item.playingTime)) return@mapNotNull null
+            val playedThisWeek = stats[id]?.lastPlayed?.isAfter(weekAgo) == true
+            val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
+            val reason = listOfNotNull(
+                gameLengthAndWeight(item)?.replaceFirstChar { it.uppercase() },
+                lastPlayedClause(stats[id])
+            ).joinToString(", ")
+            ScoredRecommendation(game, if (playedThisWeek) 0.0 else 1.0, reason)
+        }
+        val picks = shuffledPicks(candidates)
+        if (picks.isEmpty()) return null
+        return RecommendationLane("time_${slot.name.lowercase()}", slot.laneTitle, slot.laneSubtitle, picks)
+    }
+
+    /** Owned games with no play in the history or on BGG; expansions are left out. */
+    private fun buildNeverPlayedLane(
+        owned: List<GameItem>,
+        gameById: Map<Int, BggGame>,
+        playerCount: Int?,
+        stats: Map<Int, GamePlayStats>
+    ): RecommendationLane? {
+        val expansionIds = _expansionBaseGames.value.keys
+        val candidates = owned.mapNotNull { item ->
+            val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
+            if (id in stats || (item.numPlays ?: 0) > 0 || id in expansionIds) return@mapNotNull null
+            if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
+            val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
+            val reason = listOfNotNull("Never played", gameLengthAndWeight(item)).joinToString(", ")
+            // Games best at this player count first, shuffled among themselves.
+            ScoredRecommendation(game, playerCountFitScore(item, playerCount), reason)
+        }
+        val picks = shuffledPicks(candidates)
+        if (picks.isEmpty()) return null
+        return RecommendationLane("never_played", "Never played", "Still waiting on your shelf", picks)
+    }
+
+    /** "about 45 min, complexity 2.4", either part left out when BGG has no value. */
+    private fun gameLengthAndWeight(item: GameItem): String? = listOfNotNull(
+        item.playingTime?.takeIf { it > 0 }?.let { "about $it min" },
+        item.weight?.takeIf { it > 0.0 }?.let { "complexity ${String.format(Locale.US, "%.1f", it)}" }
+    ).joinToString(", ").ifBlank { null }
+
+    /** Highest score first; equal scores in a random order that stays the same for this app run. */
+    private fun shuffledPicks(candidates: List<ScoredRecommendation>): List<RecommendationPick> =
+        candidates.sortedBy { it.game.id }
+            .shuffled(kotlin.random.Random(quickPickSeed))
+            .sortedByDescending { it.score }
+            .take(LANE_CANDIDATES)
+            .map { RecommendationPick(it.game, it.reason) }
 
     private fun scoreGamesForGroup(
         owned: List<GameItem>,

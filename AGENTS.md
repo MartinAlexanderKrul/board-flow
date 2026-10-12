@@ -190,7 +190,7 @@ It stores:
 - player avatars in plays (`show_player_avatars_in_plays`; boolean; default true; Settings > Preferences > Logging plays; provided to play rows as `LocalShowPlayerAvatarsInPlays`)
 - expansion plays in BGG win stats (`expansion_plays_in_win_stats`; boolean; default false; Settings > Preferences > Logging plays)
 - custom mood templates (`custom_moods`; JSON array of user-defined mood label strings)
-- games hidden from Log Play's "Good picks right now" (`recommendation_dismissals`; JSON object BGG id -> epoch millis when the game may show again; a pick swiped left is hidden for 7 days, with Undo; "Quick to table" is shuffled once per app run, games played in the past week last)
+- games hidden from Log Play's "Good picks right now" (`recommendation_dismissals`; JSON object BGG id -> epoch millis when the game may show again)
 - challenges (legacy; still written for backup compatibility; Room is authoritative at runtime)
 
 Do not move live collection/history state back into large JSON blobs in preferences.
@@ -226,6 +226,7 @@ Import is selective: only keys present in the backup JSON are applied; missing k
 - BGG search covers both base games and expansions (`type=boardgame,boardgameexpansion`)
 - the Log Play search is debounced (800ms after typing stops) and filters `logPlayPool` (collection plus played games); a sheet composed inside a Dialog (the challenge form) must sit inside the dialog's content, or its window opens behind the dialog
 - lists longer than 20 items show a draggable fast-scroll bar on the right edge (`NewPlayScreen.FastScrollBar`): amber pill thumb, animated opacity (idle 20% / scrolling 65% / dragging 80%), floating letter bubble that leads the thumb position, and haptic feedback (`HapticFeedbackType.TextHandleMove`) per letter section change
+- with the search empty, "Good picks right now" (`AppViewModel.getLogPlayRecommendations`) lists owned games in lanes, two each, a game in one lane only: a time-of-day lane (`model/PickTimeSlot`: weekend before 17:00 heavier games, weekday daytime medium, 17:00-21:59 light and quick, 22:00-5:59 fillers; by BGG weight and playing time), Best for tonight and Great with this group (only with players picked in the Playing row or a session), Never played (no play in history or on BGG, known expansions left out), Neglected favorites, and Quick to table (up to 30 min, widened to 45 / 60 when fewer than two fit). Lanes without a strict order shuffle once per app run, games played in the past week last. Each pick's note is about that game (last played, plays, length, complexity). Swiping a pick left hides it for 7 days, with Undo; the lane fills the gap with its next game at once
 - selecting a game opens `LogPlayScreen` directly (form first); scanning is the `Scan scores` button on the form, which returns to the same form with the typed details intact (`AppViewModel.prepareScanFromLogPlay`, `AppShell.scanOpenedFromForm`)
 - session context may prefill players/location
 - every Play again (Journal play or session, post-save sheet, continue-session banner) opens the same form as picking a game: `setExtractedPlayManual()` (ready player cards fold to one line) and the expansions played with it (`LoggedPlay.expansions`, or the session's last play of the game)

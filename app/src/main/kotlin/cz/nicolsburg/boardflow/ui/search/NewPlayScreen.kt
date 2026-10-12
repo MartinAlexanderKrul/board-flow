@@ -85,7 +85,9 @@ import cz.nicolsburg.boardflow.ui.common.ScreenTabRow
 import cz.nicolsburg.boardflow.model.BggGame
 import cz.nicolsburg.boardflow.model.RecommendationLane
 import cz.nicolsburg.boardflow.model.RecommendationPick
+import cz.nicolsburg.boardflow.model.PickTimeSlot
 import cz.nicolsburg.boardflow.model.PlayTimer
+import java.time.LocalDateTime
 import cz.nicolsburg.boardflow.model.SessionContext
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Timer
@@ -145,7 +147,8 @@ fun NewPlayScreen(
     val rosterPlayers by viewModel.players.collectAsState()
     val recommendationsEnabled by viewModel.recommendationsEnabled.collectAsState()
     val recommendationDismissals by viewModel.recommendationDismissals.collectAsState()
-    val recommendationLanes = remember(query, sessionContext, collectionItems, historyPlays, pendingPlayers, recommendationsEnabled, recommendationDismissals) {
+    val pickTimeSlot = PickTimeSlot.at(LocalDateTime.now())
+    val recommendationLanes = remember(query, sessionContext, collectionItems, historyPlays, pendingPlayers, recommendationsEnabled, recommendationDismissals, pickTimeSlot) {
         if (recommendationsEnabled && query.isBlank()) viewModel.getLogPlayRecommendations() else emptyList()
     }
     val activeTimer by viewModel.activeTimer.collectAsState()
