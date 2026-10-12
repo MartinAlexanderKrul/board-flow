@@ -87,6 +87,27 @@ class SecurePreferences(context: Context) {
         get() = prefs.getBoolean(KEY_RECOMMENDATIONS_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_RECOMMENDATIONS_ENABLED, value).apply()
 
+    /** Games hidden from "Good picks right now": BGG id -> epoch millis when they may show again. Expired entries are dropped. */
+    fun getRecommendationDismissals(now: Long = System.currentTimeMillis()): Map<Int, Long> {
+        val json = prefs.getString(KEY_RECOMMENDATION_DISMISSALS, null) ?: return emptyMap()
+        return try {
+            val obj = JSONObject(json)
+            obj.keys().asSequence().mapNotNull { key ->
+                val id = key.toIntOrNull() ?: return@mapNotNull null
+                val until = obj.optLong(key)
+                if (until > now) id to until else null
+            }.toMap()
+        } catch (_: Exception) {
+            emptyMap()
+        }
+    }
+
+    fun saveRecommendationDismissals(dismissals: Map<Int, Long>) {
+        val obj = JSONObject()
+        dismissals.forEach { (id, until) -> obj.put(id.toString(), until) }
+        prefs.edit().putString(KEY_RECOMMENDATION_DISMISSALS, obj.toString()).apply()
+    }
+
     var introSeen: Boolean
         get() = prefs.getBoolean(KEY_INTRO_SEEN, false)
         set(value) = prefs.edit().putBoolean(KEY_INTRO_SEEN, value).apply()
@@ -825,6 +846,7 @@ class SecurePreferences(context: Context) {
         private const val KEY_EXPANSION_BASE_GAMES = "expansion_base_games"
         private const val KEY_ROSTER_SEEDED_FROM_HISTORY = "roster_seeded_from_history"
         private const val KEY_RECOMMENDATIONS_ENABLED = "recommendations_enabled"
+        private const val KEY_RECOMMENDATION_DISMISSALS = "recommendation_dismissals"
         private const val KEY_GEMINI_EXTRA_KEYS          = "gemini_api_keys_extra"
         private const val KEY_GEMINI_EXHAUSTED_MODELS    = "gemini_exhausted_models"
         private const val KEY_GEMINI_MODELS_REFRESHED_AT = "gemini_models_refreshed_at"

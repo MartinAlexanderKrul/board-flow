@@ -88,6 +88,7 @@ import java.util.UUID
 class AppViewModel(private val container: AppContainer) : ViewModel() {
     companion object {
         private const val CANONICAL_SNAPSHOT_ID = "__canonical_collection__"
+        private const val RECOMMENDATION_DISMISS_DAYS = 7
         private const val TAG_SCAN = "QuickScan"
         private const val TAG_AUTO_SWITCH = "AutoSwitch"
         private const val TAG_PLAYER = "PlayerRecognition"
@@ -138,6 +139,24 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _recommendationsEnabled.value = enabled
         prefs.recommendationsEnabled = enabled
     }
+
+    /** Games the user swiped out of "Good picks right now": BGG id -> when they may show again. */
+    private val _recommendationDismissals = MutableStateFlow(prefs.getRecommendationDismissals())
+    val recommendationDismissals: StateFlow<Map<Int, Long>> = _recommendationDismissals.asStateFlow()
+
+    fun dismissRecommendation(gameId: Int) {
+        val until = System.currentTimeMillis() + RECOMMENDATION_DISMISS_DAYS * 24L * 60 * 60 * 1000
+        _recommendationDismissals.value = prefs.getRecommendationDismissals() + (gameId to until)
+        prefs.saveRecommendationDismissals(_recommendationDismissals.value)
+    }
+
+    fun undoDismissRecommendation(gameId: Int) {
+        _recommendationDismissals.value = prefs.getRecommendationDismissals() - gameId
+        prefs.saveRecommendationDismissals(_recommendationDismissals.value)
+    }
+
+    /** Fixed per app run so "Quick to table" reshuffles on each launch but does not jump while the screen recomposes. */
+    private val quickPickSeed = System.nanoTime()
 
     private val _showPlayerAvatarsInPlays = MutableStateFlow(prefs.showPlayerAvatarsInPlays)
     val showPlayerAvatarsInPlays: StateFlow<Boolean> = _showPlayerAvatarsInPlays.asStateFlow()
@@ -3193,7 +3212,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun getLogPlayRecommendations(): List<RecommendationLane> {
-        val owned = _collectionItems.value.filter { it.isOwned }
+        val now = System.currentTimeMillis()
+        val dismissed = _recommendationDismissals.value.filterValues { it > now }.keys
+        val owned = _collectionItems.value.filter { it.isOwned && it.objectId.toIntOrNull() !in dismissed }
         if (owned.isEmpty()) return emptyList()
 
         val pendingNames = _pendingPlayers.value
@@ -3205,11 +3226,12 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val groupNames = effectivePlayers.map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
         val history = historyPlays.value
         val gameById = _allGames.value.associateBy { it.id }
+        val stats = playStatsByGame(history)
         val lanes = buildList {
-            buildBestForTonightLane(owned, gameById, playerCount)?.let(::add)
+            buildBestForTonightLane(owned, gameById, playerCount, stats)?.let(::add)
             buildGroupFavoritesLane(owned, gameById, groupNames, playerCount)?.let(::add)
-            buildNeglectedFavoritesLane(owned, gameById, history, playerCount)?.let(::add)
-            buildQuickOptionLane(owned, gameById, playerCount)?.let(::add)
+            buildNeglectedFavoritesLane(owned, gameById, playerCount, stats)?.let(::add)
+            buildQuickOptionLane(owned, gameById, playerCount, stats)?.let(::add)
         }
         return lanes.filter { it.picks.isNotEmpty() }
     }
@@ -3246,10 +3268,35 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val reason: String
     )
 
+    private data class GamePlayStats(val plays: Int, val lastPlayed: LocalDate?)
+
+    private fun playStatsByGame(history: List<LoggedPlay>): Map<Int, GamePlayStats> =
+        history.groupBy { it.gameId }.mapValues { (_, plays) ->
+            GamePlayStats(plays.size, plays.mapNotNull { it.date.toLocalDateOrNull() }.maxOrNull())
+        }
+
+    /** "last played 47 days ago" or "never played", for the note under a pick. */
+    private fun lastPlayedClause(stats: GamePlayStats?): String {
+        val last = stats?.lastPlayed ?: return "never played"
+        return "last played ${daysAgoText(ChronoUnit.DAYS.between(last, LocalDate.now()).toInt())}"
+    }
+
+    private fun daysAgoText(days: Int): String = when {
+        days <= 0 -> "today"
+        days == 1 -> "yesterday"
+        days < 60 -> "$days days ago"
+        days < 365 -> "${days / 30} months ago"
+        days < 730 -> "over a year ago"
+        else -> "${days / 365} years ago"
+    }
+
+    private fun playsText(count: Int): String = if (count == 1) "1 play" else "$count plays"
+
     private fun buildBestForTonightLane(
         owned: List<GameItem>,
         gameById: Map<Int, BggGame>,
-        playerCount: Int?
+        playerCount: Int?,
+        stats: Map<Int, GamePlayStats>
     ): RecommendationLane? {
         if (playerCount == null) return null
         val picks = owned.mapNotNull { item ->
@@ -3259,7 +3306,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             val recencyPenalty = recentlyPlayedPenalty(id)
             val score = fit + recencyPenalty + (item.numPlays ?: 0).coerceAtMost(12) * 0.04
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
-            ScoredRecommendation(game, score, recommendationReasonForPlayerCount(item, playerCount))
+            val reason = "${recommendationReasonForPlayerCount(item, playerCount)}, ${lastPlayedClause(stats[id])}"
+            ScoredRecommendation(game, score, reason)
         }.sortedByDescending { it.score }
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
@@ -3285,22 +3333,21 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private fun buildNeglectedFavoritesLane(
         owned: List<GameItem>,
         gameById: Map<Int, BggGame>,
-        history: List<LoggedPlay>,
-        playerCount: Int?
+        playerCount: Int?,
+        stats: Map<Int, GamePlayStats>
     ): RecommendationLane? {
-        val playsByGame = history.groupBy { it.gameId }
         val today = LocalDate.now()
         val picks = owned.mapNotNull { item ->
             val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
             if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
-            val plays = playsByGame[id].orEmpty()
-            if (plays.size < 2) return@mapNotNull null
-            val lastPlayed = plays.mapNotNull { it.date.toLocalDateOrNull() }.maxOrNull() ?: return@mapNotNull null
+            val gameStats = stats[id] ?: return@mapNotNull null
+            if (gameStats.plays < 2) return@mapNotNull null
+            val lastPlayed = gameStats.lastPlayed ?: return@mapNotNull null
             val daysSince = ChronoUnit.DAYS.between(lastPlayed, today).toInt()
             if (daysSince < 21) return@mapNotNull null
-            val score = plays.size * 0.45 + (daysSince / 14.0)
+            val score = gameStats.plays * 0.45 + (daysSince / 14.0)
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
-            ScoredRecommendation(game, score, "You play it often, but not lately")
+            ScoredRecommendation(game, score, "Last played ${daysAgoText(daysSince)}, ${playsText(gameStats.plays)}")
         }.sortedByDescending { it.score }
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
@@ -3311,17 +3358,23 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private fun buildQuickOptionLane(
         owned: List<GameItem>,
         gameById: Map<Int, BggGame>,
-        playerCount: Int?
+        playerCount: Int?,
+        stats: Map<Int, GamePlayStats>
     ): RecommendationLane? {
+        val weekAgo = LocalDate.now().minusDays(7)
+        // Any short game that fits will do, so shuffle them (once per app run) and only
+        // move the ones played this past week to the back.
         val picks = owned.mapNotNull { item ->
             val id = item.objectId.toIntOrNull() ?: return@mapNotNull null
             if (!fitsPlayerCount(item, playerCount)) return@mapNotNull null
             val time = item.playingTime ?: return@mapNotNull null
             if (time <= 0 || time > 60) return@mapNotNull null
-            val score = (70 - time).coerceAtLeast(0) / 10.0 + playerCountFitScore(item, playerCount)
+            val playedThisWeek = stats[id]?.lastPlayed?.isAfter(weekAgo) == true
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
-            ScoredRecommendation(game, score, "Quick to table at about $time min")
-        }.sortedByDescending { it.score }
+            ScoredRecommendation(game, if (playedThisWeek) 0.0 else 1.0, "About $time min, ${lastPlayedClause(stats[id])}")
+        }.sortedBy { it.game.id }
+            .shuffled(kotlin.random.Random(quickPickSeed))
+            .sortedByDescending { it.score }
             .take(3)
             .map { RecommendationPick(it.game, it.reason) }
         if (picks.isEmpty()) return null
@@ -3351,7 +3404,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             }.average()
             val score = matchingPlays.size * 0.7 + avgOverlap + recentlyPlayedPenalty(id)
             val game = gameById[id] ?: BggGame(id, item.name, item.yearPublished?.toString(), item.thumbnailUrl)
-            ScoredRecommendation(game, score, "Played ${matchingPlays.size}x with this group")
+            val lastTogether = matchingPlays.mapNotNull { it.date.toLocalDateOrNull() }.maxOrNull()
+            val reason = buildString {
+                append("Played ${matchingPlays.size}x with this group")
+                if (lastTogether != null) {
+                    append(", last ${daysAgoText(ChronoUnit.DAYS.between(lastTogether, LocalDate.now()).toInt())}")
+                }
+            }
+            ScoredRecommendation(game, score, reason)
         }.filter { it.score > 0.0 }
     }
 

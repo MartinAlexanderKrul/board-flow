@@ -89,6 +89,7 @@ import cz.nicolsburg.boardflow.model.PlayTimer
 import cz.nicolsburg.boardflow.model.SessionContext
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.TimerOff
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.BorderStroke
@@ -143,7 +144,8 @@ fun NewPlayScreen(
     val pendingPlayers by viewModel.pendingPlayers.collectAsState()
     val rosterPlayers by viewModel.players.collectAsState()
     val recommendationsEnabled by viewModel.recommendationsEnabled.collectAsState()
-    val recommendationLanes = remember(query, sessionContext, collectionItems, historyPlays, pendingPlayers, recommendationsEnabled) {
+    val recommendationDismissals by viewModel.recommendationDismissals.collectAsState()
+    val recommendationLanes = remember(query, sessionContext, collectionItems, historyPlays, pendingPlayers, recommendationsEnabled, recommendationDismissals) {
         if (recommendationsEnabled && query.isBlank()) viewModel.getLogPlayRecommendations() else emptyList()
     }
     val activeTimer by viewModel.activeTimer.collectAsState()
@@ -460,6 +462,13 @@ fun NewPlayScreen(
                                         onSelect = { game ->
                                             viewModel.selectGame(game)
                                             onGameSelected(game)
+                                        },
+                                        onDismiss = { game ->
+                                            viewModel.dismissRecommendation(game.id)
+                                            messenger.show(
+                                                "${game.name} hidden from picks for 7 days",
+                                                "Undo"
+                                            ) { viewModel.undoDismissRecommendation(game.id) }
                                         }
                                     )
                                 }
@@ -550,7 +559,8 @@ fun NewPlayScreen(
 @Composable
 private fun RecommendationsSection(
     lanes: List<RecommendationLane>,
-    onSelect: (BggGame) -> Unit
+    onSelect: (BggGame) -> Unit,
+    onDismiss: (BggGame) -> Unit
 ) {
     var expanded by rememberSaveable { mutableStateOf(true) }
     Column(modifier = Modifier.padding(bottom = Spacing.sm)) {
@@ -584,18 +594,68 @@ private fun RecommendationsSection(
                             )
                         }
                         lane.picks.forEach { pick ->
-                            GameListRow(
-                                name = pick.game.name,
-                                thumbnailUrl = pick.game.thumbnailUrl,
-                                supporting = pick.reason,
-                                onClick = { onSelect(pick.game) }
-                            ) { RowChevron() }
+                            key(lane.id, pick.game.id) {
+                                DismissiblePickRow(
+                                    pick = pick,
+                                    onSelect = { onSelect(pick.game) },
+                                    onDismiss = { onDismiss(pick.game) }
+                                )
+                            }
                         }
                     }
                 }
                 BoardFlowSectionTitle(title = "All games")
             }
         }
+    }
+}
+
+/** A pick that hides itself for a week when swiped left. Grey, not red: nothing is deleted and Undo brings it back. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DismissiblePickRow(
+    pick: RecommendationPick,
+    onSelect: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) onDismiss()
+            value == SwipeToDismissBoxValue.EndToStart
+        }
+    )
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(BoardFlowShape.Control)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = Spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Hide for 7 days",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Icon(
+                    Icons.Default.VisibilityOff,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    ) {
+        GameListRow(
+            name = pick.game.name,
+            thumbnailUrl = pick.game.thumbnailUrl,
+            supporting = pick.reason,
+            onClick = onSelect
+        ) { RowChevron() }
     }
 }
 

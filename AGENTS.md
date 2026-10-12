@@ -190,6 +190,7 @@ It stores:
 - player avatars in plays (`show_player_avatars_in_plays`; boolean; default true; Settings > Preferences > Logging plays; provided to play rows as `LocalShowPlayerAvatarsInPlays`)
 - expansion plays in BGG win stats (`expansion_plays_in_win_stats`; boolean; default false; Settings > Preferences > Logging plays)
 - custom mood templates (`custom_moods`; JSON array of user-defined mood label strings)
+- games hidden from Log Play's "Good picks right now" (`recommendation_dismissals`; JSON object BGG id -> epoch millis when the game may show again; a pick swiped left is hidden for 7 days, with Undo; "Quick to table" is shuffled once per app run, games played in the past week last)
 - challenges (legacy; still written for backup compatibility; Room is authoritative at runtime)
 
 Do not move live collection/history state back into large JSON blobs in preferences.
