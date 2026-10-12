@@ -487,6 +487,12 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                // On the whole screen, like the other tabbed screens, so Sync (its own screen) swipes too.
+                .swipeToNavigateTabs(
+                    tabCount = SettingsSection.entries.size,
+                    selectedIndex = selectedSection.ordinal,
+                    onNavigate = { selectedSection = SettingsSection.entries[it] }
+                )
         ) {
             BoardFlowAnimatedVisibility(visible = controlsVisible) {
                 ScreenTabRow(
@@ -504,13 +510,7 @@ fun SettingsScreen(
                 syncContent()
             } else LazyColumn(
                 state = listStates.getValue(section),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .swipeToNavigateTabs(
-                        tabCount = SettingsSection.entries.size,
-                        selectedIndex = selectedSection.ordinal,
-                        onNavigate = { selectedSection = SettingsSection.entries[it] }
-                    ),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
