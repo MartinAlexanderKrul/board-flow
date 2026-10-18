@@ -121,6 +121,32 @@ class ScoreSheetScoringTest {
     }
 
     @Test
+    fun typedSumsAddUp() {
+        assertEquals(25, ScoreEntry.sum("12+8+5"))
+        assertEquals(12, ScoreEntry.sum("12+"))
+        assertEquals(7, ScoreEntry.sum("7"))
+        assertNull(ScoreEntry.sum(""))
+        assertNull(ScoreEntry.sum("+"))
+        assertEquals("3+4", ScoreEntry.clean("3++4"))
+        assertEquals("12+5", ScoreEntry.clean("12 + 5"))
+    }
+
+    @Test
+    fun aSumKeepsWhatWasTypedAndScoresItsTotal() {
+        val sheet = ScoreSheets.wingspan
+        val summed = draft(sheet, emptyMap(), emptyMap()).withEntry(0, "birds", "12+8+5").withEntry(1, "birds", "30")
+        assertEquals("12+8+5", summed.entry(0, "birds"))
+        assertEquals("30", summed.entry(1, "birds"))
+        assertEquals(listOf(25, 30), ScoreSheetScoring.score(sheet, summed).totals)
+
+        // A plain number replaces the sum; clearing the cell clears both.
+        assertEquals("9", summed.withEntry(0, "birds", "9").entry(0, "birds"))
+        assertEquals("", summed.withEntry(0, "birds", "").entry(0, "birds"))
+        assertEquals(listOf("P1"), summed.withoutPlayer(0).players)
+        assertEquals("30", summed.withoutPlayer(0).entry(0, "birds"))
+    }
+
+    @Test
     fun emptySheetHasNoWinner() {
         val sheet = ScoreSheets.everdell
         val result = ScoreSheetScoring.score(sheet, draft(sheet, emptyMap(), emptyMap()))

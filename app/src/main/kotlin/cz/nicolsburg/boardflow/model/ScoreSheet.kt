@@ -97,26 +97,72 @@ data class ScoreSheetDraft(
     val gameId: Int,
     val players: List<String>,
     val enabledModules: Set<String>,
-    val values: List<Map<String, Int>>
+    val values: List<Map<String, Int>>,
+    /** What was typed where it was a sum ("12+8+5"), per player and key; plain numbers live only in [values]. */
+    val entries: List<Map<String, String>> = emptyList()
 ) {
     fun value(player: Int, key: String): Int? = values.getOrNull(player)?.get(key)
 
+    /** The text to edit for a cell: the sum as typed, or the plain number. */
+    fun entry(player: Int, key: String): String =
+        entries.getOrNull(player)?.get(key) ?: value(player, key)?.toString().orEmpty()
+
     fun withValue(player: Int, key: String, value: Int?): ScoreSheetDraft {
-        val padded = values + List((player + 1 - values.size).coerceAtLeast(0)) { emptyMap() }
-        val updated = padded.toMutableList()
+        val updated = values.padded(player).toMutableList()
         updated[player] = if (value == null) updated[player] - key else updated[player] + (key to value)
-        return copy(values = updated)
+        return copy(values = updated, entries = withoutEntry(player, key))
     }
 
-    fun withPlayer(name: String): ScoreSheetDraft = copy(players = players + name, values = values + listOf(emptyMap()))
+    /** Takes what was typed in a cell: a number, or numbers joined by "+" that are added up. */
+    fun withEntry(player: Int, key: String, text: String): ScoreSheetDraft {
+        val sum = ScoreEntry.sum(text)
+        val base = withValue(player, key, sum)
+        if (!text.contains('+') || sum == null) return base
+        val updated = base.entries.padded(player).toMutableList()
+        updated[player] = updated[player] + (key to text)
+        return base.copy(entries = updated)
+    }
+
+    fun withPlayer(name: String): ScoreSheetDraft = copy(
+        players = players + name,
+        values = values.padded(players.size - 1) + listOf(emptyMap()),
+        entries = entries.padded(players.size - 1) + listOf(emptyMap())
+    )
 
     fun withoutPlayer(player: Int): ScoreSheetDraft = copy(
         players = players.filterIndexed { i, _ -> i != player },
-        values = values.filterIndexed { i, _ -> i != player }
+        values = values.filterIndexed { i, _ -> i != player },
+        entries = entries.filterIndexed { i, _ -> i != player }
     )
 
     fun renamed(player: Int, name: String): ScoreSheetDraft =
         copy(players = players.toMutableList().also { it[player] = name })
+
+    private fun withoutEntry(player: Int, key: String): List<Map<String, String>> =
+        if (entries.getOrNull(player)?.containsKey(key) != true) entries
+        else entries.toMutableList().also { it[player] = it[player] - key }
+
+    private fun <V> List<Map<String, V>>.padded(index: Int): List<Map<String, V>> =
+        this + List((index + 1 - size).coerceAtLeast(0)) { emptyMap() }
+}
+
+/** Sums typed into a score cell: "12+8+5" is 25. Only digits and "+" count; a trailing "+" is fine. */
+object ScoreEntry {
+    private const val MAX_TOTAL = 99_999
+
+    /** Keeps digits and single "+" signs, so the text stays a sum while it is typed. */
+    fun clean(typed: String): String =
+        typed.filter { it.isDigit() || it == '+' }
+            .let { var t = it; while ("++" in t) t = t.replace("++", "+"); t }
+            .split('+').joinToString("+") { it.take(4) }
+            .take(24)
+
+    /** The total, or null when there is no number yet. */
+    fun sum(text: String): Int? {
+        val parts = text.split('+').mapNotNull { it.trim().toIntOrNull() }
+        if (parts.isEmpty()) return null
+        return parts.sum().coerceAtMost(MAX_TOTAL)
+    }
 }
 
 data class ScoreSheetResult(

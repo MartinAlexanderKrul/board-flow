@@ -897,14 +897,19 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             )
         } else {
             // Players follow the form by name; columns added on the sheet itself stay after them.
+            // Each column is (name, index of its column in the current sheet or null).
             val byName = current.players.indices.associateBy { current.players[it].trim().lowercase() }
-            val formColumns = names.map { name -> name to (byName[name.lowercase()]?.let { current.values.getOrNull(it) } ?: emptyMap()) }
+            val formColumns = names.map { name -> name to byName[name.lowercase()] }
             val sheetOnly = current.players.indices
                 .filter { i -> names.none { it.equals(current.players[i].trim(), ignoreCase = true) } }
                 .filter { i -> current.players[i].isNotBlank() || current.values.getOrNull(i).orEmpty().isNotEmpty() }
-                .map { i -> current.players[i] to current.values.getOrNull(i).orEmpty() }
-            val columns = (formColumns + sheetOnly).ifEmpty { listOf("" to emptyMap<String, Int>(), "" to emptyMap()) }
-            current.copy(players = columns.map { it.first }, values = columns.map { it.second })
+                .map { i -> current.players[i] to i }
+            val columns = (formColumns + sheetOnly).ifEmpty { listOf<Pair<String, Int?>>("" to null, "" to null) }
+            current.copy(
+                players = columns.map { it.first },
+                values = columns.map { (_, i) -> i?.let { current.values.getOrNull(it) }.orEmpty() },
+                entries = columns.map { (_, i) -> i?.let { current.entries.getOrNull(it) }.orEmpty() }
+            )
         }
         return true
     }
@@ -912,7 +917,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun updateScoreSheetDraft(draft: ScoreSheetDraft) { _scoreSheetDraft.value = draft }
 
     fun clearScoreSheetValues() {
-        _scoreSheetDraft.value = _scoreSheetDraft.value?.let { it.copy(values = it.players.map { emptyMap() }) }
+        _scoreSheetDraft.value = _scoreSheetDraft.value?.let { it.copy(values = it.players.map { emptyMap() }, entries = emptyList()) }
     }
 
     /** Writes the sheet's totals and winners to the form's players, adding any the form lacks. */

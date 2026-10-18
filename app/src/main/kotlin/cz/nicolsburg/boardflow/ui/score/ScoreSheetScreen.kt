@@ -48,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,7 +70,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -80,6 +83,7 @@ import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.model.CountRow
 import cz.nicolsburg.boardflow.model.MajorityRow
 import cz.nicolsburg.boardflow.model.PointsRow
+import cz.nicolsburg.boardflow.model.ScoreEntry
 import cz.nicolsburg.boardflow.model.ScoreSheet
 import cz.nicolsburg.boardflow.model.ScoreSheetDraft
 import cz.nicolsburg.boardflow.model.ScoreSheetResult
@@ -91,6 +95,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import cz.nicolsburg.boardflow.ui.common.GameBackdrop
 import cz.nicolsburg.boardflow.ui.common.GameCover
@@ -143,6 +148,7 @@ fun ScoreSheetScreen(
     var confirmClear by remember { mutableStateOf(false) }
     var renaming by remember { mutableStateOf<Int?>(null) }
     var focusedPlayer by remember { mutableStateOf<Int?>(null) }
+    var activeCell by remember { mutableStateOf<CellActions?>(null) }
     var viewportTop by remember { mutableFloatStateOf(0f) }
     var namesBottom by remember { mutableFloatStateOf(Float.MAX_VALUE) }
 
@@ -199,7 +205,7 @@ fun ScoreSheetScreen(
                 .verticalScroll(scroll)
                 .imePadding()
                 .padding(horizontal = Spacing.lg)
-                .padding(top = Spacing.lg, bottom = Spacing.xl),
+                .padding(top = Spacing.lg, bottom = if (activeCell != null) 88.dp else Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             SheetHeader(gameName, thumbnailUrl, design)
@@ -221,6 +227,8 @@ fun ScoreSheetScreen(
                     canAddPlayer = canAddPlayer,
                     focusedPlayer = focusedPlayer,
                     onFocusPlayer = { focusedPlayer = it },
+                    onActiveCell = { activeCell = it },
+                    onInactiveCell = { if (activeCell === it) activeCell = null },
                     onRename = { renaming = it },
                     onAddPlayer = {
                         onDraftChange(draft.withPlayer(""))
@@ -265,6 +273,17 @@ fun ScoreSheetScreen(
             exit = fadeOut() + slideOutVertically { -it }
         ) {
             PinnedTotals(draft, result, geometry, focusedPlayer)
+        }
+
+        AnimatedVisibility(
+            visible = activeCell != null,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .imePadding(),
+            enter = fadeIn() + slideInVertically { it },
+            exit = fadeOut() + slideOutVertically { it }
+        ) {
+            SumBar(onPlus = { activeCell?.addPlus?.invoke() }, onNext = { activeCell?.next?.invoke() })
         }
     }
 }
@@ -341,6 +360,8 @@ private fun SheetGrid(
     canAddPlayer: Boolean,
     focusedPlayer: Int?,
     onFocusPlayer: (Int) -> Unit,
+    onActiveCell: (CellActions) -> Unit,
+    onInactiveCell: (CellActions) -> Unit,
     onRename: (Int) -> Unit,
     onAddPlayer: () -> Unit,
     onNamesBottom: (Float) -> Unit,
@@ -409,12 +430,13 @@ private fun SheetGrid(
                     ) {
                         for (p in players) {
                             InputCell(
-                                value = draft.value(p, row.id),
+                                entry = draft.entry(p, row.id),
                                 focusRequester = requester(p, row.id),
                                 next = next(p, row.id),
                                 caption = multiplier?.let { m -> draft.value(p, row.id)?.let { "= ${it * m}" } },
-                                onFocused = { onFocusPlayer(p) },
-                                onValue = { onDraftChange(draft.withValue(p, row.id, it)) }
+                                onFocused = { onFocusPlayer(p); onActiveCell(it) },
+                                onBlurred = onInactiveCell,
+                                onEntry = { onDraftChange(draft.withEntry(p, row.id, it)) }
                             )
                         }
                     }
@@ -440,12 +462,13 @@ private fun SheetGrid(
                         ) {
                             for (p in players) {
                                 InputCell(
-                                    value = draft.value(p, key),
+                                    entry = draft.entry(p, key),
                                     focusRequester = requester(p, key),
                                     next = next(p, key),
-                                    caption = result.groupPoints[key]?.getOrNull(p)?.takeIf { it > 0 }?.let { "+$it" },
-                                    onFocused = { onFocusPlayer(p) },
-                                    onValue = { onDraftChange(draft.withValue(p, key, it)) }
+                                    caption = result.groupPoints[key]?.getOrNull(p)?.takeIf { it > 0 }?.let { "+$it pts" },
+                                    onFocused = { onFocusPlayer(p); onActiveCell(it) },
+                                    onBlurred = onInactiveCell,
+                                    onEntry = { onDraftChange(draft.withEntry(p, key, it)) }
                                 )
                             }
                         }
@@ -477,9 +500,10 @@ private fun SheetGrid(
                 for (p in players) {
                     if (p in tied) {
                         InputCell(
-                            value = draft.value(p, tiebreaker.inputKey),
-                            onFocused = { onFocusPlayer(p) },
-                            onValue = { onDraftChange(draft.withValue(p, tiebreaker.inputKey, it)) }
+                            entry = draft.entry(p, tiebreaker.inputKey),
+                            onFocused = { onFocusPlayer(p); onActiveCell(it) },
+                            onBlurred = onInactiveCell,
+                            onEntry = { onDraftChange(draft.withEntry(p, tiebreaker.inputKey, it)) }
                         )
                     } else {
                         Box(Modifier.width(ColumnWidth), contentAlignment = Alignment.Center) {
@@ -705,26 +729,78 @@ private fun AddPlayerColumn(onClick: () -> Unit) {
     }
 }
 
+/** What the plus bar above the keyboard does to the cell being typed in. */
+private class CellActions(val addPlus: () -> Unit, val next: () -> Unit)
+
+/**
+ * A number, or numbers joined by "+" that add up ("12+8+5"). While typing, the running sum shows
+ * under the cell; once you leave it, the cell shows the total and the sum moves under it.
+ */
 @Composable
 private fun InputCell(
-    value: Int?,
-    onValue: (Int?) -> Unit,
-    onFocused: () -> Unit,
+    entry: String,
+    onEntry: (String) -> Unit,
+    onFocused: (CellActions) -> Unit,
+    onBlurred: (CellActions) -> Unit,
     focusRequester: FocusRequester? = null,
     /** Where Next goes; null closes the keyboard (tiebreakers just move down). */
     next: FocusRequester? = null,
     caption: String? = null
 ) {
     val focusManager = LocalFocusManager.current
-    var text by remember(value) { mutableStateOf(value?.toString() ?: "") }
+    val currentEntry by rememberUpdatedState(entry)
+    val currentOnEntry by rememberUpdatedState(onEntry)
+    var field by remember { mutableStateOf(TextFieldValue(entry, TextRange(entry.length))) }
     var focused by remember { mutableStateOf(false) }
+    // Follow changes made elsewhere (Clear sheet, a removed player).
+    if (!focused && field.text != entry) field = TextFieldValue(entry, TextRange(entry.length))
+
+    fun goNext() {
+        when {
+            next != null -> next.requestFocus()
+            focusRequester != null || !focusManager.moveFocus(FocusDirection.Down) -> focusManager.clearFocus()
+        }
+    }
+    val actions = remember {
+        CellActions(
+            addPlus = {
+                val text = field.text
+                if (text.isNotEmpty() && !text.endsWith('+')) {
+                    val summed = "$text+"
+                    field = TextFieldValue(summed, TextRange(summed.length))
+                    currentOnEntry(summed)
+                }
+            },
+            next = { goNext() }
+        )
+    }
+
+    val isSum = '+' in entry
+    val total = ScoreEntry.sum(entry)
+    val shown = if (focused || !isSum) field else TextFieldValue(total?.toString().orEmpty())
+    val sumCaption = when {
+        !isSum -> null
+        focused -> total?.let { "= $it" }
+        else -> entry.trimEnd('+')
+    }
+    val captionText = listOfNotNull(sumCaption, caption).joinToString("  ").ifEmpty { null }
+
     Column(Modifier.width(ColumnWidth), horizontalAlignment = Alignment.CenterHorizontally) {
         BasicTextField(
-            value = text,
+            value = shown,
             onValueChange = { typed ->
-                val digits = typed.filter(Char::isDigit).take(4)
-                text = digits
-                onValue(digits.toIntOrNull())
+                when {
+                    !focused -> Unit
+                    // Only the cursor moved.
+                    typed.text == field.text -> field = typed
+                    // The tap that focuses a summed cell echoes the total it was showing; keep the sum.
+                    typed.text == shown.text -> Unit
+                    else -> {
+                        val cleaned = ScoreEntry.clean(typed.text)
+                        field = if (cleaned == typed.text) typed else TextFieldValue(cleaned, TextRange(cleaned.length))
+                        currentOnEntry(cleaned)
+                    }
+                }
             },
             singleLine = true,
             textStyle = MaterialTheme.typography.titleMedium.copy(
@@ -733,16 +809,21 @@ private fun InputCell(
             ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = {
-                when {
-                    next != null -> next.requestFocus()
-                    focusRequester != null || !focusManager.moveFocus(FocusDirection.Down) -> focusManager.clearFocus()
-                }
-            }),
+            keyboardActions = KeyboardActions(onNext = { goNext() }),
             modifier = (if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                 .onFocusChanged {
-                    focused = it.isFocused
-                    if (it.isFocused) onFocused()
+                    if (it.isFocused != focused) {
+                        focused = it.isFocused
+                        if (it.isFocused) {
+                            field = TextFieldValue(currentEntry, TextRange(currentEntry.length))
+                            onFocused(actions)
+                        } else {
+                            // A sum left ending in "+" counts as typed so far.
+                            val trimmed = currentEntry.trimEnd('+')
+                            if (trimmed != currentEntry) currentOnEntry(trimmed)
+                            onBlurred(actions)
+                        }
+                    }
                 },
             decorationBox = { inner ->
                 Box(
@@ -756,7 +837,7 @@ private fun InputCell(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (text.isEmpty()) {
+                    if (shown.text.isEmpty()) {
                         Text(
                             "–",
                             style = MaterialTheme.typography.titleMedium,
@@ -767,8 +848,44 @@ private fun InputCell(
                 }
             }
         )
-        if (caption != null) {
-            Text(caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (captionText != null) {
+            Text(
+                captionText,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isSum && focused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 2.dp)
+            )
+        }
+    }
+}
+
+/** Above the keyboard while a cell is typed in: "+" (number pads rarely have one) and Next. */
+@Composable
+private fun SumBar(onPlus: () -> Unit, onNext: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shadowElevation = 6.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        ) {
+            Text(
+                "Add up points: 12 + 8",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            BoardFlowSecondaryButton(onClick = onPlus) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                Spacer(Modifier.width(Spacing.xs))
+                Text("Plus")
+            }
+            BoardFlowInlineAction(onClick = onNext, neutral = true, large = true) { Text("Next") }
         }
     }
 }
