@@ -32,5 +32,9 @@ fun SheetGlyph(glyph: Glyph?, modifier: Modifier = Modifier) {
 fun scoreSheetDesign(sheetId: String): ScoreSheetDesign = when (sheetId) {
     "wingspan" -> WingspanDesign
     "everdell" -> EverdellDesign
+    "farshore" -> FarshoreDesign
+    "everdell-duo" -> EverdellDuoDesign
+    "silverfrost" -> SilverfrostDesign
+    "emerland" -> EmerlandDesign
     else -> error("No score sheet design for $sheetId")
 }

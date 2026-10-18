@@ -147,6 +147,75 @@ class ScoreSheetScoringTest {
     }
 
     @Test
+    fun tiesAllScoreGivesEveryTiedPlayerTheFullAward() {
+        // Bellfaire garland: most 6, second 3, tied players all score.
+        assertEquals(listOf(6, 6, 3, 0), ScoreSheetScoring.majorityPoints(listOf(4, 4, 2, 0), listOf(6, 3), TieRule.ALL))
+        assertEquals(listOf(6, 3, 3), ScoreSheetScoring.majorityPoints(listOf(5, 2, 2), listOf(6, 3), TieRule.ALL))
+    }
+
+    @Test
+    fun silverfrostSnowFollowsTheChosenReward() {
+        val sheet = ScoreSheets.silverfrost
+        assertEquals(setOf("flurries"), sheet.modulesFor(listOf(436821)))
+        val snow = draft(sheet, mapOf("snow.cleared" to 6), mapOf("snow.cleared" to 6), mapOf("snow.cleared" to 3), modules = setOf("flurries"))
+        // Flurries: 1 per Snow, and the tied leaders both get 5 more.
+        assertEquals(listOf(11, 11, 3), ScoreSheetScoring.score(sheet, snow).totals)
+        // Ice Storm keeps the typed Snow and gives the leaders 12.
+        val iceStorm = snow.copy(enabledModules = sheet.toggleModule(snow.enabledModules, "ice-storm"))
+        assertEquals(setOf("ice-storm"), iceStorm.enabledModules)
+        assertEquals(listOf(12, 12, 0), ScoreSheetScoring.score(sheet, iceStorm).totals)
+        // A group never ends up empty.
+        assertEquals(setOf("ice-storm"), sheet.toggleModule(iceStorm.enabledModules, "ice-storm"))
+    }
+
+    @Test
+    fun countRowCanScorePerTwo() {
+        val sheet = ScoreSheets.emerland
+        val result = ScoreSheetScoring.score(sheet, draft(sheet, mapOf("resources" to 7)))
+        assertEquals(listOf(3), result.rowPoints["resources"])
+    }
+
+    @Test
+    fun hummingbirdsCanGoNegative() {
+        assertEquals(4, ScoreEntry.sum("1+2+3-3+1"))
+        assertEquals(-3, ScoreEntry.sum("-3"))
+        assertEquals("-3+4", ScoreEntry.clean("--3++4", allowNegative = true))
+        assertEquals("34", ScoreEntry.clean("-3-4"))
+        val sheet = ScoreSheets.wingspan
+        val result = ScoreSheetScoring.score(sheet, draft(sheet, emptyMap(), modules = setOf("americas")).withEntry(0, "hummingbirds", "1+2-5"))
+        assertEquals(listOf(-2), result.totals)
+    }
+
+    @Test
+    fun tiebreakerReadFromTheSheetNeedsNoInput() {
+        // Farshore: tied totals go to the ship that moved furthest.
+        val sheet = ScoreSheets.farshore
+        val tied = draft(sheet, mapOf("cards" to 40, "ship" to 10), mapOf("cards" to 35, "ship" to 15))
+        val result = ScoreSheetScoring.score(sheet, tied)
+        assertEquals(setOf(1), result.winners)
+        assertEquals("ship", result.decidedBy?.id)
+        assertNull(result.pendingTiebreaker)
+    }
+
+    @Test
+    fun everyGameOfBothFamiliesHasASheet() {
+        val ids = mapOf(
+            266192 to "wingspan", 290448 to "wingspan", 300580 to "wingspan", 461932 to "wingspan", 366161 to "wingspan",
+            199792 to "everdell", 259996 to "everdell", 289056 to "everdell", 289057 to "everdell", 332390 to "everdell",
+            332397 to "everdell", 297972 to "everdell", 297973 to "everdell", 261142 to "everdell", 289405 to "everdell",
+            292794 to "everdell", 394106 to "farshore", 425005 to "everdell-duo", 436821 to "silverfrost", 455843 to "emerland"
+        )
+        ids.forEach { (id, sheet) -> assertEquals("BGG $id", sheet, ScoreSheets.forGames(listOf(id))?.id) }
+        // No id opens two sheets, and row and module ids are unique within a sheet.
+        val all = ScoreSheets.all.flatMap { it.gameIds }
+        assertEquals(all.size, all.toSet().size)
+        ScoreSheets.all.forEach { sheet ->
+            assertEquals(sheet.id, sheet.rows.size, sheet.rows.map { it.id }.toSet().size)
+            sheet.rows.mapNotNull { it.module }.forEach { m -> assertTrue("${sheet.id} $m", sheet.modules.any { it.id == m }) }
+        }
+    }
+
+    @Test
     fun emptySheetHasNoWinner() {
         val sheet = ScoreSheets.everdell
         val result = ScoreSheetScoring.score(sheet, draft(sheet, emptyMap(), emptyMap()))

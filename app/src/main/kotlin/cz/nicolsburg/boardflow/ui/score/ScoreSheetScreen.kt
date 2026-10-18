@@ -39,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -283,7 +284,11 @@ fun ScoreSheetScreen(
             enter = fadeIn() + slideInVertically { it },
             exit = fadeOut() + slideOutVertically { it }
         ) {
-            SumBar(onPlus = { activeCell?.addPlus?.invoke() }, onNext = { activeCell?.next?.invoke() })
+            SumBar(
+                onPlus = { activeCell?.addPlus?.invoke() },
+                onMinus = activeCell?.addMinus,
+                onNext = { activeCell?.next?.invoke() }
+            )
         }
     }
 }
@@ -338,8 +343,7 @@ private fun ModuleChips(
             BoardFlowFilterChip(
                 selected = on,
                 onClick = {
-                    val modules = if (on) draft.enabledModules - module.id else draft.enabledModules + module.id
-                    onDraftChange(draft.copy(enabledModules = modules))
+                    onDraftChange(draft.copy(enabledModules = sheet.toggleModule(draft.enabledModules, module.id)))
                 },
                 label = { Text(module.name) },
                 leadingIcon = if (on) {
@@ -421,19 +425,20 @@ private fun SheetGrid(
             band = !band
             when (row) {
                 is PointsRow, is CountRow -> {
-                    val multiplier = (row as? CountRow)?.pointsEach?.takeIf { it != 1 }
+                    val multiplier = (row as? CountRow)?.badge()
                     SheetLine(
                         geometry,
                         if (row.hint != null) RowWithHintHeight else RowHeight,
                         background,
-                        label = { RowLabel(design, row.id, row.label, row.hint, badge = multiplier?.let { "×$it" }, compact = geometry.compact) }
+                        label = { RowLabel(design, row.id, row.label, row.hint, badge = multiplier, compact = geometry.compact) }
                     ) {
                         for (p in players) {
                             InputCell(
                                 entry = draft.entry(p, row.id),
                                 focusRequester = requester(p, row.id),
                                 next = next(p, row.id),
-                                caption = multiplier?.let { m -> draft.value(p, row.id)?.let { "= ${it * m}" } },
+                                caption = countCaption(row, draft.value(p, row.id)),
+                                allowNegative = row.allowsNegative,
                                 onFocused = { onFocusPlayer(p); onActiveCell(it) },
                                 onBlurred = onInactiveCell,
                                 onEntry = { onDraftChange(draft.withEntry(p, row.id, it)) }
@@ -492,7 +497,7 @@ private fun SheetGrid(
         }
 
         // Tiebreakers, only while they matter
-        for (tiebreaker in result.shownTiebreakers) {
+        for (tiebreaker in result.shownTiebreakers.filter { it.asks }) {
             val tied = result.tiedPlayers[tiebreaker.id].orEmpty()
             SheetLine(geometry, RowWithHintHeight, Color.Transparent, label = {
                 RowLabel(design, tiebreaker.inputKey, tiebreaker.label, hint = "Tiebreaker", compact = geometry.compact)
@@ -521,6 +526,20 @@ private fun SheetGrid(
  * name row's Add column: every other row leaves the same space, so all rows are equally wide
  * (one scroll position is shared, and a narrower row would cap how far it can go).
  */
+/** "×2" for pearls, "÷2" for Emerland's 1 point per 2 resources; none for 1 point each. */
+private fun CountRow.badge(): String? = when {
+    per > 1 -> "÷$per"
+    pointsEach != 1 -> "×$pointsEach"
+    else -> null
+}
+
+/** Points under a counted cell when they differ from the count ("= 6"). */
+private fun countCaption(row: cz.nicolsburg.boardflow.model.ScoreRow, count: Int?): String? {
+    val counted = row as? CountRow ?: return null
+    if (counted.badge() == null || count == null) return null
+    return "= ${counted.points(count)}"
+}
+
 private class GridGeometry(val labelWidth: Dp, val hScroll: ScrollState, val trailing: Dp) {
     val compact: Boolean get() = labelWidth < CompactLabelWidth
 }
@@ -729,8 +748,8 @@ private fun AddPlayerColumn(onClick: () -> Unit) {
     }
 }
 
-/** What the plus bar above the keyboard does to the cell being typed in. */
-private class CellActions(val addPlus: () -> Unit, val next: () -> Unit)
+/** What the bar above the keyboard does to the cell being typed in; [addMinus] only where points can go below 0. */
+private class CellActions(val addPlus: () -> Unit, val addMinus: (() -> Unit)?, val next: () -> Unit)
 
 /**
  * A number, or numbers joined by "+" that add up ("12+8+5"). While typing, the running sum shows
@@ -745,7 +764,8 @@ private fun InputCell(
     focusRequester: FocusRequester? = null,
     /** Where Next goes; null closes the keyboard (tiebreakers just move down). */
     next: FocusRequester? = null,
-    caption: String? = null
+    caption: String? = null,
+    allowNegative: Boolean = false
 ) {
     val focusManager = LocalFocusManager.current
     val currentEntry by rememberUpdatedState(entry)
@@ -761,27 +781,29 @@ private fun InputCell(
             focusRequester != null || !focusManager.moveFocus(FocusDirection.Down) -> focusManager.clearFocus()
         }
     }
+    fun appendSign(sign: Char) {
+        val signed = ScoreEntry.clean(field.text + sign, allowNegative)
+        if (signed != field.text) {
+            field = TextFieldValue(signed, TextRange(signed.length))
+            currentOnEntry(signed)
+        }
+    }
     val actions = remember {
         CellActions(
-            addPlus = {
-                val text = field.text
-                if (text.isNotEmpty() && !text.endsWith('+')) {
-                    val summed = "$text+"
-                    field = TextFieldValue(summed, TextRange(summed.length))
-                    currentOnEntry(summed)
-                }
-            },
+            addPlus = { appendSign('+') },
+            addMinus = if (allowNegative) ({ appendSign('-') }) else null,
             next = { goNext() }
         )
     }
 
-    val isSum = '+' in entry
     val total = ScoreEntry.sum(entry)
+    // A sum is anything other than a plain number ("12+8", "4-3"); "-3" alone is just a number.
+    val isSum = entry.isNotEmpty() && entry != total?.toString()
     val shown = if (focused || !isSum) field else TextFieldValue(total?.toString().orEmpty())
     val sumCaption = when {
         !isSum -> null
         focused -> total?.let { "= $it" }
-        else -> entry.trimEnd('+')
+        else -> entry.trimEnd('+', '-')
     }
     val captionText = listOfNotNull(sumCaption, caption).joinToString("  ").ifEmpty { null }
 
@@ -796,7 +818,7 @@ private fun InputCell(
                     // The tap that focuses a summed cell echoes the total it was showing; keep the sum.
                     typed.text == shown.text -> Unit
                     else -> {
-                        val cleaned = ScoreEntry.clean(typed.text)
+                        val cleaned = ScoreEntry.clean(typed.text, allowNegative)
                         field = if (cleaned == typed.text) typed else TextFieldValue(cleaned, TextRange(cleaned.length))
                         currentOnEntry(cleaned)
                     }
@@ -819,7 +841,7 @@ private fun InputCell(
                             onFocused(actions)
                         } else {
                             // A sum left ending in "+" counts as typed so far.
-                            val trimmed = currentEntry.trimEnd('+')
+                            val trimmed = currentEntry.trimEnd('+', '-')
                             if (trimmed != currentEntry) currentOnEntry(trimmed)
                             onBlurred(actions)
                         }
@@ -863,7 +885,7 @@ private fun InputCell(
 
 /** Above the keyboard while a cell is typed in: "+" (number pads rarely have one) and Next. */
 @Composable
-private fun SumBar(onPlus: () -> Unit, onNext: () -> Unit) {
+private fun SumBar(onPlus: () -> Unit, onMinus: (() -> Unit)?, onNext: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shadowElevation = 6.dp,
@@ -880,6 +902,13 @@ private fun SumBar(onPlus: () -> Unit, onNext: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f)
             )
+            if (onMinus != null) {
+                BoardFlowSecondaryButton(onClick = onMinus) {
+                    Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                    Spacer(Modifier.width(Spacing.xs))
+                    Text("Minus")
+                }
+            }
             BoardFlowSecondaryButton(onClick = onPlus) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
                 Spacer(Modifier.width(Spacing.xs))

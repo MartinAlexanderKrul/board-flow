@@ -111,6 +111,24 @@ private val unusedFood: Glyph = { s ->
     disc(s, 0.68f, 0.68f, 0.20f, Berry)
 }
 
+/** Americas: a hummingbird hovering at a flower. */
+private val hummingbird: Glyph = { s ->
+    drawOval(Teal, at(s, 0.30f, 0.40f), Size(0.36f * s, 0.20f * s))
+    disc(s, 0.66f, 0.42f, 0.09f, Color(0xFF5FB86A))
+    drawLine(Edge, at(s, 0.74f, 0.42f), at(s, 0.98f, 0.36f), 0.035f * s, StrokeCap.Round)
+    drawPath(leaf(s, 0.44f, 0.42f, 0.28f, 0.10f, 0.35f), Sky)
+    drawPath(leaf(s, 0.42f, 0.44f, 0.58f, 0.12f, 0.35f), Sky)
+    drawPath(path(s, 0.32f to 0.50f, 0.06f to 0.64f, 0.12f to 0.48f), Rose)
+}
+
+/** Asia Duet mode: a half-black, half-white token. */
+private val duetToken: Glyph = { s ->
+    disc(s, 0.50f, 0.50f, 0.40f, Color.White, Edge)
+    drawArc(Color(0xFF2B2B2D), 90f, 180f, true, at(s, 0.10f, 0.10f), Size(0.80f * s, 0.80f * s))
+    disc(s, 0.50f, 0.30f, 0.20f, Color(0xFF2B2B2D))
+    disc(s, 0.50f, 0.70f, 0.20f, Color.White)
+}
+
 val WingspanDesign = ScoreSheetDesign(
     emblem = bird,
     glyphs = mapOf(
@@ -124,6 +142,8 @@ val WingspanDesign = ScoreSheetDesign(
         "nectar.forest" to habitatForest,
         "nectar.grassland" to habitatGrassland,
         "nectar.wetland" to habitatWetland,
+        "hummingbirds" to hummingbird,
+        "duet" to duetToken,
         "tie.food" to unusedFood
     )
 )
