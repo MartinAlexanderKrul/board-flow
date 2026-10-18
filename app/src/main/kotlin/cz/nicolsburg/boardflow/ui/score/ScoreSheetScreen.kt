@@ -1,10 +1,13 @@
 package cz.nicolsburg.boardflow.ui.score
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -13,19 +16,21 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -34,28 +39,36 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -64,7 +77,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cz.nicolsburg.boardflow.model.CountRow
 import cz.nicolsburg.boardflow.model.MajorityRow
 import cz.nicolsburg.boardflow.model.PointsRow
@@ -72,26 +84,53 @@ import cz.nicolsburg.boardflow.model.ScoreSheet
 import cz.nicolsburg.boardflow.model.ScoreSheetDraft
 import cz.nicolsburg.boardflow.model.ScoreSheetResult
 import cz.nicolsburg.boardflow.model.ScoreSheetScoring
+import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCard
+import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationDialog
+import cz.nicolsburg.boardflow.ui.common.BoardFlowConfirmationKind
+import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
+import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
+import cz.nicolsburg.boardflow.ui.common.GameBackdrop
+import cz.nicolsburg.boardflow.ui.common.GameCover
+import cz.nicolsburg.boardflow.ui.common.PlayerAvatar
+import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.theme.Dimens
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 
-private val ColumnWidth = 68.dp
-private val AddColumnWidth = 48.dp
-private val MinLabelWidth = 132.dp
-private val RowHeight = 52.dp
-private val RowWithHintHeight = 64.dp
-private val SubRowHeight = 44.dp
+private val ColumnWidth = 72.dp
+private val AddColumnWidth = 56.dp
+private val MinLabelWidth = 136.dp
+/** Below this the labels go compact (smaller text and icons) so long names still wrap by word. */
+private val CompactLabelWidth = 176.dp
+private val NameRowHeight = 76.dp
+private val RowHeight = 56.dp
+private val RowWithHintHeight = 68.dp
+private val SubRowHeight = 52.dp
+private val FadeWidth = 28.dp
+
+// Rows separate by tone, not lines: every other row and the total are a shade lighter.
+private val BandTint = Color.White.copy(alpha = 0.035f)
+private val TotalTint = Color.White.copy(alpha = 0.07f)
 
 /**
- * One game's score pad: rows from its [ScoreSheet], the look from its [ScoreSheetDesign].
- * Values type into a column per player (keyboard Next goes down the column); totals, places and
- * the winner follow at once. A tiebreaker row appears only while players are tied for the win.
+ * One game's score pad, in the app's own look: the game art and name on top like the play form,
+ * the pad on a plain tonal card, the winner in translucent amber. What is the game's own is the
+ * rows (its [ScoreSheet]) and the drawn icons (its [ScoreSheetDesign]).
+ *
+ * A column per player, headed by their avatar (tap to rename or remove). Keyboard Next goes down a
+ * column, then to the top of the next player's, and the column being typed in is marked. With more
+ * players than fit, the columns scroll sideways together and fade at the edge that has more. Once
+ * the names scroll off the top, a bar with every player's running total stays pinned there.
+ * A tiebreaker row appears only while players are tied for the win.
  */
 @Composable
 fun ScoreSheetScreen(
     sheet: ScoreSheet,
     draft: ScoreSheetDraft,
+    gameName: String,
+    thumbnailUrl: String?,
     onDraftChange: (ScoreSheetDraft) -> Unit,
     onApply: () -> Unit,
     onClear: () -> Unit,
@@ -99,119 +138,197 @@ fun ScoreSheetScreen(
 ) {
     val design = remember(sheet.id) { scoreSheetDesign(sheet.id) }
     val result = remember(sheet, draft) { ScoreSheetScoring.score(sheet, draft) }
+    val scroll = rememberScrollState()
+    val hScroll = rememberScrollState()
     var confirmClear by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf<Int?>(null) }
+    var focusedPlayer by remember { mutableStateOf<Int?>(null) }
+    var viewportTop by remember { mutableFloatStateOf(0f) }
+    var namesBottom by remember { mutableFloatStateOf(Float.MAX_VALUE) }
 
     if (confirmClear) {
-        AlertDialog(
-            onDismissRequest = { confirmClear = false },
-            title = { Text("Clear the score sheet?") },
-            text = { Text("Every value typed on this sheet is removed. Player names stay.") },
-            confirmButton = {
-                TextButton(onClick = { confirmClear = false; onClear() }) {
-                    Text("Clear", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmClear = false }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.onSurface)
-                }
-            }
+        BoardFlowConfirmationDialog(
+            title = "Clear the score sheet?",
+            message = "Every value typed on this sheet is removed. Player names stay.",
+            confirmLabel = "Clear",
+            kind = BoardFlowConfirmationKind.DESTRUCTIVE,
+            onConfirm = { confirmClear = false; onClear() },
+            onDismiss = { confirmClear = false }
         )
     }
+    renaming?.let { index ->
+        if (index in draft.players.indices) {
+            PlayerNameDialog(
+                initial = draft.players[index],
+                canRemove = draft.players.size > 1,
+                onSave = { onDraftChange(draft.renamed(index, it.trim())); renaming = null },
+                onRemove = {
+                    onDraftChange(draft.withoutPlayer(index))
+                    if (focusedPlayer == index) focusedPlayer = null
+                    renaming = null
+                },
+                onDismiss = { renaming = null }
+            )
+        } else {
+            renaming = null
+        }
+    }
 
-    Column(
+    BoxWithConstraints(
         modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .imePadding()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+            .onGloballyPositioned { viewportTop = it.positionInRoot().y }
     ) {
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = design.paper,
-            border = BorderStroke(1.dp, design.line)
-        ) {
-            Column {
-                design.header()
-                if (sheet.modules.isNotEmpty()) {
-                    ModuleToggles(sheet, draft, design, onDraftChange)
-                }
-                SheetGrid(sheet, draft, result, design, onDraftChange)
-                ResultSummary(draft, result, design)
-            }
-        }
+        // Player columns keep their width; the label column takes what is left of the card.
+        val canAddPlayer = draft.players.size < sheet.maxPlayers
+        val columnsWidth = ColumnWidth * draft.players.size + if (canAddPlayer) AddColumnWidth else 0.dp
+        val labelWidth = (maxWidth - Spacing.lg * 2 - columnsWidth).coerceAtLeast(MinLabelWidth)
+        val geometry = GridGeometry(labelWidth, hScroll, if (canAddPlayer) AddColumnWidth else 0.dp)
 
-        BoardFlowButton(
-            onClick = onApply,
-            enabled = result.hasInput,
-            modifier = Modifier.fillMaxWidth()
+        // Game art behind the header, scrolling away with it, like the play form.
+        GameBackdrop(
+            imageUrl = thumbnailUrl,
+            height = 220.dp,
+            baseBlur = 1.5.dp,
+            fadeTo = MaterialTheme.colorScheme.background,
+            modifier = Modifier.graphicsLayer { translationY = -scroll.value.toFloat() }
+        )
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(scroll)
+                .imePadding()
+                .padding(horizontal = Spacing.lg)
+                .padding(top = Spacing.lg, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(Spacing.sm))
-            Text("Use these scores")
-        }
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            SheetHeader(gameName, thumbnailUrl, design)
+
+            BoardFlowCard(
+                contentPadding = PaddingValues(vertical = Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                // Expansion switches sit on the card, not on the game art above it.
+                if (sheet.modules.isNotEmpty()) {
+                    ModuleChips(sheet, draft, onDraftChange)
+                }
+                SheetGrid(
+                    sheet = sheet,
+                    draft = draft,
+                    result = result,
+                    design = design,
+                    geometry = geometry,
+                    canAddPlayer = canAddPlayer,
+                    focusedPlayer = focusedPlayer,
+                    onFocusPlayer = { focusedPlayer = it },
+                    onRename = { renaming = it },
+                    onAddPlayer = {
+                        onDraftChange(draft.withPlayer(""))
+                        renaming = draft.players.size
+                    },
+                    onNamesBottom = { namesBottom = it },
+                    onDraftChange = onDraftChange
+                )
+            }
+
+            ResultSummary(draft, result)
+
             Text(
                 "Totals and the winner go to the play form, where you can still change them.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.padding(horizontal = Spacing.xs)
             )
-            BoardFlowInlineAction(onClick = { confirmClear = true }, enabled = result.hasInput, neutral = true) {
-                Text("Clear sheet")
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BoardFlowInlineAction(
+                    onClick = { confirmClear = true },
+                    enabled = result.hasInput,
+                    neutral = true,
+                    large = true
+                ) { Text("Clear sheet") }
+                BoardFlowButton(onClick = onApply, enabled = result.hasInput) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
+                    Spacer(Modifier.width(Spacing.sm))
+                    Text("Use these scores")
+                }
             }
         }
-        Spacer(Modifier.height(Spacing.lg))
+
+        // Names and running totals stay in view once the name row scrolls off the top.
+        AnimatedVisibility(
+            visible = namesBottom < viewportTop,
+            enter = fadeIn() + slideInVertically { -it },
+            exit = fadeOut() + slideOutVertically { -it }
+        ) {
+            PinnedTotals(draft, result, geometry, focusedPlayer)
+        }
+    }
+}
+
+@Composable
+private fun SheetHeader(gameName: String, thumbnailUrl: String?, design: ScoreSheetDesign) {
+    val titleShadow = Shadow(color = Color.Black.copy(alpha = 0.7f), blurRadius = 16f)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = Spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        GameCover(name = gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SheetGlyph(design.emblem, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "Score sheet",
+                    style = MaterialTheme.typography.labelLarge.copy(shadow = titleShadow),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                )
+            }
+            Text(
+                gameName,
+                style = MaterialTheme.typography.headlineMedium.copy(shadow = titleShadow),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ModuleToggles(
+private fun ModuleChips(
     sheet: ScoreSheet,
     draft: ScoreSheetDraft,
-    design: ScoreSheetDesign,
     onDraftChange: (ScoreSheetDraft) -> Unit
 ) {
     FlowRow(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         for (module in sheet.modules) {
             val on = module.id in draft.enabledModules
-            val fill by animateColorAsState(if (on) design.accent else Color.Transparent, label = "moduleFill")
-            Row(
-                Modifier
-                    .background(fill, RoundedCornerShape(50))
-                    .border(1.dp, design.accent, RoundedCornerShape(50))
-                    .clickable {
-                        val modules = if (on) draft.enabledModules - module.id else draft.enabledModules + module.id
-                        onDraftChange(draft.copy(enabledModules = modules))
-                    }
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (on) {
-                    Icon(Icons.Default.Check, contentDescription = null, tint = design.onAccent, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                }
-                Text(
-                    module.name,
-                    color = if (on) design.onAccent else design.accent,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            BoardFlowFilterChip(
+                selected = on,
+                onClick = {
+                    val modules = if (on) draft.enabledModules - module.id else draft.enabledModules + module.id
+                    onDraftChange(draft.copy(enabledModules = modules))
+                },
+                label = { Text(module.name) },
+                leadingIcon = if (on) {
+                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.IconSmall)) }
+                } else null
+            )
         }
     }
-    HorizontalDivider(color = design.line)
 }
 
 @Composable
@@ -220,158 +337,153 @@ private fun SheetGrid(
     draft: ScoreSheetDraft,
     result: ScoreSheetResult,
     design: ScoreSheetDesign,
+    geometry: GridGeometry,
+    canAddPlayer: Boolean,
+    focusedPlayer: Int?,
+    onFocusPlayer: (Int) -> Unit,
+    onRename: (Int) -> Unit,
+    onAddPlayer: () -> Unit,
+    onNamesBottom: (Float) -> Unit,
     onDraftChange: (ScoreSheetDraft) -> Unit
 ) {
-    val hScroll = rememberScrollState()
     val players = draft.players.indices.toList()
-    val canAddPlayer = draft.players.size < sheet.maxPlayers
 
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        // Player columns keep their width; the label column takes what is left (and the columns
-        // scroll sideways, all rows together, when there are too many players to fit).
-        val columnsWidth = ColumnWidth * players.size + if (canAddPlayer) AddColumnWidth else 0.dp
-        val labelWidth = (maxWidth - columnsWidth).coerceAtLeast(MinLabelWidth)
-        val geometry = GridGeometry(labelWidth, hScroll)
+    // Keyboard Next goes down a player's column, then to the top of the next player's.
+    val visibleRows = sheet.rowsFor(draft.enabledModules)
+    val inputOrder = visibleRows.flatMap { it.inputKeys }
+    val requesters = remember { mutableMapOf<String, FocusRequester>() }
+    fun requester(p: Int, key: String) = requesters.getOrPut("$p|$key") { FocusRequester() }
+    fun next(p: Int, key: String): FocusRequester? {
+        val i = inputOrder.indexOf(key)
+        return when {
+            i >= 0 && i < inputOrder.lastIndex -> requester(p, inputOrder[i + 1])
+            p < players.lastIndex && inputOrder.isNotEmpty() -> requester(p + 1, inputOrder.first())
+            else -> null
+        }
+    }
 
-        // Keyboard Next goes down a player's column, then to the top of the next player's.
-        val visibleRows = sheet.rowsFor(draft.enabledModules)
-        val inputOrder = visibleRows.flatMap { it.inputKeys }
-        val requesters = remember { mutableMapOf<String, FocusRequester>() }
-        fun requester(p: Int, key: String) = requesters.getOrPut("$p|$key") { FocusRequester() }
-        fun next(p: Int, key: String): FocusRequester? {
-            val i = inputOrder.indexOf(key)
-            return when {
-                i >= 0 && i < inputOrder.lastIndex -> requester(p, inputOrder[i + 1])
-                p < players.lastIndex && inputOrder.isNotEmpty() -> requester(p + 1, inputOrder.first())
-                else -> null
+    Column {
+        // Names
+        SheetLine(
+            geometry,
+            NameRowHeight,
+            Color.Transparent,
+            padTrailing = false,
+            modifier = Modifier.onGloballyPositioned {
+                onNamesBottom(it.positionInRoot().y + it.size.height)
+            },
+            label = {
+                Text(
+                    "Tap a player to rename",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        ) {
+            for (p in players) {
+                PlayerHeader(
+                    name = draft.players[p],
+                    placeholder = "Player ${p + 1}",
+                    isWinner = p in result.winners,
+                    isFocused = p == focusedPlayer,
+                    onClick = { onRename(p) }
+                )
+            }
+            if (canAddPlayer) {
+                AddPlayerColumn(onAddPlayer)
             }
         }
 
-        Column {
-            // Names
-            SheetLine(geometry, RowHeight, design.paper, label = {}) {
-                for (p in players) {
-                    NameCell(
-                        name = draft.players[p],
-                        placeholder = "Player ${p + 1}",
-                        isWinner = p in result.winners,
-                        design = design,
-                        onName = { onDraftChange(draft.renamed(p, it)) }
-                    )
-                }
-                if (canAddPlayer) {
-                    Box(Modifier.width(AddColumnWidth).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                        Box(
-                            Modifier
-                                .size(32.dp)
-                                .border(1.dp, design.accent, RoundedCornerShape(50))
-                                .clickable { onDraftChange(draft.withPlayer("")) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add player", tint = design.accent, modifier = Modifier.size(18.dp))
+        var band = true
+        for (row in visibleRows) {
+            val background = if (band) BandTint else Color.Transparent
+            band = !band
+            when (row) {
+                is PointsRow, is CountRow -> {
+                    val multiplier = (row as? CountRow)?.pointsEach?.takeIf { it != 1 }
+                    SheetLine(
+                        geometry,
+                        if (row.hint != null) RowWithHintHeight else RowHeight,
+                        background,
+                        label = { RowLabel(design, row.id, row.label, row.hint, badge = multiplier?.let { "×$it" }, compact = geometry.compact) }
+                    ) {
+                        for (p in players) {
+                            InputCell(
+                                value = draft.value(p, row.id),
+                                focusRequester = requester(p, row.id),
+                                next = next(p, row.id),
+                                caption = multiplier?.let { m -> draft.value(p, row.id)?.let { "= ${it * m}" } },
+                                onFocused = { onFocusPlayer(p) },
+                                onValue = { onDraftChange(draft.withValue(p, row.id, it)) }
+                            )
                         }
                     }
                 }
-            }
-            HorizontalDivider(color = design.line)
-
-            var band = false
-            for (row in visibleRows) {
-                band = !band
-                val background = if (band) design.paperBand else design.paper
-                when (row) {
-                    is PointsRow, is CountRow -> {
-                        val multiplier = (row as? CountRow)?.pointsEach?.takeIf { it != 1 }
+                is MajorityRow -> {
+                    SheetLine(
+                        geometry,
+                        if (row.hint != null) RowWithHintHeight else RowHeight,
+                        background,
+                        label = { RowLabel(design, row.id, row.label, row.hint, compact = geometry.compact) }
+                    ) {
+                        for (p in players) {
+                            ComputedCell(result.rowPoints[row.id]?.getOrNull(p) ?: 0)
+                        }
+                    }
+                    for (group in row.groups) {
+                        val key = row.groupKey(group)
                         SheetLine(
                             geometry,
-                            if (row.hint != null) RowWithHintHeight else RowHeight,
+                            SubRowHeight,
                             background,
-                            label = {
-                                RowLabel(design, row.id, row.label, row.hint, badge = multiplier?.let { "×$it" })
-                            }
+                            label = { RowLabel(design, key, group.label, hint = null, indent = true, compact = geometry.compact) }
                         ) {
                             for (p in players) {
                                 InputCell(
-                                    value = draft.value(p, row.id),
-                                    design = design,
-                                    focusRequester = requester(p, row.id),
-                                    next = next(p, row.id),
-                                    caption = multiplier?.let { m -> draft.value(p, row.id)?.let { "= ${it * m}" } },
-                                    onValue = { onDraftChange(draft.withValue(p, row.id, it)) }
+                                    value = draft.value(p, key),
+                                    focusRequester = requester(p, key),
+                                    next = next(p, key),
+                                    caption = result.groupPoints[key]?.getOrNull(p)?.takeIf { it > 0 }?.let { "+$it" },
+                                    onFocused = { onFocusPlayer(p) },
+                                    onValue = { onDraftChange(draft.withValue(p, key, it)) }
                                 )
                             }
                         }
                     }
-                    is MajorityRow -> {
-                        SheetLine(
-                            geometry,
-                            if (row.hint != null) RowWithHintHeight else RowHeight,
-                            background,
-                            label = { RowLabel(design, row.id, row.label, row.hint) }
-                        ) {
-                            for (p in players) {
-                                ComputedCell(result.rowPoints[row.id]?.getOrNull(p) ?: 0, design, bold = true)
-                            }
-                        }
-                        for (group in row.groups) {
-                            val key = row.groupKey(group)
-                            SheetLine(
-                                geometry,
-                                SubRowHeight,
-                                background,
-                                label = { RowLabel(design, key, group.label, hint = null, indent = true) }
-                            ) {
-                                for (p in players) {
-                                    InputCell(
-                                        value = draft.value(p, key),
-                                        design = design,
-                                        focusRequester = requester(p, key),
-                                        next = next(p, key),
-                                        compact = true,
-                                        caption = result.groupPoints[key]?.getOrNull(p)?.takeIf { it > 0 }?.let { "+$it" },
-                                        onValue = { onDraftChange(draft.withValue(p, key, it)) }
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
-                HorizontalDivider(color = design.line)
             }
+        }
 
-            // Total
-            SheetLine(geometry, RowHeight, design.accent, label = {
-                Text(
-                    "Total",
-                    color = design.onAccent,
-                    fontFamily = design.titleFont,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
-                )
+        // Total
+        SheetLine(geometry, RowHeight, TotalTint, label = {
+            Text(
+                "Total",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }) {
+            for (p in players) {
+                TotalCell(result.totals.getOrElse(p) { 0 }, isWinner = p in result.winners)
+            }
+        }
+
+        // Tiebreakers, only while they matter
+        for (tiebreaker in result.shownTiebreakers) {
+            val tied = result.tiedPlayers[tiebreaker.id].orEmpty()
+            SheetLine(geometry, RowWithHintHeight, Color.Transparent, label = {
+                RowLabel(design, tiebreaker.inputKey, tiebreaker.label, hint = "Tiebreaker", compact = geometry.compact)
             }) {
                 for (p in players) {
-                    TotalCell(result.totals.getOrElse(p) { 0 }, isWinner = p in result.winners, design = design)
-                }
-            }
-
-            // Tiebreakers, only while they matter
-            for (tiebreaker in result.shownTiebreakers) {
-                val tied = result.tiedPlayers[tiebreaker.id].orEmpty()
-                HorizontalDivider(color = design.line)
-                SheetLine(geometry, RowWithHintHeight, design.paperBand, label = {
-                    RowLabel(design, tiebreaker.inputKey, tiebreaker.label, hint = "Tiebreaker")
-                }) {
-                    for (p in players) {
-                        if (p in tied) {
-                            InputCell(
-                                value = draft.value(p, tiebreaker.inputKey),
-                                design = design,
-                                onValue = { onDraftChange(draft.withValue(p, tiebreaker.inputKey, it)) }
-                            )
-                        } else {
-                            Box(Modifier.width(ColumnWidth), contentAlignment = Alignment.Center) {
-                                Text("–", color = design.inkMuted)
-                            }
+                    if (p in tied) {
+                        InputCell(
+                            value = draft.value(p, tiebreaker.inputKey),
+                            onFocused = { onFocusPlayer(p) },
+                            onValue = { onDraftChange(draft.withValue(p, tiebreaker.inputKey, it)) }
+                        )
+                    } else {
+                        Box(Modifier.width(ColumnWidth), contentAlignment = Alignment.Center) {
+                            Text("–", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -380,39 +492,75 @@ private fun SheetGrid(
     }
 }
 
-private class GridGeometry(val labelWidth: Dp, val hScroll: ScrollState)
+/**
+ * Shared by every row so the columns line up and scroll as one. [trailing] is the width of the
+ * name row's Add column: every other row leaves the same space, so all rows are equally wide
+ * (one scroll position is shared, and a narrower row would cap how far it can go).
+ */
+private class GridGeometry(val labelWidth: Dp, val hScroll: ScrollState, val trailing: Dp) {
+    val compact: Boolean get() = labelWidth < CompactLabelWidth
+}
 
 @Composable
 private fun SheetLine(
     geometry: GridGeometry,
     height: Dp,
     background: Color,
+    modifier: Modifier = Modifier,
+    /** False for the name row, which fills the trailing space with its Add column. */
+    padTrailing: Boolean = true,
     label: @Composable () -> Unit,
     cells: @Composable RowScope.() -> Unit
 ) {
+    // At least [height]; taller when a label and its hint need more lines.
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
-            .height(height)
-            .background(background)
+            .heightIn(min = height)
+            .background(background),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             Modifier
                 .width(geometry.labelWidth)
-                .fillMaxHeight()
-                .padding(start = 12.dp, end = 6.dp),
+                .padding(start = Spacing.lg, end = Spacing.xs, top = Spacing.sm, bottom = Spacing.sm),
             contentAlignment = Alignment.CenterStart
         ) { label() }
         Row(
             Modifier
                 .weight(1f)
-                .fillMaxHeight()
+                .fadingEdges(geometry.hScroll)
                 .horizontalScroll(geometry.hScroll),
-            verticalAlignment = Alignment.CenterVertically,
-            content = cells
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            cells()
+            if (padTrailing && geometry.trailing > 0.dp) Spacer(Modifier.width(geometry.trailing))
+        }
     }
 }
+
+/** Fades the player columns out at an edge that has more columns past it. */
+private fun Modifier.fadingEdges(state: ScrollState): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        val fade = FadeWidth.toPx()
+        if (state.value > 0) {
+            drawRect(
+                Brush.horizontalGradient(listOf(Color.Transparent, Color.Black), startX = 0f, endX = fade),
+                size = Size(fade, size.height),
+                blendMode = BlendMode.DstIn
+            )
+        }
+        if (state.value < state.maxValue) {
+            drawRect(
+                Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), startX = size.width - fade, endX = size.width),
+                topLeft = Offset(size.width - fade, 0f),
+                size = Size(fade, size.height),
+                blendMode = BlendMode.DstIn
+            )
+        }
+    }
 
 @Composable
 private fun RowLabel(
@@ -421,43 +569,41 @@ private fun RowLabel(
     label: String,
     hint: String?,
     badge: String? = null,
-    indent: Boolean = false
+    indent: Boolean = false,
+    compact: Boolean = false
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        if (indent) Spacer(Modifier.width(12.dp))
+        if (indent) Spacer(Modifier.width(if (compact) Spacing.sm else Spacing.md))
         val glyph = design.glyphs[glyphKey]
         if (glyph != null) {
-            SheetGlyph(glyph, Modifier.size(if (indent) 20.dp else 28.dp))
-            Spacer(Modifier.width(8.dp))
+            SheetGlyph(glyph, Modifier.size(if (indent || compact) 18.dp else 24.dp))
+            Spacer(Modifier.width(if (compact) Spacing.sm else Spacing.md))
         }
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     label,
-                    color = design.ink,
-                    fontFamily = design.titleFont,
-                    fontWeight = if (indent) FontWeight.Normal else FontWeight.SemiBold,
-                    style = if (indent) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
+                    style = if (indent || compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 if (badge != null) {
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(Spacing.xs))
                     Text(
                         badge,
-                        color = design.accent,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             if (hint != null) {
                 Text(
                     hint,
-                    color = design.inkMuted,
-                    style = MaterialTheme.typography.labelSmall.copy(lineHeight = 13.sp),
-                    maxLines = 2,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis
                 )
             }
@@ -465,69 +611,114 @@ private fun RowLabel(
     }
 }
 
+/** A player's avatar and name, centred over their column; the trophy marks the winner. */
 @Composable
-private fun NameCell(
+private fun PlayerHeader(
     name: String,
     placeholder: String,
     isWinner: Boolean,
-    design: ScoreSheetDesign,
-    onName: (String) -> Unit
+    isFocused: Boolean,
+    onClick: () -> Unit
 ) {
-    val focusManager = LocalFocusManager.current
+    val shown = name.trim().ifEmpty { placeholder }
     Column(
-        Modifier.width(ColumnWidth).fillMaxHeight(),
+        Modifier
+            .width(ColumnWidth)
+            .height(NameRowHeight)
+            .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(Modifier.height(16.dp), contentAlignment = Alignment.Center) {
+        Box {
+            PlayerAvatar(name = shown, size = 32.dp)
             if (isWinner) {
-                Icon(Icons.Default.EmojiEvents, contentDescription = "Winner", tint = design.winner, modifier = Modifier.size(16.dp))
-            }
-        }
-        BasicTextField(
-            value = name,
-            onValueChange = { onName(it.take(24)) },
-            singleLine = true,
-            textStyle = TextStyle(
-                color = if (isWinner) design.winner else design.ink,
-                fontFamily = design.titleFont,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center
-            ),
-            cursorBrush = SolidColor(design.accent),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-            modifier = Modifier.padding(horizontal = 4.dp),
-            decorationBox = { inner ->
-                Box(contentAlignment = Alignment.Center) {
-                    if (name.isEmpty()) {
-                        Text(placeholder, color = design.inkMuted, fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 1)
-                    }
-                    inner()
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 6.dp, y = (-6).dp)
+                        .size(18.dp)
+                ) {
+                    Icon(
+                        Icons.Default.EmojiEvents,
+                        contentDescription = "Winner",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(2.dp)
+                    )
                 }
             }
+        }
+        Spacer(Modifier.height(Spacing.xs))
+        Text(
+            shown,
+            style = MaterialTheme.typography.labelMedium,
+            color = when {
+                isWinner -> MaterialTheme.colorScheme.primary
+                name.isBlank() -> MaterialTheme.colorScheme.onSurfaceVariant
+                else -> MaterialTheme.colorScheme.onSurface
+            },
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.xs)
         )
+        // The column being typed in.
+        Box(
+            Modifier
+                .padding(top = 3.dp)
+                .width(20.dp)
+                .height(2.dp)
+                .background(
+                    if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    BoardFlowShape.Pill
+                )
+        )
+    }
+}
+
+@Composable
+private fun AddPlayerColumn(onClick: () -> Unit) {
+    Column(
+        Modifier
+            .width(AddColumnWidth)
+            .height(NameRowHeight)
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(32.dp)) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Add player",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(Dimens.Icon)
+                )
+            }
+        }
+        Spacer(Modifier.height(Spacing.xs))
+        Text("Add", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(5.dp))
     }
 }
 
 @Composable
 private fun InputCell(
     value: Int?,
-    design: ScoreSheetDesign,
     onValue: (Int?) -> Unit,
+    onFocused: () -> Unit,
     focusRequester: FocusRequester? = null,
     /** Where Next goes; null closes the keyboard (tiebreakers just move down). */
     next: FocusRequester? = null,
-    compact: Boolean = false,
     caption: String? = null
 ) {
     val focusManager = LocalFocusManager.current
     var text by remember(value) { mutableStateOf(value?.toString() ?: "") }
-    Column(
-        Modifier.width(ColumnWidth),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    var focused by remember { mutableStateOf(false) }
+    Column(Modifier.width(ColumnWidth), horizontalAlignment = Alignment.CenterHorizontally) {
         BasicTextField(
             value = text,
             onValueChange = { typed ->
@@ -536,14 +727,11 @@ private fun InputCell(
                 onValue(digits.toIntOrNull())
             },
             singleLine = true,
-            textStyle = TextStyle(
-                color = design.ink,
-                fontFamily = design.titleFont,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = if (compact) 15.sp else 18.sp,
+            textStyle = MaterialTheme.typography.titleMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             ),
-            cursorBrush = SolidColor(design.accent),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = {
                 when {
@@ -551,63 +739,174 @@ private fun InputCell(
                     focusRequester != null || !focusManager.moveFocus(FocusDirection.Down) -> focusManager.clearFocus()
                 }
             }),
-            modifier = if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
+            modifier = (if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                .onFocusChanged {
+                    focused = it.isFocused
+                    if (it.isFocused) onFocused()
+                },
             decorationBox = { inner ->
                 Box(
                     Modifier
-                        .width(ColumnWidth - 14.dp)
-                        .height(if (compact) 30.dp else 36.dp)
-                        .background(design.cell, RoundedCornerShape(8.dp))
-                        .border(1.dp, design.line, RoundedCornerShape(8.dp)),
+                        .width(ColumnWidth - Spacing.lg)
+                        .height(40.dp)
+                        .background(
+                            if (focused) MaterialTheme.colorScheme.surfaceContainerHighest
+                            else MaterialTheme.colorScheme.surfaceVariant,
+                            BoardFlowShape.Cover
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (text.isEmpty()) Text("·", color = design.inkMuted, fontSize = 18.sp)
+                    if (text.isEmpty()) {
+                        Text(
+                            "–",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                    }
                     inner()
                 }
             }
         )
         if (caption != null) {
-            Text(caption, color = design.accent, fontSize = 10.sp, fontWeight = FontWeight.Bold, lineHeight = 11.sp)
+            Text(caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun ComputedCell(points: Int, design: ScoreSheetDesign, bold: Boolean = false) {
+private fun ComputedCell(points: Int) {
     Box(Modifier.width(ColumnWidth), contentAlignment = Alignment.Center) {
         Text(
             points.toString(),
-            color = design.ink,
-            fontFamily = design.titleFont,
-            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-            fontSize = 18.sp
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
 
 @Composable
-private fun TotalCell(total: Int, isWinner: Boolean, design: ScoreSheetDesign) {
-    val fill by animateColorAsState(if (isWinner) design.winner else Color.Transparent, label = "totalFill")
+private fun TotalCell(total: Int, isWinner: Boolean) {
+    val primary = MaterialTheme.colorScheme.primary
+    val fill by animateColorAsState(if (isWinner) primary.copy(alpha = 0.16f) else Color.Transparent, label = "totalFill")
     Box(Modifier.width(ColumnWidth), contentAlignment = Alignment.Center) {
         Box(
             Modifier
-                .background(fill, RoundedCornerShape(10.dp))
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .background(fill, BoardFlowShape.Pill)
+                .padding(horizontal = Spacing.md, vertical = Spacing.xs),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 total.toString(),
-                color = if (isWinner) design.onWinner else design.onAccent,
-                fontFamily = design.titleFont,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
+                color = if (isWinner) primary else MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
 
+/** Every player's name and running total, pinned to the top while the rows scroll under it. */
 @Composable
-private fun ResultSummary(draft: ScoreSheetDraft, result: ScoreSheetResult, design: ScoreSheetDesign) {
+private fun PinnedTotals(
+    draft: ScoreSheetDraft,
+    result: ScoreSheetResult,
+    geometry: GridGeometry,
+    focusedPlayer: Int?
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = BoardFlowShape.Card,
+        shadowElevation = 6.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+    ) {
+        SheetLine(geometry, 52.dp, Color.Transparent, label = {
+            Text(
+                "Total so far",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }) {
+            draft.players.forEachIndexed { p, raw ->
+                val isWinner = p in result.winners
+                val name = raw.trim().ifEmpty { "Player ${p + 1}" }
+                Column(Modifier.width(ColumnWidth), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = when {
+                            isWinner || p == focusedPlayer -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.xs)
+                    )
+                    Text(
+                        result.totals.getOrElse(p) { 0 }.toString(),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Renames a player column; a column can also be removed while another stays. */
+@Composable
+private fun PlayerNameDialog(
+    initial: String,
+    canRemove: Boolean,
+    onSave: (String) -> Unit,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf(initial) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    AnimatedDialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier.padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+        ) {
+            Text(
+                if (initial.isBlank()) "Who is playing?" else "Player",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            BoardFlowTextField(
+                value = name,
+                onValueChange = { name = it.take(24) },
+                label = { Text("Name") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onSave(name) }),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focus)
+            )
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (canRemove) {
+                    BoardFlowInlineAction(onClick = onRemove, destructive = true, large = true) { Text("Remove") }
+                }
+                Spacer(Modifier.weight(1f))
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
+                Spacer(Modifier.width(Spacing.sm))
+                BoardFlowButton(onClick = { onSave(name) }) { Text("Save") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultSummary(draft: ScoreSheetDraft, result: ScoreSheetResult) {
     fun name(p: Int) = draft.players.getOrNull(p)?.trim().orEmpty().ifBlank { "Player ${p + 1}" }
     fun names(ps: Collection<Int>) = ps.map(::name).let {
         if (it.size <= 1) it.joinToString() else it.dropLast(1).joinToString(", ") + " and " + it.last()
@@ -623,17 +922,15 @@ private fun ResultSummary(draft: ScoreSheetDraft, result: ScoreSheetResult, desi
         result.winners.size > 1 -> "${names(result.winners)} share the win at ${result.totals[result.winners.first()]}."
         result.winners.size == 1 -> {
             val winner = result.winners.first()
-            val decided = result.decidedBy?.let { " — on ${it.label.lowercase()}" }.orEmpty()
+            val decided = result.decidedBy?.let { ", on ${it.label.lowercase()}" }.orEmpty()
             "${name(winner)} wins with ${result.totals[winner]} points$decided."
         }
         else -> ""
     }
     Text(
         text,
-        color = design.ink,
-        fontFamily = design.titleFont,
-        fontStyle = FontStyle.Italic,
         style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(horizontal = Spacing.xs)
     )
 }

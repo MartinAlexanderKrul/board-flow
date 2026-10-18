@@ -110,6 +110,11 @@ data class ScoreSheetDraft(
 
     fun withPlayer(name: String): ScoreSheetDraft = copy(players = players + name, values = values + listOf(emptyMap()))
 
+    fun withoutPlayer(player: Int): ScoreSheetDraft = copy(
+        players = players.filterIndexed { i, _ -> i != player },
+        values = values.filterIndexed { i, _ -> i != player }
+    )
+
     fun renamed(player: Int, name: String): ScoreSheetDraft =
         copy(players = players.toMutableList().also { it[player] = name })
 }

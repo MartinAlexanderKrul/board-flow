@@ -104,7 +104,7 @@ Source: `ui/review/LogPlayScreen.kt`
 - Main group: Date, Duration, Location, Notes. **More options:** Quantity, Incomplete play, Count in BGG stats
 - "Also log an expansion" chips (`RelatedGamesBanner`)
 - Players: suggested player pills (under a "Suggested" label), `Add player`, `Scan`, and a `PlayerResultEditorCard` for each player
-- `ScoreSheetEntryCard` above the players when the game (or a logged expansion) has a score sheet: the sheet's own paper, three of its row icons, "<Game> score sheet" ("Continue score sheet" once values are typed); opens Score sheet
+- `ScoreSheetEntryCard` above the players when the game (or a logged expansion) has a score sheet: a plain card with three of the sheet's row icons, "Score sheet" ("Continue score sheet" once values are typed) and a grey chevron; opens Score sheet
 - Scan banners: `ScanResultBanner`, `GameSuggestionBanner`, `ScanRetryBanner`; `AiOutputCard` with the raw response and model
 - Bottom bar: player count, date and "saved on this device" when offline, and `Log play` / `Save locally`
 - `PostSaveCard` after saving: headline (record moment), players with a translucent amber winner row, challenge progress (completed ones in green), `Play again`, `Edit play`, `Change game`, and "Try next" picks
@@ -126,15 +126,17 @@ Source: `ui/setup/QuickSetupScreen.kt`
 
 ## Score sheet
 
-Source: `ui/score/ScoreSheetScreen.kt`, one design per game (`ui/score/WingspanDesign.kt`, `EverdellDesign.kt`)
+Source: `ui/score/ScoreSheetScreen.kt`; each game's row icons and header emblem in `ui/score/WingspanDesign.kt`, `EverdellDesign.kt`
 
-- A paper card in the game's own colours: the game's header, expansion chips (rows of an expansion show while it is on), then the pad: a pinned label column (drawn icon, label, hint, `×2` badge on counted rows) and one column per player that scrolls sideways when the players do not fit. Every other row is tinted, like a printed pad
-- The name row is editable, with a `+` column to add a player up to the sheet's maximum; a crown marks the winner
-- Input cells take numbers only; keyboard Next moves down the player's column. Counted rows show their points under the cell (`= 6`); majority rows (Oceania nectar) show the points per habitat (`+5`) and the row total
-- The accent `Total` row; the winner's total sits on the winner colour
+- The app's own look, like the play form: game art behind the top (`GameBackdrop`), the cover, the game's emblem with "Score sheet", and the game name
+- One plain tonal card (`BoardFlowCard`): expansion chips (`BoardFlowFilterChip`; rows of an expansion show while it is on), then the pad: a pinned label column (drawn icon, label, grey hint, grey `×2` badge on counted rows) and one column per player. Rows separate by tone, every other row a shade lighter
+- Each column is headed by the player's avatar and name, centred; the winner's name is amber with a trophy on the avatar. Tapping a player opens a name dialog (`Remove` in red while another player stays, white `Cancel`, `Save` pill); `Add` at the end of the row adds a player up to the sheet's maximum and opens the dialog straight away
+- More players than fit: the columns scroll sideways together (every row is as wide as the name row, Add included) and fade at an edge with more past it. When the label column is short (under 176dp) the labels go compact (smaller text and icons); hints always show, and a row grows to fit its label
+- Input cells are tonal, numbers only, and lighten while typed in; the column being typed in is marked under its name. Keyboard Next goes down a player's column, then to the top of the next player's (the columns scroll to it). Counted rows show their points under the cell (`= 6`); majority rows (Oceania nectar) show the points per habitat (`+5`) and the row total
+- The `Total` row is a shade lighter; the winner's total sits on translucent amber
+- Once the name row scrolls off the top, a raised bar pinned there shows every player's name and total so far (amber for the leader and the column being typed in)
 - Tiebreaker rows appear only while players are tied for the win, with inputs only for the tied players
-- An italic summary line ("Anna wins with 87 points", "... are tied at 50. Enter unused food to break it.", "... share the win")
-- `Use these scores` (writes totals and winners to the play form and goes back), the note that the form can still change them, and white `Clear sheet` (asks first; names stay)
+- A summary line ("Anna wins with 87 points", "... are tied at 50. Enter unused food to break it.", "... share the win"), a grey note that the form can still change the result, then white `Clear sheet` (`BoardFlowConfirmationDialog`; names stay) and the `Use these scores` pill (writes totals and winners to the play form and goes back)
 
 ## Guide editor
 

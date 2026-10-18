@@ -112,6 +112,15 @@ class ScoreSheetScoringTest {
     }
 
     @Test
+    fun removingAPlayerDropsTheirColumn() {
+        val sheet = ScoreSheets.wingspan
+        val three = draft(sheet, mapOf("birds" to 10), mapOf("birds" to 20), mapOf("birds" to 30))
+        val two = three.withoutPlayer(1)
+        assertEquals(listOf("P0", "P2"), two.players)
+        assertEquals(listOf(10, 30), ScoreSheetScoring.score(sheet, two).totals)
+    }
+
+    @Test
     fun emptySheetHasNoWinner() {
         val sheet = ScoreSheets.everdell
         val result = ScoreSheetScoring.score(sheet, draft(sheet, emptyMap(), emptyMap()))

@@ -1,29 +1,26 @@
 package cz.nicolsburg.boardflow.ui.score
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.model.ScoreSheet
+import cz.nicolsburg.boardflow.ui.common.BoardFlowCard
+import cz.nicolsburg.boardflow.ui.theme.Spacing
 
-/** Log Play's way into a game's score sheet, in that sheet's own paper and ink. */
+/** Log Play's way into a game's score sheet: a plain card with three of the sheet's row icons. */
 @Composable
 fun ScoreSheetEntryCard(
     sheet: ScoreSheet,
@@ -38,35 +35,30 @@ fun ScoreSheetEntryCard(
         labels.take(2).mapIndexed { i, l -> if (i == 0) l else l.lowercase() }.joinToString(", ") +
             if (labels.size > 2) " and more" else ""
     }
-    Surface(
+    BoardFlowCard(
+        modifier = modifier,
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = design.paper,
-        border = BorderStroke(1.dp, design.line)
+        contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.md)
     ) {
         Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy((-4).dp)) {
                 sheet.rows.take(3).forEach { row ->
-                    SheetGlyph(design.glyphs[row.id], Modifier.size(26.dp))
+                    SheetGlyph(design.glyphs[row.id], Modifier.size(24.dp))
                 }
             }
             Column(Modifier.weight(1f)) {
                 Text(
-                    if (hasValues) "Continue score sheet" else "${sheet.gameName} score sheet",
-                    color = design.ink,
-                    fontFamily = design.titleFont,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleSmall
+                    if (hasValues) "Continue score sheet" else "Score sheet",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     preview,
-                    color = design.inkMuted,
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -74,7 +66,7 @@ fun ScoreSheetEntryCard(
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = design.accent
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

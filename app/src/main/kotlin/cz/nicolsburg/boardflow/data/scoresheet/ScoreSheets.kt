@@ -32,7 +32,7 @@ object ScoreSheets {
             MajorityRow(
                 id = "nectar",
                 label = "Nectar",
-                hint = "Nectar spent in each habitat: most 5, second 2",
+                hint = "Per habitat: most 5, second 2",
                 module = "oceania",
                 groups = listOf(
                     ScoreGroup("forest", "Forest"),

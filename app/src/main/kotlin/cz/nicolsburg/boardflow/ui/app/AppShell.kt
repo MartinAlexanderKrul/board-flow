@@ -833,6 +833,8 @@ fun BoardFlowApp(
                     ScoreSheetScreen(
                         sheet = sheet,
                         draft = current,
+                        gameName = appViewModel.selectedGame?.name ?: sheet.gameName,
+                        thumbnailUrl = appViewModel.selectedGame?.thumbnailUrl,
                         onDraftChange = appViewModel::updateScoreSheetDraft,
                         onApply = {
                             appViewModel.applyScoreSheet()
