@@ -14,7 +14,11 @@ import cz.nicolsburg.boardflow.data.GeminiModels
 import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
 import cz.nicolsburg.boardflow.data.chronicle.ChronicleAiConfig
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
+import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheets
 import cz.nicolsburg.boardflow.model.PickTimeSlot
+import cz.nicolsburg.boardflow.model.ScoreSheet
+import cz.nicolsburg.boardflow.model.ScoreSheetDraft
+import cz.nicolsburg.boardflow.model.ScoreSheetScoring
 import cz.nicolsburg.boardflow.model.BggCollectionEntry
 import cz.nicolsburg.boardflow.model.BggCollectionStatus
 import cz.nicolsburg.boardflow.model.CollectionStatusUiState
@@ -863,6 +867,69 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun updatePlayer(index: Int, updated: PlayerResult) { _editablePlayers.value = _editablePlayers.value.toMutableList().also { it[index] = updated } }
     fun addPlayer() { _editablePlayers.value = _editablePlayers.value + PlayerResult("", "", false) }
     fun removePlayer(index: Int) { _editablePlayers.value = _editablePlayers.value.toMutableList().also { it.removeAt(index) } }
+
+    // --- Score sheet ---
+    // The sheet being filled in for the play on the form. It lives as long as the form does, so
+    // going back to the form and in again keeps what was typed.
+    private val _scoreSheetDraft = MutableStateFlow<ScoreSheetDraft?>(null)
+    val scoreSheetDraft: StateFlow<ScoreSheetDraft?> = _scoreSheetDraft.asStateFlow()
+
+    private fun logPlayGameIds(): List<Int> =
+        listOfNotNull(selectedGame?.id?.takeIf { it != 0 }) + _additionalGames.value.map { it.id }
+
+    /** The score sheet for the game on the form (or one of its expansions), if it has one. */
+    fun scoreSheetForLogPlay(): ScoreSheet? = ScoreSheets.forGames(logPlayGameIds())
+
+    /** Starts or resumes the sheet with the form's players as columns; false when there is no sheet. */
+    fun openScoreSheet(): Boolean {
+        val sheet = scoreSheetForLogPlay() ?: return false
+        val gameId = selectedGame?.id ?: 0
+        val names = _editablePlayers.value.map { it.name.trim() }.filter { it.isNotEmpty() }
+        val current = _scoreSheetDraft.value?.takeIf { it.sheetId == sheet.id && it.gameId == gameId }
+        _scoreSheetDraft.value = if (current == null) {
+            val columns = names.ifEmpty { listOf("", "") }
+            ScoreSheetDraft(
+                sheetId = sheet.id,
+                gameId = gameId,
+                players = columns,
+                enabledModules = sheet.modulesFor(logPlayGameIds()),
+                values = columns.map { emptyMap() }
+            )
+        } else {
+            // Players follow the form by name; columns added on the sheet itself stay after them.
+            val byName = current.players.indices.associateBy { current.players[it].trim().lowercase() }
+            val formColumns = names.map { name -> name to (byName[name.lowercase()]?.let { current.values.getOrNull(it) } ?: emptyMap()) }
+            val sheetOnly = current.players.indices
+                .filter { i -> names.none { it.equals(current.players[i].trim(), ignoreCase = true) } }
+                .filter { i -> current.players[i].isNotBlank() || current.values.getOrNull(i).orEmpty().isNotEmpty() }
+                .map { i -> current.players[i] to current.values.getOrNull(i).orEmpty() }
+            val columns = (formColumns + sheetOnly).ifEmpty { listOf("" to emptyMap<String, Int>(), "" to emptyMap()) }
+            current.copy(players = columns.map { it.first }, values = columns.map { it.second })
+        }
+        return true
+    }
+
+    fun updateScoreSheetDraft(draft: ScoreSheetDraft) { _scoreSheetDraft.value = draft }
+
+    fun clearScoreSheetValues() {
+        _scoreSheetDraft.value = _scoreSheetDraft.value?.let { it.copy(values = it.players.map { emptyMap() }) }
+    }
+
+    /** Writes the sheet's totals and winners to the form's players, adding any the form lacks. */
+    fun applyScoreSheet() {
+        val draft = _scoreSheetDraft.value ?: return
+        val sheet = ScoreSheets.byId(draft.sheetId) ?: return
+        val result = ScoreSheetScoring.score(sheet, draft)
+        val form = _editablePlayers.value
+        val fromSheet = draft.players.mapIndexed { i, raw ->
+            val name = raw.trim().ifEmpty { "Player ${i + 1}" }
+            val existing = form.firstOrNull { it.name.trim().equals(name, ignoreCase = true) }
+            (existing ?: PlayerResult(name = name, score = "", isWinner = false))
+                .copy(score = result.totals[i].toString(), isWinner = i in result.winners)
+        }
+        val untouched = form.filter { p -> fromSheet.none { it.name.trim().equals(p.name.trim(), ignoreCase = true) } }
+        _editablePlayers.value = fromSheet + untouched
+    }
 
     // --- Player roster ---
     private val _players = MutableStateFlow<List<Player>>(emptyList())
@@ -2629,6 +2696,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         _gameRelations.value = null
         _logPlayHasUnsavedChanges.value = false
         _logPlayPrefill = null
+        _scoreSheetDraft.value = null
         clearExtractedPlay()
     }
 

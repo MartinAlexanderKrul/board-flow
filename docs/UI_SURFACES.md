@@ -70,7 +70,7 @@ All paths are relative to `app/src/main/kotlin/cz/nicolsburg/boardflow/`.
 Source: `ui/app/AppShell.kt`
 
 - Top bar with the destination name, and a back arrow on pushed screens. A play timer chip appears while a game is timed: tap it to log the play, long-press to stop the timer
-- Bottom navigation: **Log Play, Journal, Collection, Settings**. It is hidden on pushed screens (Scan, Log play form, Quick Setup, QR import)
+- Bottom navigation: **Log Play, Journal, Collection, Settings**. It is hidden on pushed screens (Scan, Log play form, Score sheet, Quick Setup, QR import)
 - Snackbar host for `LocalBoardFlowMessenger`
 - Discard confirmation when leaving the Log play form with unsaved changes
 
@@ -104,6 +104,7 @@ Source: `ui/review/LogPlayScreen.kt`
 - Main group: Date, Duration, Location, Notes. **More options:** Quantity, Incomplete play, Count in BGG stats
 - "Also log an expansion" chips (`RelatedGamesBanner`)
 - Players: suggested player pills (under a "Suggested" label), `Add player`, `Scan`, and a `PlayerResultEditorCard` for each player
+- `ScoreSheetEntryCard` above the players when the game (or a logged expansion) has a score sheet: the sheet's own paper, three of its row icons, "<Game> score sheet" ("Continue score sheet" once values are typed); opens Score sheet
 - Scan banners: `ScanResultBanner`, `GameSuggestionBanner`, `ScanRetryBanner`; `AiOutputCard` with the raw response and model
 - Bottom bar: player count, date and "saved on this device" when offline, and `Log play` / `Save locally`
 - `PostSaveCard` after saving: headline (record moment), players with a translucent amber winner row, challenge progress (completed ones in green), `Play again`, `Edit play`, `Change game`, and "Try next" picks
@@ -122,6 +123,18 @@ Source: `ui/setup/QuickSetupScreen.kt`
 - An AI draft shows "Draft guide - check it against the rulebook." with `Mark as reviewed`; a guide of your own with no standard guide behind it has `Delete guide`
 - `Start game` starts the play timer and returns to Log Play with the Playing now banner. The screen stays awake while open
 - No guide: "No setup guide for X yet" with white `Back` and the `Draft from rulebook` pill (needs a Gemini key; asks for notifications, picks a PDF, then "Drafting the guide" with a spinner, a line saying the user can leave, and a `Back` pill). The draft runs in the background with a "Drafting a guide for X" notification and ends with "X guide is ready" (tap opens this screen) A standard guide that is not downloaded yet says to connect instead
+
+## Score sheet
+
+Source: `ui/score/ScoreSheetScreen.kt`, one design per game (`ui/score/WingspanDesign.kt`, `EverdellDesign.kt`)
+
+- A paper card in the game's own colours: the game's header, expansion chips (rows of an expansion show while it is on), then the pad: a pinned label column (drawn icon, label, hint, `×2` badge on counted rows) and one column per player that scrolls sideways when the players do not fit. Every other row is tinted, like a printed pad
+- The name row is editable, with a `+` column to add a player up to the sheet's maximum; a crown marks the winner
+- Input cells take numbers only; keyboard Next moves down the player's column. Counted rows show their points under the cell (`= 6`); majority rows (Oceania nectar) show the points per habitat (`+5`) and the row total
+- The accent `Total` row; the winner's total sits on the winner colour
+- Tiebreaker rows appear only while players are tied for the win, with inputs only for the tied players
+- An italic summary line ("Anna wins with 87 points", "... are tied at 50. Enter unused food to break it.", "... share the win")
+- `Use these scores` (writes totals and winners to the play form and goes back), the note that the form can still change them, and white `Clear sheet` (asks first; names stay)
 
 ## Guide editor
 

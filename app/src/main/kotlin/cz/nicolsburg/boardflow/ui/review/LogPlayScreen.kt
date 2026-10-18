@@ -1,6 +1,7 @@
 package cz.nicolsburg.boardflow.ui.review
 
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
+import cz.nicolsburg.boardflow.ui.score.ScoreSheetEntryCard
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material3.ButtonDefaults
 import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
@@ -155,7 +156,8 @@ fun LogPlayScreen(
     onChooseGame: () -> Unit = {},
     onScan: () -> Unit = {},
     onPickRecommendation: (BggGame) -> Unit = {},
-    onEditPlay: (LoggedPlay) -> Unit = {}
+    onEditPlay: (LoggedPlay) -> Unit = {},
+    onOpenScoreSheet: () -> Unit = {}
 ) {
     val players         by viewModel.editablePlayers.collectAsState()
     val posting         by viewModel.postLoading.collectAsState()
@@ -171,6 +173,9 @@ fun LogPlayScreen(
     val scanStartedWithGame   by viewModel.scanStartedWithGame.collectAsState()
     val scanRetryResult       by viewModel.scanRetryResult.collectAsState()
     var showExpansionPicker   by rememberSaveable { mutableStateOf(false) }
+    val scoreSheetDraft       by viewModel.scoreSheetDraft.collectAsState()
+    // A game with its own score pad (or one of its expansions) gets a way into it above the players.
+    val scoreSheet = remember(viewModel.selectedGame?.id, additionalGames) { viewModel.scoreSheetForLogPlay() }
 
     // Read prefill once on first composition (consumed from ViewModel).
     val prefill = remember { viewModel.takePrefill() }
@@ -587,6 +592,16 @@ fun LogPlayScreen(
                         onToggleAiOutput = { showAiOutput = !showAiOutput },
                         onScan = onScan
                     )
+                }
+
+                if (scoreSheet != null) {
+                    item {
+                        ScoreSheetEntryCard(
+                            sheet = scoreSheet,
+                            hasValues = scoreSheetDraft?.let { it.sheetId == scoreSheet.id && it.values.any { v -> v.isNotEmpty() } } == true,
+                            onClick = onOpenScoreSheet
+                        )
+                    }
                 }
 
                 val extracted = extractedPlay
