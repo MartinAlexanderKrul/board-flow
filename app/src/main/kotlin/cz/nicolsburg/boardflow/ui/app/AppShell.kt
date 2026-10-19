@@ -118,7 +118,6 @@ import cz.nicolsburg.boardflow.ui.search.NewPlayScreen
 import cz.nicolsburg.boardflow.ui.settings.SettingsScreen
 import cz.nicolsburg.boardflow.ui.score.ScoreSheetScreen
 import cz.nicolsburg.boardflow.ui.setup.QuickSetupScreen
-import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheets
 import cz.nicolsburg.boardflow.data.setupguide.GuideDraftService
 import cz.nicolsburg.boardflow.ui.setup.GuideEditorScreen
 import cz.nicolsburg.boardflow.ui.setup.GuideEditorViewModel
@@ -825,7 +824,7 @@ fun BoardFlowApp(
             composable(AppRoutes.SCORE_SHEET) {
                 val draft by appViewModel.scoreSheetDraft.collectAsState()
                 val current = draft
-                val sheet = current?.let { ScoreSheets.byId(it.sheetId) }
+                val sheet = current?.let { appViewModel.scoreSheetById(it.sheetId) }
                 if (current == null || sheet == null) {
                     // The play form was left (and its sheet with it); nothing to show.
                     LaunchedEffect(Unit) { navController.popBackStack() }
@@ -840,7 +839,10 @@ fun BoardFlowApp(
                             appViewModel.applyScoreSheet()
                             navController.popBackStack()
                         },
-                        onClear = appViewModel::clearScoreSheetValues
+                        onClear = appViewModel::clearScoreSheetValues,
+                        onMarkReviewed = { appViewModel.markScoreSheetReviewed(sheet.id) },
+                        // Deleting clears the sheet's values, and the empty draft above leaves this screen.
+                        onDelete = { appViewModel.deleteScoreSheet(sheet.id) }
                     )
                 }
             }

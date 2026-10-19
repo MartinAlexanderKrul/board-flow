@@ -143,9 +143,11 @@ fun ScoreSheetScreen(
     onDraftChange: (ScoreSheetDraft) -> Unit,
     onApply: () -> Unit,
     onClear: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onMarkReviewed: () -> Unit = {},
+    onDelete: () -> Unit = {}
 ) {
-    val design = remember(sheet.id) { scoreSheetDesign(sheet.id) }
+    val design = remember(sheet) { scoreSheetDesign(sheet) }
     val result = remember(sheet, draft) { ScoreSheetScoring.score(sheet, draft) }
     val scroll = rememberScrollState()
     val hScroll = rememberScrollState()
@@ -213,6 +215,7 @@ fun ScoreSheetScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             SheetHeader(gameName, thumbnailUrl, design)
+            UserSheetBanner(sheet, onMarkReviewed = onMarkReviewed, onDelete = onDelete)
 
             BoardFlowCard(
                 contentPadding = PaddingValues(vertical = Spacing.sm),

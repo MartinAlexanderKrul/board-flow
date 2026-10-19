@@ -42,7 +42,21 @@ data class GuideDraftAiConfig(
 )
 
 /**
- * Drafts a Quick Setup guide from a rulebook PDF with Gemini. Small PDFs go inline; larger ones
+ * What a rulebook draft makes: the prompt, and how the model's answer becomes one. The guide
+ * spec is below; the score sheet one is `ScoreSheetDraftPrompt.spec`.
+ */
+interface DraftSpec<T> {
+    /** "guide" or "score sheet", for messages. */
+    val noun: String
+    fun prompt(problems: List<String>): String
+    /** The draft and the validator's problems (empty when usable); throws when the answer is not one at all. */
+    fun parse(answer: String, model: String): Pair<T, List<String>>
+    /** The model's reason for not drafting one (the game has nothing to draft), or null. */
+    fun refusal(answer: String): String? = null
+}
+
+/**
+ * Drafts from a rulebook PDF with Gemini: a Quick Setup guide, or anything a [DraftSpec] describes. Small PDFs go inline; larger ones
  * are uploaded through the File API (once per key, since uploads belong to the key's project).
  *
  * Busy models are not waited for one after another: [PARALLEL_MODELS] models work on the same
@@ -70,7 +84,9 @@ class GeminiGuideDraftGenerator {
         gameId: Int,
         gameName: String,
         config: GuideDraftAiConfig
-    ): Result<SetupGuide> = withContext(Dispatchers.IO) {
+    ): Result<SetupGuide> = draft(pdf, guideSpec(gameId, gameName, sourceName), config)
+
+    suspend fun <T : Any> draft(pdf: File, spec: DraftSpec<T>, config: GuideDraftAiConfig): Result<T> = withContext(Dispatchers.IO) {
         runCatching {
             require(config.apiKeys.isNotEmpty() && config.models.isNotEmpty()) { "No Gemini key" }
             val inline = if (pdf.length() <= INLINE_LIMIT_BYTES) Base64.getEncoder().encodeToString(pdf.readBytes()) else null
@@ -79,10 +95,10 @@ class GeminiGuideDraftGenerator {
             val candidates = config.models.take(MAX_MODELS)
             val queue = ArrayDeque(candidates.filterNot(::isLite) + candidates.filter(::isLite))
             var fullInFlight = 0
-            var liteFallback: SetupGuide? = null
+            var liteFallback: T? = null
             val queueLock = Mutex()
             val failures = mutableListOf<String>()
-            val winner = CompletableDeferred<SetupGuide>()
+            val winner = CompletableDeferred<T>()
 
             suspend fun pdfPart(key: String): JSONObject = if (inline != null) {
                 JSONObject().put("inline_data", JSONObject().put("mime_type", PDF).put("data", inline))
@@ -103,17 +119,17 @@ class GeminiGuideDraftGenerator {
                                 next?.also { queue.remove(it); if (!isLite(it)) fullInFlight++ }
                             } ?: break
                             val outcome = withTimeoutOrNull(MODEL_TIMEOUT_MS) {
-                                tryModel(model, ::pdfPart, gameId, gameName, sourceName, config)
+                                tryModel(model, ::pdfPart, spec, config)
                             } ?: Outcome.Failed(SLOW).also { log("draft model=$model gave up after ${MODEL_TIMEOUT_MS / 1000} s") }
                             queueLock.withLock {
                                 if (!isLite(model)) fullInFlight--
                                 val fullLeft = fullInFlight > 0 || queue.any { !isLite(it) }
                                 when (outcome) {
-                                    is Outcome.Guide ->
+                                    is Outcome.Draft ->
                                         if (isLite(model) && fullLeft) {
-                                            if (liteFallback == null) liteFallback = outcome.guide
+                                            if (liteFallback == null) liteFallback = outcome.value
                                         } else {
-                                            winner.complete(outcome.guide)
+                                            winner.complete(outcome.value)
                                         }
                                     is Outcome.Failed -> synchronized(failures) { failures += outcome.reason }
                                 }
@@ -127,7 +143,7 @@ class GeminiGuideDraftGenerator {
                     lanes.joinAll()
                     liteFallback?.let { winner.complete(it) }
                     if (!winner.isCompleted) {
-                        winner.completeExceptionally(IllegalStateException(summarise(synchronized(failures) { failures.toList() })))
+                        winner.completeExceptionally(IllegalStateException(summarise(spec.noun, synchronized(failures) { failures.toList() })))
                     }
                 }
                 val guide = winner.await()
@@ -142,26 +158,24 @@ class GeminiGuideDraftGenerator {
         }
     }
 
-    private sealed interface Outcome {
-        data class Guide(val guide: SetupGuide) : Outcome
-        data class Failed(val reason: String) : Outcome
+    private sealed interface Outcome<out T> {
+        data class Draft<T>(val value: T) : Outcome<T>
+        data class Failed(val reason: String) : Outcome<Nothing>
     }
 
     /** One model: its keys in turn while they are rate limited, and one retry with the validator's problems. */
-    private suspend fun tryModel(
+    private suspend fun <T> tryModel(
         model: String,
         pdfPart: suspend (String) -> JSONObject,
-        gameId: Int,
-        gameName: String,
-        sourceName: String?,
+        spec: DraftSpec<T>,
         config: GuideDraftAiConfig
-    ): Outcome {
+    ): Outcome<T> {
         var keyIndex = 0
         var problems = emptyList<String>()
         var retriedWithProblems = false
         while (true) {
             val key = config.apiKeys[keyIndex]
-            val body = requestBody(pdfPart(key), GuideDraftPrompt.build(gameId, gameName, problems))
+            val body = requestBody(pdfPart(key), spec.prompt(problems))
             val endpoint = if (model.contains("/")) model else "v1beta/models/$model"
             log("draft model=$model key=${keyIndex + 1}/${config.apiKeys.size} retryWithProblems=${problems.size}")
             val started = System.currentTimeMillis()
@@ -169,11 +183,13 @@ class GeminiGuideDraftGenerator {
             log("draft response model=$model code=$code length=${text.length} seconds=${(System.currentTimeMillis() - started) / 1000}")
             when {
                 code in 200..299 -> {
-                    val result = answerText(text)?.let {
-                        runCatching { GuideDraftPrompt.parse(it, gameId, gameName, model.substringAfterLast('/'), sourceName) }.getOrNull()
+                    val answer = answerText(text)
+                    answer?.let(spec::refusal)?.let { return Outcome.Failed(REFUSED + it) }
+                    val result = answer?.let {
+                        runCatching { spec.parse(it, model.substringAfterLast('/')) }.getOrNull()
                     }
-                    if (result != null && result.second.isEmpty()) return Outcome.Guide(result.first)
-                    val found = result?.second ?: listOf("The answer was not a guide in the requested JSON format")
+                    if (result != null && result.second.isEmpty()) return Outcome.Draft(result.first)
+                    val found = result?.second ?: listOf("The answer was not a ${spec.noun} in the requested JSON format")
                     if (retriedWithProblems) return Outcome.Failed(found.first())
                     retriedWithProblems = true
                     problems = found
@@ -197,13 +213,23 @@ class GeminiGuideDraftGenerator {
         }
     }
 
-    private fun summarise(failures: List<String>): String {
-        val problem = failures.firstOrNull { it != BUSY && it != UNAVAILABLE && it != SLOW && !it.startsWith("Gemini error") }
-        return when {
-            problem != null -> "The draft did not pass the guide checks: $problem"
-            failures.isNotEmpty() && failures.all { it == BUSY || it == UNAVAILABLE || it == SLOW } -> "Gemini is busy right now. Try again in a few minutes."
-            else -> failures.firstOrNull() ?: "Gemini could not draft a guide. Try again later."
+    private fun summarise(noun: String, failures: List<String>): String {
+        val refusal = failures.firstOrNull { it.startsWith(REFUSED) }
+        val problem = failures.firstOrNull {
+            it != BUSY && it != UNAVAILABLE && it != SLOW && !it.startsWith("Gemini error") && !it.startsWith(REFUSED)
         }
+        return when {
+            refusal != null -> refusal.removePrefix(REFUSED)
+            problem != null -> "The draft did not pass the $noun checks: $problem"
+            failures.isNotEmpty() && failures.all { it == BUSY || it == UNAVAILABLE || it == SLOW } -> "Gemini is busy right now. Try again in a few minutes."
+            else -> failures.firstOrNull() ?: "Gemini could not draft a $noun. Try again later."
+        }
+    }
+
+    private fun guideSpec(gameId: Int, gameName: String, sourceName: String?) = object : DraftSpec<SetupGuide> {
+        override val noun = "guide"
+        override fun prompt(problems: List<String>) = GuideDraftPrompt.build(gameId, gameName, problems)
+        override fun parse(answer: String, model: String) = GuideDraftPrompt.parse(answer, gameId, gameName, model, sourceName)
     }
 
     private fun requestBody(pdfPart: JSONObject, prompt: String): String = JSONObject().apply {
@@ -306,5 +332,7 @@ class GeminiGuideDraftGenerator {
         /** A model still thinking after this long is given up (one took over 10 minutes on Arcs). */
         const val MODEL_TIMEOUT_MS = 4 * 60 * 1000L
         const val UNAVAILABLE = "unavailable"
+        /** Prefix of a failure where the model said there is nothing to draft. */
+        const val REFUSED = "refused:"
     }
 }

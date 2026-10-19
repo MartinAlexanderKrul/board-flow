@@ -18,7 +18,16 @@ data class ScoreSheet(
     val rows: List<ScoreRow>,
     /** Asked one at a time, only while players are tied for the win. None left: a shared win. */
     val tiebreakers: List<ScoreTiebreaker> = emptyList(),
-    val winRule: WinRule = WinRule.HIGHEST
+    val winRule: WinRule = WinRule.HIGHEST,
+    /** Built in (code), or the user's own: drafted from a rulebook or imported. */
+    val origin: SheetOrigin = SheetOrigin.BUILT_IN,
+    /** False for an AI draft nobody has checked against the rulebook yet. */
+    val reviewed: Boolean = true,
+    val aiModel: String? = null,
+    /** Where the rules came from (the rulebook file name). */
+    val sources: List<String> = emptyList(),
+    /** Worked examples (usually the rulebook's) the sheet must reproduce; see ScoreSheetValidator. */
+    val examples: List<ScoreExample> = emptyList()
 ) {
     fun rowsFor(enabledModules: Set<String>): List<ScoreRow> =
         rows.filter { it.module == null || it.module in enabledModules }
@@ -52,6 +61,16 @@ data class ScoreSheet(
         return result
     }
 }
+
+enum class SheetOrigin { BUILT_IN, USER, AI_DRAFT }
+
+/** Typed values per player (input key to value), the modules on, and the totals they must give. */
+data class ScoreExample(
+    val players: List<Map<String, Int>>,
+    val totals: List<Int>,
+    val modules: Set<String> = emptySet(),
+    val note: String? = null
+)
 
 data class ScoreModule(
     val id: String,

@@ -1,6 +1,13 @@
 package cz.nicolsburg.boardflow.ui.review
 
+import android.widget.Toast
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
+import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetDraftService
+import cz.nicolsburg.boardflow.ui.score.ScoreSheetDraftCard
 import cz.nicolsburg.boardflow.ui.score.ScoreSheetEntryCard
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material3.ButtonDefaults
@@ -174,8 +181,16 @@ fun LogPlayScreen(
     val scanRetryResult       by viewModel.scanRetryResult.collectAsState()
     var showExpansionPicker   by rememberSaveable { mutableStateOf(false) }
     val scoreSheetDraft       by viewModel.scoreSheetDraft.collectAsState()
+    val userScoreSheets       by viewModel.userScoreSheets.collectAsState()
     // A game with its own score pad (or one of its expansions) gets a way into it above the players.
-    val scoreSheet = remember(viewModel.selectedGame?.id, additionalGames) { viewModel.scoreSheetForLogPlay() }
+    val scoreSheet = remember(viewModel.selectedGame?.id, additionalGames, userScoreSheets) { viewModel.scoreSheetForLogPlay() }
+    // Without one, a game can get a sheet drafted from its rulebook.
+    val draftGame = viewModel.selectedGame?.takeIf { it.id > 0 && scoreSheet == null && viewModel.canDraftScoreSheet() }
+    val sheetDraftState by remember(draftGame?.id) {
+        draftGame?.let { viewModel.scoreSheetDraftState(it.id) } ?: flowOf(ScoreSheetDraftService.DraftState.Idle)
+    }.collectAsState(ScoreSheetDraftService.DraftState.Idle)
+    val draftScope = rememberCoroutineScope()
+    val draftContext = LocalContext.current
 
     // Read prefill once on first composition (consumed from ViewModel).
     val prefill = remember { viewModel.takePrefill() }
@@ -600,6 +615,19 @@ fun LogPlayScreen(
                             sheet = scoreSheet,
                             hasValues = scoreSheetDraft?.let { it.sheetId == scoreSheet.id && it.values.any { v -> v.isNotEmpty() } } == true,
                             onClick = onOpenScoreSheet
+                        )
+                    }
+                } else if (draftGame != null) {
+                    item {
+                        ScoreSheetDraftCard(
+                            state = sheetDraftState,
+                            onPickPdf = { uri ->
+                                draftScope.launch {
+                                    viewModel.startScoreSheetDraft(uri, draftGame.id, draftGame.name)?.let {
+                                        Toast.makeText(draftContext, it, Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            }
                         )
                     }
                 }

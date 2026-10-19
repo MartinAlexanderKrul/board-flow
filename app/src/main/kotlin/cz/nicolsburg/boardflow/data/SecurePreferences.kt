@@ -734,7 +734,8 @@ class SecurePreferences(context: Context) {
         challenges: List<Challenge>? = null,
         recognitionHints: List<GameRecognitionHint>? = null,
         playerRecognitionHints: List<PlayerRecognitionHint>? = null,
-        setupGuides: List<String> = emptyList()
+        setupGuides: List<String> = emptyList(),
+        scoreSheets: List<String> = emptyList()
     ): String {
         return BackupSerializer.export(
             includeSensitiveData = includeSensitiveData,
@@ -764,7 +765,8 @@ class SecurePreferences(context: Context) {
             collectionSnapshot = collectionSnapshot ?: emptyList(),
             loggedPlays = loggedPlays ?: emptyList(),
             cachedBggPlays = cachedBggPlays ?: emptyList(),
-            setupGuides = setupGuides
+            setupGuides = setupGuides,
+            scoreSheets = scoreSheets
         )
     }
 

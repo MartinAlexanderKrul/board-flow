@@ -28,7 +28,7 @@ fun ScoreSheetEntryCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val design = remember(sheet.id) { scoreSheetDesign(sheet.id) }
+    val design = remember(sheet) { scoreSheetDesign(sheet) }
     // The first two base rows show what the sheet counts: "Birds, bonus cards and more".
     val preview = remember(sheet.id) {
         val labels = sheet.rows.filter { it.module == null }.map { it.label }

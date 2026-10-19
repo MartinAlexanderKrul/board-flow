@@ -22,7 +22,9 @@ data class ImportedBackupData(
     val gameRecognitionHints: List<GameRecognitionHint> = emptyList(),
     val playerRecognitionHints: List<PlayerRecognitionHint> = emptyList(),
     /** The user's own Quick Setup guides (JSON documents); null when the backup has none (format < 8). */
-    val setupGuides: List<String>? = null
+    val setupGuides: List<String>? = null,
+    /** The user's own score sheets (JSON documents); null when the backup has none (format < 9). */
+    val scoreSheets: List<String>? = null
 )
 
 object BackupSerializer {
@@ -56,10 +58,11 @@ object BackupSerializer {
         collectionSnapshot: List<GameItem>,
         loggedPlays: List<LoggedPlay>,
         cachedBggPlays: List<LoggedPlay>,
-        setupGuides: List<String> = emptyList()
+        setupGuides: List<String> = emptyList(),
+        scoreSheets: List<String> = emptyList()
     ): String {
         val root = JSONObject()
-        root.put("version", 8)
+        root.put("version", 9)
         root.put("exportDate", java.time.LocalDate.now().toString())
         root.put("includesSensitiveData", includeSensitiveData)
         root.put("settings", JSONObject().apply {
@@ -183,6 +186,10 @@ object BackupSerializer {
         // Format 8: the user's own setup guides, each stored as its guide document.
         root.put("setupGuides", JSONArray().also { arr ->
             setupGuides.forEach { json -> runCatching { arr.put(JSONObject(json)) } }
+        })
+        // Format 9: the user's own score sheets (AI drafts and imports), each as its sheet document.
+        root.put("scoreSheets", JSONArray().also { arr ->
+            scoreSheets.forEach { json -> runCatching { arr.put(JSONObject(json)) } }
         })
         root.put("collectionSnapshots", JSONObject().also { snapshots ->
             snapshots.put(CANONICAL_SNAPSHOT_ID, JSONArray().also { arr ->
@@ -325,6 +332,9 @@ object BackupSerializer {
             gameRecognitionHints = importedGameHints,
             playerRecognitionHints = importedPlayerHints,
             setupGuides = root.optJSONArray("setupGuides")?.let { arr ->
+                (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.toString() }
+            },
+            scoreSheets = root.optJSONArray("scoreSheets")?.let { arr ->
                 (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.toString() }
             }
         )
