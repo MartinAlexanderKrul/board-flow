@@ -233,6 +233,94 @@ class ScoreSheetScoringTest {
     }
 
     @Test
+    fun sevenWondersScienceSquaresAndSets() {
+        // Rulebook example: 3, 2 and 1 symbols score 9 + 4 + 1, plus 7 for one set of three.
+        val sheet = ScoreSheets.byId("7-wonders")!!
+        val result = ScoreSheetScoring.score(
+            sheet, draft(sheet, mapOf("science.compass" to 3, "science.tablet" to 2, "science.gear" to 1, "treasury" to 14))
+        )
+        assertEquals(listOf(21), result.rowPoints["science"])
+        assertEquals(listOf(4), result.rowPoints["treasury"])
+    }
+
+    @Test
+    fun lostCitiesExpeditions() {
+        // Rulebook example: 3, 0, -40, -10 and 45 + 20 bonus = 18.
+        val sheet = ScoreSheets.byId("lost-cities")!!
+        fun e(c: String, sum: Int, wagers: Int, cards: Int) = mapOf(
+            "expeditions.$c.sum" to sum, "expeditions.$c.wagers" to wagers, "expeditions.$c.cards" to cards
+        )
+        val values = e("yellow", 23, 0, 3) + e("white", 0, 1, 1) + e("green", 15, 1, 3) + e("red", 35, 2, 8)
+        val result = ScoreSheetScoring.score(sheet, draft(sheet, values))
+        assertEquals(listOf(3), result.groupPoints["expeditions.yellow"])
+        assertEquals(listOf(0), result.groupPoints["expeditions.blue"])
+        assertEquals(listOf(-40), result.groupPoints["expeditions.white"])
+        assertEquals(listOf(-10), result.groupPoints["expeditions.green"])
+        assertEquals(listOf(65), result.groupPoints["expeditions.red"])
+        assertEquals(18, result.totals[0])
+    }
+
+    @Test
+    fun agricolaTablesStartBelowZero() {
+        val sheet = ScoreSheets.byId("agricola")!!
+        val result = ScoreSheetScoring.score(sheet, draft(sheet, mapOf("fields" to 1, "grain" to 5, "sheep" to 9, "begging" to 1)))
+        assertEquals(listOf(-1), result.rowPoints["fields"])
+        assertEquals(listOf(2), result.rowPoints["grain"])
+        assertEquals(listOf(4), result.rowPoints["sheep"])
+        assertEquals(listOf(0), result.rowPoints["cattle"])
+        assertEquals(-1 + 2 + 4 - 3, result.totals[0])
+    }
+
+    @Test
+    fun fiveTribesViziersBeatEachOpponentWithFewer() {
+        val sheet = ScoreSheets.byId("five-tribes")!!
+        val result = ScoreSheetScoring.score(
+            sheet, draft(sheet, mapOf("viziers.count" to 5), mapOf("viziers.count" to 3), mapOf("viziers.count" to 3))
+        )
+        assertEquals(listOf(25, 3, 3), result.rowPoints["viziers"])
+    }
+
+    @Test
+    fun sushiGoPuddingRewardsMostAndPunishesFewest() {
+        val sheet = ScoreSheets.byId("sushi-go")!!
+        val four = draft(sheet, mapOf("pudding.count" to 4), mapOf("pudding.count" to 2), mapOf("pudding.count" to 1), mapOf("pudding.count" to 1))
+        assertEquals(listOf(6, 0, -3, -3), ScoreSheetScoring.score(sheet, four).rowPoints["pudding"])
+        // No penalty with 2 players.
+        val two = draft(sheet, mapOf("pudding.count" to 2), mapOf("pudding.count" to 0))
+        assertEquals(listOf(6, 0), ScoreSheetScoring.score(sheet, two).rowPoints["pudding"])
+    }
+
+    @Test
+    fun cavernaGrainRoundsUpAndPenaltiesSubtract() {
+        val sheet = ScoreSheets.byId("caverna")!!
+        val result = ScoreSheetScoring.score(sheet, draft(sheet, mapOf("grain" to 5, "missing" to 1)))
+        assertEquals(listOf(3), result.rowPoints["grain"])
+        assertEquals(listOf(-2), result.rowPoints["missing"])
+        val tickets = ScoreSheets.byId("ticket-to-ride")!!
+        assertEquals(listOf(-12), ScoreSheetScoring.score(tickets, draft(tickets, mapOf("failed" to 12))).rowPoints["failed"])
+    }
+
+    @Test
+    fun awardsCanDependOnPlayerCount() {
+        val sheet = ScoreSheets.byId("clans-of-caledonia")!!
+        val two = draft(sheet, mapOf("export.contracts" to 4), mapOf("export.contracts" to 2))
+        assertEquals(listOf(8, 0), ScoreSheetScoring.score(sheet, two).rowPoints["export"])
+        val three = draft(sheet, mapOf("export.contracts" to 4), mapOf("export.contracts" to 4), mapOf("export.contracts" to 1))
+        assertEquals(listOf(9, 9, 0), ScoreSheetScoring.score(sheet, three).rowPoints["export"])
+    }
+
+    @Test
+    fun guideGamesOpenTheirSheets() {
+        mapOf(
+            68448 to "7-wonders", 92539 to "7-wonders", 173346 to "7-wonders-duel", 31260 to "agricola", 200680 to "agricola-revised",
+            13 to "catan", 191710 to "catan", 295947 to "cascadia", 167791 to "terraforming-mars", 9209 to "ticket-to-ride",
+            14996 to "ticket-to-ride-europe", 50 to "lost-cities", 216849 to "dominion", 36218 to "dominion"
+        ).forEach { (id, sheet) -> assertEquals("BGG $id", sheet, ScoreSheets.forGames(listOf(id))?.id) }
+        // Games scored during play have no sheet.
+        assertNull(ScoreSheets.forGames(listOf(230802)))
+    }
+
+    @Test
     fun emptySheetHasNoWinner() {
         val sheet = ScoreSheets.everdell
         val result = ScoreSheetScoring.score(sheet, draft(sheet, emptyMap(), emptyMap()))

@@ -76,16 +76,21 @@ sealed interface ScoreRow {
     val allowsNegative: Boolean get() = false
 }
 
-/** Points written straight onto the pad (bird cards, bonus cards). */
+/**
+ * Points written straight onto the pad (bird cards, bonus cards). [negative] lets the typed points
+ * go below 0; [subtract] takes the typed points off the total (penalties typed as a positive number).
+ */
 data class PointsRow(
     override val id: String,
     override val label: String,
     override val hint: String? = null,
     override val module: String? = null,
-    val negative: Boolean = false
+    val negative: Boolean = false,
+    val subtract: Boolean = false
 ) : ScoreRow {
     override val inputKeys: List<String> get() = listOf(id)
     override val allowsNegative: Boolean get() = negative
+    fun points(value: Int): Int = if (subtract) -value else value
 }
 
 /**
@@ -100,10 +105,16 @@ data class CountRow(
     override val hint: String? = null,
     override val module: String? = null,
     val per: Int = 1,
-    val squared: Boolean = false
+    val squared: Boolean = false,
+    /** With [per] > 1: a part group still scores (Caverna grain: 1 per 2, rounded up). */
+    val roundUp: Boolean = false
 ) : ScoreRow {
     override val inputKeys: List<String> get() = listOf(id)
-    fun points(count: Int): Int = if (squared) count * count * pointsEach else count / per * pointsEach
+    fun points(count: Int): Int = when {
+        squared -> count * count * pointsEach
+        roundUp -> (count + per - 1) / per * pointsEach
+        else -> count / per * pointsEach
+    }
 }
 
 /**
@@ -122,10 +133,82 @@ data class MajorityRow(
     override val module: String? = null,
     val ties: TieRule = TieRule.SPLIT,
     val pointsEach: Int = 0,
-    val inputPrefix: String = id
+    val inputPrefix: String = id,
+    /** Awards that differ by player count (Clans of Caledonia: 12/6 at 3-4 players, 8 at 2); [awards] otherwise. */
+    val awardsByPlayers: Map<Int, List<Int>> = emptyMap(),
+    /** Points for each other player with strictly fewer (Five Tribes viziers: 10 per such opponent). */
+    val beatsEach: Int = 0,
+    /** Taken from the player(s) with the fewest, 0 included (Sushi Go pudding: -6), from [fewestFromPlayers] players. */
+    val fewestPenalty: Int = 0,
+    val fewestFromPlayers: Int = 3
 ) : ScoreRow {
     override val inputKeys: List<String> get() = groups.map { groupKey(it) }
     fun groupKey(group: ScoreGroup) = "$inputPrefix.${group.id}"
+    fun awardsFor(players: Int): List<Int> = awardsByPlayers[players] ?: awards
+}
+
+/**
+ * A count looked up in a table, like the printed charts on Agricola's score pad: the points of the
+ * highest [steps] entry whose count is at or below the typed count. Below the first step scores
+ * [below] (Agricola: no fields is -1).
+ */
+data class TableRow(
+    override val id: String,
+    override val label: String,
+    val steps: List<Pair<Int, Int>>,
+    val below: Int = 0,
+    override val hint: String? = null,
+    override val module: String? = null
+) : ScoreRow {
+    override val inputKeys: List<String> get() = listOf(id)
+    override val allowsNegative: Boolean get() = false
+    fun points(count: Int): Int = steps.lastOrNull { count >= it.first }?.second ?: below
+}
+
+/**
+ * Sets of different symbols (7 Wonders science): each symbol's count squared, plus [setBonus] for
+ * every complete set of one of each.
+ */
+data class SetsRow(
+    override val id: String,
+    override val label: String,
+    val groups: List<ScoreGroup>,
+    val setBonus: Int,
+    override val hint: String? = null,
+    override val module: String? = null
+) : ScoreRow {
+    override val inputKeys: List<String> get() = groups.map { groupKey(it) }
+    fun groupKey(group: ScoreGroup) = "$id.${group.id}"
+    fun points(counts: List<Int>): Int = counts.sumOf { it * it } + (counts.minOrNull() ?: 0) * setBonus
+}
+
+/**
+ * Lost Cities expeditions: per expedition the card sum minus 20, times 1 + wagers, plus [bonus]
+ * for [bonusCards] or more cards. An expedition with no cards and no wagers scores nothing.
+ */
+data class ExpeditionRow(
+    override val id: String,
+    override val label: String,
+    val groups: List<ScoreGroup>,
+    val cost: Int = 20,
+    val bonus: Int = 20,
+    val bonusCards: Int = 8,
+    override val hint: String? = null,
+    override val module: String? = null
+) : ScoreRow {
+    override val inputKeys: List<String> get() = groups.flatMap { g -> FIELDS.map { key(g, it) } }
+    fun key(group: ScoreGroup, field: String) = "$id.${group.id}.$field"
+    fun points(sum: Int, wagers: Int, cards: Int): Int {
+        if (sum == 0 && wagers == 0 && cards == 0) return 0
+        return (sum - cost) * (1 + wagers) + if (cards >= bonusCards) bonus else 0
+    }
+
+    companion object {
+        const val SUM = "sum"
+        const val WAGERS = "wagers"
+        const val CARDS = "cards"
+        val FIELDS = listOf(SUM, WAGERS, CARDS)
+    }
 }
 
 enum class TieRule {
@@ -280,14 +363,35 @@ object ScoreSheetScoring {
 
         for (row in rows) {
             rowPoints[row.id] = when (row) {
-                is PointsRow -> List(playerCount) { draft.value(it, row.id) ?: 0 }
+                is PointsRow -> List(playerCount) { row.points(draft.value(it, row.id) ?: 0) }
                 is CountRow -> List(playerCount) { row.points(draft.value(it, row.id) ?: 0) }
+                is TableRow -> List(playerCount) { p ->
+                    draft.value(p, row.id)?.let { row.points(it) } ?: 0
+                }
+                is ExpeditionRow -> {
+                    val perGroup = row.groups.map { group ->
+                        List(playerCount) { p ->
+                            fun v(f: String) = draft.value(p, row.key(group, f))?.coerceAtLeast(0) ?: 0
+                            row.points(v(ExpeditionRow.SUM), v(ExpeditionRow.WAGERS), v(ExpeditionRow.CARDS))
+                        }.also { groupPoints["${row.id}.${group.id}"] = it }
+                    }
+                    List(playerCount) { p -> perGroup.sumOf { it[p] } }
+                }
+                is SetsRow -> List(playerCount) { p ->
+                    row.points(row.groups.map { draft.value(p, row.groupKey(it))?.coerceAtLeast(0) ?: 0 })
+                }
                 is MajorityRow -> {
                     val perGroup = row.groups.map { group ->
                         val key = row.groupKey(group)
                         val counts = List(playerCount) { draft.value(it, key) ?: 0 }
-                        majorityPoints(counts, row.awards, row.ties)
-                            .mapIndexed { p, award -> award + counts[p].coerceAtLeast(0) * row.pointsEach }
+                        val fewest = if (row.fewestPenalty != 0 && playerCount >= row.fewestFromPlayers) {
+                            fewestPoints(counts, row.fewestPenalty, row.ties)
+                        } else List(playerCount) { 0 }
+                        majorityPoints(counts, row.awardsFor(playerCount), row.ties)
+                            .mapIndexed { p, award ->
+                                award + counts[p].coerceAtLeast(0) * row.pointsEach +
+                                    row.beatsEach * counts.count { it < counts[p] } + fewest[p]
+                            }
                             .also { groupPoints[key] = it }
                     }
                     List(playerCount) { p -> perGroup.sumOf { it[p] } }
@@ -337,6 +441,17 @@ object ScoreSheetScoring {
             tiedPlayers = tied,
             hasInput = hasInput
         )
+    }
+
+    /** The fewest-count penalty (0 counts too): split rounded toward zero, or in full with [TieRule.ALL]. */
+    fun fewestPoints(counts: List<Int>, penalty: Int, ties: TieRule): List<Int> {
+        if (counts.isEmpty()) return emptyList()
+        val low = counts.min()
+        val losers = counts.indices.filter { counts[it] == low }
+        // Everyone tied: nobody has fewest.
+        if (losers.size == counts.size) return List(counts.size) { 0 }
+        val each = if (ties == TieRule.ALL) penalty else penalty / losers.size
+        return List(counts.size) { if (it in losers) -each else 0 }
     }
 
     /** Awards by place for one group; see [MajorityRow] and [TieRule]. */

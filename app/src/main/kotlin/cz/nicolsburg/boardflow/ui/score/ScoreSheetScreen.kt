@@ -82,6 +82,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.model.CountRow
+import cz.nicolsburg.boardflow.model.ExpeditionRow
 import cz.nicolsburg.boardflow.model.MajorityRow
 import cz.nicolsburg.boardflow.model.PointsRow
 import cz.nicolsburg.boardflow.model.ScoreEntry
@@ -89,6 +90,8 @@ import cz.nicolsburg.boardflow.model.ScoreSheet
 import cz.nicolsburg.boardflow.model.ScoreSheetDraft
 import cz.nicolsburg.boardflow.model.ScoreSheetResult
 import cz.nicolsburg.boardflow.model.ScoreSheetScoring
+import cz.nicolsburg.boardflow.model.SetsRow
+import cz.nicolsburg.boardflow.model.TableRow
 import cz.nicolsburg.boardflow.ui.common.AnimatedDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCard
@@ -424,8 +427,8 @@ private fun SheetGrid(
             val background = if (band) BandTint else Color.Transparent
             band = !band
             when (row) {
-                is PointsRow, is CountRow -> {
-                    val multiplier = (row as? CountRow)?.badge()
+                is PointsRow, is CountRow, is TableRow -> {
+                    val multiplier = (row as? CountRow)?.badge() ?: (row as? PointsRow)?.takeIf { it.subtract }?.let { "minus" }
                     SheetLine(
                         geometry,
                         if (row.hint != null) RowWithHintHeight else RowHeight,
@@ -443,6 +446,79 @@ private fun SheetGrid(
                                 onBlurred = onInactiveCell,
                                 onEntry = { onDraftChange(draft.withEntry(p, row.id, it)) }
                             )
+                        }
+                    }
+                }
+                is ExpeditionRow -> {
+                    for (group in row.groups) {
+                        val groupKey = "${row.id}.${group.id}"
+                        // The rule shows once, under the first expedition.
+                        val hint = row.hint.takeIf { group == row.groups.first() }
+                        SheetLine(
+                            geometry,
+                            if (hint != null) RowWithHintHeight else RowHeight,
+                            background,
+                            label = { RowLabel(design, groupKey, group.label, hint = hint, compact = geometry.compact) }
+                        ) {
+                            for (p in players) {
+                                ComputedCell(result.groupPoints[groupKey]?.getOrNull(p) ?: 0)
+                            }
+                        }
+                        for ((field, fieldLabel) in listOf(
+                            ExpeditionRow.SUM to "Card sum",
+                            ExpeditionRow.WAGERS to "Wagers",
+                            ExpeditionRow.CARDS to "Cards played"
+                        )) {
+                            val key = row.key(group, field)
+                            SheetLine(
+                                geometry,
+                                SubRowHeight,
+                                background,
+                                label = { RowLabel(design, key, fieldLabel, hint = null, indent = true, compact = geometry.compact) }
+                            ) {
+                                for (p in players) {
+                                    InputCell(
+                                        entry = draft.entry(p, key),
+                                        focusRequester = requester(p, key),
+                                        next = next(p, key),
+                                        onFocused = { onFocusPlayer(p); onActiveCell(it) },
+                                        onBlurred = onInactiveCell,
+                                        onEntry = { onDraftChange(draft.withEntry(p, key, it)) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                is SetsRow -> {
+                    SheetLine(
+                        geometry,
+                        if (row.hint != null) RowWithHintHeight else RowHeight,
+                        background,
+                        label = { RowLabel(design, row.id, row.label, row.hint, compact = geometry.compact) }
+                    ) {
+                        for (p in players) {
+                            ComputedCell(result.rowPoints[row.id]?.getOrNull(p) ?: 0)
+                        }
+                    }
+                    for (group in row.groups) {
+                        val key = row.groupKey(group)
+                        SheetLine(
+                            geometry,
+                            SubRowHeight,
+                            background,
+                            label = { RowLabel(design, key, group.label, hint = null, indent = true, compact = geometry.compact) }
+                        ) {
+                            for (p in players) {
+                                InputCell(
+                                    entry = draft.entry(p, key),
+                                    focusRequester = requester(p, key),
+                                    next = next(p, key),
+                                    onFocused = { onFocusPlayer(p); onActiveCell(it) },
+                                    onBlurred = onInactiveCell,
+                                    onEntry = { onDraftChange(draft.withEntry(p, key, it)) }
+                                )
+                            }
                         }
                     }
                 }
@@ -536,9 +612,13 @@ private fun CountRow.badge(): String? = when {
 
 /** Points under a counted cell when they differ from the count ("= 6"). */
 private fun countCaption(row: cz.nicolsburg.boardflow.model.ScoreRow, count: Int?): String? {
-    val counted = row as? CountRow ?: return null
-    if (counted.badge() == null || count == null) return null
-    return "= ${counted.points(count)}"
+    if (count == null) return null
+    return when (row) {
+        is TableRow -> "= ${row.points(count)}"
+        is PointsRow -> if (row.subtract && count != 0) "= ${row.points(count)}" else null
+        is CountRow -> if (row.badge() == null) null else "= ${row.points(count)}"
+        else -> null
+    }
 }
 
 private class GridGeometry(val labelWidth: Dp, val hScroll: ScrollState, val trailing: Dp) {
