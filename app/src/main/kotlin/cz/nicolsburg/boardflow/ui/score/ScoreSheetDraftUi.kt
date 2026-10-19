@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -35,12 +36,14 @@ import cz.nicolsburg.boardflow.ui.theme.Spacing
 
 /**
  * Log Play's offer for a game with no score sheet: pick the rulebook PDF and Gemini drafts one in
- * the background. Shows the running draft, or why the last one failed, in place.
+ * the background. Shows the running draft, or why the last one failed, in place. "Not needed"
+ * marks the game as needing no sheet, so the offer stops (games known to need none never get it).
  */
 @Composable
 fun ScoreSheetDraftCard(
     state: DraftState,
     onPickPdf: (Uri) -> Unit,
+    onNotNeeded: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -85,7 +88,28 @@ fun ScoreSheetDraftCard(
                     color = if (state is DraftState.Failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            if (!running) {
+                BoardFlowInlineAction(onClick = onNotNeeded, neutral = true) { Text("Not needed") }
+            }
         }
+    }
+}
+
+/** Left where the draft card was after "Not needed", until the form is left. */
+@Composable
+fun NoScoreSheetUndo(onUndo: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier.fillMaxWidth().padding(horizontal = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+    ) {
+        Text(
+            "No score sheet for this game. A draft is not offered again.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        BoardFlowInlineAction(onClick = onUndo) { Text("Undo") }
     }
 }
 

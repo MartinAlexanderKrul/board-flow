@@ -45,6 +45,9 @@ data class GuideDraftAiConfig(
  * What a rulebook draft makes: the prompt, and how the model's answer becomes one. The guide
  * spec is below; the score sheet one is `ScoreSheetDraftPrompt.spec`.
  */
+/** The model said there is nothing to draft (the game has no end-of-game scoring); [reason] is for the user. */
+class DraftRefusedException(val reason: String) : IllegalStateException(reason)
+
 interface DraftSpec<T> {
     /** "guide" or "score sheet", for messages. */
     val noun: String
@@ -143,7 +146,9 @@ class GeminiGuideDraftGenerator {
                     lanes.joinAll()
                     liteFallback?.let { winner.complete(it) }
                     if (!winner.isCompleted) {
-                        winner.completeExceptionally(IllegalStateException(summarise(spec.noun, synchronized(failures) { failures.toList() })))
+                        val all = synchronized(failures) { failures.toList() }
+                        val refusal = all.firstOrNull { it.startsWith(REFUSED) }?.removePrefix(REFUSED)
+                        winner.completeExceptionally(refusal?.let(::DraftRefusedException) ?: IllegalStateException(summarise(spec.noun, all)))
                     }
                 }
                 val guide = winner.await()
@@ -214,12 +219,9 @@ class GeminiGuideDraftGenerator {
     }
 
     private fun summarise(noun: String, failures: List<String>): String {
-        val refusal = failures.firstOrNull { it.startsWith(REFUSED) }
-        val problem = failures.firstOrNull {
-            it != BUSY && it != UNAVAILABLE && it != SLOW && !it.startsWith("Gemini error") && !it.startsWith(REFUSED)
-        }
+        // A refusal never gets here: it ends the draft as a DraftRefusedException.
+        val problem = failures.firstOrNull { it != BUSY && it != UNAVAILABLE && it != SLOW && !it.startsWith("Gemini error") }
         return when {
-            refusal != null -> refusal.removePrefix(REFUSED)
             problem != null -> "The draft did not pass the $noun checks: $problem"
             failures.isNotEmpty() && failures.all { it == BUSY || it == UNAVAILABLE || it == SLOW } -> "Gemini is busy right now. Try again in a few minutes."
             else -> failures.firstOrNull() ?: "Gemini could not draft a $noun. Try again later."

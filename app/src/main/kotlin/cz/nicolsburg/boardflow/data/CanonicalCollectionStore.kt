@@ -410,6 +410,19 @@ class CanonicalCollectionStore private constructor(
         dao.deleteUserScoreSheet(id)
     }
 
+    // --- Games marked as needing no score sheet (by an AI draft's answer or by the user) ---
+
+    suspend fun getNoScoreSheetMarks(): List<StoredNoScoreSheet> =
+        dao.getNoScoreSheetMarks().map { StoredNoScoreSheet(it.gameId, it.reason, it.source, it.updatedAt) }
+
+    suspend fun saveNoScoreSheetMark(mark: StoredNoScoreSheet) {
+        dao.upsertNoScoreSheetMark(NoScoreSheetEntity(mark.gameId, mark.reason, mark.source, mark.updatedAt))
+    }
+
+    suspend fun deleteNoScoreSheetMark(gameId: Int) {
+        dao.deleteNoScoreSheetMark(gameId)
+    }
+
     companion object {
         private const val KEY_BGG_CACHE_UPDATED_AT = "bgg_cache_updated_at"
         private const val KEY_SETUP_GUIDE_CATALOG_UPDATED_AT = "setup_guide_catalog_updated_at"
@@ -423,7 +436,7 @@ class CanonicalCollectionStore private constructor(
                         CanonicalCollectionDatabase::class.java,
                         "boardflow_collection.db"
                     )
-                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
                         .build()
                 ).also { INSTANCE = it }
             }
@@ -644,6 +657,15 @@ private interface CanonicalCollectionDao {
 
     @Query("DELETE FROM user_score_sheets WHERE id = :id")
     suspend fun deleteUserScoreSheet(id: String)
+
+    @Query("SELECT * FROM score_sheet_not_needed")
+    suspend fun getNoScoreSheetMarks(): List<NoScoreSheetEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertNoScoreSheetMark(mark: NoScoreSheetEntity)
+
+    @Query("DELETE FROM score_sheet_not_needed WHERE gameId = :gameId")
+    suspend fun deleteNoScoreSheetMark(gameId: Int)
 }
 
 @Database(
@@ -664,9 +686,10 @@ private interface CanonicalCollectionDao {
         SetupGuideEntity::class,
         SetupGuideCatalogEntity::class,
         BggGameDetailEntity::class,
-        UserScoreSheetEntity::class
+        UserScoreSheetEntity::class,
+        NoScoreSheetEntity::class
     ],
-    version = 15,
+    version = 16,
     exportSchema = false
 )
 @TypeConverters(CanonicalCollectionConverters::class)
@@ -925,6 +948,31 @@ private data class UserScoreSheetEntity(
     val sheetJson: String,
     val updatedAt: Long
 )
+
+/** A game that needs no score sheet, so Log Play stops offering an AI draft for it. */
+@Entity(tableName = "score_sheet_not_needed")
+private data class NoScoreSheetEntity(
+    @PrimaryKey val gameId: Int,
+    val reason: String,
+    val source: String,
+    val updatedAt: Long
+)
+
+private val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `score_sheet_not_needed` (
+                `gameId` INTEGER NOT NULL,
+                `reason` TEXT NOT NULL,
+                `source` TEXT NOT NULL,
+                `updatedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`gameId`)
+            )
+            """.trimIndent()
+        )
+    }
+}
 
 private val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -1605,3 +1653,6 @@ data class NamePlayRow(val gameName: String, val plays: Int)
 
 /** A stored user score sheet: its id, the game it is for and the sheet as JSON. */
 data class StoredScoreSheet(val id: String, val gameId: Int, val sheetJson: String, val updatedAt: Long)
+
+/** A game marked as needing no score sheet: why, and who said so ("AI" or "USER"). */
+data class StoredNoScoreSheet(val gameId: Int, val reason: String, val source: String, val updatedAt: Long)

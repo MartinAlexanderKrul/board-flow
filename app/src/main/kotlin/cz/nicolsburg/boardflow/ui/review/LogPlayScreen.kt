@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
 import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetDraftService
+import cz.nicolsburg.boardflow.ui.score.NoScoreSheetUndo
 import cz.nicolsburg.boardflow.ui.score.ScoreSheetDraftCard
 import cz.nicolsburg.boardflow.ui.score.ScoreSheetEntryCard
 import androidx.compose.material.icons.automirrored.filled.Notes
@@ -184,8 +185,13 @@ fun LogPlayScreen(
     val userScoreSheets       by viewModel.userScoreSheets.collectAsState()
     // A game with its own score pad (or one of its expansions) gets a way into it above the players.
     val scoreSheet = remember(viewModel.selectedGame?.id, additionalGames, userScoreSheets) { viewModel.scoreSheetForLogPlay() }
-    // Without one, a game can get a sheet drafted from its rulebook.
-    val draftGame = viewModel.selectedGame?.takeIf { it.id > 0 && scoreSheet == null && viewModel.canDraftScoreSheet() }
+    // Without one, a game can get a sheet drafted from its rulebook, unless it needs none (co-op,
+    // scored during play...: built in, or marked by an AI draft or the user).
+    val noSheetMarks by viewModel.noScoreSheetMarks.collectAsState()
+    val sheetlessGame = viewModel.selectedGame?.takeIf { it.id > 0 && scoreSheet == null && viewModel.canDraftScoreSheet() }
+    val draftGame = sheetlessGame?.takeIf { it.id !in noSheetMarks && viewModel.noScoreSheetReason(it.id) == null }
+    // "Not needed" can be undone until the form is left.
+    var undoNoSheetFor by remember { mutableStateOf<Int?>(null) }
     val sheetDraftState by remember(draftGame?.id) {
         draftGame?.let { viewModel.scoreSheetDraftState(it.id) } ?: flowOf(ScoreSheetDraftService.DraftState.Idle)
     }.collectAsState(ScoreSheetDraftService.DraftState.Idle)
@@ -627,8 +633,19 @@ fun LogPlayScreen(
                                         Toast.makeText(draftContext, it, Toast.LENGTH_LONG).show()
                                     }
                                 }
+                            },
+                            onNotNeeded = {
+                                viewModel.markNoScoreSheet(draftGame.id)
+                                undoNoSheetFor = draftGame.id
                             }
                         )
+                    }
+                } else if (sheetlessGame != null && undoNoSheetFor == sheetlessGame.id) {
+                    item {
+                        NoScoreSheetUndo(onUndo = {
+                            viewModel.clearNoScoreSheet(sheetlessGame.id)
+                            undoNoSheetFor = null
+                        })
                     }
                 }
 

@@ -12,6 +12,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import cz.nicolsburg.boardflow.data.SecurePreferences
+import cz.nicolsburg.boardflow.data.setupguide.DraftRefusedException
 import cz.nicolsburg.boardflow.data.setupguide.GeminiGuideDraftGenerator
 import cz.nicolsburg.boardflow.data.setupguide.GuideDraftAiConfig
 import kotlinx.coroutines.Dispatchers
@@ -99,8 +100,11 @@ class ScoreSheetDraftService(
             onModelBusy = { prefs.markModelExhausted(it, BUSY_MODEL_SKIP_MS) },
             onModelUnavailable = { prefs.markGeminiModelUnavailable(it) }
         )
-        val sheet = generator.draft(file, ScoreSheetDraftPrompt.spec(gameId, gameName, sourceName), config)
-            .getOrElse { return it.message ?: "Gemini could not draft a score sheet" }
+        val sheet = generator.draft(file, ScoreSheetDraftPrompt.spec(gameId, gameName, sourceName), config).getOrElse { error ->
+            // The rulebook has nothing to put on a sheet: remember it, so the draft is not offered again.
+            if (error is DraftRefusedException) repository.markNoSheet(gameId, error.reason, ScoreSheetRepository.SOURCE_AI)
+            return error.message ?: "Gemini could not draft a score sheet"
+        }
         sheet.aiModel?.let { model ->
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_LAST_MODEL, model).apply()
         }

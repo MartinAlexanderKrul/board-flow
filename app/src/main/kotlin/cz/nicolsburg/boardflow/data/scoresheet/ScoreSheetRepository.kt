@@ -1,6 +1,7 @@
 package cz.nicolsburg.boardflow.data.scoresheet
 
 import cz.nicolsburg.boardflow.data.CanonicalCollectionStore
+import cz.nicolsburg.boardflow.data.StoredNoScoreSheet
 import cz.nicolsburg.boardflow.data.StoredScoreSheet
 import cz.nicolsburg.boardflow.model.ScoreSheet
 import cz.nicolsburg.boardflow.model.SheetOrigin
@@ -18,6 +19,9 @@ import kotlinx.coroutines.sync.withLock
 class ScoreSheetRepository(private val store: CanonicalCollectionStore) {
     private val _userSheets = MutableStateFlow<List<ScoreSheet>>(emptyList())
     val userSheets: StateFlow<List<ScoreSheet>> = _userSheets.asStateFlow()
+    private val _noSheetMarks = MutableStateFlow<Map<Int, StoredNoScoreSheet>>(emptyMap())
+    /** Games the user or an AI draft marked as needing no sheet; built-in ones are [NoScoreSheetGames]. */
+    val noSheetMarks: StateFlow<Map<Int, StoredNoScoreSheet>> = _noSheetMarks.asStateFlow()
     private val lock = Mutex()
     private var loaded = false
 
@@ -26,7 +30,43 @@ class ScoreSheetRepository(private val store: CanonicalCollectionStore) {
         _userSheets.value = store.getUserScoreSheets().mapNotNull { stored ->
             runCatching { ScoreSheetJson.parse(stored.sheetJson) }.getOrNull()
         }
+        _noSheetMarks.value = store.getNoScoreSheetMarks().associateBy { it.gameId }
         loaded = true
+    }
+
+    /** Why [gameId] needs no score sheet, or null when it may get one (drafted by AI). */
+    fun noSheetReason(gameId: Int): String? =
+        NoScoreSheetGames.reasonFor(gameId)?.message ?: _noSheetMarks.value[gameId]?.reason
+
+    /** Remembers that [gameId] needs no sheet; [source] is [SOURCE_AI] or [SOURCE_USER]. */
+    suspend fun markNoSheet(gameId: Int, reason: String, source: String) {
+        load()
+        val mark = StoredNoScoreSheet(gameId, reason, source, System.currentTimeMillis())
+        store.saveNoScoreSheetMark(mark)
+        lock.withLock { _noSheetMarks.value = _noSheetMarks.value + (gameId to mark) }
+    }
+
+    suspend fun clearNoSheet(gameId: Int) {
+        load()
+        store.deleteNoScoreSheetMark(gameId)
+        lock.withLock { _noSheetMarks.value = _noSheetMarks.value - gameId }
+    }
+
+    /** The marks as JSON objects, for backups. */
+    suspend fun exportNoSheetMarks(): List<String> {
+        load()
+        return _noSheetMarks.value.values.map {
+            org.json.JSONObject().put("gameId", it.gameId).put("reason", it.reason).put("source", it.source).toString()
+        }
+    }
+
+    /** Restores marks from a backup, adding or replacing them by game. */
+    suspend fun importNoSheetMarks(documents: List<String>) {
+        documents.forEach { text ->
+            val json = runCatching { org.json.JSONObject(text) }.getOrNull() ?: return@forEach
+            val gameId = json.optInt("gameId", 0).takeIf { it > 0 } ?: return@forEach
+            markNoSheet(gameId, json.optString("reason"), json.optString("source", SOURCE_USER))
+        }
     }
 
     /** The sheet for the first id that has one: the game first, then its logged expansions. */
@@ -75,5 +115,8 @@ class ScoreSheetRepository(private val store: CanonicalCollectionStore) {
     companion object {
         /** The id of the user's sheet for a game. */
         fun userSheetId(gameId: Int) = "user-$gameId"
+
+        const val SOURCE_AI = "AI"
+        const val SOURCE_USER = "USER"
     }
 }

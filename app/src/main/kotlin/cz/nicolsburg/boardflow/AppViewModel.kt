@@ -3,6 +3,7 @@
 import android.net.Uri
 import kotlinx.coroutines.flow.Flow
 import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetDraftService
+import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetRepository
 import kotlinx.coroutines.sync.withLock
 import cz.nicolsburg.boardflow.data.PlayPostLock
 import android.util.Log
@@ -889,6 +890,23 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     /** Drafting needs a Gemini key; without one Log Play does not offer it. */
     fun canDraftScoreSheet(): Boolean = container.scoreSheetDraftService.hasGeminiKey()
+
+    /** Games marked as needing no sheet (by an AI draft or the user); Log Play follows them. */
+    val noScoreSheetMarks = container.scoreSheetRepository.noSheetMarks
+
+    /** Why the game needs no score sheet (built in, or marked), or null when one may be drafted. */
+    fun noScoreSheetReason(gameId: Int): String? = container.scoreSheetRepository.noSheetReason(gameId)
+
+    /** The user says the game needs no sheet: stop offering a draft for it. */
+    fun markNoScoreSheet(gameId: Int) {
+        viewModelScope.launch {
+            container.scoreSheetRepository.markNoSheet(gameId, "You marked it as needing no score sheet", ScoreSheetRepository.SOURCE_USER)
+        }
+    }
+
+    fun clearNoScoreSheet(gameId: Int) {
+        viewModelScope.launch { container.scoreSheetRepository.clearNoSheet(gameId) }
+    }
 
     fun scoreSheetDraftState(gameId: Int): Flow<ScoreSheetDraftService.DraftState> =
         container.scoreSheetDraftService.state(gameId)
@@ -2551,6 +2569,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val playerHints = runBlocking { store.getPlayerRecognitionHints() }
         val userGuides = runBlocking { container.setupGuideRepository.userGuidesJson() }
         val userSheets = runBlocking { container.scoreSheetRepository.exportJson() }
+        val noSheetMarks = runBlocking { container.scoreSheetRepository.exportNoSheetMarks() }
         return prefs.exportAll(
             includeSensitiveData = includeSensitiveData,
             collectionSnapshot = collection,
@@ -2561,7 +2580,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             recognitionHints = gameHints,
             playerRecognitionHints = playerHints,
             setupGuides = userGuides,
-            scoreSheets = userSheets
+            scoreSheets = userSheets,
+            scoreSheetsNotNeeded = noSheetMarks
         )
     }
 
@@ -2623,6 +2643,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 container.canonicalCollectionStore.replacePlayerRecognitionHints(imported.playerRecognitionHints)
             imported.setupGuides?.let { container.setupGuideRepository.restoreUserGuides(it) }
             imported.scoreSheets?.let { container.scoreSheetRepository.importJson(it) }
+            imported.scoreSheetsNotNeeded?.let { container.scoreSheetRepository.importNoSheetMarks(it) }
 
             try {
                 _statsPlayScope.value = StatsPlayScope.valueOf(prefs.statsPlayScope)
