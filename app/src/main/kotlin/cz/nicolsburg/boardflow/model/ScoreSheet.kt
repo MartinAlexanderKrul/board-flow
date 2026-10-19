@@ -62,7 +62,8 @@ data class ScoreSheet(
     }
 }
 
-enum class SheetOrigin { BUILT_IN, USER, AI_DRAFT }
+/** BUILT_IN: in the app's code. COMMUNITY: from the repo's `score-sheets/` catalog (shared by users, merged). */
+enum class SheetOrigin { BUILT_IN, COMMUNITY, USER, AI_DRAFT }
 
 /** Typed values per player (input key to value), the modules on, and the totals they must give. */
 data class ScoreExample(

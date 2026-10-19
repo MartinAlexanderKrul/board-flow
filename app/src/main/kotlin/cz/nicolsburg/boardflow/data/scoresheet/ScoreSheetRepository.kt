@@ -12,13 +12,22 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Every score sheet the app knows: the user's own (AI drafts and imports, in Room as JSON) and the
- * built-in ones in [ScoreSheets]. For a game the user's sheet wins, like a user's Quick Setup guide.
- * One per process (in `AppContainer`), so a sheet a background draft saves shows on an open form.
+ * Every score sheet the app knows, in the order they win for a game: the user's own (AI drafts and
+ * imports, in Room as JSON), the catalog's (shared sheets and fixes from the repo's `score-sheets/`,
+ * see [ScoreSheetCatalog]) and the built-in ones in [ScoreSheets]. One per process (in
+ * `AppContainer`), so a sheet a background draft saves shows on an open form. A sheet the user
+ * marks as reviewed goes to [onReviewed], which shares it as a pull request.
  */
-class ScoreSheetRepository(private val store: CanonicalCollectionStore) {
+class ScoreSheetRepository(
+    private val store: CanonicalCollectionStore,
+    private val catalog: ScoreSheetCatalog? = null,
+    private val onReviewed: (ScoreSheet) -> Unit = {}
+) {
     private val _userSheets = MutableStateFlow<List<ScoreSheet>>(emptyList())
     val userSheets: StateFlow<List<ScoreSheet>> = _userSheets.asStateFlow()
+    private val _catalogSheets = MutableStateFlow<List<ScoreSheet>>(emptyList())
+    /** The catalog's sheets; a form showing a game follows them like [userSheets]. */
+    val catalogSheets: StateFlow<List<ScoreSheet>> = _catalogSheets.asStateFlow()
     private val _noSheetMarks = MutableStateFlow<Map<Int, StoredNoScoreSheet>>(emptyMap())
     /** Games the user or an AI draft marked as needing no sheet; built-in ones are [NoScoreSheetGames]. */
     val noSheetMarks: StateFlow<Map<Int, StoredNoScoreSheet>> = _noSheetMarks.asStateFlow()
@@ -31,7 +40,16 @@ class ScoreSheetRepository(private val store: CanonicalCollectionStore) {
             runCatching { ScoreSheetJson.parse(stored.sheetJson) }.getOrNull()
         }
         _noSheetMarks.value = store.getNoScoreSheetMarks().associateBy { it.gameId }
+        _catalogSheets.value = catalog?.sheets().orEmpty()
         loaded = true
+    }
+
+    /** Downloads new and updated catalog sheets (at most once a day unless [force]). */
+    suspend fun refreshCatalog(isOnline: Boolean, force: Boolean = false) {
+        val catalog = catalog ?: return
+        if (!isOnline) return
+        load()
+        if (catalog.refreshIfStale(force)) _catalogSheets.value = catalog.sheets()
     }
 
     /** Why [gameId] needs no score sheet, or null when it may get one (drafted by AI). */
@@ -71,10 +89,13 @@ class ScoreSheetRepository(private val store: CanonicalCollectionStore) {
 
     /** The sheet for the first id that has one: the game first, then its logged expansions. */
     fun forGames(gameIds: List<Int>): ScoreSheet? = gameIds.firstNotNullOfOrNull { id ->
-        _userSheets.value.firstOrNull { id in it.gameIds } ?: ScoreSheets.all.firstOrNull { id in it.gameIds }
+        _userSheets.value.firstOrNull { id in it.gameIds }
+            ?: _catalogSheets.value.firstOrNull { id in it.gameIds }
+            ?: ScoreSheets.all.firstOrNull { id in it.gameIds }
     }
 
-    fun byId(id: String): ScoreSheet? = _userSheets.value.firstOrNull { it.id == id } ?: ScoreSheets.byId(id)
+    fun byId(id: String): ScoreSheet? =
+        _userSheets.value.firstOrNull { it.id == id } ?: _catalogSheets.value.firstOrNull { it.id == id } ?: ScoreSheets.byId(id)
 
     /** Stores the user's own sheet for [ScoreSheet.gameIds]'s first game. Returns the validator's problems; empty when saved. */
     suspend fun save(sheet: ScoreSheet): List<String> {
@@ -89,9 +110,11 @@ class ScoreSheetRepository(private val store: CanonicalCollectionStore) {
         return emptyList()
     }
 
+    /** The user checked the sheet against the rulebook: it is trusted now, and shared with everyone. */
     suspend fun markReviewed(id: String) {
         val sheet = _userSheets.value.firstOrNull { it.id == id } ?: return
-        save(sheet.copy(reviewed = true))
+        val reviewed = sheet.copy(reviewed = true)
+        if (save(reviewed).isEmpty()) onReviewed(reviewed)
     }
 
     suspend fun delete(id: String) {
@@ -109,7 +132,8 @@ class ScoreSheetRepository(private val store: CanonicalCollectionStore) {
     /** Restores sheets from a backup, adding or replacing them by id; returns how many were valid. */
     suspend fun importJson(documents: List<String>): Int = documents.count { text ->
         val sheet = runCatching { ScoreSheetJson.parse(text) }.getOrNull() ?: return@count false
-        save(if (sheet.origin == SheetOrigin.BUILT_IN) sheet.copy(origin = SheetOrigin.USER) else sheet).isEmpty()
+        val own = sheet.origin == SheetOrigin.BUILT_IN || sheet.origin == SheetOrigin.COMMUNITY
+        save(if (own) sheet.copy(origin = SheetOrigin.USER) else sheet).isEmpty()
     }
 
     companion object {

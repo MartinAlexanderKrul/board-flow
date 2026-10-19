@@ -883,6 +883,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     /** The user's own score sheets (AI drafts, imports); a form showing a game follows them. */
     val userScoreSheets: StateFlow<List<ScoreSheet>> = container.scoreSheetRepository.userSheets
 
+    /** Shared sheets from the repo's catalog; a form showing a game follows them too. */
+    val catalogScoreSheets: StateFlow<List<ScoreSheet>> = container.scoreSheetRepository.catalogSheets
+
     fun scoreSheetById(id: String): ScoreSheet? = container.scoreSheetRepository.byId(id)
 
     /** The score sheet for the game on the form (or one of its expansions), if it has one. */
@@ -2258,7 +2261,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val promotedPlayIds = PlayPostLock.promotedIds
 
     init {
-        viewModelScope.launch { container.scoreSheetRepository.load() }
+        viewModelScope.launch {
+            container.scoreSheetRepository.load()
+            // Shared sheets and fixes from the repo's catalog, at most once a day.
+            container.scoreSheetRepository.refreshCatalog(isOnline())
+        }
         // The worker posted plays while the app is open: show them as posted straight away.
         viewModelScope.launch {
             PlayPostLock.postedInBackground.collect {

@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.setup
 
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.ui.common.rememberNotificationPermissionRequest
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
@@ -442,7 +443,10 @@ private fun SetupHeader(
         )
         if (!state.loaded.guide.provenance.reviewed) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) { HintText("Draft guide - check it against the rulebook.") }
+                Box(Modifier.weight(1f)) { HintText(
+                    "Draft guide - check it against the rulebook." +
+                        if (BuildConfig.CONTRIBUTION_RELAY_URL.isNotBlank()) " Once reviewed, it is shared with all BoardFlow users." else ""
+                ) }
                 BoardFlowInlineAction(onClick = onMarkReviewed) { Text("Mark as reviewed") }
             }
         }

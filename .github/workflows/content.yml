@@ -1,0 +1,44 @@
+# Checks shared content before it reaches every install: the Quick Setup guides in setup-guides/
+# and the score sheets in score-sheets/. Pull requests from the contribution relay (relay/) touch
+# only these folders, so this is what decides whether one can be merged.
+name: Content checks
+
+on:
+  pull_request:
+    paths:
+      - "setup-guides/**"
+      - "score-sheets/**"
+      - "relay/**"
+  push:
+    branches: [master]
+    paths:
+      - "setup-guides/**"
+      - "score-sheets/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Validate guides and score sheets
+        run: >
+          ./gradlew :app:testDebugUnitTest
+          --tests "cz.nicolsburg.boardflow.data.setupguide.BundledSetupGuidesTest"
+          --tests "cz.nicolsburg.boardflow.data.scoresheet.RepoScoreSheetsTest"
+
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Relay tests
+        run: node --test relay/test/relay.test.mjs

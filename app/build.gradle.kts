@@ -35,6 +35,13 @@ android {
             "BGG_XML_API_TOKEN",
             buildConfigString((System.getenv("BGG_XML_API_TOKEN") ?: localProperty("BGG_XML_API_TOKEN")).trim())
         )
+        // The relay that turns reviewed guides and score sheets into pull requests (see relay/README.md);
+        // empty turns sharing off.
+        buildConfigField(
+            "String",
+            "CONTRIBUTION_RELAY_URL",
+            buildConfigString((System.getenv("CONTRIBUTION_RELAY_URL") ?: localProperty("CONTRIBUTION_RELAY_URL")).trim())
+        )
     }
 
     signingConfigs {
@@ -99,9 +106,18 @@ val copySetupGuideAssets = tasks.register<Copy>("copySetupGuideAssets") {
     into(layout.buildDirectory.dir("generated/setupGuideAssets/setup-guides"))
 }
 android.sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/setupGuideAssets"))
-tasks.named("preBuild") { dependsOn(copySetupGuideAssets) }
-// BundledSetupGuidesTest reads setup-guides/ directly; declare it so guide edits re-run the tests.
-tasks.withType<Test>().configureEach { inputs.dir(rootProject.file("setup-guides")) }
+// Shared score sheets work the same way: the repo-root score-sheets/ folder is the catalog and ships
+// as assets/score-sheets/*.json.
+val copyScoreSheetAssets = tasks.register<Copy>("copyScoreSheetAssets") {
+    from(rootProject.file("score-sheets")) { include("*.json") }
+    into(layout.buildDirectory.dir("generated/setupGuideAssets/score-sheets"))
+}
+tasks.named("preBuild") { dependsOn(copySetupGuideAssets, copyScoreSheetAssets) }
+// BundledSetupGuidesTest and RepoScoreSheetsTest read the folders directly; declare them so edits re-run the tests.
+tasks.withType<Test>().configureEach {
+    inputs.dir(rootProject.file("setup-guides"))
+    inputs.dir(rootProject.file("score-sheets"))
+}
 
 android.applicationVariants.configureEach {
     outputs.configureEach {

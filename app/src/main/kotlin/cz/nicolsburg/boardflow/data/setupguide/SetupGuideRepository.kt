@@ -44,7 +44,9 @@ data class SetupGuideSummary(
 class SetupGuideRepository(
     private val store: CanonicalCollectionStore,
     private val bundled: BundledSetupGuideSource,
-    private val catalog: SetupGuideCatalogClient
+    private val catalog: SetupGuideCatalogClient,
+    /** A user guide the user checked (draft marked reviewed, or saved in the editor); shared as a pull request. */
+    private val onReviewed: (SetupGuide) -> Unit = {}
 ) {
     private val mutex = Mutex()
     private val _availability = MutableStateFlow<Map<Int, SetupGuideAvailability>>(emptyMap())
@@ -191,6 +193,7 @@ class SetupGuideRepository(
         saveUserGuide(guide, basedOnVersion = existing?.basedOnVersion ?: upstreamVersion(guide.gameId))
         refreshAvailability()
         _userGuideChanges.value++
+        onReviewed(guide)
         return emptyList()
     }
 
@@ -214,6 +217,7 @@ class SetupGuideRepository(
         val reviewed = guide.copy(provenance = guide.provenance.copy(reviewed = true))
         store.saveSetupGuide(row.copy(guideJson = SetupGuideJson.toJsonString(reviewed), updatedAt = System.currentTimeMillis()))
         _userGuideChanges.value++
+        onReviewed(reviewed)
     }
 
     /** Removes the user's own version; the bundled or downloaded guide shows again. */

@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cz.nicolsburg.boardflow.BuildConfig
 import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetDraftService.DraftState
 import cz.nicolsburg.boardflow.model.ScoreSheet
 import cz.nicolsburg.boardflow.model.SheetOrigin
@@ -125,7 +126,7 @@ fun UserSheetBanner(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (sheet.origin == SheetOrigin.BUILT_IN) return
+    if (sheet.origin == SheetOrigin.BUILT_IN || sheet.origin == SheetOrigin.COMMUNITY) return
     var confirmDelete by remember { mutableStateOf(false) }
     if (confirmDelete) {
         BoardFlowConfirmationDialog(
@@ -150,7 +151,10 @@ fun UserSheetBanner(
                     append(if (sheet.origin == SheetOrigin.AI_DRAFT) "Drafted by Gemini" else "Imported")
                     sheet.sources.firstOrNull()?.let { append(" from $it") }
                     append(".")
-                    if (draft) append(" Point values or rows may be wrong; compare them with the rulebook's scoring section.")
+                    if (draft) {
+                        append(" Point values or rows may be wrong; compare them with the rulebook's scoring section.")
+                        if (BuildConfig.CONTRIBUTION_RELAY_URL.isNotBlank()) append(" Once reviewed, it is shared with all BoardFlow users.")
+                    }
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

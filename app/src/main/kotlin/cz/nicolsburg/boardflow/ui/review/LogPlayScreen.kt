@@ -183,8 +183,9 @@ fun LogPlayScreen(
     var showExpansionPicker   by rememberSaveable { mutableStateOf(false) }
     val scoreSheetDraft       by viewModel.scoreSheetDraft.collectAsState()
     val userScoreSheets       by viewModel.userScoreSheets.collectAsState()
+    val catalogScoreSheets    by viewModel.catalogScoreSheets.collectAsState()
     // A game with its own score pad (or one of its expansions) gets a way into it above the players.
-    val scoreSheet = remember(viewModel.selectedGame?.id, additionalGames, userScoreSheets) { viewModel.scoreSheetForLogPlay() }
+    val scoreSheet = remember(viewModel.selectedGame?.id, additionalGames, userScoreSheets, catalogScoreSheets) { viewModel.scoreSheetForLogPlay() }
     // Without one, a game can get a sheet drafted from its rulebook, unless it needs none (co-op,
     // scored during play...: built in, or marked by an AI draft or the user).
     val noSheetMarks by viewModel.noScoreSheetMarks.collectAsState()

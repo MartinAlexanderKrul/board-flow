@@ -1,0 +1,19 @@
+# Cloudflare Worker for the BoardFlow contribution relay. See README.md for the setup.
+name = "boardflow-relay"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+GITHUB_OWNER = "MartinAlexanderKrul"
+GITHUB_REPO = "board-flow"
+BASE_BRANCH = "master"
+
+# Per-IP rate limit (10 submissions an hour). Create it with
+#   npx wrangler kv namespace create RATE
+# and put the id it prints here.
+[[kv_namespaces]]
+binding = "RATE"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secrets (npx wrangler secret put <NAME>), never in this file:
+#   GITHUB_APP_ID, GITHUB_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY (PKCS#8 PEM)

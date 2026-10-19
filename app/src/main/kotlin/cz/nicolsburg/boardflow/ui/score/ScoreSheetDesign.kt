@@ -31,11 +31,16 @@ fun SheetGlyph(glyph: Glyph?, modifier: Modifier = Modifier) {
 }
 
 /**
- * A sheet's design: its hand-made one when it has one (every built-in sheet does), otherwise icons
- * picked by keyword (the user's own sheets).
+ * A sheet's design: the hand-made one for its id (every built-in sheet has one, and a catalog fix
+ * keeps the id), with icons picked by keyword for rows it does not cover; only keyword icons for
+ * the user's own and shared sheets.
  */
-fun scoreSheetDesign(sheet: ScoreSheet): ScoreSheetDesign =
-    if (sheet.origin == SheetOrigin.BUILT_IN) builtInDesign(sheet.id) ?: keywordDesign(sheet) else keywordDesign(sheet)
+fun scoreSheetDesign(sheet: ScoreSheet): ScoreSheetDesign {
+    val keyword = keywordDesign(sheet)
+    val handMade = builtInDesign(sheet.id)?.takeIf { sheet.origin == SheetOrigin.BUILT_IN || sheet.origin == SheetOrigin.COMMUNITY }
+        ?: return keyword
+    return ScoreSheetDesign(emblem = handMade.emblem, glyphs = keyword.glyphs + handMade.glyphs)
+}
 
 /** The hand-made design for a built-in sheet id, or null. */
 internal fun builtInDesign(sheetId: String): ScoreSheetDesign? = when (sheetId) {

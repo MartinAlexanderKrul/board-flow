@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.setup
 
+import cz.nicolsburg.boardflow.BuildConfig
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -169,6 +170,7 @@ private fun EditorContent(
                     Text(guide.gameName, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                     Text(
                         "Saved as your version of this guide; the standard guide stays as it was. " +
+                            (if (BuildConfig.CONTRIBUTION_RELAY_URL.isNotBlank()) "Saving also shares it with all BoardFlow users. " else "") +
                             "Tap the grey line under a step for its quantities and when it shows.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

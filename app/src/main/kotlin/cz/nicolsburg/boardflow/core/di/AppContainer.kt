@@ -11,6 +11,8 @@ import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.data.chronicle.FallbackChronicleComposer
 import cz.nicolsburg.boardflow.data.chronicle.GeminiChronicleLineGenerator
 import cz.nicolsburg.boardflow.data.chronicle.SessionChronicleService
+import cz.nicolsburg.boardflow.data.contribution.ContributionService
+import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetCatalog
 import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetDraftService
 import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetRepository
 import cz.nicolsburg.boardflow.data.setupguide.BundledSetupGuideSource
@@ -33,13 +35,20 @@ class AppContainer private constructor(context: Context) {
         lineGenerator = GeminiChronicleLineGenerator(),
         fallbackComposer = FallbackChronicleComposer()
     )
+    /** Shares reviewed guides and score sheets as pull requests; see [ContributionService]. */
+    val contributionService = ContributionService(appContext)
     val setupGuideRepository = SetupGuideRepository(
         store = canonicalCollectionStore,
         bundled = BundledSetupGuideSource(appContext),
-        catalog = SetupGuideCatalogClient()
+        catalog = SetupGuideCatalogClient(),
+        onReviewed = contributionService::shareSetupGuide
     )
     val guideDraftService = GuideDraftService(appContext, securePreferences, setupGuideRepository)
-    val scoreSheetRepository = ScoreSheetRepository(canonicalCollectionStore)
+    val scoreSheetRepository = ScoreSheetRepository(
+        store = canonicalCollectionStore,
+        catalog = ScoreSheetCatalog(appContext),
+        onReviewed = contributionService::shareScoreSheet
+    )
     val scoreSheetDraftService = ScoreSheetDraftService(appContext, securePreferences, scoreSheetRepository)
 
     /** Lets [BggPlayPostWorker] post plays that were saved without reaching BGG. */
