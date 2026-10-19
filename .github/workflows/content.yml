@@ -1,19 +1,17 @@
 # Checks shared content before it reaches every install: the Quick Setup guides in setup-guides/
 # and the score sheets in score-sheets/. Pull requests from the contribution relay (relay/) touch
-# only these folders, so this is what decides whether one can be merged.
+# only these folders, so this is what mainly decides whether one can be merged.
+#
+# "validate" is a required status check on master, so it has no `paths:` filter: a required check
+# that only fires on some paths never runs (and never reports) on a PR or push that touches none
+# of them, which leaves the branch permanently blocked waiting on a check that cannot happen. It
+# runs fast (a couple of targeted unit tests), so checking it on every PR costs little.
 name: Content checks
 
 on:
   pull_request:
-    paths:
-      - "setup-guides/**"
-      - "score-sheets/**"
-      - "relay/**"
   push:
     branches: [master]
-    paths:
-      - "setup-guides/**"
-      - "score-sheets/**"
 
 jobs:
   validate:
@@ -26,6 +24,35 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
+      - name: Fake google-services.json
+        # google-services.json holds Firebase config and is gitignored, so CI has none. This job
+        # never touches Firebase (it only runs BundledSetupGuidesTest and RepoScoreSheetsTest),
+        # but the debug variant it builds for needs some file there to satisfy the Google Services
+        # plugin; none of these values are real.
+        run: |
+          cat > app/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "0",
+              "project_id": "ci-placeholder",
+              "storage_bucket": "ci-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:0:android:0000000000000000",
+                  "android_client_info": { "package_name": "cz.nicolsburg.boardflow" }
+                },
+                "oauth_client": [
+                  { "client_id": "0-ciplaceholder.apps.googleusercontent.com", "client_type": 3 }
+                ],
+                "api_key": [ { "current_key": "ci-placeholder" } ],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
       - name: Validate guides and score sheets
         run: >
           ./gradlew :app:testDebugUnitTest
