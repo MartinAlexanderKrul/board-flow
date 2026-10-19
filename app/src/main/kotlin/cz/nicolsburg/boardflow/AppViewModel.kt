@@ -1,5 +1,8 @@
 ﻿package cz.nicolsburg.boardflow
 
+import android.net.Uri
+import kotlinx.coroutines.flow.Flow
+import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetDraftService
 import kotlinx.coroutines.sync.withLock
 import cz.nicolsburg.boardflow.data.PlayPostLock
 import android.util.Log
@@ -14,7 +17,6 @@ import cz.nicolsburg.boardflow.data.GeminiModels
 import cz.nicolsburg.boardflow.data.PlayerRecognitionEngine
 import cz.nicolsburg.boardflow.data.chronicle.ChronicleAiConfig
 import cz.nicolsburg.boardflow.data.normalizeForRecognition
-import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheets
 import cz.nicolsburg.boardflow.model.PickTimeSlot
 import cz.nicolsburg.boardflow.model.ScoreSheet
 import cz.nicolsburg.boardflow.model.ScoreSheetDraft
@@ -877,8 +879,33 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private fun logPlayGameIds(): List<Int> =
         listOfNotNull(selectedGame?.id?.takeIf { it != 0 }) + _additionalGames.value.map { it.id }
 
+    /** The user's own score sheets (AI drafts, imports); a form showing a game follows them. */
+    val userScoreSheets: StateFlow<List<ScoreSheet>> = container.scoreSheetRepository.userSheets
+
+    fun scoreSheetById(id: String): ScoreSheet? = container.scoreSheetRepository.byId(id)
+
     /** The score sheet for the game on the form (or one of its expansions), if it has one. */
-    fun scoreSheetForLogPlay(): ScoreSheet? = ScoreSheets.forGames(logPlayGameIds())
+    fun scoreSheetForLogPlay(): ScoreSheet? = container.scoreSheetRepository.forGames(logPlayGameIds())
+
+    /** Drafting needs a Gemini key; without one Log Play does not offer it. */
+    fun canDraftScoreSheet(): Boolean = container.scoreSheetDraftService.hasGeminiKey()
+
+    fun scoreSheetDraftState(gameId: Int): Flow<ScoreSheetDraftService.DraftState> =
+        container.scoreSheetDraftService.state(gameId)
+
+    /** Queues a draft from the rulebook PDF; null when queued, or a message for the user. */
+    suspend fun startScoreSheetDraft(pdf: Uri, gameId: Int, gameName: String): String? =
+        container.scoreSheetDraftService.start(pdf, gameId, gameName)
+
+    fun markScoreSheetReviewed(id: String) {
+        viewModelScope.launch { container.scoreSheetRepository.markReviewed(id) }
+    }
+
+    /** Deletes the user's sheet; values typed on it go too, since its rows are gone. */
+    fun deleteScoreSheet(id: String) {
+        if (_scoreSheetDraft.value?.sheetId == id) _scoreSheetDraft.value = null
+        viewModelScope.launch { container.scoreSheetRepository.delete(id) }
+    }
 
     /** Starts or resumes the sheet with the form's players as columns; false when there is no sheet. */
     fun openScoreSheet(): Boolean {
@@ -923,7 +950,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     /** Writes the sheet's totals and winners to the form's players, adding any the form lacks. */
     fun applyScoreSheet() {
         val draft = _scoreSheetDraft.value ?: return
-        val sheet = ScoreSheets.byId(draft.sheetId) ?: return
+        val sheet = scoreSheetById(draft.sheetId) ?: return
         val result = ScoreSheetScoring.score(sheet, draft)
         val form = _editablePlayers.value
         val fromSheet = draft.players.mapIndexed { i, raw ->
@@ -2213,6 +2240,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val promotedPlayIds = PlayPostLock.promotedIds
 
     init {
+        viewModelScope.launch { container.scoreSheetRepository.load() }
         // The worker posted plays while the app is open: show them as posted straight away.
         viewModelScope.launch {
             PlayPostLock.postedInBackground.collect {
@@ -2522,6 +2550,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         val gameHints = runBlocking { store.getGameRecognitionHints() }
         val playerHints = runBlocking { store.getPlayerRecognitionHints() }
         val userGuides = runBlocking { container.setupGuideRepository.userGuidesJson() }
+        val userSheets = runBlocking { container.scoreSheetRepository.exportJson() }
         return prefs.exportAll(
             includeSensitiveData = includeSensitiveData,
             collectionSnapshot = collection,
@@ -2531,7 +2560,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             challenges = challenges,
             recognitionHints = gameHints,
             playerRecognitionHints = playerHints,
-            setupGuides = userGuides
+            setupGuides = userGuides,
+            scoreSheets = userSheets
         )
     }
 
@@ -2592,6 +2622,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             if (imported.playerRecognitionHints.isNotEmpty())
                 container.canonicalCollectionStore.replacePlayerRecognitionHints(imported.playerRecognitionHints)
             imported.setupGuides?.let { container.setupGuideRepository.restoreUserGuides(it) }
+            imported.scoreSheets?.let { container.scoreSheetRepository.importJson(it) }
 
             try {
                 _statsPlayScope.value = StatsPlayScope.valueOf(prefs.statsPlayScope)

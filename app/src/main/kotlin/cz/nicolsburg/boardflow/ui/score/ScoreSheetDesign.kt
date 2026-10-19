@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import cz.nicolsburg.boardflow.model.ScoreSheet
+import cz.nicolsburg.boardflow.model.SheetOrigin
 
 /**
  * What makes one game's score sheet its own: a drawn icon per row and an emblem for the header,
@@ -28,8 +30,15 @@ fun SheetGlyph(glyph: Glyph?, modifier: Modifier = Modifier) {
     Canvas(modifier) { glyph(size.minDimension) }
 }
 
-/** The design for a sheet id; every sheet in `ScoreSheets` has one. */
-fun scoreSheetDesign(sheetId: String): ScoreSheetDesign = when (sheetId) {
+/**
+ * A sheet's design: its hand-made one when it has one (every built-in sheet does), otherwise icons
+ * picked by keyword (the user's own sheets).
+ */
+fun scoreSheetDesign(sheet: ScoreSheet): ScoreSheetDesign =
+    if (sheet.origin == SheetOrigin.BUILT_IN) builtInDesign(sheet.id) ?: keywordDesign(sheet) else keywordDesign(sheet)
+
+/** The hand-made design for a built-in sheet id, or null. */
+internal fun builtInDesign(sheetId: String): ScoreSheetDesign? = when (sheetId) {
     "wingspan" -> WingspanDesign
     "everdell" -> EverdellDesign
     "farshore" -> FarshoreDesign
@@ -38,5 +47,5 @@ fun scoreSheetDesign(sheetId: String): ScoreSheetDesign = when (sheetId) {
     "emerland" -> EmerlandDesign
     "finspan" -> FinspanDesign
     "wyrmspan" -> WyrmspanDesign
-    else -> guideDesigns[sheetId] ?: error("No score sheet design for $sheetId")
+    else -> guideDesigns[sheetId]
 }

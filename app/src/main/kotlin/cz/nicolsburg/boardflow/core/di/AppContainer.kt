@@ -11,6 +11,8 @@ import cz.nicolsburg.boardflow.data.SecurePreferences
 import cz.nicolsburg.boardflow.data.chronicle.FallbackChronicleComposer
 import cz.nicolsburg.boardflow.data.chronicle.GeminiChronicleLineGenerator
 import cz.nicolsburg.boardflow.data.chronicle.SessionChronicleService
+import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetDraftService
+import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetRepository
 import cz.nicolsburg.boardflow.data.setupguide.BundledSetupGuideSource
 import cz.nicolsburg.boardflow.data.setupguide.GuideDraftService
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideCatalogClient
@@ -37,6 +39,8 @@ class AppContainer private constructor(context: Context) {
         catalog = SetupGuideCatalogClient()
     )
     val guideDraftService = GuideDraftService(appContext, securePreferences, setupGuideRepository)
+    val scoreSheetRepository = ScoreSheetRepository(canonicalCollectionStore)
+    val scoreSheetDraftService = ScoreSheetDraftService(appContext, securePreferences, scoreSheetRepository)
 
     /** Lets [BggPlayPostWorker] post plays that were saved without reaching BGG. */
     fun scheduleUnpostedPlayPost() = BggPlayPostWorker.enqueue(appContext)

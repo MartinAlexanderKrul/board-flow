@@ -397,6 +397,19 @@ class CanonicalCollectionStore private constructor(
         }
     }
 
+    // --- The user's own score sheets (AI drafts and imports; built-in sheets live in code) ---
+
+    suspend fun getUserScoreSheets(): List<StoredScoreSheet> =
+        dao.getUserScoreSheets().map { StoredScoreSheet(it.id, it.gameId, it.sheetJson, it.updatedAt) }
+
+    suspend fun saveUserScoreSheet(sheet: StoredScoreSheet) {
+        dao.upsertUserScoreSheet(UserScoreSheetEntity(sheet.id, sheet.gameId, sheet.sheetJson, sheet.updatedAt))
+    }
+
+    suspend fun deleteUserScoreSheet(id: String) {
+        dao.deleteUserScoreSheet(id)
+    }
+
     companion object {
         private const val KEY_BGG_CACHE_UPDATED_AT = "bgg_cache_updated_at"
         private const val KEY_SETUP_GUIDE_CATALOG_UPDATED_AT = "setup_guide_catalog_updated_at"
@@ -410,7 +423,7 @@ class CanonicalCollectionStore private constructor(
                         CanonicalCollectionDatabase::class.java,
                         "boardflow_collection.db"
                     )
-                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
                         .build()
                 ).also { INSTANCE = it }
             }
@@ -622,6 +635,15 @@ private interface CanonicalCollectionDao {
 
     @Query("DELETE FROM setup_guide_catalog")
     suspend fun clearSetupGuideCatalog()
+
+    @Query("SELECT * FROM user_score_sheets")
+    suspend fun getUserScoreSheets(): List<UserScoreSheetEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertUserScoreSheet(sheet: UserScoreSheetEntity)
+
+    @Query("DELETE FROM user_score_sheets WHERE id = :id")
+    suspend fun deleteUserScoreSheet(id: String)
 }
 
 @Database(
@@ -641,9 +663,10 @@ private interface CanonicalCollectionDao {
         SleeveInventoryEntity::class,
         SetupGuideEntity::class,
         SetupGuideCatalogEntity::class,
-        BggGameDetailEntity::class
+        BggGameDetailEntity::class,
+        UserScoreSheetEntity::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = false
 )
 @TypeConverters(CanonicalCollectionConverters::class)
@@ -890,6 +913,31 @@ private data class SetupGuideCatalogEntity(
             version = entry.version,
             schemaVersion = entry.schemaVersion,
             path = entry.path
+        )
+    }
+}
+
+/** One of the user's own score sheets, stored whole; see `ScoreSheetJson`. */
+@Entity(tableName = "user_score_sheets")
+private data class UserScoreSheetEntity(
+    @PrimaryKey val id: String,
+    val gameId: Int,
+    val sheetJson: String,
+    val updatedAt: Long
+)
+
+private val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `user_score_sheets` (
+                `id` TEXT NOT NULL,
+                `gameId` INTEGER NOT NULL,
+                `sheetJson` TEXT NOT NULL,
+                `updatedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`id`)
+            )
+            """.trimIndent()
         )
     }
 }
@@ -1554,3 +1602,6 @@ private data class PlayerRecognitionHintEntity(
 
 data class DatePlayRow(val date: String, val plays: Int)
 data class NamePlayRow(val gameName: String, val plays: Int)
+
+/** A stored user score sheet: its id, the game it is for and the sheet as JSON. */
+data class StoredScoreSheet(val id: String, val gameId: Int, val sheetJson: String, val updatedAt: Long)
