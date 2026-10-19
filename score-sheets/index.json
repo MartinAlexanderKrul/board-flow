@@ -1,4 +1,12 @@
 {
   "schemaVersion": 1,
-  "sheets": []
+  "sheets": [
+    {
+      "id": "community-330950",
+      "gameName": "Age of Galaxy",
+      "gameIds": [330950],
+      "version": 1,
+      "path": "330950.json"
+    }
+  ]
 }
