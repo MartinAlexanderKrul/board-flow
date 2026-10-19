@@ -45,12 +45,18 @@ class ScoreSheetRepository(
     }
 
     /** Downloads new and updated catalog sheets (at most once a day unless [force]). */
-    suspend fun refreshCatalog(isOnline: Boolean, force: Boolean = false) {
-        val catalog = catalog ?: return
-        if (!isOnline) return
+    /** Returns how many sheets were new or updated. */
+    suspend fun refreshCatalog(isOnline: Boolean, force: Boolean = false): Int {
+        val catalog = catalog ?: return 0
+        if (!isOnline) return 0
         load()
-        if (catalog.refreshIfStale(force)) _catalogSheets.value = catalog.sheets()
+        val changed = catalog.refreshIfStale(force)
+        if (changed > 0) _catalogSheets.value = catalog.sheets()
+        return changed
     }
+
+    /** Total sheets the app knows (user's own, catalog, built-in), for a Settings summary. */
+    fun counts(): Int = (ScoreSheets.all.map { it.id } + _catalogSheets.value.map { it.id } + _userSheets.value.map { it.id }).distinct().size
 
     /** Why [gameId] needs no score sheet, or null when it may get one (drafted by AI). */
     fun noSheetReason(gameId: Int): String? =

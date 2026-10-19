@@ -90,26 +90,26 @@ class ScoreSheetCatalog(
             .mapNotNull { (_, copies) -> copies.sortedByDescending { it.first.version }.firstNotNullOfOrNull { ScoreSheetIndex.parseSheet(it.second) } }
     }
 
-    /** Downloads the index and any sheet newer than the copy on the phone, at most once a day. Returns true when something changed. */
-    suspend fun refreshIfStale(force: Boolean = false): Boolean = withContext(Dispatchers.IO) {
-        if (!force && System.currentTimeMillis() - prefs.getLong(KEY_UPDATED_AT, 0) < MAX_AGE_MS) return@withContext false
-        val indexText = fetch("index.json") ?: return@withContext false
-        val remote = runCatching { ScoreSheetIndex.parse(indexText) }.getOrNull() ?: return@withContext false
+    /** Downloads the index and any sheet newer than the copy on the phone, at most once a day. Returns how many sheets were new or updated. */
+    suspend fun refreshIfStale(force: Boolean = false): Int = withContext(Dispatchers.IO) {
+        if (!force && System.currentTimeMillis() - prefs.getLong(KEY_UPDATED_AT, 0) < MAX_AGE_MS) return@withContext 0
+        val indexText = fetch("index.json") ?: return@withContext 0
+        val remote = runCatching { ScoreSheetIndex.parse(indexText) }.getOrNull() ?: return@withContext 0
         val known = runCatching { ScoreSheetIndex.parse(File(cacheDir, "index.json").readText()) }.getOrDefault(emptyList())
             .associateBy { it.id }
         cacheDir.mkdirs()
-        var changed = false
+        var changed = 0
         val kept = remote.mapNotNull { entry ->
             val have = known[entry.id]
             if (have != null && have.version >= entry.version && File(cacheDir, entry.path).exists()) return@mapNotNull entry
             val text = fetch(entry.path)?.takeIf { ScoreSheetIndex.parseSheet(it) != null } ?: return@mapNotNull null
             File(cacheDir, entry.path).writeText(text)
-            changed = true
+            changed++
             entry
         }
         File(cacheDir, "index.json").writeText(ScoreSheetIndex.toJson(kept))
         prefs.edit().putLong(KEY_UPDATED_AT, System.currentTimeMillis()).apply()
-        changed || kept.size != known.size
+        changed
     }
 
     private fun asset(path: String): String =

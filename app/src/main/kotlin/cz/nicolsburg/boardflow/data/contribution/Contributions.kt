@@ -1,17 +1,24 @@
 package cz.nicolsburg.boardflow.data.contribution
 
 import android.content.Context
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.util.Log
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
+import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import cz.nicolsburg.boardflow.BuildConfig
+import cz.nicolsburg.boardflow.R
+import cz.nicolsburg.boardflow.core.di.AppContainer
+import cz.nicolsburg.boardflow.data.BackgroundNotifications
 import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheetJson
 import cz.nicolsburg.boardflow.model.GuideOrigin
 import cz.nicolsburg.boardflow.model.ScoreSheet
@@ -105,6 +112,9 @@ class ContributionService(
         val request = OneTimeWorkRequestBuilder<ContributionWorker>()
             .setInputData(workDataOf(ContributionWorker.KEY_FILE to file.absolutePath, ContributionWorker.KEY_ID to key))
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            // One quick POST with no visible sign of progress; without this, Doze/App Standby can
+            // leave it sitting enqueued for a long time instead of running right away.
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.MINUTES)
             .addTag(ContributionWorker.TAG)
             .build()
@@ -142,12 +152,35 @@ class ContributionService(
     }
 }
 
-/** Sends a queued contribution to the relay; retried with backoff while offline or rate limited. */
+/**
+ * Sends a queued contribution to the relay; retried with backoff while offline or rate limited.
+ * Expedited (see [ContributionService.enqueue]), which on Android 12 and below needs a foreground
+ * service while it runs: a quiet, title-only notification with no text, gone the moment the one
+ * POST finishes (under a second in practice). Unlike the draft workers, there is no result
+ * notification on success or final failure - sharing has no button, so it stays out of the way.
+ */
 class ContributionWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        val notification = BackgroundNotifications.progress(
+            applicationContext,
+            title = "Sharing with BoardFlow users",
+            text = "",
+            icon = R.drawable.ic_stat_guide,
+            openIntent = BackgroundNotifications.openApp(applicationContext)
+        )
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            ForegroundInfo(NOTIFICATION_ID, notification)
+        }
+    }
+
     override suspend fun doWork(): Result {
         val file = inputData.getString(KEY_FILE)?.let(::File)?.takeIf { it.exists() } ?: return Result.success()
+        runCatching { setForeground(getForegroundInfo()) }
         val key = inputData.getString(KEY_ID).orEmpty()
-        val done = cz.nicolsburg.boardflow.core.di.AppContainer.get(applicationContext).contributionService.send(key, file.readText())
+        val done = AppContainer.get(applicationContext).contributionService.send(key, file.readText())
         if (!done) return if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
         file.delete()
         return Result.success()
@@ -158,5 +191,6 @@ class ContributionWorker(context: Context, params: WorkerParameters) : Coroutine
         const val KEY_FILE = "file"
         const val KEY_ID = "id"
         private const val MAX_ATTEMPTS = 8
+        private const val NOTIFICATION_ID = 46_000_000
     }
 }

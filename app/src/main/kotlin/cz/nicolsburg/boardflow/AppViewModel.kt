@@ -895,6 +895,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     /** Drafting needs a Gemini key; without one Log Play does not offer it. */
     fun canDraftScoreSheet(): Boolean = container.scoreSheetDraftService.hasGeminiKey()
 
+    fun scoreSheetCounts(): Int = container.scoreSheetRepository.counts()
+
+    /** Forces an immediate check for new and updated catalog score sheets. Returns how many changed. */
+    suspend fun refreshScoreSheetCatalog(): Int = container.scoreSheetRepository.refreshCatalog(isOnline(), force = true)
+
     /** Games marked as needing no sheet (by an AI draft or the user); Log Play follows them. */
     val noScoreSheetMarks = container.scoreSheetRepository.noSheetMarks
 

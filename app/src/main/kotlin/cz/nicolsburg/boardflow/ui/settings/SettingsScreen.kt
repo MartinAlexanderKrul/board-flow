@@ -215,6 +215,8 @@ fun SettingsScreen(
     var guidesBusy by remember { mutableStateOf(false) }
     var showClearGuidesConfirm by remember { mutableStateOf(false) }
     LaunchedEffect(setupGuides) { guideCounts = setupGuides?.counts() }
+    var scoreSheetCount by remember { mutableStateOf(viewModel.scoreSheetCounts()) }
+    var scoreSheetsBusy by remember { mutableStateOf(false) }
     val guideImportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val repo = setupGuides ?: return@rememberLauncherForActivityResult
         if (uri == null) return@rememberLauncherForActivityResult
@@ -656,6 +658,36 @@ fun SettingsScreen(
                                 onClick = { showClearGuidesConfirm = true }
                             )
                         }
+                    }
+                }
+                item { BoardFlowSectionTitle(title = "Score sheets", supporting = "Shared sheets download automatically; this checks right away.") }
+                item {
+                    BoardFlowFormGroup {
+                        BoardFlowSettingRow(
+                            icon = Icons.Default.Checklist,
+                            title = "Update score sheets",
+                            detail = if (scoreSheetsBusy) "Checking for new and updated sheets..." else "$scoreSheetCount score sheets",
+                            enabled = !scoreSheetsBusy,
+                            onClick = {
+                                if (!viewModel.isOnline()) {
+                                    messenger.show("You're offline. Score sheets update when you're online.")
+                                } else {
+                                    scoreSheetsBusy = true
+                                    guideScope.launch {
+                                        val updated = viewModel.refreshScoreSheetCatalog()
+                                        scoreSheetCount = viewModel.scoreSheetCounts()
+                                        scoreSheetsBusy = false
+                                        messenger.show(
+                                            when (updated) {
+                                                0 -> "Score sheets are up to date"
+                                                1 -> "1 score sheet updated"
+                                                else -> "$updated score sheets updated"
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
                 item { BoardFlowSectionTitle(title = "Help") }
