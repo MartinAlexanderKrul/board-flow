@@ -27,7 +27,7 @@ class ContributionPayloadTest {
     @Test
     fun aGuideIsSharedWithoutItsAuthor() {
         val dir = listOf(File("../setup-guides"), File("setup-guides")).first { it.isDirectory }
-        val guide = SetupGuideJson.parse(File(dir, "13.json").readText())
+        val guide = SetupGuideJson.parse(File(dir, "191710.json").readText())
         val mine = guide.copy(provenance = guide.provenance.copy(author = "Martin", reviewed = true))
         val payload = ContributionPayload.setupGuide(mine, "6.7.0")
         assertFalse(payload.toString().contains("Martin"))

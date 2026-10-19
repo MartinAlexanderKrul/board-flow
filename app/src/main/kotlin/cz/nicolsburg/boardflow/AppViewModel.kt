@@ -47,6 +47,7 @@ import cz.nicolsburg.boardflow.model.GameRecognitionHint
 import cz.nicolsburg.boardflow.model.PlayerRecognitionHint
 import cz.nicolsburg.boardflow.model.ScanRecognitionResult
 import cz.nicolsburg.boardflow.model.GameItem
+import cz.nicolsburg.boardflow.model.BigBox
 import cz.nicolsburg.boardflow.model.GameRelations
 import cz.nicolsburg.boardflow.model.LogPlayPrefill
 import cz.nicolsburg.boardflow.model.PlayTimer
@@ -3147,10 +3148,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             prefs.addExpansionBaseGames(list.associate { (id, _) -> id to setOf(gameId) })
             _expansionBaseGames.value = prefs.getExpansionBaseGames()
         }
+        // A big box also takes the expansions of the base game it holds: BGG links them there only.
+        val boxName = _allGames.value.firstOrNull { it.id == gameId }?.name.orEmpty()
+        val heldBaseIds = _allGames.value.filter { it.id != gameId && BigBox.holds(boxName, it.name) }.map { it.id }
+        val held = heldBaseIds.mapNotNull { baseId -> expansionsOf(baseId) }.flatten()
+        if (detail == null && held.isEmpty()) return null
         val owned = ownedGameIds()
-        return detail?.expansions
-            ?.map { (id, name) -> gameForLogPlay(id, name) }
-            ?.sortedWith(compareByDescending<BggGame> { it.id in owned }.thenBy { it.name.lowercase() })
+        return (detail?.expansions.orEmpty().map { (id, name) -> gameForLogPlay(id, name) } + held)
+            .filter { !BigBox.isBigBox(it.name) }
+            .distinctBy { it.id }
+            .sortedWith(compareByDescending<BggGame> { it.id in owned }.thenBy { it.name.lowercase() })
     }
 
     fun ownedGameIds(): Set<Int> =
@@ -3887,8 +3894,14 @@ private fun findRelatedGames(game: BggGame, collection: List<BggGame>): GameRela
         else c.lowercase().startsWith(r.lowercase() + " ")
     }
 
+    // A big box is a base game: the expansions of the game it holds are its own. Other big boxes
+    // are base games too, never chips to log alongside.
+    if (BigBox.isBigBox(name)) {
+        val expansions = collection.filter { other -> other.id != game.id && BigBox.covers(name, other.name) }
+        return GameRelations(isExpansion = false, baseGames = emptyList(), expansions = expansions)
+    }
     val mySepIdx = separatorIndex(name)
-    return if (mySepIdx != null) {
+    val relations = if (mySepIdx != null) {
         // Separator present \u2014 this is an expansion.
         val root = name.substring(0, mySepIdx).trim()
         val baseGames = collection.filter { other ->
@@ -3914,6 +3927,13 @@ private fun findRelatedGames(game: BggGame, collection: List<BggGame>): GameRela
             GameRelations(isExpansion = false, baseGames = emptyList(), expansions = expansions)
         }
     }
+    if (!relations.isExpansion) return relations.copy(expansions = relations.expansions.filterNot { BigBox.isBigBox(it.name) })
+    // An expansion can be played with any big box that holds its base game.
+    val bigBoxes = collection.filter { other -> other.id != game.id && BigBox.covers(other.name, name) }
+    return relations.copy(
+        baseGames = relations.baseGames + bigBoxes.filter { box -> relations.baseGames.none { it.id == box.id } },
+        expansions = relations.expansions.filterNot { BigBox.isBigBox(it.name) }
+    )
 }
 
 private fun levenshtein(a: String, b: String): Int {

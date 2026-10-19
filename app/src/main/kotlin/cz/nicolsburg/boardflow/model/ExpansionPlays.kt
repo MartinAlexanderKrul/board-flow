@@ -53,10 +53,11 @@ object ExpansionPlays {
         if (sessionIds.size > 1) return
         // Names that extend each other ("Tainted Grail: The Fall of Avalon" and "Tainted Grail:
         // The Last Knight") say nothing on their own; only the BGG type decides those.
-        fun isExpansion(play: LoggedPlay) = play.gameId in expansionGameIds ||
+        // A big box holds its base game, so it is a base game whatever its name says.
+        fun isExpansion(play: LoggedPlay) = !BigBox.isBigBox(play.gameName) && (play.gameId in expansionGameIds ||
             group.any { other ->
                 other.gameId != play.gameId && extendsName(play.gameName, other.gameName) && !extendsName(other.gameName, play.gameName)
-            }
+            })
         val (expansions, bases) = group.partition(::isExpansion)
         if (bases.isEmpty()) return
         expansions.forEach { expansion ->
@@ -64,7 +65,7 @@ object ExpansionPlays {
             // "played" entries share a date and an empty result but are not one sitting.
             val loggedTogether = sessionIds.size == 1 && group.all { it.sessionId == sessionIds.single() }
             val base = bases.firstOrNull { it.gameId in baseGamesOf[expansion.gameId].orEmpty() }
-                ?: bases.firstOrNull { extendsName(expansion.gameName, it.gameName) }
+                ?: bases.firstOrNull { extendsName(expansion.gameName, it.gameName) || BigBox.covers(it.gameName, expansion.gameName) }
                 ?: bases.singleOrNull()?.takeIf { loggedTogether }
                 ?: return@forEach
             baseOf[expansion.id] = base.id
@@ -94,6 +95,7 @@ object ExpansionPlays {
     fun shortName(expansionName: String, baseName: String): String {
         val name = expansionName.trim()
         subtitleAfter(name, baseName.trim())?.let { return it }
+        BigBox.roots(baseName).firstNotNullOfOrNull { subtitleAfter(name, it) }?.let { return it }
         val sep = separatorIndex(name) ?: return name
         val baseRoot = separatorIndex(baseName.trim())?.let { baseName.trim().substring(0, it).trim() }
         return if (name.substring(0, sep).trim().equals(baseRoot, ignoreCase = true)) {

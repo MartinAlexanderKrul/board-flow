@@ -67,7 +67,11 @@ class SetupGuideRepository(
     suspend fun refreshAvailability() {
         val bundledIndex = bundled.index().filter { it.isSupported() }
         val catalogIndex = store.getSetupGuideCatalog().filter { it.isSupported() }
+        val indexedBaseIds = (bundledIndex + catalogIndex).map { it.gameId }.toSet()
+        // A downloaded copy of a guide that has left the index (merged into a big box guide,
+        // e.g. Catan into Catan: Big Box) would otherwise keep claiming its ids.
         val stored = store.getSetupGuides()
+            .filter { it.source == SetupGuideSource.USER || it.gameId in indexedBaseIds }
         val offlineBaseIds = bundledIndex.map { it.gameId }.toSet() + stored.map { it.gameId }
 
         val result = mutableMapOf<Int, SetupGuideAvailability>()

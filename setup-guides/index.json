@@ -10,14 +10,6 @@
       "path": "11.json"
     },
     {
-      "gameId": 13,
-      "gameName": "Catan",
-      "gameIds": [13, 2807],
-      "version": 2,
-      "schemaVersion": 1,
-      "path": "13.json"
-    },
-    {
       "gameId": 50,
       "gameName": "Lost Cities",
       "gameIds": [50],
@@ -772,8 +764,8 @@
     {
       "gameId": 191710,
       "gameName": "Catan: Big Box",
-      "gameIds": [191710],
-      "version": 1,
+      "gameIds": [13, 2807, 135378, 191710],
+      "version": 2,
       "schemaVersion": 1,
       "path": "191710.json"
     },

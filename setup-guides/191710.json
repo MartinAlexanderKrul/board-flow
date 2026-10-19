@@ -2,12 +2,15 @@
   "schemaVersion": 1,
   "gameId": 191710,
   "gameName": "Catan: Big Box",
-  "version": 1,
+  "aliasGameIds": [13],
+  "version": 2,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Catan Game Rules & Almanac (base game)"
+      "Catan Big Box rules, Czech edition (KOSMOS / Albi, 2016)",
+      "Catan rules (CATAN Studio, via RulesPal)",
+      "CATAN - Explorers & Pirates Rulebook, 6th edition (CATAN Studio, 2025)"
     ]
   },
   "players": {
@@ -16,56 +19,240 @@
   },
   "modules": [
     {
-      "id": "beginner",
-      "name": "Beginner map",
-      "group": "Board",
+      "id": "x56",
+      "name": "5-6 Player Expansion",
+      "bggId": 2807,
+      "extendsMaxPlayers": 6,
+      "forcedAtPlayers": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "base",
+      "name": "Base game",
+      "group": "Scenario",
       "defaultEnabled": true
     },
     {
-      "id": "variable",
-      "name": "Variable map",
-      "group": "Board"
+      "id": "friends",
+      "name": "Best Friends",
+      "group": "Scenario"
+    },
+    {
+      "id": "germany",
+      "name": "Germany",
+      "group": "Scenario"
+    },
+    {
+      "id": "mallorca",
+      "name": "Mallorca",
+      "group": "Scenario"
+    },
+    {
+      "id": "helpers",
+      "name": "Helpers",
+      "group": "Scenario"
+    },
+    {
+      "id": "explorers",
+      "name": "Explorers & Pirates",
+      "bggId": 135378,
+      "group": "Scenario",
+      "players": {
+        "min": 3,
+        "max": 4
+      },
+      "excludes": [
+        "x56"
+      ],
+      "note": "The full Explorers & Pirates scenario; the Mission Guide's four learning scenarios each have their own setup"
     }
   ],
   "sections": [
     {
-      "id": "board",
-      "title": "Board",
+      "id": "island",
+      "title": "Island",
+      "condition": {
+        "notModules": [
+          "germany",
+          "mallorca",
+          "explorers"
+        ]
+      },
       "steps": [
         {
-          "id": "frame",
-          "text": "Assemble the sea frame",
-          "ref": "p.2"
-        },
-        {
-          "id": "beginner-map",
-          "text": "Lay the 19 terrain hexes and number tokens as in Illustration A",
+          "id": "island-1",
+          "text": "Build the sea frame from its 6 parts",
           "condition": {
-            "modules": [
-              "beginner"
+            "notModules": [
+              "x56"
             ]
           },
-          "ref": "p.3"
+          "ref": "p.4"
         },
         {
-          "id": "variable-map",
-          "text": "Shuffle the terrain hexes facedown and place them randomly; 9 harbor pieces on the frame harbors; number tokens by letter in a spiral",
+          "id": "island-2",
+          "text": "Beginners: lay the terrain hexes, number tokens and harbours exactly as pictured",
           "condition": {
-            "modules": [
-              "variable"
+            "notModules": [
+              "x56"
             ]
           },
-          "ref": "p.12"
+          "note": "After a game or two, build a variable board (Almanac: variable set-up)",
+          "ref": "p.2-4"
         },
         {
-          "id": "robber",
-          "text": "Robber on the desert",
-          "ref": "p.12"
+          "id": "island-3",
+          "text": "Frame of 10 parts: the 6 base parts with the 4 blue parts between them, as pictured",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "ref": "p.7"
         },
         {
-          "id": "cards",
-          "text": "Resource cards in 5 faceup stacks; development cards shuffled facedown; Longest Road, Largest Army and dice beside the board",
-          "ref": "p.3"
+          "id": "island-4",
+          "text": "Shuffle all 30 land hexes from both sets and lay them faceup in rows of 3, 4, 5, 6, 5, 4, 3",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "ref": "p.7"
+        },
+        {
+          "id": "island-5",
+          "text": "Use only the 28 number tokens of the expansion: start in a corner with A and spiral inward in alphabetical order; none on the deserts",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "note": "The last three tokens are Za, Zb and Zc",
+          "ref": "p.7"
+        },
+        {
+          "id": "island-6",
+          "text": "Robber on one of the two deserts",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "ref": "p.7"
+        }
+      ]
+    },
+    {
+      "id": "germany",
+      "title": "Germany",
+      "condition": {
+        "modules": [
+          "germany"
+        ]
+      },
+      "steps": [
+        {
+          "id": "germany-1",
+          "text": "Lay out the Germany board instead of the hexes and frame",
+          "ref": "p.10"
+        },
+        {
+          "id": "germany-2",
+          "text": "3-4 players: play only the northern or the southern area; mark the boundary line with roads of an unused colour",
+          "condition": {
+            "maxPlayers": 4
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "germany-3",
+          "text": "Landmark figures on their outlines outside the play area; 1 Catan token on each landmark outline that is in play",
+          "ref": "p.10"
+        },
+        {
+          "id": "germany-4",
+          "text": "Goetz von Berlichingen replaces the robber: on the mountains with the 12, east of Nuremberg",
+          "ref": "p.10"
+        }
+      ]
+    },
+    {
+      "id": "mallorca",
+      "title": "Mallorca",
+      "condition": {
+        "modules": [
+          "mallorca"
+        ]
+      },
+      "steps": [
+        {
+          "id": "mallorca-1",
+          "text": "Lay out the Mallorca board instead of the hexes and frame",
+          "ref": "p.11"
+        },
+        {
+          "id": "mallorca-2",
+          "text": "3-4 players: 1 Catan token on every intersection with a victory point symbol",
+          "condition": {
+            "maxPlayers": 4
+          },
+          "ref": "p.11"
+        },
+        {
+          "id": "mallorca-3",
+          "text": "Robber on the pasture north-west of Cala Pi",
+          "ref": "p.11"
+        }
+      ]
+    },
+    {
+      "id": "explorers-board",
+      "title": "Explorers & Pirates: sea and islands",
+      "condition": {
+        "modules": [
+          "explorers"
+        ]
+      },
+      "steps": [
+        {
+          "id": "explorers-box",
+          "text": "From the Catan box, leave out the development cards, Longest Road and Largest Army, the cities and the robber; also 1 hill, 1 pasture, 2 fields, the desert and the number tokens 2, one 5 and one 9",
+          "ref": "E&P p.5"
+        },
+        {
+          "id": "explorers-frame",
+          "text": "Build the frame from the Catan pieces turned coastline-down and the 8 Explorers & Pirates pieces, as on the scenario map",
+          "note": "Lay the Catan pieces onto the Explorers & Pirates pieces, not the other way round",
+          "ref": "E&P p.6"
+        },
+        {
+          "id": "explorers-home",
+          "text": "Starting island: the 14 remaining Catan land hexes shuffled faceup, number tokens as pictured",
+          "ref": "E&P p.6"
+        },
+        {
+          "id": "explorers-parrot",
+          "text": "Parrot hexes: put 1 sea hex back in the box, shuffle the other 16 and lay them facedown in the green region",
+          "ref": "E&P p.6"
+        },
+        {
+          "id": "explorers-goose",
+          "text": "Goose hexes: put 1 sea hex back in the box, shuffle the other 16 and lay them facedown in the orange region",
+          "ref": "E&P p.6"
+        },
+        {
+          "id": "explorers-council",
+          "text": "Council of Catan hex and the sea hexes in the remaining spaces, as on the map",
+          "ref": "E&P p.6"
+        },
+        {
+          "id": "explorers-tracks",
+          "text": "Mission track frame pieces along the frame; each player puts 1 mission marker at the start of each of the 3 tracks",
+          "note": "The 3 bonus VP tiles go to whoever leads each track",
+          "ref": "E&P p.6, p.13"
         }
       ]
     },
@@ -74,48 +261,238 @@
       "title": "Players",
       "steps": [
         {
-          "id": "pieces",
+          "id": "players-1",
           "text": "Each player: 5 settlements, 4 cities, 15 roads and a building costs card",
-          "ref": "p.3"
-        },
-        {
-          "id": "start-pieces",
-          "text": "Place your 2 settlements and 2 roads on the starting map",
           "condition": {
-            "modules": [
-              "beginner"
+            "notModules": [
+              "explorers"
             ]
           },
-          "ref": "p.3"
+          "note": "3 players: red stays in the box",
+          "ref": "p.4"
         },
         {
-          "id": "start-resources",
-          "text": "Take the resources around your settlement marked with a white star",
+          "id": "players-2",
+          "text": "Beginners: place your 2 settlements and 2 roads as pictured",
           "condition": {
-            "modules": [
-              "beginner"
+            "notModules": [
+              "x56",
+              "germany",
+              "mallorca",
+              "explorers"
             ]
           },
-          "ref": "p.3"
+          "ref": "p.4"
         },
         {
-          "id": "round-one",
-          "text": "Highest roll starts; clockwise, each places 1 settlement and road",
+          "id": "players-3",
+          "text": "Place starting settlements and roads in the founding phase",
           "condition": {
             "modules": [
-              "variable"
+              "x56"
+            ],
+            "notModules": [
+              "germany",
+              "mallorca"
             ]
           },
+          "ref": "p.7"
+        },
+        {
+          "id": "players-4",
+          "text": "Place starting settlements and roads in the founding phase - settlements only on the round building spaces",
+          "condition": {
+            "notModules": [
+              "base",
+              "friends",
+              "helpers",
+              "explorers"
+            ]
+          },
+          "ref": "p.10-11"
+        },
+        {
+          "id": "players-5",
+          "text": "Longest Road and Largest Army cards and the dice to the side",
+          "condition": {
+            "notModules": [
+              "explorers"
+            ]
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "players-6",
+          "text": "Resource cards sorted into 5 faceup stacks; development cards shuffled facedown",
+          "condition": {
+            "notModules": [
+              "explorers"
+            ]
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "players-7",
+          "text": "Take 1 resource for each hex next to your settlement marked with a star; keep your cards hidden",
+          "condition": {
+            "notModules": [
+              "x56",
+              "germany",
+              "mallorca",
+              "explorers"
+            ]
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "explorers-supply",
+          "text": "Resource cards in 5 faceup stacks; parrot number discs, goose number discs and pirate lair tokens each shuffled into a facedown stack",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.6"
+        },
+        {
+          "id": "explorers-piles",
+          "text": "Fish hauls, spice sacks and gold in piles beside the board; trade rate tile where everyone can see it",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.6"
+        },
+        {
+          "id": "explorers-first",
+          "text": "Everyone rolls the dice; the highest roll is the first player",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.7"
+        },
+        {
+          "id": "explorers-pieces",
+          "text": "Each player: the settlements, roads, harbor settlements, ships, settlers, crews and pirate ship in your colour, 1 player aid and 2 gold",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.7"
+        },
+        {
+          "id": "explorers-harbor",
+          "text": "Founding, first piece: a harbor settlement (no road) on one of the marked starting intersections",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "note": "Placed like the variable set-up in Catan",
+          "ref": "E&P p.7"
+        },
+        {
+          "id": "explorers-settlement",
+          "text": "Founding, second piece: a settlement (no road) on the starting island",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.7"
+        },
+        {
+          "id": "explorers-ship",
+          "text": "In turn order: 1 road next to your settlement and 1 ship carrying a settler next to your harbor settlement",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.7"
+        },
+        {
+          "id": "explorers-resources",
+          "text": "Take 1 resource for each hex next to your settlement",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.7"
+        }
+      ]
+    },
+    {
+      "id": "best-friends",
+      "title": "Best Friends",
+      "condition": {
+        "modules": [
+          "friends"
+        ]
+      },
+      "steps": [
+        {
+          "id": "best-friends-1",
+          "text": "Guild mat beside the island; Catan victory point tokens to its right",
+          "ref": "p.8"
+        },
+        {
+          "id": "best-friends-2",
+          "text": "Favour tokens in play: {a} each of Merchant, Trader and Road Builder; {b} each of Scholar and Architect",
+          "amounts": {
+            "a": {
+              "byPlayers": {
+                "3": 6,
+                "4": 8,
+                "5": 10,
+                "6": 12
+              }
+            },
+            "b": {
+              "byPlayers": {
+                "3": 12,
+                "4": 16,
+                "5": 20,
+                "6": 24
+              }
+            }
+          },
+          "ref": "p.8"
+        },
+        {
+          "id": "best-friends-3",
+          "text": "Shuffle them facedown into one common supply",
+          "ref": "p.8"
+        }
+      ]
+    },
+    {
+      "id": "helpers",
+      "title": "Helpers",
+      "condition": {
+        "modules": [
+          "helpers"
+        ]
+      },
+      "steps": [
+        {
+          "id": "helpers-1",
+          "text": "Stack the numbered helper cards A1 on top down to A6, the unnumbered ones underneath in any order",
           "ref": "p.12"
         },
         {
-          "id": "round-two",
-          "text": "Counterclockwise from the last player: second settlement and road; take 1 resource per adjacent hex",
-          "condition": {
-            "modules": [
-              "variable"
-            ]
-          },
+          "id": "helpers-2",
+          "text": "After placing your second settlement, take the top card, A side up",
+          "ref": "p.12"
+        },
+        {
+          "id": "helpers-3",
+          "text": "After the founding phase, lay out the remaining cards A side up as the offer",
           "ref": "p.12"
         }
       ]
@@ -126,9 +503,142 @@
       "kind": "REMINDERS",
       "steps": [
         {
-          "id": "distance",
-          "text": "Distance Rule: no settlement next to another",
+          "id": "reminders-distance",
+          "text": "Distance rule: no settlement next to another",
           "ref": "p.7"
+        },
+        {
+          "id": "reminders-1",
+          "text": "5-6 players: after every turn there is a special building phase - everyone else may build or buy development cards in turn order, but not trade",
+          "condition": {
+            "modules": [
+              "x56"
+            ]
+          },
+          "ref": "p.7"
+        },
+        {
+          "id": "reminders-2",
+          "text": "Favour tokens can't be used in the turn you gain them, nor in the special building phase",
+          "condition": {
+            "modules": [
+              "friends"
+            ]
+          },
+          "ref": "p.9"
+        },
+        {
+          "id": "reminders-3",
+          "text": "Germany: trade with the bank at 3:1 - there are no harbours",
+          "condition": {
+            "modules": [
+              "germany"
+            ]
+          },
+          "ref": "p.10"
+        },
+        {
+          "id": "reminders-4",
+          "text": "Germany and Mallorca are won at {n} victory points",
+          "amounts": {
+            "n": {
+              "byPlayers": {
+                "3": 13,
+                "4": 12,
+                "5": 10,
+                "6": 10
+              }
+            }
+          },
+          "condition": {
+            "notModules": [
+              "base",
+              "friends",
+              "helpers",
+              "explorers"
+            ]
+          },
+          "ref": "p.11"
+        },
+        {
+          "id": "reminders-5",
+          "text": "A helper card can't be used in the turn you gained or flipped it",
+          "condition": {
+            "modules": [
+              "helpers"
+            ]
+          },
+          "ref": "p.12"
+        },
+        {
+          "id": "explorers-turn",
+          "text": "Each turn: production, actions, then a movement phase for your ships",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.8"
+        },
+        {
+          "id": "explorers-nothing",
+          "text": "A roll that gives you no resources gives you 1 gold",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.8"
+        },
+        {
+          "id": "explorers-seven",
+          "text": "A 7 moves your pirate ship instead of a robber - never next to the starting island; steal from a player with a ship on that hex",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.8"
+        },
+        {
+          "id": "explorers-gold",
+          "text": "Trade 3:1 with the supply; twice a turn you may buy any resource for 2 gold",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.9"
+        },
+        {
+          "id": "explorers-explore",
+          "text": "Flipping an unexplored hex ends that ship's move; take its number disc (or lair token, or spice sacks) and 1 matching resource or 2 gold",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.12"
+        },
+        {
+          "id": "explorers-tribute",
+          "text": "Moving a ship onto, off or around another player's pirate ship costs 1 gold tribute",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.10"
+        },
+        {
+          "id": "explorers-win",
+          "text": "The first player to 17 victory points on their turn wins",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.15"
         }
       ]
     },
@@ -138,8 +648,24 @@
       "kind": "START",
       "steps": [
         {
-          "id": "roll",
-          "text": "The starting player rolls both dice for production"
+          "id": "start-1",
+          "text": "The oldest player starts; play passes to the left",
+          "condition": {
+            "notModules": [
+              "explorers"
+            ]
+          },
+          "ref": "p.4"
+        },
+        {
+          "id": "explorers-start",
+          "text": "The first player rolls for production; play passes clockwise",
+          "condition": {
+            "modules": [
+              "explorers"
+            ]
+          },
+          "ref": "E&P p.8"
         }
       ]
     }

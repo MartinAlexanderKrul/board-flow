@@ -116,6 +116,11 @@ and keep the copy they have.
 
 ## Writing rules
 
+- A **big box is the base game**. When a big box exists, write one guide named after the big
+  box's BGG id, put the original base game (and other editions) in `aliasGameIds`, and add
+  every expansion as a module, including ones sold separately. Opening the base game, the big
+  box or any expansion then shows the same guide. Do not keep a separate guide for the base
+  game: a base game's own id always opens its own guide, so it would hide the big box guide.
 - Cover **every published gameplay expansion**, not only the ones you own: one module per
   expansion, with its BGG id. Leave out promo cards, component upgrades and fan packs, and say in
   the pull request which expansions were left out and why (not released yet, no public rulebook,
