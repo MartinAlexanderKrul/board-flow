@@ -824,7 +824,15 @@ fun BoardFlowApp(
             composable(AppRoutes.SCORE_SHEET) {
                 val draft by appViewModel.scoreSheetDraft.collectAsState()
                 val current = draft
-                val sheet = current?.let { appViewModel.scoreSheetById(it.sheetId) }
+                // Collected, not a plain scoreSheetById lookup, so marking the sheet reviewed (or
+                // deleting it) recomposes this screen instead of leaving the old banner showing.
+                val userScoreSheets by appViewModel.userScoreSheets.collectAsState()
+                val catalogScoreSheets by appViewModel.catalogScoreSheets.collectAsState()
+                val sheet = current?.let { d ->
+                    userScoreSheets.firstOrNull { it.id == d.sheetId }
+                        ?: catalogScoreSheets.firstOrNull { it.id == d.sheetId }
+                        ?: appViewModel.scoreSheetById(d.sheetId)
+                }
                 if (current == null || sheet == null) {
                     // The play form was left (and its sheet with it); nothing to show.
                     LaunchedEffect(Unit) { navController.popBackStack() }

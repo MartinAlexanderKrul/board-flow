@@ -78,7 +78,11 @@ object ScoreSheetDraftPrompt {
         val start = body.indexOf('{')
         val end = body.lastIndexOf('}')
         require(start >= 0 && end > start) { "The answer has no JSON object" }
-        return body.substring(start, end + 1)
+        // Models sometimes write an id with an underscore ("ideology_researched") instead of a
+        // hyphen. Ids must be kebab-case everywhere they are used (definitions, module and
+        // tiebreaker references, example keys), so fix it once here rather than reject an
+        // otherwise good draft and cost a retry over one character.
+        return body.substring(start, end + 1).replace('_', '-')
     }
 
     private const val NO_SHEET = "noScoreSheet"

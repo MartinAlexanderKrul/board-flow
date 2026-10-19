@@ -76,4 +76,24 @@ class ScoreSheetDraftPromptTest {
     fun anUnknownRowKindIsNotASheet() {
         ScoreSheetDraftPrompt.parse("""{"id":"x","gameName":"G","rows":[{"kind":"dice","id":"a"}]}""", 1, "G", null, null)
     }
+
+    /** A model sometimes writes an id with an underscore; it is fixed everywhere the id is used, not rejected. */
+    @Test
+    fun anUnderscoreInAnIdIsFixedNotRejected() {
+        val text = """
+            {
+              "id": "x", "gameName": "G", "maxPlayers": 4,
+              "modules": [ { "id": "base_game", "name": "Base" } ],
+              "rows": [
+                { "kind": "points", "id": "ideology_researched", "label": "Ideology", "module": "base_game" }
+              ],
+              "examples": [ { "players": [ { "ideology_researched": 3 }, { "ideology_researched": 1 } ], "totals": [3, 1], "modules": ["base_game"] } ]
+            }
+        """.trimIndent()
+        val (sheet, problems) = ScoreSheetDraftPrompt.parse(text, 1, "G", null, null)
+        assertEquals(emptyList<String>(), problems)
+        assertEquals("ideology-researched", sheet.rows.single().id)
+        assertEquals("base-game", sheet.modules.single().id)
+        assertEquals("base-game", sheet.rows.single().module)
+    }
 }
