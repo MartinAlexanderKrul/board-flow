@@ -7,40 +7,48 @@
   "provenance": {
     "origin": "COMMUNITY",
     "reviewed": true,
-    "aiModel": "gemini-flash-lite-latest",
     "sources": [
-      "AoG_rulebook_compressed-17.pdf"
+      "AoG_rulebook_compressed.pdf"
     ]
   },
   "rows": [
     {
       "id": "prestige",
       "label": "Prestige",
-      "hint": "Points from prestige",
+      "hint": "1 point per Prestige (your Prestige track total)",
       "kind": "points"
     },
     {
       "id": "major-ideology",
       "label": "Major Ideology",
-      "hint": "Points from Major Ideology rules",
+      "hint": "By your Major Ideology only: 1 per Researched Advanced Tech, or 1 per 4 Prestige (round down), or 1 per Cruiser + 1 per 2 Strength (round down), or 1 per Developed planet, or 1 per 2 Relics (round down). 0 with no Major Ideology.",
       "kind": "points"
     },
     {
-      "id": "galaxy",
-      "label": "Galaxy",
-      "hint": "Points from Galaxy cards",
-      "kind": "points"
+      "id": "colonized-planets",
+      "label": "Colonized planets",
+      "hint": "1 point each",
+      "kind": "count",
+      "pointsEach": 1
+    },
+    {
+      "id": "developed-planets",
+      "label": "Developed planets",
+      "hint": "2 points each",
+      "kind": "count",
+      "pointsEach": 2
     },
     {
       "id": "relics",
       "label": "Relics",
-      "hint": "1 point per Relic",
-      "kind": "points"
+      "hint": "1 point each",
+      "kind": "count",
+      "pointsEach": 1
     },
     {
       "id": "faction-scorings",
       "label": "Faction scorings",
-      "hint": "Points from special faction end-game conditions",
+      "hint": "Add up any special end-game scoring from your Faction cards",
       "kind": "points"
     }
   ],
@@ -52,7 +60,7 @@
     },
     {
       "id": "disc-on-top",
-      "label": "Disc on top"
+      "label": "Whose disc is on top"
     }
   ],
   "examples": [
@@ -61,19 +69,21 @@
         {
           "prestige": 20,
           "major-ideology": 5,
-          "galaxy": 3,
+          "colonized-planets": 3,
+          "developed-planets": 1,
           "relics": 2,
           "faction-scorings": 4
         },
         {
           "prestige": 15,
           "major-ideology": 8,
-          "galaxy": 4,
+          "colonized-planets": 2,
+          "developed-planets": 2,
           "relics": 1,
           "faction-scorings": 5
         }
       ],
-      "totals": [34, 33],
+      "totals": [36, 35],
       "note": "Example scoring calculation"
     }
   ]
