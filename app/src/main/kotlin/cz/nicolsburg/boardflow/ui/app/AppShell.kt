@@ -116,7 +116,9 @@ import cz.nicolsburg.boardflow.ui.review.LogPlayScreen
 import cz.nicolsburg.boardflow.ui.scan.ScanScreen
 import cz.nicolsburg.boardflow.ui.search.NewPlayScreen
 import cz.nicolsburg.boardflow.ui.settings.SettingsScreen
+import cz.nicolsburg.boardflow.ui.score.ScoreSheetScreen
 import cz.nicolsburg.boardflow.ui.setup.QuickSetupScreen
+import cz.nicolsburg.boardflow.data.scoresheet.ScoreSheets
 import cz.nicolsburg.boardflow.data.setupguide.GuideDraftService
 import cz.nicolsburg.boardflow.ui.setup.GuideEditorScreen
 import cz.nicolsburg.boardflow.ui.setup.GuideEditorViewModel
@@ -300,6 +302,7 @@ fun BoardFlowApp(
     val isScan = currentRoute?.startsWith("scan/") == true
     val isReview = currentRoute == AppRoutes.LOG_PLAY
     val isQuickSetup = currentRoute == AppRoutes.QUICK_SETUP
+    val isScoreSheet = currentRoute == AppRoutes.SCORE_SHEET
     val isGuideEditor = currentRoute == AppRoutes.GUIDE_EDITOR
     // The editor confirms unsaved changes itself; the top bar's back arrow just asks it to.
     var guideEditorBackRequests by remember { mutableIntStateOf(0) }
@@ -313,6 +316,7 @@ fun BoardFlowApp(
         currentRoute == AppRoutes.COLLECTION -> "Collection"
         currentRoute == AppRoutes.SETTINGS -> "Settings"
         isQuickSetup -> "Quick setup"
+        isScoreSheet -> "Score sheet"
         isGuideEditor -> "Edit guide"
         isScan -> "Scan scores"
         isReview -> "Log play"
@@ -399,6 +403,7 @@ fun BoardFlowApp(
         })
         isScan -> ({ leaveScan() })
         isQuickSetup -> ({ navController.popBackStack() })
+        isScoreSheet -> ({ navController.popBackStack() })
         isGuideEditor -> ({ guideEditorBackRequests++ })
         isQrImport -> ({
             appViewModel.clearPendingImportedPlay()
@@ -513,7 +518,7 @@ fun BoardFlowApp(
             )
         },
         bottomBar = {
-            if (!isScan && !isReview && !isQuickSetup && !isGuideEditor && !isQrImport) {
+            if (!isScan && !isReview && !isQuickSetup && !isScoreSheet && !isGuideEditor && !isQrImport) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.background,
                     tonalElevation = 0.dp
@@ -808,8 +813,36 @@ fun BoardFlowApp(
                         navController.navigate(AppRoutes.HISTORY) {
                             popUpTo(AppRoutes.NEW_PLAY) { inclusive = false }
                         }
+                    },
+                    onOpenScoreSheet = {
+                        if (appViewModel.openScoreSheet()) {
+                            navController.navigate(AppRoutes.SCORE_SHEET) { launchSingleTop = true }
+                        }
                     }
                 )
+            }
+
+            composable(AppRoutes.SCORE_SHEET) {
+                val draft by appViewModel.scoreSheetDraft.collectAsState()
+                val current = draft
+                val sheet = current?.let { ScoreSheets.byId(it.sheetId) }
+                if (current == null || sheet == null) {
+                    // The play form was left (and its sheet with it); nothing to show.
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                } else {
+                    ScoreSheetScreen(
+                        sheet = sheet,
+                        draft = current,
+                        gameName = appViewModel.selectedGame?.name ?: sheet.gameName,
+                        thumbnailUrl = appViewModel.selectedGame?.thumbnailUrl,
+                        onDraftChange = appViewModel::updateScoreSheetDraft,
+                        onApply = {
+                            appViewModel.applyScoreSheet()
+                            navController.popBackStack()
+                        },
+                        onClear = appViewModel::clearScoreSheetValues
+                    )
+                }
             }
 
             composable(

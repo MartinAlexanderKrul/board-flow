@@ -70,7 +70,7 @@ All paths are relative to `app/src/main/kotlin/cz/nicolsburg/boardflow/`.
 Source: `ui/app/AppShell.kt`
 
 - Top bar with the destination name, and a back arrow on pushed screens. A play timer chip appears while a game is timed: tap it to log the play, long-press to stop the timer
-- Bottom navigation: **Log Play, Journal, Collection, Settings**. It is hidden on pushed screens (Scan, Log play form, Quick Setup, QR import)
+- Bottom navigation: **Log Play, Journal, Collection, Settings**. It is hidden on pushed screens (Scan, Log play form, Score sheet, Quick Setup, QR import)
 - Snackbar host for `LocalBoardFlowMessenger`
 - Discard confirmation when leaving the Log play form with unsaved changes
 
@@ -104,6 +104,7 @@ Source: `ui/review/LogPlayScreen.kt`
 - Main group: Date, Duration, Location, Notes. **More options:** Quantity, Incomplete play, Count in BGG stats
 - "Also log an expansion" chips (`RelatedGamesBanner`)
 - Players: suggested player pills (under a "Suggested" label), `Add player`, `Scan`, and a `PlayerResultEditorCard` for each player
+- `ScoreSheetEntryCard` above the players when the game (or a logged expansion) has a score sheet: a plain card with three of the sheet's row icons, "Score sheet" ("Continue score sheet" once values are typed) and a grey chevron; opens Score sheet
 - Scan banners: `ScanResultBanner`, `GameSuggestionBanner`, `ScanRetryBanner`; `AiOutputCard` with the raw response and model
 - Bottom bar: player count, date and "saved on this device" when offline, and `Log play` / `Save locally`
 - `PostSaveCard` after saving: headline (record moment), players with a translucent amber winner row, challenge progress (completed ones in green), `Play again`, `Edit play`, `Change game`, and "Try next" picks
@@ -122,6 +123,21 @@ Source: `ui/setup/QuickSetupScreen.kt`
 - An AI draft shows "Draft guide - check it against the rulebook." with `Mark as reviewed`; a guide of your own with no standard guide behind it has `Delete guide`
 - `Start game` starts the play timer and returns to Log Play with the Playing now banner. The screen stays awake while open
 - No guide: "No setup guide for X yet" with white `Back` and the `Draft from rulebook` pill (needs a Gemini key; asks for notifications, picks a PDF, then "Drafting the guide" with a spinner, a line saying the user can leave, and a `Back` pill). The draft runs in the background with a "Drafting a guide for X" notification and ends with "X guide is ready" (tap opens this screen) A standard guide that is not downloaded yet says to connect instead
+
+## Score sheet
+
+Source: `ui/score/ScoreSheetScreen.kt`; each game's row icons and header emblem in `ui/score/WingspanDesign.kt`, `EverdellDesign.kt`, `EverdellFamilyDesigns.kt` (Farshore, Duo, Silverfrost, Emerland)
+
+- The app's own look, like the play form: game art behind the top (`GameBackdrop`), the cover, the game's emblem with "Score sheet", and the game name
+- One plain tonal card (`BoardFlowCard`): expansion chips (`BoardFlowFilterChip`; rows of an expansion show while it is on; chips in a group, like Silverfrost's Flurries / Ice Storm, are a single choice), then the pad: a pinned label column (drawn icon, label, grey hint, grey `×2` badge on counted rows) and one column per player. Rows separate by tone, every other row a shade lighter
+- Each column is headed by the player's avatar and name, centred; the winner's name is amber with a trophy on the avatar. Tapping a player opens a name dialog (`Remove` in red while another player stays, white `Cancel`, `Save` pill); `Add` at the end of the row adds a player up to the sheet's maximum and opens the dialog straight away
+- More players than fit: the columns scroll sideways together (every row is as wide as the name row, Add included) and fade at an edge with more past it. When the label column is short (under 176dp) the labels go compact (smaller text and icons); hints always show, and a row grows to fit its label
+- Input cells are tonal and lighten while typed in. They take a number or a sum (`12+8+5`): while typing, the running total shows under the cell in amber (`= 25`); after leaving, the cell shows the total with the sum under it, and tapping it again edits the sum. While a cell is typed in, a bar above the keyboard has a `Plus` button (number pads rarely have "+"), a `Minus` button on rows that can go below 0 (Americas hummingbirds), and white `Next`; the column being typed in is marked under its name. Keyboard Next goes down a player's column, then to the top of the next player's (the columns scroll to it). Counted rows show their points under the cell (`= 6`); majority rows (Oceania nectar) show the points per habitat (`+5`) and the row total
+- The `Total` row is a shade lighter; the winner's total sits on translucent amber
+- Once the name row scrolls off the top, a raised bar pinned there shows every player's name and total so far (amber for the leader and the column being typed in)
+- Some rows work out points from several inputs: science sets (7 Wonders: one input per symbol, the row shows the points), Lost Cities expeditions (a points line per expedition, then card sum, wagers and cards played; the rule shows under the first), lookup charts (Agricola: the count in the cell, the chart points under it), and penalties (typed as a positive number, `= -5` under the cell)
+- Tiebreaker rows appear only while players are tied for the win, with inputs only for the tied players; a tiebreaker read from the sheet (Farshore's ship, Silverfrost's Snow) settles the tie without a row
+- A summary line ("Anna wins with 87 points", "... are tied at 50. Enter unused food to break it.", "... share the win"), a grey note that the form can still change the result, then white `Clear sheet` (`BoardFlowConfirmationDialog`; names stay) and the `Use these scores` pill (writes totals and winners to the play form and goes back)
 
 ## Guide editor
 
