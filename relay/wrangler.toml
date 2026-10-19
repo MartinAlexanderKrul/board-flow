@@ -13,7 +13,7 @@ BASE_BRANCH = "master"
 # and put the id it prints here.
 [[kv_namespaces]]
 binding = "RATE"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "2d977f08bfd4413698b397a8ccf440da"
 
 # Secrets (npx wrangler secret put <NAME>), never in this file:
 #   GITHUB_APP_ID, GITHUB_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY (PKCS#8 PEM)
