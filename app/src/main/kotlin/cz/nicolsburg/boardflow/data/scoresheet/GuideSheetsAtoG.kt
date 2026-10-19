@@ -237,14 +237,24 @@ internal val cascadia = ScoreSheet(
 internal val catan = ScoreSheet(
     id = "catan",
     gameName = "Catan",
-    gameIds = setOf(13, 191710, 2807),
+    gameIds = setOf(13, 191710, 2807, 135378),
     maxPlayers = 6,
+    // Explorers & Pirates has no cities, development cards, Longest Road or Largest Army.
+    modules = listOf(
+        ScoreModule("classic", "Catan", group = "Game"),
+        ScoreModule("explorers", "Explorers & Pirates", bggIds = setOf(135378), group = "Game")
+    ),
     rows = listOf(
         CountRow("settlements", "Settlements"),
-        CountRow("cities", "Cities", pointsEach = 2),
-        PointsRow("road", "Longest road", hint = "2 points"),
-        PointsRow("army", "Largest army", hint = "2 points"),
-        CountRow("vp-cards", "Victory point cards")
+        CountRow("cities", "Cities", pointsEach = 2, module = "classic"),
+        PointsRow("road", "Longest road", hint = "2 points", module = "classic"),
+        PointsRow("army", "Largest army", hint = "2 points", module = "classic"),
+        CountRow("vp-cards", "Victory point cards", module = "classic"),
+        CountRow("harbors", "Harbor settlements", pointsEach = 2, module = "explorers"),
+        PointsRow("lairs", "Pirate lairs track", hint = "Points next to your marker", module = "explorers"),
+        PointsRow("fish", "Fish for Catan track", hint = "Points next to your marker", module = "explorers"),
+        PointsRow("spices", "Spices for Catan track", hint = "Points next to your marker", module = "explorers"),
+        CountRow("bonus", "Bonus VP tiles", hint = "1 point for leading a mission track", module = "explorers")
     )
 )
 

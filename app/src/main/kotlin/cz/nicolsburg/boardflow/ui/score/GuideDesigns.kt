@@ -83,7 +83,9 @@ internal val guideDesigns: Map<String, ScoreSheetDesign> = mapOf(
     "catan" to design(
         Kit.hexes(Orange),
         "settlements" to Kit.house(Red, Red), "cities" to Kit.building(Red), "road" to Kit.route(Red),
-        "army" to Kit.swords(), "vp-cards" to Kit.card(Yellow, Gold)
+        "army" to Kit.swords(), "vp-cards" to Kit.card(Yellow, Gold),
+        "harbors" to Kit.house(Sea, Red), "lairs" to Kit.skull(Red), "fish" to Kit.fish(Sea),
+        "spices" to Kit.barrel(Orange), "bonus" to Kit.medal()
     ),
     "caverna" to design(
         Kit.mountain(Grey),

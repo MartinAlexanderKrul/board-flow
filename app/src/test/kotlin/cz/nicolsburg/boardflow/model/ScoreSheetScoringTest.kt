@@ -154,6 +154,27 @@ class ScoreSheetScoringTest {
     }
 
     @Test
+    fun catanExplorersAndPiratesSwapsTheRows() {
+        val sheet = ScoreSheets.byId("catan")!!
+        assertEquals(setOf("classic"), sheet.modulesFor(listOf(191710)))
+        assertEquals(setOf("explorers"), sheet.modulesFor(listOf(191710, 135378)))
+        assertEquals(
+            listOf("settlements", "harbors", "lairs", "fish", "spices", "bonus"),
+            sheet.rowsFor(setOf("explorers")).map { it.id }
+        )
+        // 3 settlements, 4 harbor settlements, 3 + 4 + 2 on the tracks, 2 bonus tiles = 22.
+        val result = ScoreSheetScoring.score(
+            sheet,
+            draft(
+                sheet,
+                mapOf("settlements" to 3, "harbors" to 4, "lairs" to 3, "fish" to 4, "spices" to 2, "bonus" to 2, "cities" to 4),
+                modules = setOf("explorers")
+            )
+        )
+        assertEquals(listOf(22), result.totals)
+    }
+
+    @Test
     fun silverfrostSnowFollowsTheChosenReward() {
         val sheet = ScoreSheets.silverfrost
         assertEquals(setOf("flurries"), sheet.modulesFor(listOf(436821)))
