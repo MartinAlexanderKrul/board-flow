@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "community-330950",
+  "gameName": "Age of Galaxy",
+  "gameIds": [330950],
+  "maxPlayers": 4,
+  "provenance": {
+    "origin": "COMMUNITY",
+    "reviewed": true,
+    "aiModel": "gemini-flash-lite-latest",
+    "sources": [
+      "AoG_rulebook_compressed-17.pdf"
+    ]
+  },
+  "rows": [
+    {
+      "id": "prestige",
+      "label": "Prestige",
+      "hint": "Points from prestige",
+      "kind": "points"
+    },
+    {
+      "id": "major-ideology",
+      "label": "Major Ideology",
+      "hint": "Points from Major Ideology rules",
+      "kind": "points"
+    },
+    {
+      "id": "galaxy",
+      "label": "Galaxy",
+      "hint": "Points from Galaxy cards",
+      "kind": "points"
+    },
+    {
+      "id": "relics",
+      "label": "Relics",
+      "hint": "1 point per Relic",
+      "kind": "points"
+    },
+    {
+      "id": "faction-scorings",
+      "label": "Faction scorings",
+      "hint": "Points from special faction end-game conditions",
+      "kind": "points"
+    }
+  ],
+  "tiebreakers": [
+    {
+      "id": "higher-prestige",
+      "label": "Higher prestige",
+      "fromKey": "prestige"
+    },
+    {
+      "id": "disc-on-top",
+      "label": "Disc on top"
+    }
+  ],
+  "examples": [
+    {
+      "players": [
+        {
+          "prestige": 20,
+          "major-ideology": 5,
+          "galaxy": 3,
+          "relics": 2,
+          "faction-scorings": 4
+        },
+        {
+          "prestige": 15,
+          "major-ideology": 8,
+          "galaxy": 4,
+          "relics": 1,
+          "faction-scorings": 5
+        }
+      ],
+      "totals": [34, 33],
+      "note": "Example scoring calculation"
+    }
+  ]
+}
