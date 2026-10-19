@@ -526,8 +526,9 @@ private fun SheetGrid(
  * name row's Add column: every other row leaves the same space, so all rows are equally wide
  * (one scroll position is shared, and a narrower row would cap how far it can go).
  */
-/** "×2" for pearls, "÷2" for Emerland's 1 point per 2 resources; none for 1 point each. */
+/** "×2" for pearls, "÷2" for 1 point per 2, "n²" for squared counts; none for 1 point each. */
 private fun CountRow.badge(): String? = when {
+    squared -> "n²"
     per > 1 -> "÷$per"
     pointsEach != 1 -> "×$pointsEach"
     else -> null

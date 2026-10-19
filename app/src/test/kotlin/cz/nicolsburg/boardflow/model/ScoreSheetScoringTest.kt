@@ -203,7 +203,8 @@ class ScoreSheetScoringTest {
             266192 to "wingspan", 290448 to "wingspan", 300580 to "wingspan", 461932 to "wingspan", 366161 to "wingspan",
             199792 to "everdell", 259996 to "everdell", 289056 to "everdell", 289057 to "everdell", 332390 to "everdell",
             332397 to "everdell", 297972 to "everdell", 297973 to "everdell", 261142 to "everdell", 289405 to "everdell",
-            292794 to "everdell", 394106 to "farshore", 425005 to "everdell-duo", 436821 to "silverfrost", 455843 to "emerland"
+            292794 to "everdell", 394106 to "farshore", 425005 to "everdell-duo", 436821 to "silverfrost", 455843 to "emerland",
+            436126 to "finspan", 468426 to "finspan", 410201 to "wyrmspan", 453406 to "wyrmspan"
         )
         ids.forEach { (id, sheet) -> assertEquals("BGG $id", sheet, ScoreSheets.forGames(listOf(id))?.id) }
         // No id opens two sheets, and row and module ids are unique within a sheet.
@@ -213,6 +214,22 @@ class ScoreSheetScoringTest {
             assertEquals(sheet.id, sheet.rows.size, sheet.rows.map { it.id }.toSet().size)
             sheet.rows.mapNotNull { it.module }.forEach { m -> assertTrue("${sheet.id} $m", sheet.modules.any { it.id == m }) }
         }
+    }
+
+    @Test
+    fun fledglingsScoreTheirCountSquared() {
+        val sheet = ScoreSheets.wyrmspan
+        val result = ScoreSheetScoring.score(sheet, draft(sheet, mapOf("fledglings" to 3, "items" to 9), modules = setOf("academy")))
+        assertEquals(listOf(9), result.rowPoints["fledglings"])
+        assertEquals(listOf(2), result.rowPoints["items"])
+        assertEquals(11, result.totals[0])
+    }
+
+    @Test
+    fun finspanSchoolsAreWorthSix() {
+        val sheet = ScoreSheets.finspan
+        val result = ScoreSheetScoring.score(sheet, draft(sheet, mapOf("schools" to 2, "eggs" to 3, "coral" to 4), modules = setOf("sharks")))
+        assertEquals(19, result.totals[0])
     }
 
     @Test

@@ -90,18 +90,20 @@ data class PointsRow(
 
 /**
  * Something counted, worth [pointsEach] for every [per] of them, rounded down (eggs 1 each,
- * pearls 2 each, Emerland's leftover resources 1 per 2).
+ * pearls 2 each, Emerland's leftover resources 1 per 2). [squared] scores the count times itself
+ * (Wyrmspan fledglings: each is worth 1 per fledgling, so 3 score 9).
  */
 data class CountRow(
     override val id: String,
     override val label: String,
-    val pointsEach: Int,
+    val pointsEach: Int = 1,
     override val hint: String? = null,
     override val module: String? = null,
-    val per: Int = 1
+    val per: Int = 1,
+    val squared: Boolean = false
 ) : ScoreRow {
     override val inputKeys: List<String> get() = listOf(id)
-    fun points(count: Int): Int = count / per * pointsEach
+    fun points(count: Int): Int = if (squared) count * count * pointsEach else count / per * pointsEach
 }
 
 /**

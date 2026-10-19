@@ -227,7 +227,53 @@ object ScoreSheets {
         )
     )
 
-    val all: List<ScoreSheet> = listOf(wingspan, everdell, farshore, everdellDuo, silverfrost, emerland)
+    /** Finspan; Sharks & Reefs adds coral and reef bonuses. */
+    val finspan = ScoreSheet(
+        id = "finspan",
+        gameName = "Finspan",
+        gameIds = setOf(436126, 468426),
+        maxPlayers = 5,
+        modules = listOf(ScoreModule("sharks", "Sharks & Reefs", setOf(468426))),
+        rows = listOf(
+            PointsRow("achievements", "Achievements", hint = "Weeks 1-3, side B bonuses included"),
+            PointsRow("game-end", "Game end abilities", hint = "Yellow GAME END points on visible fish"),
+            PointsRow("fish", "Fish", hint = "Points printed on visible fish"),
+            CountRow("consumed", "Consumed fish", hint = "Cards and forage under your fish"),
+            CountRow("eggs", "Eggs"),
+            CountRow("young", "Young"),
+            CountRow("schools", "Schools", pointsEach = 6),
+            CountRow("coral", "Coral", module = "sharks"),
+            PointsRow("reefs", "Complete reefs", hint = "Blue 6, purple 8, green 5", module = "sharks")
+        ),
+        tiebreakers = listOf(ScoreTiebreaker("hand", "Fish cards in hand"))
+    )
+
+    /** Wyrmspan; Dragon Academy adds fledglings. */
+    val wyrmspan = ScoreSheet(
+        id = "wyrmspan",
+        gameName = "Wyrmspan",
+        gameIds = setOf(410201, 453406),
+        maxPlayers = 5,
+        modules = listOf(ScoreModule("academy", "Dragon Academy", setOf(453406))),
+        rows = listOf(
+            PointsRow("guild", "Dragon Guild", hint = "Points under your markers on the Dragon Guild"),
+            PointsRow("dragons", "Dragons", hint = "Points printed on visible dragons"),
+            PointsRow("end-game", "End game abilities"),
+            CountRow("eggs", "Eggs"),
+            CountRow("cached", "Cached resources"),
+            CountRow("tucked", "Tucked cards"),
+            PointsRow("objectives", "Public objectives", hint = "Round objectives; ties all score"),
+            CountRow("coins", "Coins"),
+            CountRow("items", "Other items", per = 4, hint = "Resources, dragon and cave cards left: 1 per 4"),
+            CountRow(
+                "fledglings", "Fledglings", squared = true,
+                hint = "Each scores 1 per fledgling you have: 3 score 9", module = "academy"
+            )
+        ),
+        tiebreakers = listOf(ScoreTiebreaker("dragons", "Visible dragons"))
+    )
+
+    val all: List<ScoreSheet> = listOf(wingspan, everdell, farshore, everdellDuo, silverfrost, emerland, finspan, wyrmspan)
 
     fun byId(id: String): ScoreSheet? = all.firstOrNull { it.id == id }
 

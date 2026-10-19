@@ -36,5 +36,7 @@ fun scoreSheetDesign(sheetId: String): ScoreSheetDesign = when (sheetId) {
     "everdell-duo" -> EverdellDuoDesign
     "silverfrost" -> SilverfrostDesign
     "emerland" -> EmerlandDesign
+    "finspan" -> FinspanDesign
+    "wyrmspan" -> WyrmspanDesign
     else -> error("No score sheet design for $sheetId")
 }
