@@ -24,8 +24,8 @@ Either way `app/release.jks` is your **upload key**. Keep it and its passwords b
 
 ## 4. Upload the build
 
-- Build: `./gradlew.bat :app:bundleRelease -Djavax.net.ssl.trustStoreType=Windows-ROOT`
-- File: `app/build/outputs/bundle/release/app-release.aab` (version 6.0.1, code 601, targets Android 16 / API 36)
+- Build: `./gradlew.bat :app:bundleRelease -Djavax.net.ssl.trustStoreType=Windows-ROOT`, with `CONTRIBUTION_RELAY_URL` in `local.properties` so sharing guides and score sheets is on
+- File: `app/build/outputs/bundle/release/app-release.aab` (version 6.7.1, code 671 at the time of writing, targets Android 16 / API 36)
 - **(you)** Testing, Closed testing: create a track, add your testers' Google accounts (or a Google Group), upload the .aab, add release notes, roll out. Share the opt-in link with the testers.
 - Each new upload needs a higher `versionCode` in `app/build.gradle.kts`.
 

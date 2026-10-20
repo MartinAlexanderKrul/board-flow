@@ -17,6 +17,8 @@ BoardFlow is a play journal for board gamers. It logs your games, remembers who 
 LOG A PLAY IN SECONDS
 - Pick a game, tap who played, enter the scores and mark the winner
 - Scan a score sheet with your camera and let AI fill in the players and scores (uses your own Gemini API key)
+- Score on built-in score sheets for 60+ games, with each game's own scoring categories, and send the totals and winner straight to the play
+- Get suggestions for what to play right now, matched to the time of day and your shelf
 - Plays are saved on your phone first and posted to BoardGameGeek when you're online
 - Add moods and a quote to remember how the session felt
 
@@ -33,7 +35,8 @@ YOUR COLLECTION
 - Update your BGG collection status and rating from the game page
 
 QUICK SETUP GUIDES
-- Step-by-step setup for your games, adjusted for player count and expansions
+- Step-by-step setup for more than 250 games, adjusted for player count and expansions
+- No guide or score sheet yet? Let AI draft one from the rulebook, then share it with every BoardFlow user once you've checked it
 - An "easy to forget" list, and a play timer that starts with the game
 
 MORE
@@ -43,7 +46,7 @@ MORE
 - Backup and restore when you move to a new phone
 
 PRIVATE BY DESIGN
-BoardFlow has no ads, no analytics and no server of its own. Your data stays on your phone and in the accounts you connect yourself.
+BoardFlow has no ads, no analytics and no accounts of its own. Your data stays on your phone and in the accounts you connect yourself.
 
 BoardFlow is an independent app. It is not affiliated with or endorsed by BoardGameGeek.
 

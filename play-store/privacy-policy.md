@@ -1,8 +1,8 @@
 # BoardFlow privacy policy
 
-_Last updated: October 3, 2026_
+_Last updated: October 20, 2026_
 
-BoardFlow is a board game play tracker. It is built and published by Martin Alexander Krul. This policy explains what BoardFlow does with your data. In short: your data stays on your phone and in accounts you connect yourself. BoardFlow has no server of its own, no ads, no analytics and no tracking.
+BoardFlow is a board game play tracker. It is built and published by Martin Alexander Krul. This policy explains what BoardFlow does with your data. In short: your data stays on your phone and in accounts you connect yourself. BoardFlow has no ads, no analytics, no tracking and no accounts of its own. Its one small service, the contribution relay described below, receives only game guides and score sheets, never anything about you.
 
 ## Data stored on your phone
 
@@ -11,6 +11,7 @@ BoardFlow stores the following on your device:
 - the plays you log (game, date, players, scores, location, notes, moods and quotes)
 - your player list (names, aliases, avatar colours, optional BoardGameGeek usernames)
 - your board game collection, challenges and app settings
+- your own Quick Setup guides and score sheets
 
 Your BoardGameGeek password and Gemini API keys are kept in encrypted storage on the device. Uninstalling the app or clearing its data removes all of it.
 
@@ -20,7 +21,13 @@ BoardFlow sends data only to these services, and only when you set them up and u
 
 - **BoardGameGeek** (boardgamegeek.com). Your username and password are used to sign in. BoardFlow then reads your collection and play history, posts the plays you log, and saves the collection and rating changes you make. See the BoardGameGeek privacy policy.
 - **Google Sheets and Google Drive** (optional). If you sign in with Google, BoardFlow writes your collection to the spreadsheet you pick. It can also create Drive folders and QR codes. BoardFlow can only see the Drive folders and files it created itself, plus the spreadsheet you connect; it has no access to the rest of your Drive. See the Google privacy policy.
-- **Google Gemini** (optional). If you add your own Gemini API key, a photo of a score sheet you choose to scan is sent to Google's Gemini API to read the scores. If AI chronicles are on, a short summary of a session is sent too: the game, player names, scores, moods and quote. This data is processed under your own Gemini API account and the Gemini API terms.
+- **Google Gemini** (optional). If you add your own Gemini API key, a photo of a score sheet you choose to scan is sent to Google's Gemini API to read the scores. If AI chronicles are on, a short summary of a session is sent too: the game, player names, scores, moods and quote. If you ask BoardFlow to draft a setup guide or a score sheet, the rulebook PDF you pick is sent. This data is processed under your own Gemini API account and the Gemini API terms.
+
+BoardFlow also downloads game setup guides and score sheets from its public GitHub repository (github.com/MartinAlexanderKrul/board-flow). These downloads send nothing about you.
+
+## Shared guides and score sheets
+
+When you mark an AI-drafted guide or score sheet as reviewed, or save a guide in the guide editor, BoardFlow shares it with all BoardFlow users. It sends the guide or score sheet, the game's name and BoardGameGeek ids, and the app version to the BoardFlow contribution relay (a Cloudflare Worker), which publishes it as a public pull request on the GitHub repository. Your name, accounts, plays and players are not sent. The relay keeps your IP address for about an hour to limit how often submissions can be made, then deletes it.
 
 BoardFlow does not sell or share your data with anyone else.
 
@@ -30,11 +37,11 @@ The camera is used only to photograph score sheets and to scan BoardFlow QR code
 
 ## Notifications
 
-Challenge reminders are created on your device. No notification data leaves the phone.
+Challenge reminders and the notifications for background work (syncing, AI drafts, sharing) are created on your device. No notification data leaves the phone.
 
 ## Backups and sharing
 
-Export creates a backup file only where you choose to save it. You can include your passwords and API keys in it if you turn that option on. Sharing a play as a QR code puts that play's details in the code. Both are up to you.
+Export creates a backup file only where you choose to save it. It includes your own guides and score sheets. You can include your passwords and API keys in it if you turn that option on. Sharing a play as a QR code puts that play's details in the code. Both are up to you.
 
 ## Children
 
