@@ -4,6 +4,7 @@ import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.animation.AnimatedVisibility
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
@@ -172,10 +173,15 @@ fun PlayerResultEditorCard(
                         }
                     }
                 }
-                BoardFlowIconButton(onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) }) {
+                val spokenName = player.name.trim().ifBlank { "new player" }
+                BoardFlowIconButton(
+                    onClick = { onUpdate(player.copy(isWinner = !player.isWinner)) },
+                    // TalkBack reads "<name> won" plus selected / not selected.
+                    modifier = Modifier.semantics { selected = player.isWinner }
+                ) {
                     Icon(
                         Icons.Default.EmojiEvents,
-                        contentDescription = "Winner",
+                        contentDescription = "$spokenName won",
                         tint = if (player.isWinner) MaterialTheme.colorScheme.primary
                                else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(Dimens.IconLarge)
@@ -188,7 +194,7 @@ fun PlayerResultEditorCard(
                     } else {
                         MaterialTheme.colorScheme.surfaceContainerHighest
                     },
-                    modifier = Modifier.size(width = 76.dp, height = 44.dp)
+                    modifier = Modifier.size(width = 76.dp, height = Dimens.MinTouchTarget)
                 ) {
                     // Saved players start at "0". Show that as the placeholder rather than as
                     // text, so typing 62 can never produce "062".
@@ -207,7 +213,7 @@ fun PlayerResultEditorCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = Spacing.sm)
-                            .semantics { contentDescription = "Score" }
+                            .semantics { contentDescription = "Score for $spokenName" }
                             .focusRequester(scoreFocusRequester)
                     )
                 }

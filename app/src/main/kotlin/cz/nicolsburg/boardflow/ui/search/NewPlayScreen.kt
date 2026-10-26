@@ -94,7 +94,6 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.TimerOff
 import androidx.compose.material3.Icon
-import androidx.compose.foundation.BorderStroke
 import cz.nicolsburg.boardflow.ui.common.BoardFlowCloseGlyph
 import cz.nicolsburg.boardflow.ui.common.BoardFlowIconButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSurfaceTokens
@@ -684,17 +683,17 @@ private fun PlayingWithRow(
     var pickerExpanded by remember { mutableStateOf(false) }
     var customName by remember { mutableStateOf("") }
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             Text(
                 "Playing:",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(end = 4.dp)
             )
@@ -702,7 +701,7 @@ private fun PlayingWithRow(
                 InputChip(
                     selected = false,
                     onClick = { onRemove(name) },
-                    label = { Text(name, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(name, style = MaterialTheme.typography.labelLarge) },
                     trailingIcon = {
                         Icon(
                             Icons.Default.Close,
@@ -717,7 +716,7 @@ private fun PlayingWithRow(
                 label = {
                     Text(
                         if (pendingPlayers.isEmpty()) "Who's playing?" else "+ Add",
-                        style = MaterialTheme.typography.labelSmall
+                        style = MaterialTheme.typography.labelLarge
                     )
                 },
                 icon = {
@@ -733,14 +732,14 @@ private fun PlayingWithRow(
         AnimatedVisibility(visible = pickerExpanded) {
             Surface(
                 shape = BoardFlowShape.Control,
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
+                // A Graphite card on the page, so the raised name field inside it still reads.
+                color = MaterialTheme.colorScheme.surface
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     val available = remember(rosterPlayers, pendingPlayers) {
                         rosterPlayers
@@ -750,7 +749,7 @@ private fun PlayingWithRow(
                     if (available.isNotEmpty()) {
                         Row(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             available.forEach { player ->
                                 SuggestionChip(
@@ -758,7 +757,7 @@ private fun PlayingWithRow(
                                     label = {
                                         Text(
                                             player.displayName,
-                                            style = MaterialTheme.typography.labelSmall
+                                            style = MaterialTheme.typography.labelLarge
                                         )
                                     }
                                 )

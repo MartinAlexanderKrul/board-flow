@@ -130,3 +130,7 @@ android/google-services.json
 
 # Kotlin compiler session/cache files
 .kotlin/
+
+# Claude Code: local settings and the Impeccable skill install stay on this machine
+.claude/skills/
+.claude/agents/

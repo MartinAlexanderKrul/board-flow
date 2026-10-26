@@ -57,7 +57,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.onFocusChanged
@@ -95,15 +94,15 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import cz.nicolsburg.boardflow.ui.common.withTabularNumbers
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -499,10 +498,13 @@ fun LogPlayScreen(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    // The app draws edge to edge, so the keyboard does not shrink the window:
+                    // without this a score or note field near the bottom stays under it.
+                    .imePadding()
+                    .padding(horizontal = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md),
                 // The title starts at the top; the art sits behind it and the first rows.
-                contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
+                contentPadding = PaddingValues(top = Spacing.lg, bottom = Spacing.xl)
             ) {
                 item {
                     // Only show passive AI hint when no actionable suggestion banner is visible.
@@ -813,11 +815,6 @@ private fun SessionDetailsCard(
             GameCover(name = gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    "New play",
-                    style = MaterialTheme.typography.labelLarge.copy(shadow = titleShadow),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
-                )
-                Text(
                     gameName,
                     style = MaterialTheme.typography.headlineMedium.copy(shadow = titleShadow),
                     color = MaterialTheme.colorScheme.onSurface,
@@ -1083,15 +1080,11 @@ private fun AiOutputCard(rawText: String, modelUsed: String? = null) {
     var copied by remember { mutableStateOf(false) }
     Surface(
         shape = BoardFlowShape.Card,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
-        )
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1108,7 +1101,7 @@ private fun AiOutputCard(rawText: String, modelUsed: String? = null) {
                         Text(
                             modelUsed,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1205,7 +1198,7 @@ private fun PostSaveCard(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(Spacing.xl),
         contentAlignment = Alignment.Center
     ) {
         val maxCardHeight = maxHeight
@@ -1220,40 +1213,22 @@ private fun PostSaveCard(
             ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium))
         ) {
             Box {
-            Card(
-                modifier  = Modifier.fillMaxWidth().heightIn(max = maxCardHeight),
-                shape     = BoardFlowShape.Sheet,
-                elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
+            // A plain Graphite card like every other surface: flat, no amber wash, so the
+            // secondary text keeps its contrast in a dim room.
+            Surface(
+                modifier = Modifier.fillMaxWidth().heightIn(max = maxCardHeight),
+                shape    = BoardFlowShape.Sheet,
+                color    = MaterialTheme.colorScheme.surface
             ) {
                 val heroColor = MaterialTheme.colorScheme.primary
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .drawBehind {
-                            drawRect(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(heroColor.copy(alpha = 0.18f), Color.Transparent),
-                                    endY   = size.height * 0.46f
-                                )
-                            )
-                        }
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp, vertical = 24.dp),
+                        .padding(Spacing.xl),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Game name — all-caps label at the very top
-                    if (info.sessionContext.gameName.isNotBlank()) {
-                        Text(
-                            info.sessionContext.gameName.uppercase(),
-                            style         = MaterialTheme.typography.labelSmall,
-                            letterSpacing = 1.5.sp,
-                            color         = MaterialTheme.colorScheme.primary,
-                            textAlign     = TextAlign.Center
-                        )
-                        Spacer(Modifier.height(20.dp))
-                    }
-
-                    // Hero badge — layered glow rings
+                    // Trophy badge in layered rings: the card's one celebratory mark.
                     Box(contentAlignment = Alignment.Center) {
                         Box(
                             modifier = Modifier
@@ -1262,12 +1237,12 @@ private fun PostSaveCard(
                         )
                         Box(
                             modifier = Modifier
-                                .size(70.dp)
+                                .size(72.dp)
                                 .background(heroColor.copy(alpha = 0.13f), CircleShape)
                         )
                         Box(
                             modifier         = Modifier
-                                .size(50.dp)
+                                .size(48.dp)
                                 .background(heroColor.copy(alpha = 0.20f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
@@ -1280,54 +1255,38 @@ private fun PostSaveCard(
                         }
                     }
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(Spacing.lg))
 
-                    // Primary message
                     Text(
                         primaryMemory,
                         style      = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                         color      = MaterialTheme.colorScheme.onSurface,
-                        textAlign  = TextAlign.Center,
-                        lineHeight = 30.sp
+                        textAlign  = TextAlign.Center
                     )
 
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(Spacing.xs))
 
-                    // Date — day name adds warmth over a bare date
-                    val dateLabel = buildString {
-                        append(LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM d")))
-                        val location = info.sessionContext.location
-                        if (location.isNotBlank()) append(" · $location")
-                    }
+                    // Game, the play's own date (a play logged the next morning keeps its day)
+                    // and where it was played.
+                    val playedOn = info.anchorPlay.date.toFlexibleLocalDateOrNull() ?: LocalDate.now()
+                    val contextLine = listOfNotNull(
+                        info.sessionContext.gameName.trim().takeIf { it.isNotBlank() },
+                        playedOn.format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                        info.sessionContext.location.trim().takeIf { it.isNotBlank() }
+                    ).joinToString(" · ")
                     Text(
-                        dateLabel,
-                        style     = MaterialTheme.typography.labelSmall,
-                        color     = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f),
+                        contextLine,
+                        style     = MaterialTheme.typography.bodyMedium,
+                        color     = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
 
-                    // Player results
                     if (sortedPlayers.isNotEmpty()) {
-                        Spacer(Modifier.height(22.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.7f)
-                                .height(1.dp)
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            Color.Transparent,
-                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
-                                            Color.Transparent
-                                        )
-                                    )
-                                )
-                        )
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(Spacing.xl))
                         Column(
                             modifier            = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             sortedPlayers.forEach { player ->
                                 VictoryPlayerRow(player = player)
@@ -1335,192 +1294,150 @@ private fun PostSaveCard(
                         }
                     }
 
-                    val hasAnyChallengeData = challengeAdvances.isNotEmpty() || stillActive.isNotEmpty()
-                    if (hasAnyChallengeData) {
-                        Spacer(Modifier.height(16.dp))
-                        Surface(
-                            shape = BoardFlowShape.Control,
-                            color = Color.White.copy(alpha = 0.06f),
-                            modifier = Modifier.fillMaxWidth()
+                    val newlyComplete = challengeAdvances.filter { it.isNewlyComplete }
+                    val progressed = challengeAdvances.filter { !it.isNewlyComplete }.take(2)
+                    val activeSlots = (3 - challengeAdvances.size).coerceIn(0, 2)
+                    val quietActive = if (activeSlots > 0) stillActive.take(activeSlots) else emptyList()
+                    if (newlyComplete.isNotEmpty() || progressed.isNotEmpty() || quietActive.isNotEmpty()) {
+                        Spacer(Modifier.height(Spacing.xl))
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    "Challenges",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.padding(bottom = 2.dp)
-                                )
+                            Text(
+                                "Challenges",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
 
-                                // Completed advances — prominent accent cards
-                                val pri = MaterialTheme.colorScheme.primary
-                                challengeAdvances.filter { it.isNewlyComplete }.forEach { advance ->
-                                    Surface(
-                                        shape = BoardFlowShape.Control,
-                                        color = BoardFlowColors.Success.copy(alpha = 0.14f),
-                                        modifier = Modifier.fillMaxWidth()
+                            // Completed: the success tone, the strongest row in the list.
+                            newlyComplete.forEach { advance ->
+                                Surface(
+                                    shape = BoardFlowShape.Control,
+                                    color = BoardFlowColors.SuccessContainer,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.md),
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(32.dp)
-                                                    .background(BoardFlowColors.Success.copy(alpha = 0.22f), CircleShape),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.EmojiEvents,
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(16.dp),
-                                                    tint = BoardFlowColors.Success
-                                                )
-                                            }
-                                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                                Text(
-                                                    advance.challenge.title,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                                Text(
-                                                    "Complete!",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = BoardFlowColors.Success
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Progress advances — in-progress card, one step below completion
-                                challengeAdvances.filter { !it.isNewlyComplete }.take(2).forEach { advance ->
-                                    Surface(
-                                        shape = BoardFlowShape.Control,
-                                        color = Color.White.copy(alpha = 0.06f),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(28.dp)
-                                                        .background(pri.copy(alpha = 0.16f), CircleShape),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Icon(
-                                                        Icons.Default.AutoAwesome,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.size(13.dp),
-                                                        tint = pri
-                                                    )
-                                                }
-                                                Text(
-                                                    advance.challenge.title,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                                Surface(
-                                                    shape = BoardFlowShape.Pill,
-                                                    color = Color.White.copy(alpha = 0.08f)
-                                                ) {
-                                                    Text(
-                                                        "${advance.to} / ${advance.goal}",
-                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = pri
-                                                    )
-                                                }
-                                            }
-                                            LinearProgressIndicator(
-                                                progress = { advance.to.toFloat() / advance.goal.coerceAtLeast(1) },
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(6.dp)
-                                                    .clip(BoardFlowShape.Pill),
-                                                color = pri,
-                                                trackColor = Color.White.copy(alpha = 0.10f)
-                                            )
-                                        }
-                                    }
-                                }
-
-                                // Still-active — muted compact rows, lower visual tier
-                                val activeSlots = (3 - challengeAdvances.size).coerceIn(0, 2)
-                                if (activeSlots > 0 && stillActive.isNotEmpty()) {
-                                    if (challengeAdvances.isNotEmpty()) {
-                                        HorizontalDivider(
-                                            modifier = Modifier.padding(vertical = 2.dp),
-                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+                                        Icon(
+                                            Icons.Default.EmojiEvents,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(Dimens.Icon),
+                                            tint = BoardFlowColors.Success
                                         )
                                         Text(
-                                            "Still in progress",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
-                                            modifier = Modifier.padding(bottom = 2.dp)
+                                            advance.challenge.title,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(
+                                            "Complete",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = BoardFlowColors.Success
                                         )
                                     }
-                                    stillActive.take(activeSlots).forEach { progress ->
-                                        val fraction = progress.currentCount.toFloat() / progress.goalCount.coerceAtLeast(1)
+                                }
+                            }
+
+                            // Moved forward by this play: amber count and bar.
+                            progressed.forEach { advance ->
+                                Surface(
+                                    shape = BoardFlowShape.Control,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(Spacing.md),
+                                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                                    ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Column(
-                                                modifier = Modifier.weight(1f),
-                                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Text(
-                                                    progress.challenge.title,
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                                LinearProgressIndicator(
-                                                    progress = { fraction },
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .height(3.dp)
-                                                        .clip(BoardFlowShape.Pill),
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.30f),
-                                                    trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
-                                                )
-                                            }
+                                            Icon(
+                                                Icons.Default.AutoAwesome,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(Dimens.IconSmall),
+                                                tint = heroColor
+                                            )
                                             Text(
-                                                "${progress.currentCount} / ${progress.goalCount}",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f)
+                                                advance.challenge.title,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Text(
+                                                "${advance.to} / ${advance.goal}",
+                                                style = MaterialTheme.typography.labelLarge.withTabularNumbers(),
+                                                color = heroColor
                                             )
                                         }
+                                        LinearProgressIndicator(
+                                            progress = { advance.to.toFloat() / advance.goal.coerceAtLeast(1) },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(6.dp)
+                                                .clip(BoardFlowShape.Pill),
+                                            color = heroColor,
+                                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                                        )
                                     }
+                                }
+                            }
+
+                            // Not moved by this play: plain rows, grey, below the others.
+                            quietActive.forEach { progress ->
+                                val fraction = progress.currentCount.toFloat() / progress.goalCount.coerceAtLeast(1)
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            progress.challenge.title,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(
+                                            "${progress.currentCount} / ${progress.goalCount}",
+                                            style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    LinearProgressIndicator(
+                                        progress = { fraction },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(4.dp)
+                                            .clip(BoardFlowShape.Pill),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                                    )
                                 }
                             }
                         }
                     }
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(Spacing.xl))
 
-                    // Primary CTA — most common next action
+                    // Primary CTA: the most common next action at a game night.
                     BoardFlowButton(
                         onClick = onPlayAgain,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -1528,60 +1445,60 @@ private fun PostSaveCard(
                         Text("Play again")
                     }
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Spacing.sm))
 
-                    // Secondary actions: side by side, equal priority
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.CenterHorizontally)
                     ) {
-                        // The card is already a raised tone, so these sit one step lighter.
-                        val onCard = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                        BoardFlowSecondaryButton(onClick = onEditPlay, colors = onCard) { Text("Edit play") }
-                        BoardFlowSecondaryButton(onClick = onChangeGame, colors = onCard) { Text("Change game") }
+                        BoardFlowSecondaryButton(onClick = onEditPlay) { Text("Edit play") }
+                        BoardFlowSecondaryButton(onClick = onChangeGame) { Text("Change game") }
                     }
 
-                    // Ghost dismiss — de-emphasised so the eye skips it unless intended
                     if (nextRecommendations.isNotEmpty()) {
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(Spacing.lg))
                         Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { recommendationsExpanded = !recommendationsExpanded },
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .clip(BoardFlowShape.Control)
+                                    .toggleable(
+                                        value = recommendationsExpanded,
+                                        role = Role.Switch,
+                                        onValueChange = { recommendationsExpanded = it }
+                                    ),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     "Try next",
-                                    style = MaterialTheme.typography.labelLarge,
+                                    style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Icon(
                                     if (recommendationsExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             AnimatedVisibility(visible = recommendationsExpanded) {
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                                     nextRecommendations.take(2).forEach { pick ->
                                         Surface(
+                                            onClick = { onPickRecommendation(pick.game) },
                                             shape = BoardFlowShape.Control,
-                                            color = Color.White.copy(alpha = 0.06f),
-                                            modifier = Modifier.clickable { onPickRecommendation(pick.game) }
+                                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                            modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Row(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                                    .heightIn(min = Dimens.MinTouchTarget)
+                                                    .padding(start = Spacing.md, end = Spacing.sm, top = Spacing.sm, bottom = Spacing.sm),
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Column(
@@ -1591,19 +1508,19 @@ private fun PostSaveCard(
                                                     Text(
                                                         pick.game.name,
                                                         style = MaterialTheme.typography.bodyMedium,
-                                                        fontWeight = FontWeight.Medium
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = MaterialTheme.colorScheme.onSurface
                                                     )
                                                     Text(
                                                         pick.reason,
-                                                        style = MaterialTheme.typography.labelSmall,
+                                                        style = MaterialTheme.typography.bodySmall,
                                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                                     )
                                                 }
                                                 Icon(
                                                     Icons.Default.ChevronRight,
-                                                    contentDescription = "Log ${pick.game.name}",
-                                                    modifier = Modifier.size(16.dp),
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
                                         }
@@ -1616,9 +1533,9 @@ private fun PostSaveCard(
             }
             BoardFlowIconButton(
                 onClick = onDone,
-                modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(32.dp)
+                modifier = Modifier.align(Alignment.TopEnd).padding(Spacing.xs)
             ) {
-                BoardFlowCloseGlyph(contentDescription = "Close", modifier = Modifier.size(18.dp), iconSize = 18.dp)
+                BoardFlowCloseGlyph(contentDescription = "Close", iconSize = Dimens.IconLarge, alpha = 1f)
             }
             }
         }
@@ -1631,48 +1548,41 @@ private fun VictoryPlayerRow(player: PlayerResult) {
     val primary  = MaterialTheme.colorScheme.primary
     Surface(
         shape  = BoardFlowShape.Control,
+        // The winner row is translucent amber (DESIGN.md); everyone else sits one tone up.
         color  = if (isWinner) primary.copy(alpha = 0.16f)
-                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                 else MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Row(
-            modifier          = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = Dimens.MinTouchTarget)
+                .padding(horizontal = Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(
-                        start  = 12.dp,
-                        end    = 12.dp,
-                        top    = 11.dp,
-                        bottom = 11.dp
-                    ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (isWinner) {
-                    Icon(
-                        Icons.Default.EmojiEvents,
-                        contentDescription = null,
-                        tint               = primary,
-                        modifier           = Modifier.size(14.dp)
-                    )
-                    Spacer(Modifier.width(7.dp))
-                }
-                Text(
-                    player.name.trim(),
-                    style      = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isWinner) FontWeight.SemiBold else FontWeight.Normal,
-                    color      = if (isWinner) primary else MaterialTheme.colorScheme.onSurface,
-                    modifier   = Modifier.weight(1f)
-                )
-                val score = player.score.trim()
-                Text(
-                    score.ifBlank { "—" },
-                    style      = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isWinner) FontWeight.SemiBold else FontWeight.Normal,
-                    color      = if (isWinner) primary else MaterialTheme.colorScheme.onSurfaceVariant
+            if (isWinner) {
+                Icon(
+                    Icons.Default.EmojiEvents,
+                    contentDescription = "Winner",
+                    tint               = primary,
+                    modifier           = Modifier.size(Dimens.IconSmall)
                 )
             }
+            Text(
+                player.name.trim(),
+                style      = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                color      = if (isWinner) primary else MaterialTheme.colorScheme.onSurface,
+                maxLines   = 1,
+                overflow   = TextOverflow.Ellipsis,
+                modifier   = Modifier.weight(1f)
+            )
+            Text(
+                player.score.trim().ifBlank { "—" },
+                style      = MaterialTheme.typography.bodyLarge.withTabularNumbers(),
+                fontWeight = if (isWinner) FontWeight.SemiBold else FontWeight.Normal,
+                color      = if (isWinner) primary else MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
@@ -1879,8 +1789,8 @@ private fun GameSuggestionBanner(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp)
+            modifier = Modifier.padding(start = Spacing.lg, end = Spacing.xs, top = Spacing.xs, bottom = Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
         ) {
             // Header row: label + dismiss
             Row(
@@ -1891,7 +1801,7 @@ private fun GameSuggestionBanner(
                 Text(
                     "Detected game",
                     style = MaterialTheme.typography.labelSmall,
-                    color = onSurfaceMuted.copy(alpha = 0.60f)
+                    color = onSurfaceMuted
                 )
                 BoardFlowIconButton(onClick = onDismiss) {
                     Icon(
@@ -1923,20 +1833,20 @@ private fun GameSuggestionBanner(
                 Text(
                     confLine,
                     style = MaterialTheme.typography.labelSmall,
-                    color = onSurfaceMuted.copy(alpha = 0.60f)
+                    color = onSurfaceMuted
                 )
             }
             if (!detectionEvidence.isNullOrBlank()) {
                 Text(
                     detectionEvidence,
                     style = MaterialTheme.typography.labelSmall,
-                    color = onSurfaceMuted.copy(alpha = 0.50f)
+                    color = onSurfaceMuted
                 )
             }
 
             // Actions — right-aligned, lightweight
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs, end = Spacing.md),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1945,7 +1855,7 @@ private fun GameSuggestionBanner(
                 } else {
                     BoardFlowInlineAction(onClick = onChooseGame) { Text("Choose another") }
                 }
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(Spacing.xs))
                 BoardFlowSecondaryButton(onClick = onAccept) { Text("Use this game") }
             }
         }
