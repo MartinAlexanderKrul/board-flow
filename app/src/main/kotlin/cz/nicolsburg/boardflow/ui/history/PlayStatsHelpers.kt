@@ -30,7 +30,7 @@ fun StatsTimeRange.displaySubtitle(now: LocalDate = LocalDate.now()): String = w
     StatsTimeRange.ALL -> subtitle
     StatsTimeRange.THIS_YEAR -> "${now.year} so far"
     StatsTimeRange.THIS_MONTH -> "${now.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}'s table"
-    StatsTimeRange.LAST_30 -> "Recent run"
+    StatsTimeRange.LAST_30 -> "Last 30 days"
 }
 
 fun List<LoggedPlay>.filterByTimeRange(range: StatsTimeRange): List<LoggedPlay> {
@@ -245,7 +245,7 @@ private fun buildInsightCandidates(
         recent7 >= 2 ->
             candidates += InsightCandidate("recent_week_$recent7", "$recent7 plays this week. A good stretch", InsightType.RecentActivity)
         recent30 >= 2 ->
-            candidates += InsightCandidate("recent_30_$recent30", "$recent30 plays in the recent run", InsightType.RecentActivity)
+            candidates += InsightCandidate("recent_30_$recent30", "$recent30 plays in the last 30 days", InsightType.RecentActivity)
         daysSinceLast == 1L ->
             candidates += InsightCandidate("recent_yesterday", "Last session: yesterday", InsightType.RecentActivity)
         daysSinceLast != null && daysSinceLast in 2..14 ->
@@ -341,12 +341,6 @@ private fun buildInsightCandidates(
 
     val withDuration = gamePlays.filter { it.durationMinutes > 0 }
     if (withDuration.isNotEmpty()) {
-        fun formatDuration(minutes: Int) = when {
-            minutes >= 60 && minutes % 60 == 0 -> "${minutes / 60}h"
-            minutes >= 60 -> "${minutes / 60}h ${minutes % 60}m"
-            else -> "${minutes}m"
-        }
-
         val longestDuration = withDuration.maxOf { it.durationMinutes }
         if (withDuration.size >= 3) {
             val averageDuration = withDuration.sumOf { it.durationMinutes } / withDuration.size
@@ -587,9 +581,7 @@ fun List<LoggedPlay>.playInsights(play: LoggedPlay): List<PlayInsight> {
     if (result.size < 2 && play.durationMinutes > 0) {
         val previousMax = prior.filter { it.durationMinutes > 0 }.maxOfOrNull { it.durationMinutes }
         if (previousMax == null || play.durationMinutes > previousMax) {
-            val label = if (play.durationMinutes >= 60)
-                "${play.durationMinutes / 60}h ${play.durationMinutes % 60}m"
-            else "${play.durationMinutes}m"
+            val label = formatDuration(play.durationMinutes)
             result.add(PlayInsight("$label at the table. This one had room to breathe.", InsightRarity.COMMON))
         }
     }
@@ -599,10 +591,11 @@ fun List<LoggedPlay>.playInsights(play: LoggedPlay): List<PlayInsight> {
 
 // ── Shared duration formatter ─────────────────────────────────────────────────
 
+/** One way to write a length everywhere: "45 min", "2 h", "1 h 20 min". */
 fun formatDuration(minutes: Int): String = when {
-    minutes >= 60 && minutes % 60 == 0 -> "${minutes / 60}h"
-    minutes >= 60 -> "${minutes / 60}h ${minutes % 60}m"
-    else -> "${minutes}m"
+    minutes >= 60 && minutes % 60 == 0 -> "${minutes / 60} h"
+    minutes >= 60 -> "${minutes / 60} h ${minutes % 60} min"
+    else -> "$minutes min"
 }
 
 private fun formatDormantAge(days: Long): String = when {
@@ -778,12 +771,12 @@ fun List<LoggedPlay>.buildRangeObservations(
             when {
                 prev30Count == 0 -> result += SmartObservation(
                     text = "${playCount(totalPlays)} in the last 30 days.",
-                    subtext = "Recent run"
+                    subtext = "Last 30 days"
                 )
                 totalPlays > prev30Count * 1.3 -> result += SmartObservation(
                     text = "$totalPlays plays in 30 days, up from $prev30Count. Momentum building.",
                     rarity = InsightRarity.NOTABLE,
-                    subtext = "Recent run"
+                    subtext = "Last 30 days"
                 )
                 totalPlays < prev30Count * 0.7 -> result += SmartObservation(
                     "${playCount(totalPlays)} in the last 30 days, down from $prev30Count. A quieter stretch."
@@ -797,7 +790,7 @@ fun List<LoggedPlay>.buildRangeObservations(
             val playsPerWeek = totalPlays.toFloat() / 4.3f
             if (playsPerWeek >= 1f) {
                 result += SmartObservation(
-                    "${String.format("%.1f", playsPerWeek)} plays per week over the recent run."
+                    "${String.format("%.1f", playsPerWeek)} plays per week over the last 30 days."
                 )
             }
 
@@ -813,7 +806,7 @@ fun List<LoggedPlay>.buildRangeObservations(
             // Average session
             if (avgSession > 0 && withDuration.size >= 3) {
                 result += SmartObservation(
-                    "Sessions run about ${formatDuration(avgSession)} over the recent run."
+                    "Sessions run about ${formatDuration(avgSession)} over the last 30 days."
                 )
             }
         }
@@ -1380,7 +1373,7 @@ fun List<LoggedPlay>.buildContextualHeader(range: StatsTimeRange, currentStreak:
         currentStreak >= 3 -> "A good stretch."
         range == StatsTimeRange.THIS_MONTH -> "$monthName's table"
         range == StatsTimeRange.THIS_YEAR -> "${now.year} so far"
-        range == StatsTimeRange.LAST_30 -> "Recent run"
+        range == StatsTimeRange.LAST_30 -> "Last 30 days"
         else -> {
             val recent = any { p ->
                 runCatching { LocalDate.parse(p.date) >= now.minusDays(3) }.getOrDefault(false)
@@ -1389,7 +1382,7 @@ fun List<LoggedPlay>.buildContextualHeader(range: StatsTimeRange, currentStreak:
             val years = mapNotNull { runCatching { LocalDate.parse(it.date).year }.getOrNull() }.toSet().size
             when {
                 recent -> "Back at the table"
-                totalPlays < 5 -> "Getting started."
+                totalPlays < 5 -> "Getting started"
                 years >= 3 -> "$years years of gaming"
                 else -> "Your gaming story"
             }

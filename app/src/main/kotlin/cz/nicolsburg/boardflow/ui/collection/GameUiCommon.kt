@@ -111,7 +111,7 @@ fun overviewStats(game: GameItem): List<SectionStat> {
     game.weight?.let { stats += SectionStat("Difficulty", gameWeightLabel(it)) }
     game.yearPublished?.toString()?.let { stats += SectionStat("Year", it) }
     compactPlayTime(game)?.let { stats += SectionStat("Play time", it) }
-    game.recommendedAge?.takeIf { it.isNotBlank() }?.let { stats += SectionStat("Age", it) }
+    game.recommendedAge?.takeIf { it.isNotBlank() }?.let { stats += SectionStat("Age", if (it.trim().all(Char::isDigit)) "${it.trim()}+" else it) }
     return stats
 }
 

@@ -1,5 +1,6 @@
 package cz.nicolsburg.boardflow.ui.review
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSwitch
 import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -21,6 +22,8 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.ExpansionPickerSheet
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.foundation.horizontalScroll
@@ -930,7 +933,7 @@ private fun SessionDetailsCard(
             ) {
                 Column {
                     BoardFlowFormDivider()
-                    BoardFlowFormRow(label = "Quantity", labelWidth = null) {
+                    BoardFlowFormRow(label = "Quantity", icon = Icons.Default.Repeat, labelWidth = null) {
                         BoardFlowIconButton(onClick = onQuantityDecrease, enabled = quantity > 1) {
                             Icon(Icons.Default.Remove, contentDescription = "Decrease")
                         }
@@ -945,12 +948,12 @@ private fun SessionDetailsCard(
                         }
                     }
                     BoardFlowFormDivider()
-                    BoardFlowFormRow(label = "Incomplete play", labelWidth = null) {
-                        Switch(checked = incomplete, onCheckedChange = onIncompleteChange)
+                    BoardFlowFormRow(label = "Incomplete play", icon = Icons.Default.HourglassBottom, labelWidth = null) {
+                        BoardFlowSwitch(checked = incomplete, onCheckedChange = onIncompleteChange)
                     }
                     BoardFlowFormDivider()
-                    BoardFlowFormRow(label = "Count in BGG win stats", labelWidth = null) {
-                        Switch(checked = nowInStats, onCheckedChange = onNowInStatsChange)
+                    BoardFlowFormRow(label = "Count in BGG win stats", icon = Icons.Default.EmojiEvents, labelWidth = null) {
+                        BoardFlowSwitch(checked = nowInStats, onCheckedChange = onNowInStatsChange)
                     }
                 }
             }
@@ -967,7 +970,7 @@ private fun PlayersHeader(
 ) {
     BoardFlowSectionTitle(
         title = "Players",
-        supporting = if (playerCount > 0) "Tap the trophy to mark the winner" else "Add who played, or scan the scoresheet",
+        supporting = if (playerCount > 0) "Tap the trophy to mark the winner" else "Add who played, or scan the score sheet",
         modifier = Modifier.padding(top = Spacing.sm)
     ) {
         if (hasAiOutput) {

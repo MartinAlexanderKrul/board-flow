@@ -10,6 +10,7 @@ import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import cz.nicolsburg.boardflow.ui.common.GameCover
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.animation.core.Animatable
@@ -728,9 +729,12 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
                         if (label.isNotEmpty()) {
                             Text(
                                 label,
-                                fontSize = 9.sp,
+                                fontSize = 10.sp,
+                                lineHeight = 10.sp,
                                 color = onSurfaceVariantColor,
-                                style = MaterialTheme.typography.labelSmall
+                                style = MaterialTheme.typography.labelSmall,
+                                softWrap = false,
+                                modifier = Modifier.wrapContentSize(unbounded = true)
                             )
                         }
                     }
@@ -742,15 +746,30 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
             LaunchedEffect(heatmapData.weeks.size) { scrollState.scrollTo(scrollState.maxValue) }
 
             Column(modifier = Modifier.weight(1f).horizontalScroll(scrollState)) {
-                // Month label row (one label per first week of each month)
+                // Month label row: one label per first week of each month, skipping a label
+                // that would start under 3 weeks after the previous one (a partial first
+                // month), so names never run into each other.
+                val shownMonthLabels = remember(heatmapData.monthLabels) {
+                    buildMap {
+                        var lastWeek = -100
+                        heatmapData.monthLabels.sortedBy { it.first }.forEach { (week, name) ->
+                            if (week - lastWeek >= 3) {
+                                put(week, name)
+                                lastWeek = week
+                            }
+                        }
+                    }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(cellGapDp)) {
                     heatmapData.weeks.forEachIndexed { weekIdx, _ ->
-                        val label = heatmapData.monthLabels.find { it.first == weekIdx }?.second ?: ""
-                        Box(modifier = Modifier.size(cellSizeDp).height(14.dp)) {
+                        val label = shownMonthLabels[weekIdx] ?: ""
+                        // Width from the cell, height of its own: size() then height() kept 11dp and cut the text.
+                        Box(modifier = Modifier.width(cellSizeDp).height(14.dp)) {
                             if (label.isNotEmpty()) {
                                 Text(
                                     label,
-                                    fontSize = 9.sp,
+                                    fontSize = 10.sp,
+                                    lineHeight = 12.sp,
                                     color = onSurfaceVariantColor,
                                     style = MaterialTheme.typography.labelSmall,
                                     softWrap = false,
@@ -801,8 +820,8 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
         ) {
             Text(
                 "Less",
-                fontSize = 8.sp,
-                color = onSurfaceVariantColor.copy(alpha = 0.45f),
+                fontSize = 10.sp,
+                color = onSurfaceVariantColor,
                 style = MaterialTheme.typography.labelSmall
             )
             Spacer(Modifier.width(4.dp))
@@ -821,8 +840,8 @@ private fun HeatmapSection(heatmapData: HeatmapData) {
             Spacer(Modifier.width(4.dp))
             Text(
                 "More",
-                fontSize = 8.sp,
-                color = onSurfaceVariantColor.copy(alpha = 0.45f),
+                fontSize = 10.sp,
+                color = onSurfaceVariantColor,
                 style = MaterialTheme.typography.labelSmall
             )
         }

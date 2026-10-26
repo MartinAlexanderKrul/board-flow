@@ -13,6 +13,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -410,22 +412,12 @@ private fun SetupHeader(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 GameCover(name = state.loaded.guide.gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
+                // The top bar already says Quick setup, and the bottom bar counts the steps.
                 Column(Modifier.weight(1f)) {
-                    Text(
-                        "Quick setup",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                     Text(
                         state.loaded.guide.gameName,
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        if (state.isComplete) "Table is ready" else "${state.doneSteps} / ${state.totalSteps} steps",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (state.isComplete) BoardFlowColors.Success
-                                else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -557,11 +549,14 @@ private fun ChecklistRow(step: ResolvedStep, checked: Boolean, onToggle: () -> U
         modifier = Modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 48.dp)
-            .clickable(onClick = onToggle)
+            // One checkbox for TalkBack, read with the step text, instead of a row plus an unnamed box.
+            .toggleable(value = checked, role = Role.Checkbox, onValueChange = { onToggle() })
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Checkbox(checked = checked, onCheckedChange = { onToggle() })
+        Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            Checkbox(checked = checked, onCheckedChange = null)
+        }
         Column(
             modifier = Modifier
                 .weight(1f)

@@ -4,7 +4,6 @@ import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.material3.Switch
 import androidx.compose.animation.AnimatedVisibility
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.Dimens
@@ -282,7 +281,7 @@ fun PlayerResultEditorCard(
                     }
                     BoardFlowFormDivider()
                     BoardFlowFormRow(label = "First play", labelWidth = null) {
-                        Switch(checked = player.isNew, onCheckedChange = { onUpdate(player.copy(isNew = it)) })
+                        BoardFlowSwitch(checked = player.isNew, onCheckedChange = { onUpdate(player.copy(isNew = it)) })
                     }
                     BoardFlowFormDivider()
                     Row(

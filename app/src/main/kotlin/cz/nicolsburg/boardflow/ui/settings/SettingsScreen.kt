@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.settings
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSwitch
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Extension
@@ -541,7 +542,7 @@ fun SettingsScreen(
                             detail = "Suggest what to play next after you log a play",
                             onClick = { viewModel.setRecommendationsEnabled(!recommendationsEnabled) }
                         ) {
-                            androidx.compose.material3.Switch(
+                            BoardFlowSwitch(
                                 checked = recommendationsEnabled,
                                 onCheckedChange = { viewModel.setRecommendationsEnabled(it) }
                             )
@@ -553,7 +554,7 @@ fun SettingsScreen(
                             detail = "A story line for each session, written by AI",
                             onClick = { viewModel.setChronicleEnabled(!chronicleEnabled) }
                         ) {
-                            androidx.compose.material3.Switch(
+                            BoardFlowSwitch(
                                 checked = chronicleEnabled,
                                 onCheckedChange = { viewModel.setChronicleEnabled(it) }
                             )
@@ -561,11 +562,11 @@ fun SettingsScreen(
                         BoardFlowFormDivider()
                         BoardFlowSettingRow(
                             icon = Icons.Default.Palette,
-                            title = "Player colours in plays",
-                            detail = "Show each player's coloured initials in the Journal",
+                            title = "Player colors in plays",
+                            detail = "Show each player's colored initials in the Journal",
                             onClick = { viewModel.setShowPlayerAvatarsInPlays(!showPlayerAvatarsInPlays) }
                         ) {
-                            androidx.compose.material3.Switch(
+                            BoardFlowSwitch(
                                 checked = showPlayerAvatarsInPlays,
                                 onCheckedChange = { viewModel.setShowPlayerAvatarsInPlays(it) }
                             )
@@ -577,7 +578,7 @@ fun SettingsScreen(
                             detail = "An expansion logged with its base game is its own play on BGG. Off marks it \"don't count win stats\" so wins are not counted twice",
                             onClick = { viewModel.setExpansionPlaysInWinStats(!expansionPlaysInWinStats) }
                         ) {
-                            androidx.compose.material3.Switch(
+                            BoardFlowSwitch(
                                 checked = expansionPlaysInWinStats,
                                 onCheckedChange = { viewModel.setExpansionPlaysInWinStats(it) }
                             )
@@ -662,7 +663,7 @@ fun SettingsScreen(
                         }
                     }
                 }
-                item { BoardFlowSectionTitle(title = "Score sheets", supporting = "Shared sheets download automatically; this checks right away.") }
+                item { BoardFlowSectionTitle(title = "Score sheets", supporting = "Shared sheets download once a day. Update score sheets checks now.") }
                 item {
                     BoardFlowFormGroup {
                         BoardFlowSettingRow(
@@ -706,7 +707,7 @@ fun SettingsScreen(
             }
 
             if (section == SettingsSection.SCAN) {
-                item { BoardFlowSectionTitle(title = "Gemini", supporting = "Optional. Reads scoresheet photos and writes chronicles.") }
+                item { BoardFlowSectionTitle(title = "Gemini", supporting = "Optional. Reads score sheet photos and writes chronicles.") }
                 item {
                     var showKeyDialog by remember { mutableStateOf(false) }
                     var showBackupKeysDialog by remember { mutableStateOf(false) }
@@ -859,7 +860,7 @@ fun SettingsScreen(
                             detail = "Adds your BGG password and Gemini keys to the backup",
                             onClick = { includeSensitiveBackup = !includeSensitiveBackup }
                         ) {
-                            androidx.compose.material3.Switch(
+                            BoardFlowSwitch(
                                 checked = includeSensitiveBackup,
                                 onCheckedChange = { includeSensitiveBackup = it }
                             )

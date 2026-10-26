@@ -455,7 +455,7 @@ fun String.trimMemorySuffix(): String {
 fun String.trimMoodSuffix(): String = trimMemorySuffix()
 
 enum class StatsPlayScope(val label: String, val description: String) {
-    ALL_PLAYS("All logged plays", "Every saved play appears in History stats."),
+    ALL_PLAYS("All logged plays", "Every saved play appears in Journal stats."),
     COUNTED_ONLY("Counted plays only", "Only plays marked Count in stats are included.")
 }
 

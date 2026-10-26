@@ -1,5 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.players
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSwitch
 import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
@@ -299,7 +300,7 @@ internal fun EditPlayerDialog(
                         }
                         BoardFlowFormDivider()
                         BoardFlowFormRow(label = "Hide from stats", icon = Icons.Default.VisibilityOff, labelWidth = null) {
-                            Switch(checked = isHidden, onCheckedChange = { isHidden = it })
+                            BoardFlowSwitch(checked = isHidden, onCheckedChange = { isHidden = it })
                         }
                     }
                 }

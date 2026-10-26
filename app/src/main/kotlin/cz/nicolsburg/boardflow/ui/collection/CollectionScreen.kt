@@ -881,7 +881,7 @@ private fun GameCard(
                         InlineStat(icon = Icons.Default.Scale, label = collectionWeightLabel(it))
                     }
                     game.playingTime?.let {
-                        InlineStat(icon = Icons.Default.Schedule, label = "${it}m")
+                        InlineStat(icon = Icons.Default.Schedule, label = "$it min")
                     }
                     playerLabel(game)?.let {
                         InlineStat(icon = Icons.Default.Groups, label = it)

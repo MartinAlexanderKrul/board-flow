@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -358,10 +359,12 @@ fun BoardFlowFormRow(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+        // White label, grey placeholder: an empty field must not look like a filled one.
         Text(
             label,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             modifier = if (labelWidth != null) Modifier.width(labelWidth) else Modifier.weight(1f)
         )

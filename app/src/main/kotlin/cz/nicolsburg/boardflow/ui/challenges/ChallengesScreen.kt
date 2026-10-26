@@ -678,7 +678,7 @@ private fun ChallengesHeroCard(
                     )
                 }
                 Text(
-                    "Keep ongoing goals visible and give completed runs a proper finish line.",
+                    "Goals you are working on, and the ones you finished.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

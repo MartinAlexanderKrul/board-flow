@@ -338,9 +338,9 @@ fun buildInsights(
         hotPlayerStreak?.let { (name, streak) ->
             add(StatsInsight(
                 icon = Icons.Default.LocalFireDepartment,
-                value = "${streak}W",
+                value = "$streak wins",
                 label = "Hot hand",
-                detail = "$name is on a tear right now",
+                detail = "$name has won $streak in a row",
                 playerFilter = name
             ))
         }
@@ -396,7 +396,7 @@ fun buildInsights(
         }
         add(StatsInsight(
             icon = Icons.AutoMirrored.Filled.TrendingUp,
-            value = "H-$hIndex",
+            value = "$hIndex",
             label = "Gamer level",
             detail = if (hIndex == 1) "1 game played at least once" else if (hIndex > 1) "$hIndex games played at least $hIndex times each" else "Replay favorites to level up"
         ))

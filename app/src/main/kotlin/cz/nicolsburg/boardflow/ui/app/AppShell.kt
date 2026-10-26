@@ -551,8 +551,8 @@ fun BoardFlowApp(
     ) { innerPadding ->
         if (showDiscardLogPlayConfirm) {
             BoardFlowConfirmationDialog(
-                title = "Discard log play?",
-                message = "You have unsaved play details. If you leave now, those changes will be lost.",
+                title = "Discard this play?",
+                message = "What you entered for this play will be lost.",
                 confirmLabel = "Discard",
                 dismissLabel = "Keep editing",
                 kind = BoardFlowConfirmationKind.DESTRUCTIVE,

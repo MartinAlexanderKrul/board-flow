@@ -128,7 +128,7 @@ private fun IntroFeatures() {
         )
         Spacer(Modifier.height(4.dp))
         FeatureRow(Icons.Default.NoteAdd, "Log plays", "Record scores, players, moods, and locations for any game.")
-        FeatureRow(Icons.Default.CameraAlt, "Scan scoresheets", "Use your camera and AI to extract scores automatically.")
+        FeatureRow(Icons.Default.CameraAlt, "Scan score sheets", "Use your camera and AI to extract scores automatically.")
         FeatureRow(Icons.AutoMirrored.Filled.MenuBook, "Play journal & stats", "Browse history, filter by game or player, and track wins.")
         FeatureRow(Icons.Default.GridView, "Collection browser", "View your owned games, wishlists, and sleeve recommendations.")
         FeatureRow(Icons.Default.EmojiEvents, "Challenges", "Set personal play goals and track progress.")
@@ -165,8 +165,8 @@ private fun IntroSetupSteps() {
         )
         SetupStep(
             number = 4,
-            title = "Enable AI scoresheet scanning",
-            description = "Add a Gemini API key in Settings, Scan to let the camera read scoresheet photos and fill in scores for you.",
+            title = "Enable AI score sheet scanning",
+            description = "Add a Gemini API key in Settings, Scan to let the camera read score sheet photos and fill in scores for you.",
             optional = true
         )
     }
@@ -323,7 +323,7 @@ private fun IntroSettingsOverview() {
         SettingItem(
             icon = Icons.Default.AutoAwesome,
             title = "Gemini API key",
-            description = "Your Google AI Studio key. Required for scoresheet scanning and chronicle generation. Free tier is sufficient for casual use.",
+            description = "Your Google AI Studio key. Required for score sheet scanning and chronicle generation. Free tier is sufficient for casual use.",
             optional = true
         )
         SettingItem(
@@ -335,7 +335,7 @@ private fun IntroSettingsOverview() {
         SettingItem(
             icon = Icons.Default.CameraAlt,
             title = "Recognition templates",
-            description = "Saved scoresheet layouts learned from previous scans. More templates = better accuracy over time. Can be cleared to reset."
+            description = "Saved score sheet layouts learned from previous scans. More templates = better accuracy over time. Can be cleared to reset."
         )
         SettingItem(
             icon = Icons.Default.Person,

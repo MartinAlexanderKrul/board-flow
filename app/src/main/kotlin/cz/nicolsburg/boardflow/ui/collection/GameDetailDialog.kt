@@ -243,7 +243,7 @@ fun GameDetailsDialog(
                         }
                     ),
                     SectionStat(
-                        label = "Sleeves",
+                        label = "Sleeve status",
                         value = sleeveTrackingLabel(sleeveTracking),
                         icon = Icons.Default.Style,
                         onClick = if (canEditSleeveTracking) {
@@ -934,8 +934,13 @@ private fun YourStatsCard(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 verticalAlignment = Alignment.Top
             ) {
+                // Padding inside the clip, so the rounded ripple shape does not cut the text.
                 Column(
-                    modifier = Modifier.weight(1f).clip(BoardFlowShape.Control).clickable(onClick = onViewPlays),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(BoardFlowShape.Control)
+                        .clickable(onClick = onViewPlays)
+                        .padding(horizontal = Spacing.xs),
                     verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
                     Text(
@@ -945,9 +950,9 @@ private fun YourStatsCard(
                         color = primary
                     )
                     Text(
-                        text = "plays",
+                        text = if (stats.plays == 1) "play" else "plays",
                         style = MaterialTheme.typography.labelSmall,
-                        color = onSurfaceVariant.copy(alpha = 0.5f)
+                        color = onSurfaceVariant
                     )
                 }
                 stats.lastPlayedDate?.let { date ->
@@ -958,7 +963,7 @@ private fun YourStatsCard(
                         Text(
                             text = "Last played",
                             style = MaterialTheme.typography.labelSmall,
-                            color = onSurfaceVariant.copy(alpha = 0.55f)
+                            color = onSurfaceVariant
                         )
                         Text(
                             text = date,
@@ -969,12 +974,12 @@ private fun YourStatsCard(
                     }
                 }
                 stats.avgDurationMinutes?.let { avg ->
-                    val durationText = if (avg >= 60) "${avg / 60}h ${avg % 60}m" else "${avg}m"
+                    val durationText = "$avg min"
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
                             text = "Avg time",
                             style = MaterialTheme.typography.labelSmall,
-                            color = onSurfaceVariant.copy(alpha = 0.55f)
+                            color = onSurfaceVariant
                         )
                         Surface(
                             shape = CircleShape,
@@ -1875,7 +1880,7 @@ private fun PlayerPreferenceBlock(game: GameItem) {
                             Text(
                                 text = "Best for",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = onSurfaceVariant.copy(alpha = 0.58f)
+                                color = onSurfaceVariant
                             )
                             PlayerCountBubbles(value = bestFor, tint = primary)
                         }
@@ -1889,7 +1894,7 @@ private fun PlayerPreferenceBlock(game: GameItem) {
                             Text(
                                 text = "Great with",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = onSurfaceVariant.copy(alpha = 0.58f)
+                                color = onSurfaceVariant
                             )
                             PlayerCountBubbles(value = recFor, tint = onSurface.copy(alpha = 0.60f))
                         }
@@ -1901,11 +1906,12 @@ private fun PlayerPreferenceBlock(game: GameItem) {
                             verticalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Text(
-                                text = "Avoid",
+                                // Grey, not red: red is kept for data loss.
+                                text = "Not for",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = error.copy(alpha = 0.58f)
+                                color = onSurfaceVariant
                             )
-                            PlayerCountBubbles(value = notRecFor, tint = error.copy(alpha = 0.70f))
+                            PlayerCountBubbles(value = notRecFor, tint = onSurfaceVariant)
                         }
                     }
                 }

@@ -2,9 +2,9 @@
 
 package cz.nicolsburg.boardflow.ui.history
 
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSwitch
 import cz.nicolsburg.boardflow.ui.common.BoardFlowErrorBanner
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.material3.Switch
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Place
@@ -564,11 +564,11 @@ private fun QrPlayImportReview(
                     }
                     BoardFlowFormDivider()
                     BoardFlowFormRow(label = "Incomplete play", labelWidth = null) {
-                        Switch(checked = incomplete, onCheckedChange = { incomplete = it })
+                        BoardFlowSwitch(checked = incomplete, onCheckedChange = { incomplete = it })
                     }
                     BoardFlowFormDivider()
                     BoardFlowFormRow(label = "Count in BGG win stats", labelWidth = null) {
-                        Switch(checked = nowInStats, onCheckedChange = { nowInStats = it })
+                        BoardFlowSwitch(checked = nowInStats, onCheckedChange = { nowInStats = it })
                     }
                 }
             }

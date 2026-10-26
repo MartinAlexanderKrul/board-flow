@@ -211,7 +211,7 @@ fun ScanScreen(
                                     )
                                     AsyncImage(
                                         model = file,
-                                        contentDescription = "Captured scoresheet preview",
+                                        contentDescription = "Captured score sheet preview",
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -313,7 +313,7 @@ fun ScanScreen(
 
                     BoardFlowCameraScene(
                         title = gameName,
-                        subtitle = "Line up the scoresheet, then tap anywhere or use the shutter.",
+                        subtitle = "Line up the score sheet, then tap anywhere or use the shutter.",
                         preview = {
                             AndroidView(
                                 factory = { ctx ->
@@ -398,7 +398,7 @@ fun ScanScreen(
                 }
 
                 else -> BoardFlowCameraPermissionPrompt(
-                    message = "Camera permission is needed to scan scoresheets.",
+                    message = "Camera permission is needed to scan score sheets.",
                     actions = {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,

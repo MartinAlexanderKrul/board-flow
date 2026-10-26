@@ -106,6 +106,8 @@ import cz.nicolsburg.boardflow.ui.common.GameCover
 import cz.nicolsburg.boardflow.ui.common.PlayerAvatar
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import cz.nicolsburg.boardflow.ui.theme.Dimens
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import cz.nicolsburg.boardflow.ui.theme.Spacing
 
 private val ColumnWidth = 72.dp
@@ -310,16 +312,13 @@ private fun SheetHeader(gameName: String, thumbnailUrl: String?, design: ScoreSh
         verticalAlignment = Alignment.Bottom
     ) {
         GameCover(name = gameName, thumbnailUrl = thumbnailUrl, size = 72.dp)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SheetGlyph(design.emblem, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    "Score sheet",
-                    style = MaterialTheme.typography.labelLarge.copy(shadow = titleShadow),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
-                )
-            }
+        // The game's emblem beside its name; the top bar already says Score sheet.
+        Row(
+            Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        ) {
+            SheetGlyph(design.emblem, Modifier.size(Dimens.IconLarge))
             Text(
                 gameName,
                 style = MaterialTheme.typography.headlineMedium.copy(shadow = titleShadow),
@@ -441,6 +440,7 @@ private fun SheetGrid(
                         for (p in players) {
                             InputCell(
                                 entry = draft.entry(p, row.id),
+                                description = "${row.label}, ${draft.players.getOrNull(p)?.trim().orEmpty().ifBlank { "Player ${p + 1}" }}",
                                 focusRequester = requester(p, row.id),
                                 next = next(p, row.id),
                                 caption = countCaption(row, draft.value(p, row.id)),
@@ -482,6 +482,7 @@ private fun SheetGrid(
                                 for (p in players) {
                                     InputCell(
                                         entry = draft.entry(p, key),
+                                        description = "${group.label} $fieldLabel, ${draft.players.getOrNull(p)?.trim().orEmpty().ifBlank { "Player ${p + 1}" }}",
                                         focusRequester = requester(p, key),
                                         next = next(p, key),
                                         onFocused = { onFocusPlayer(p); onActiveCell(it) },
@@ -515,6 +516,7 @@ private fun SheetGrid(
                             for (p in players) {
                                 InputCell(
                                     entry = draft.entry(p, key),
+                                    description = "${row.label} ${group.label}, ${draft.players.getOrNull(p)?.trim().orEmpty().ifBlank { "Player ${p + 1}" }}",
                                     focusRequester = requester(p, key),
                                     next = next(p, key),
                                     onFocused = { onFocusPlayer(p); onActiveCell(it) },
@@ -547,6 +549,7 @@ private fun SheetGrid(
                             for (p in players) {
                                 InputCell(
                                     entry = draft.entry(p, key),
+                                    description = "${row.label} ${group.label}, ${draft.players.getOrNull(p)?.trim().orEmpty().ifBlank { "Player ${p + 1}" }}",
                                     focusRequester = requester(p, key),
                                     next = next(p, key),
                                     caption = result.groupPoints[key]?.getOrNull(p)?.takeIf { it > 0 }?.let { "+$it pts" },
@@ -585,6 +588,7 @@ private fun SheetGrid(
                     if (p in tied) {
                         InputCell(
                             entry = draft.entry(p, tiebreaker.inputKey),
+                            description = "${tiebreaker.label}, ${draft.players.getOrNull(p)?.trim().orEmpty().ifBlank { "Player ${p + 1}" }}",
                             onFocused = { onFocusPlayer(p); onActiveCell(it) },
                             onBlurred = onInactiveCell,
                             onEntry = { onDraftChange(draft.withEntry(p, tiebreaker.inputKey, it)) }
@@ -842,6 +846,8 @@ private class CellActions(val addPlus: () -> Unit, val addMinus: (() -> Unit)?, 
 @Composable
 private fun InputCell(
     entry: String,
+    /** What TalkBack reads for the cell: the row and the player ("Eggs, Jane"). */
+    description: String,
     onEntry: (String) -> Unit,
     onFocused: (CellActions) -> Unit,
     onBlurred: (CellActions) -> Unit,
@@ -917,6 +923,8 @@ private fun InputCell(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { goNext() }),
             modifier = (if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                // Merged, so the name sits on the text field node TalkBack focuses.
+                .semantics(mergeDescendants = true) { contentDescription = description }
                 .onFocusChanged {
                     if (it.isFocused != focused) {
                         focused = it.isFocused
@@ -935,7 +943,7 @@ private fun InputCell(
                 Box(
                     Modifier
                         .width(ColumnWidth - Spacing.lg)
-                        .height(40.dp)
+                        .height(Dimens.MinTouchTarget)
                         .background(
                             if (focused) MaterialTheme.colorScheme.surfaceContainerHighest
                             else MaterialTheme.colorScheme.surfaceVariant,
@@ -947,7 +955,7 @@ private fun InputCell(
                         Text(
                             "–",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     inner()
@@ -1143,7 +1151,7 @@ private fun ResultSummary(draft: ScoreSheetDraft, result: ScoreSheetResult) {
     }
 
     val text = when {
-        !result.hasInput -> "Fill in a column per player. Totals and the winner update as you go."
+        !result.hasInput -> "Fill in a column per player."
         result.pendingTiebreaker != null -> {
             val tied = result.tiedPlayers[result.pendingTiebreaker.id].orEmpty()
             "${names(tied)} are tied at ${result.totals[tied.first()]}. " +
@@ -1157,10 +1165,12 @@ private fun ResultSummary(draft: ScoreSheetDraft, result: ScoreSheetResult) {
         }
         else -> ""
     }
+    if (text.isEmpty()) return
+    // Before any score it is a quiet hint like the line under it; after, it is the result.
     Text(
         text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurface,
+        style = if (result.hasInput) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
+        color = if (result.hasInput) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(horizontal = Spacing.xs)
     )
 }

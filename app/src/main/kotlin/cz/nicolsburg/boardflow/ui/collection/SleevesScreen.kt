@@ -626,7 +626,7 @@ private fun SleeveSizeGroupCard(
                     val deficit = group.totalCount - ownedCount
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            "x${group.totalCount}",
+                            "×${group.totalCount}",
                             style = MaterialTheme.typography.titleLarge.withTabularNumbers(),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary

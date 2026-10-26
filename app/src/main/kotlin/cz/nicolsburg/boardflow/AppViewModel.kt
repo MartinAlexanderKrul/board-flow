@@ -713,7 +713,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 "Gemini rejected the API key. Check it in Settings > Scan, or enter the play manually."
             listOf("429", "RESOURCE_EXHAUSTED", "quota").any { text.contains(it, ignoreCase = true) } ->
                 "Gemini's quota is used up for now. Try again later, or enter the play manually."
-            else -> "The scoresheet could not be read. Try again, or enter the play manually."
+            else -> "The score sheet could not be read. Try again, or enter the play manually."
         }
         val detail = text.lineSequence().firstOrNull { it.isNotBlank() }?.trim()?.take(120)
         return if (detail.isNullOrBlank()) summary else "$summary\n\nDetails: $detail"

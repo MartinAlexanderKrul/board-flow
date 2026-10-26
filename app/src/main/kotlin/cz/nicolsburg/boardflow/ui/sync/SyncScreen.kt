@@ -1,6 +1,6 @@
 ﻿package cz.nicolsburg.boardflow.ui.sync
 
-import androidx.compose.material3.Switch
+import cz.nicolsburg.boardflow.ui.common.BoardFlowSwitch
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.UploadFile
@@ -192,6 +192,7 @@ fun SyncScreen(
     var logDialogOpen by rememberSaveable { mutableStateOf(false) }
     var logAutoOpenDismissedRun by rememberSaveable { mutableStateOf(-1) }
     var showClearLogConfirm by remember { mutableStateOf(false) }
+    var showSleeveBackupConfirm by remember { mutableStateOf(false) }
     var pendingSyncAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // Tapping refresh is an explicit request, so it runs without asking again.
@@ -284,6 +285,22 @@ fun SyncScreen(
         )
     }
 
+    // A BGG write that rewrites the private notes of many games: confirm first, as every BGG write does.
+    if (showSleeveBackupConfirm) {
+        BoardFlowConfirmationDialog(
+            title = "Back up sleeve status?",
+            message = "Writes each game's sleeve status into its private notes on BoardGameGeek. Your own notes stay as they are.",
+            confirmLabel = "Back up",
+            dismissLabel = "Cancel",
+            kind = BoardFlowConfirmationKind.NEUTRAL,
+            onConfirm = {
+                showSleeveBackupConfirm = false
+                syncViewModel.backupSleeveStatusToBgg()
+            },
+            onDismiss = { showSleeveBackupConfirm = false }
+        )
+    }
+
     if (pendingSyncAction != null) {
         val elapsedMs = System.currentTimeMillis() - lastSyncedAt
         val minutes = (elapsedMs / 60_000).toInt()
@@ -361,7 +378,7 @@ fun SyncScreen(
                         title = "Back up sleeve status to BGG",
                         detail = "Saves sleeved / to sleeve in each game's private notes.",
                         enabled = !busy && hasBggCredentials,
-                        onClick = { syncViewModel.backupSleeveStatusToBgg() }
+                        onClick = { showSleeveBackupConfirm = true }
                     )
                 }
 
@@ -415,7 +432,7 @@ fun SyncScreen(
                                 detail = "Copies the QR codes into your gallery.",
                                 onClick = { saveQrToDevice = !saveQrToDevice }
                             ) {
-                                Switch(checked = saveQrToDevice, onCheckedChange = { saveQrToDevice = it })
+                                BoardFlowSwitch(checked = saveQrToDevice, onCheckedChange = { saveQrToDevice = it })
                             }
                         }
                         if (!canSync && syncHint != null) {
@@ -490,13 +507,18 @@ private fun ReadinessHub(
         ActionStatusRow(
             label = "Sheet",
             connected = sheetConnected,
-            detail = if (sheetConnected) sheetLabel else "No sheet selected",
+            detail = when {
+                sheetConnected -> sheetLabel
+                googleConnected -> "No sheet selected"
+                else -> "Sign in to Google first"
+            },
+            // Signed out, the way on is Google sign-in; the sheet can be picked after it.
             actionLabel = when {
                 sheetConnected -> "Change"
                 googleConnected -> "Connect"
-                else -> null
+                else -> "Sign in"
             },
-            onAction = if (sheetConnected || googleConnected) onChangeSheet else null
+            onAction = if (sheetConnected || googleConnected) onChangeSheet else onManageGoogle
         )
     }
 }
