@@ -432,8 +432,10 @@ fun SettingsScreen(
                 item { cz.nicolsburg.boardflow.ui.intro.SetupGuideContent() }
                 item {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        BoardFlowButton(
-                            onClick = { showSetupGuide = false }
+                        BoardFlowInlineAction(
+                            onClick = { showSetupGuide = false },
+                            neutral = true,
+                            large = true
                         ) { Text("Close") }
                     }
                 }

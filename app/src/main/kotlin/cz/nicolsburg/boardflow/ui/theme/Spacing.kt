@@ -15,7 +15,7 @@ object Spacing {
 // Sizes that are about hit areas and icons rather than rhythm.
 object Dimens {
     val MinTouchTarget = 48.dp  // every tappable thing is at least this in both axes
-    val ButtonHeight = 48.dp
+    val ButtonHeight = 40.dp    // visible pill height; Material keeps a 48dp touch area around it
     val FieldHeight = 48.dp
     val IconSmall = 16.dp       // inline with small text
     val Icon = 20.dp            // default inside buttons and rows

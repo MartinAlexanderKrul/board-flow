@@ -6,7 +6,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowTabContent
 import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import cz.nicolsburg.boardflow.ui.collection.CollectionStatsTab
 import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
-import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
+import cz.nicolsburg.boardflow.ui.common.BoardFlowDatePickerDialog
 import androidx.compose.material3.Button
 import androidx.compose.ui.graphics.compositeOver
 import cz.nicolsburg.boardflow.ui.common.BoardFlowErrorBanner
@@ -83,7 +83,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -97,7 +96,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -2247,7 +2245,7 @@ private fun ShareQrDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End)
             ) {
-                BoardFlowSecondaryButton(onClick = onDismiss) { Text("Close") }
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Close") }
                 BoardFlowSecondaryButton(onClick = { onShare?.invoke() }, enabled = onShare != null) {
                     Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(Dimens.Icon))
                     Spacer(Modifier.width(Spacing.sm))
@@ -2318,25 +2316,11 @@ private fun EditPlayDialog(
     }
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = runCatching {
-                date.toFlexibleLocalDateOrNull()?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
-            }.getOrDefault(System.currentTimeMillis())
+        BoardFlowDatePickerDialog(
+            date = date,
+            onDateSelected = { date = it },
+            onDismiss = { showDatePicker = false }
         )
-        DatePickerDialog(
-            colors = boardFlowDatePickerColors(),
-            tonalElevation = 0.dp,
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        date = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()
-                    }
-                    showDatePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") } }
-        ) { DatePicker(state = datePickerState, colors = boardFlowDatePickerColors()) }
     }
 
     val addPlayer = {

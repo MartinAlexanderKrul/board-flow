@@ -21,9 +21,9 @@ enum class StatsTimeRange(val label: String, val subtitle: String = label) {
 
 fun StatsTimeRange.displayLabel(now: LocalDate = LocalDate.now()): String = when (this) {
     StatsTimeRange.ALL -> label
-    StatsTimeRange.THIS_YEAR -> "${now.year} So Far"
-    StatsTimeRange.THIS_MONTH -> "${now.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}'s Table"
-    StatsTimeRange.LAST_30 -> "Recent Run"
+    StatsTimeRange.THIS_YEAR -> "${now.year} so far"
+    StatsTimeRange.THIS_MONTH -> "${now.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}'s table"
+    StatsTimeRange.LAST_30 -> "Last 30 days"
 }
 
 fun StatsTimeRange.displaySubtitle(now: LocalDate = LocalDate.now()): String = when (this) {

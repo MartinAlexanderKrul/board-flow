@@ -1,6 +1,6 @@
 package cz.nicolsburg.boardflow.ui.review
 
-import android.widget.Toast
+import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.flow.flowOf
@@ -12,7 +12,7 @@ import cz.nicolsburg.boardflow.ui.score.ScoreSheetDraftCard
 import cz.nicolsburg.boardflow.ui.score.ScoreSheetEntryCard
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material3.ButtonDefaults
-import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
+import cz.nicolsburg.boardflow.ui.common.BoardFlowDatePickerDialog
 import cz.nicolsburg.boardflow.ui.common.formatDisplayDate
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineField
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
@@ -197,7 +197,7 @@ fun LogPlayScreen(
         draftGame?.let { viewModel.scoreSheetDraftState(it.id) } ?: flowOf(ScoreSheetDraftService.DraftState.Idle)
     }.collectAsState(ScoreSheetDraftService.DraftState.Idle)
     val draftScope = rememberCoroutineScope()
-    val draftContext = LocalContext.current
+    val draftMessenger = LocalBoardFlowMessenger.current
 
     // Read prefill once on first composition (consumed from ViewModel).
     val prefill = remember { viewModel.takePrefill() }
@@ -230,30 +230,11 @@ fun LogPlayScreen(
     }
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = runCatching {
-                date.toFlexibleLocalDateOrNull()?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
-            }.getOrDefault(System.currentTimeMillis())
+        BoardFlowDatePickerDialog(
+            date = date,
+            onDateSelected = { date = it },
+            onDismiss = { showDatePicker = false }
         )
-        DatePickerDialog(
-            colors = boardFlowDatePickerColors(),
-            tonalElevation = 0.dp,
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        date = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneOffset.UTC).toLocalDate().toString()
-                    }
-                    showDatePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") }
-            }
-        ) {
-            DatePicker(state = datePickerState, colors = boardFlowDatePickerColors())
-        }
     }
 
     // Quick scan + "Enter manually" reaches this screen without a game.
@@ -631,7 +612,7 @@ fun LogPlayScreen(
                             onPickPdf = { uri ->
                                 draftScope.launch {
                                     viewModel.startScoreSheetDraft(uri, draftGame.id, draftGame.name)?.let {
-                                        Toast.makeText(draftContext, it, Toast.LENGTH_LONG).show()
+                                        draftMessenger.show(it)
                                     }
                                 }
                             },
@@ -1769,42 +1750,42 @@ private fun FireworksLayer(primaryColor: Color, modifier: Modifier = Modifier) {
 
 @Composable
 private fun ScanRetryBanner(onApply: () -> Unit, onDismiss: () -> Unit) {
-    val primary = MaterialTheme.colorScheme.primary
-    Surface(
-        shape = BoardFlowShape.Card,
-        color = primary.copy(alpha = 0.08f),
-        modifier = Modifier.fillMaxWidth()
+    // A tonal card like the rest of the form. Save stays the one solid button on screen,
+    // so applying the retry is the outlined alternative and dismissing is plain text.
+    BoardFlowCard(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.AutoAwesome,
-                    contentDescription = null,
-                    tint = primary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    "Scan retry got a cleaner result.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = primary
-                )
-            }
-            Text(
-                "Apply it to replace the current player data?",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            Icon(
+                Icons.Default.AutoAwesome,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(Dimens.Icon)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BoardFlowSecondaryButton(onClick = onDismiss) { Text("Dismiss") }
-                BoardFlowButton(onClick = onApply) { Text("Apply update") }
-            }
+            Text(
+                "Scan retry got a cleaner result.",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Text(
+            "Apply it to replace the current player data?",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Dismiss") }
+            BoardFlowSecondaryButton(onClick = onApply) { Text("Apply update") }
         }
     }
 }
@@ -1834,57 +1815,39 @@ private fun ScanResultBanner(
         is ScanRecognitionResult.NoCollectionMatch -> "Detected ${result.detectedTitle}, but it is not in your collection"
         is ScanRecognitionResult.LowConfidence     -> "Could not confidently detect the game"
     }
+    // The X already keeps the current game, so a switch onto a game the user picked needs no button.
+    val chooseLabel = when {
+        isSuccess && hasPreselectedGame -> null
+        isSuccess -> "Choose another game"
+        else -> "Choose game"
+    }
 
-    Surface(
-        shape  = BoardFlowSurfaceTokens.ContentCardShape,
-        color  = if (isSuccess)
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
-        else
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (isSuccess)
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-            else
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
-        ),
-        modifier = Modifier.fillMaxWidth()
+    BoardFlowCard(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.xs, top = Spacing.xs, bottom = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    message,
-                    style    = MaterialTheme.typography.bodyMedium,
-                    color    = if (isSuccess) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
-                )
-                BoardFlowIconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(Dimens.Icon))
-                }
+            Text(
+                message,
+                style    = MaterialTheme.typography.bodyMedium,
+                color    = if (isSuccess) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            BoardFlowIconButton(onClick = onDismiss) {
+                Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(Dimens.Icon))
             }
-            when {
-                isSuccess && hasPreselectedGame -> BoardFlowSecondaryButton(
-                    onClick  = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Keep current") }
-
-                isSuccess && !hasPreselectedGame -> BoardFlowSecondaryButton(
-                    onClick  = onChooseGame,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Choose another game") }
-
-                else -> BoardFlowSecondaryButton(
-                    onClick  = onChooseGame,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Choose game") }
+        }
+        if (chooseLabel != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(end = Spacing.md),
+                horizontalArrangement = Arrangement.End
+            ) {
+                BoardFlowSecondaryButton(onClick = onChooseGame) { Text(chooseLabel) }
             }
         }
     }
@@ -1906,12 +1869,10 @@ private fun GameSuggestionBanner(
     onChooseGame: () -> Unit = {}
 ) {
     val onSurfaceMuted = MaterialTheme.colorScheme.onSurfaceVariant
+    // Tone, not an outline, separates it from the form.
     Surface(
         shape    = BoardFlowShape.Card,
-        color    = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.14f),
-        border   = androidx.compose.foundation.BorderStroke(
-            1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-        ),
+        color    = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(

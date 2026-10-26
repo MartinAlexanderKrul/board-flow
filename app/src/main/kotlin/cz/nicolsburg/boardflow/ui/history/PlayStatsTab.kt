@@ -226,9 +226,9 @@ internal fun StatsContent(
             if (stats.activeObservations.isNotEmpty()) {
                 val insightLabel = when (timeRange) {
                     StatsTimeRange.ALL        -> "Your chronicle"
-                    StatsTimeRange.THIS_YEAR  -> "${LocalDate.now().year} So Far"
-                    StatsTimeRange.THIS_MONTH -> "${LocalDate.now().month.name.lowercase().replaceFirstChar { it.uppercase() }}'s Table"
-                    StatsTimeRange.LAST_30    -> "Recent Run"
+                    StatsTimeRange.THIS_YEAR  -> "${LocalDate.now().year} so far"
+                    StatsTimeRange.THIS_MONTH -> "${LocalDate.now().month.name.lowercase().replaceFirstChar { it.uppercase() }}'s table"
+                    StatsTimeRange.LAST_30    -> "Last 30 days"
                 }
                 item { HeroObservationCard(stats.activeObservations, insightLabel) }
             }
@@ -1021,7 +1021,7 @@ private fun HeadToHeadSection(
 
     if (pickingA) {
         BoardFlowPickerSheet(
-            title = "Choose Player A",
+            title = "Choose player A",
             options = players,
             selectedOption = selectedA ?: players.first(),
             optionLabel = { it.displayName },
@@ -1031,7 +1031,7 @@ private fun HeadToHeadSection(
     }
     if (pickingB) {
         BoardFlowPickerSheet(
-            title = "Choose Player B",
+            title = "Choose player B",
             options = players,
             selectedOption = selectedB ?: players.first(),
             optionLabel = { it.displayName },

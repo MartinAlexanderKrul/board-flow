@@ -6,7 +6,7 @@ import cz.nicolsburg.boardflow.ui.common.BggSearchSheet
 import cz.nicolsburg.boardflow.model.bggOnlyGameItem
 import cz.nicolsburg.boardflow.data.BggGameSearch
 import androidx.compose.material3.ButtonDefaults
-import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
+import cz.nicolsburg.boardflow.ui.common.BoardFlowDatePickerDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import androidx.compose.foundation.layout.offset
 import cz.nicolsburg.boardflow.ui.common.GameCover
@@ -83,7 +83,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -93,7 +92,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -674,7 +672,7 @@ private fun ChallengesHeroCard(
                 ) {
                     Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = amber, modifier = Modifier.size(Dimens.IconLarge))
                     Text(
-                        "Challenge Board",
+                        "Challenge board",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -940,48 +938,20 @@ fun CreateChallengeDialog(
         else -> true
     }
 
-    fun String.toInitialMillis(): Long = runCatching {
-        LocalDate.parse(this).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-    }.getOrDefault(System.currentTimeMillis())
-
     if (showStartDatePicker) {
-        val state = rememberDatePickerState(initialSelectedDateMillis = startDate.toInitialMillis())
-        DatePickerDialog(
-            colors = boardFlowDatePickerColors(),
-            tonalElevation = 0.dp,
-            onDismissRequest = { showStartDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    state.selectedDateMillis?.let { millis ->
-                        startDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toString()
-                    }
-                    showStartDatePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showStartDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") }
-            }
-        ) { DatePicker(state = state, colors = boardFlowDatePickerColors()) }
+        BoardFlowDatePickerDialog(
+            date = startDate,
+            onDateSelected = { startDate = it },
+            onDismiss = { showStartDatePicker = false }
+        )
     }
 
     if (showEndDatePicker) {
-        val state = rememberDatePickerState(initialSelectedDateMillis = endDate.toInitialMillis())
-        DatePickerDialog(
-            colors = boardFlowDatePickerColors(),
-            tonalElevation = 0.dp,
-            onDismissRequest = { showEndDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    state.selectedDateMillis?.let { millis ->
-                        endDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toString()
-                    }
-                    showEndDatePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEndDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") }
-            }
-        ) { DatePicker(state = state, colors = boardFlowDatePickerColors()) }
+        BoardFlowDatePickerDialog(
+            date = endDate,
+            onDateSelected = { endDate = it },
+            onDismiss = { showEndDatePicker = false }
+        )
     }
 
     val missingInput = when {

@@ -3,6 +3,7 @@
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowColors
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.theme.Spacing
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
@@ -258,50 +259,29 @@ fun ScanScreen(
                                                     )
                                                 }
                                         }
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-                                        ) {
-                                            // A poor photo: retaking is the recommended way on.
-                                            BoardFlowSecondaryButton(
-                                                onClick = {
-                                                    viewModel.extractScores(file)
-                                                    pendingPhoto = null
-                                                }
-                                            ) {
-                                                Text("Use anyway")
+                                        ScanPhotoActions(
+                                            poorPhoto = true,
+                                            onRetake = { pendingPhoto = null },
+                                            onUse = {
+                                                viewModel.extractScores(file)
+                                                pendingPhoto = null
                                             }
-                                            BoardFlowButton(
-                                                onClick = { pendingPhoto = null }
-                                            ) {
-                                                Text("Retake")
-                                            }
-                                        }
+                                        )
                                     } else {
                                         Text(
                                             "Retake if the sheet is cropped or blurry.\nUse photo to extract scores.",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-                                        ) {
-                                            BoardFlowSecondaryButton(
-                                                onClick = { pendingPhoto = null }
-                                            ) {
-                                                Text("Retake")
+                                        ScanPhotoActions(
+                                            poorPhoto = false,
+                                            enabled = !qualityAnalysisRunning,
+                                            onRetake = { pendingPhoto = null },
+                                            onUse = {
+                                                viewModel.extractScores(file)
+                                                pendingPhoto = null
                                             }
-                                            BoardFlowButton(
-                                                onClick = {
-                                                    viewModel.extractScores(file)
-                                                    pendingPhoto = null
-                                                },
-                                                enabled = !qualityAnalysisRunning
-                                            ) {
-                                                Text("Use photo")
-                                            }
-                                        }
+                                        )
                                     }
                                 }
                             }
@@ -453,5 +433,31 @@ private fun uriToFile(context: Context, uri: Uri): File? {
         file
     } catch (e: Exception) {
         null
+    }
+}
+
+/**
+ * Retake on the left, use on the right, whatever the photo looks like, so a tap by habit
+ * never does the opposite thing. A poor photo only moves the fill: Retake becomes the
+ * recommended action and "Use anyway" the outlined alternative.
+ */
+@Composable
+private fun ScanPhotoActions(
+    poorPhoto: Boolean,
+    onRetake: () -> Unit,
+    onUse: () -> Unit,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End)
+    ) {
+        if (poorPhoto) {
+            BoardFlowButton(onClick = onRetake) { Text("Retake") }
+            BoardFlowSecondaryButton(onClick = onUse, enabled = enabled) { Text("Use anyway") }
+        } else {
+            BoardFlowSecondaryButton(onClick = onRetake) { Text("Retake") }
+            BoardFlowButton(onClick = onUse, enabled = enabled) { Text("Use photo") }
+        }
     }
 }

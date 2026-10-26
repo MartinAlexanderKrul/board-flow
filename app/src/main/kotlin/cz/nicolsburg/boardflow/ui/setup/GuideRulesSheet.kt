@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import cz.nicolsburg.boardflow.data.setupguide.GuideEdits
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideResolver
 import cz.nicolsburg.boardflow.model.SetupGuide
-import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
+import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFilterChip
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFormDivider
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
@@ -182,7 +182,7 @@ internal fun GuideRulesSheet(
             }
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                BoardFlowButton(onClick = onDismiss) { Text("Done") }
+                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Done") }
             }
         }
     }

@@ -560,7 +560,7 @@ private fun HiddenPlayersSectionHeader(count: Int, expanded: Boolean, onToggle: 
         Icon(
             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
             contentDescription = if (expanded) "Collapse hidden" else "Expand hidden",
-            tint = MaterialTheme.colorScheme.primary
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

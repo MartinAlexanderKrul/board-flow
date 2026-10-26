@@ -19,7 +19,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowFormRow
 import cz.nicolsburg.boardflow.ui.common.BoardFlowFormGroup
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import androidx.compose.material3.ButtonDefaults
-import cz.nicolsburg.boardflow.ui.common.boardFlowDatePickerColors
+import cz.nicolsburg.boardflow.ui.common.BoardFlowDatePickerDialog
 import cz.nicolsburg.boardflow.ui.common.BoardFlowInlineAction
 import cz.nicolsburg.boardflow.ui.common.BoardFlowTextField
 import androidx.compose.material.icons.filled.Close
@@ -61,7 +61,6 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,7 +69,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -460,29 +458,12 @@ private fun QrPlayImportReview(
             ?: collectionNames[play.gameId]
     }
 
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = runCatching {
-            date.toFlexibleLocalDateOrNull()?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
-        }.getOrDefault(System.currentTimeMillis())
-    )
-
     if (showDatePicker) {
-        DatePickerDialog(
-            colors = boardFlowDatePickerColors(),
-            tonalElevation = 0.dp,
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        date = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()
-                    }
-                    showDatePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Cancel") } }
-        ) {
-            DatePicker(state = datePickerState, colors = boardFlowDatePickerColors())
-        }
+        BoardFlowDatePickerDialog(
+            date = date,
+            onDateSelected = { date = it },
+            onDismiss = { showDatePicker = false }
+        )
     }
 
     LaunchedEffect(editPlayers.size) {

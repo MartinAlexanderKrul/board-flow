@@ -3,6 +3,10 @@
 import cz.nicolsburg.boardflow.ui.theme.PlayerColors
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerColors
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
+import cz.nicolsburg.boardflow.util.toFlexibleLocalDateOrNull
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -421,7 +425,7 @@ object BoardFlowActionTokens {
     // Buttons are compact pills that hug their label. Do not stretch them with fillMaxWidth;
     // a wide slab reads as a banner, not as something to press.
     // 40dp visible; Material still reserves a 48dp touch target around it.
-    val ButtonMinHeight = 40.dp
+    val ButtonMinHeight = Dimens.ButtonHeight
     val ButtonShape = BoardFlowShape.Pill
     val ButtonContentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
     val InlineActionContentPadding = ButtonDefaults.TextButtonContentPadding
@@ -446,13 +450,11 @@ private object BoardFlowConfirmationTokens {
     val MaxWidth = 360.dp
     val Shape = BoardFlowShape.Sheet
     val OuterPadding = 32.dp
-    val ContentPadding = 20.dp
-    val ContentPaddingBottom = 12.dp
-    val IconContainerSize = 32.dp
-    val IconSize = 16.dp
+    val ContentPadding = 24.dp
+    val ContentPaddingBottom = 16.dp
     val HeaderSpacing = 12.dp
-    val MessageSpacing = 20.dp
-    val ActionSpacing = 4.dp
+    val SectionSpacing = 20.dp
+    val ActionSpacing = 8.dp
 }
 
 @Composable
@@ -482,18 +484,23 @@ fun BoardFlowConfirmationDialog(
 
         Surface(
             modifier = modifier
-                .padding(horizontal = 32.dp)
+                .padding(horizontal = BoardFlowConfirmationTokens.OuterPadding)
                 .fillMaxWidth()
                 .widthIn(max = BoardFlowConfirmationTokens.MaxWidth),
-            shape = BoardFlowShape.Sheet,
+            shape = BoardFlowConfirmationTokens.Shape,
             color = MaterialTheme.colorScheme.surface
         ) {
             Column(
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                modifier = Modifier.padding(
+                    start = BoardFlowConfirmationTokens.ContentPadding,
+                    end = BoardFlowConfirmationTokens.ContentPadding,
+                    top = BoardFlowConfirmationTokens.ContentPadding,
+                    bottom = BoardFlowConfirmationTokens.ContentPaddingBottom
+                ),
+                verticalArrangement = Arrangement.spacedBy(BoardFlowConfirmationTokens.SectionSpacing)
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(BoardFlowConfirmationTokens.HeaderSpacing),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (resolvedIcon != null) {
@@ -517,17 +524,15 @@ fun BoardFlowConfirmationDialog(
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    horizontalArrangement = Arrangement.spacedBy(BoardFlowConfirmationTokens.ActionSpacing, Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // The way out is quiet; the action itself carries the colour.
-                    TextButton(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
-                    ) {
-                        Text(dismissLabel, style = MaterialTheme.typography.labelMedium)
+                    // The way out is quiet white text at the button's size; the action carries the colour.
+                    BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) {
+                        Text(dismissLabel)
                     }
-                    BoardFlowSecondaryButton(
+                    // A solid pill with no outline: red for data loss, amber otherwise.
+                    BoardFlowButton(
                         onClick = onConfirm,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = accent,
@@ -585,6 +590,12 @@ fun BoardFlowSecondaryButton(
     ),
     // 32dp instead of 40dp, for a row of small links (game detail: BGG, Rules, Drive).
     compact: Boolean = false,
+    // The amber outline. Pass null for a pill that must not be amber (on the camera or game art).
+    border: BorderStroke? = BorderStroke(
+        Dimens.Hairline,
+        if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+    ),
     content: @Composable RowScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -597,11 +608,7 @@ fun BoardFlowSecondaryButton(
             .scale(scale),
         enabled = enabled,
         colors = colors,
-        border = BorderStroke(
-            1.dp,
-            if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-        ),
+        border = border,
         shape = BoardFlowActionTokens.ButtonShape,
         contentPadding = if (compact) BoardFlowActionTokens.SecondaryButtonContentPadding else BoardFlowActionTokens.ButtonContentPadding,
         interactionSource = interactionSource,
@@ -674,7 +681,7 @@ fun BoardFlowInlineAction(
                     imageVector = icon,
                     contentDescription = null,
                     tint = tint,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(Dimens.IconSmall)
                 )
             }
             // Same label size as the button it sits next to.
@@ -1009,3 +1016,40 @@ fun boardFlowDatePickerColors(): DatePickerColors = DatePickerDefaults.colors(
     titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
     headlineContentColor = MaterialTheme.colorScheme.onSurface
 )
+
+/**
+ * The date picker every form uses. [date] is an ISO date (or anything the flexible parser
+ * reads; blank opens on today) and [onDateSelected] gets the picked day as an ISO date.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BoardFlowDatePickerDialog(
+    date: String,
+    onDateSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = date.toFlexibleLocalDateOrNull()
+            ?.atStartOfDay(java.time.ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
+            ?: System.currentTimeMillis()
+    )
+    DatePickerDialog(
+        colors = boardFlowDatePickerColors(),
+        tonalElevation = 0.dp,
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            BoardFlowInlineAction(onClick = {
+                state.selectedDateMillis?.let { millis ->
+                    onDateSelected(
+                        java.time.Instant.ofEpochMilli(millis)
+                            .atZone(java.time.ZoneOffset.UTC).toLocalDate().toString()
+                    )
+                }
+                onDismiss()
+            }, large = true) { Text("OK") }
+        },
+        dismissButton = {
+            BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
+        }
+    ) { DatePicker(state = state, colors = boardFlowDatePickerColors()) }
+}

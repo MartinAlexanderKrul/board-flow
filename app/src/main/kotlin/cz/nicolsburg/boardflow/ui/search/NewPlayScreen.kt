@@ -765,47 +765,35 @@ private fun PlayingWithRow(
                             }
                         }
                     }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = customName,
-                            onValueChange = { customName = it },
-                            placeholder = {
-                                Text("Type a name…", style = MaterialTheme.typography.bodySmall)
-                            },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            textStyle = MaterialTheme.typography.bodySmall,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                imeAction = androidx.compose.ui.text.input.ImeAction.Done
-                            ),
-                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
-                                onDone = {
-                                    if (customName.isNotBlank()) {
-                                        onAdd(customName.trim())
-                                        customName = ""
-                                    }
-                                }
-                            )
-                        )
-                        IconButton(
-                            onClick = {
-                                if (customName.isNotBlank()) {
-                                    onAdd(customName.trim())
-                                    customName = ""
-                                }
-                            },
-                            enabled = customName.isNotBlank()
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add player",
-                                modifier = Modifier.size(20.dp)
-                            )
+                    // The kit's tonal field, with Add inside it like other inline fields.
+                    val addCustomName = {
+                        if (customName.isNotBlank()) {
+                            onAdd(customName.trim())
+                            customName = ""
                         }
                     }
+                    BoardFlowTextField(
+                        value = customName,
+                        onValueChange = { customName = it },
+                        placeholder = { Text("Type a name...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                        ),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                            onDone = { addCustomName() }
+                        ),
+                        trailingIcon = {
+                            BoardFlowIconButton(onClick = addCustomName, enabled = customName.isNotBlank()) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add player",
+                                    modifier = Modifier.size(Dimens.Icon)
+                                )
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -1030,7 +1018,7 @@ private fun SessionContinueBanner(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                BoardFlowIconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
+                BoardFlowIconButton(onClick = onDismiss) {
                     Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(Dimens.IconSmall))
                 }
             }

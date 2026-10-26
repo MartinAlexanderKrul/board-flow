@@ -1,6 +1,7 @@
 package cz.nicolsburg.boardflow.ui.common
 
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
+import cz.nicolsburg.boardflow.ui.theme.Dimens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
@@ -145,9 +146,10 @@ fun BoardFlowCameraSecondaryAction(
             // On the live camera: dark fill for contrast. The shutter is the only amber control.
             containerColor = Color.Black.copy(alpha = 0.5f),
             contentColor = Color.White
-        )
+        ),
+        border = null
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+        Icon(icon, contentDescription = null, modifier = Modifier.size(Dimens.IconSmall))
         Spacer(Modifier.size(6.dp))
         Text(label)
     }

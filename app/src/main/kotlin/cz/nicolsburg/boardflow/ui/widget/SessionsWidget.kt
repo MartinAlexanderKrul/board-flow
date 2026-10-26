@@ -213,12 +213,18 @@ open class SessionGlanceWidget : GlanceAppWidget() {
                     )
                 }
                 Spacer(GlanceModifier.width(6.dp))
-                Image(
-                    provider           = ImageProvider(R.drawable.ic_widget_camera),
-                    contentDescription = null,
-                    modifier           = GlanceModifier.size(30.dp).clickable(scanAction),
-                    contentScale       = ContentScale.Fit,
-                )
+                // The icon keeps its size; the tap area around it is 48dp.
+                Box(
+                    modifier         = GlanceModifier.size(48.dp).clickable(scanAction),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        provider           = ImageProvider(R.drawable.ic_widget_camera),
+                        contentDescription = "Scan scores",
+                        modifier           = GlanceModifier.size(30.dp),
+                        contentScale       = ContentScale.Fit,
+                    )
+                }
             }
         }
     }
@@ -265,12 +271,18 @@ open class SessionGlanceWidget : GlanceAppWidget() {
                     modifier         = GlanceModifier.fillMaxHeight(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Image(
-                        provider           = ImageProvider(R.drawable.ic_widget_camera),
-                        contentDescription = null,
-                        modifier           = GlanceModifier.size(38.dp).clickable(scanAction),
-                        contentScale       = ContentScale.Fit,
-                    )
+                    // The icon keeps its size; the tap area around it is 48dp.
+                    Box(
+                        modifier         = GlanceModifier.size(48.dp).clickable(scanAction),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            provider           = ImageProvider(R.drawable.ic_widget_camera),
+                            contentDescription = "Scan scores",
+                            modifier           = GlanceModifier.size(38.dp),
+                            contentScale       = ContentScale.Fit,
+                        )
+                    }
                 }
             }
         }
@@ -337,12 +349,18 @@ open class SessionGlanceWidget : GlanceAppWidget() {
                     modifier         = GlanceModifier.fillMaxHeight(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Image(
-                        provider           = ImageProvider(R.drawable.ic_widget_camera),
-                        contentDescription = null,
-                        modifier           = GlanceModifier.size(46.dp).clickable(scanAction),
-                        contentScale       = ContentScale.Fit,
-                    )
+                    // The icon keeps its size; the tap area around it is 48dp.
+                    Box(
+                        modifier         = GlanceModifier.size(48.dp).clickable(scanAction),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            provider           = ImageProvider(R.drawable.ic_widget_camera),
+                            contentDescription = "Scan scores",
+                            modifier           = GlanceModifier.size(46.dp),
+                            contentScale       = ContentScale.Fit,
+                        )
+                    }
                 }
             }
         }

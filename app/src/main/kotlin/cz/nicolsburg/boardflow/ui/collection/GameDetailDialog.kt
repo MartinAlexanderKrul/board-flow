@@ -4,6 +4,7 @@ import cz.nicolsburg.boardflow.ui.common.BoardFlowSecondaryButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowButton
 import cz.nicolsburg.boardflow.ui.common.BoardFlowActionTokens
 import cz.nicolsburg.boardflow.ui.theme.Dimens
+import cz.nicolsburg.boardflow.ui.theme.Spacing
 import cz.nicolsburg.boardflow.ui.theme.BoardFlowShape
 import androidx.compose.material.icons.filled.ChevronRight
 import android.content.Intent
@@ -77,6 +78,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -285,7 +297,7 @@ fun GameDetailsDialog(
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 item {
                     HeaderSection(
@@ -364,7 +376,7 @@ fun GameDetailsDialog(
                         // Links out of the app: secondary buttons, centred under the content.
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.CenterHorizontally)
                         ) {
                             if (bggUrl != null) {
                                 BoardFlowSecondaryButton(
@@ -406,7 +418,7 @@ fun GameDetailsDialog(
                 alpha = compactHeaderAlpha,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
             )
         }
     }
@@ -482,6 +494,63 @@ private fun DetailEditorLabel(text: String) {
     )
 }
 
+/**
+ * Ten stars do not fit 48dp each, so the whole row is one control: a tap or a slide picks the
+ * star under the finger, shown while the finger is down and sent once on release.
+ */
+@Composable
+private fun RatingStarsRow(rating: Int?, onRate: (Int) -> Unit) {
+    var preview by remember { mutableStateOf<Int?>(null) }
+    val shown = preview ?: rating
+    val currentOnRate by rememberUpdatedState(onRate)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = Dimens.MinTouchTarget)
+            .pointerInput(Unit) {
+                fun starAt(x: Float): Int = ((x / size.width) * 10).toInt().coerceIn(0, 9) + 1
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    preview = starAt(down.position.x)
+                    var pointer = down
+                    while (pointer.pressed) {
+                        val event = awaitPointerEvent()
+                        pointer = event.changes.firstOrNull { it.id == down.id } ?: break
+                        preview = starAt(pointer.position.x)
+                        pointer.consume()
+                    }
+                    preview?.let(currentOnRate)
+                    preview = null
+                }
+            }
+            .semantics(mergeDescendants = true) {
+                contentDescription = "Your rating"
+                stateDescription = shown?.let { "$it of 10" } ?: "Not rated"
+                progressBarRangeInfo = ProgressBarRangeInfo(shown?.toFloat() ?: 0f, 0f..10f, steps = 9)
+                setProgress { value ->
+                    val n = value.roundToInt().coerceIn(1, 10)
+                    currentOnRate(n)
+                    true
+                }
+            },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        (1..10).forEach { n ->
+            val selected = shown != null && n <= shown
+            Icon(
+                imageVector = if (selected) Icons.Default.Star else Icons.Default.StarBorder,
+                contentDescription = null,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 10.dp)
+                    .size(28.dp),
+                tint = if (selected) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+            )
+        }
+    }
+}
+
 @Composable
 private fun RatingPickerDialog(
     gameName: String,
@@ -494,30 +563,14 @@ private fun RatingPickerDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             DetailEditorHeader(title = "Rate this game", subtitle = gameName)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    (1..10).forEach { n ->
-                        val selected = personalRating != null && n <= personalRating
-                        Icon(
-                            imageVector = if (selected) Icons.Default.Star else Icons.Default.StarBorder,
-                            contentDescription = "$n",
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(CircleShape)
-                                .clickable { onRate(n) }
-                                .padding(vertical = 10.dp)
-                                .size(28.dp),
-                            tint = if (selected) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                        )
-                    }
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                RatingStarsRow(rating = personalRating, onRate = onRate)
                 Text(
-                    if (personalRating != null) "Current: $personalRating / 10" else "Tap a star to rate",
+                    if (personalRating != null) "Current: $personalRating / 10" else "Tap or slide to rate",
                     style = MaterialTheme.typography.bodySmall.withTabularNumbers(),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -575,15 +628,15 @@ private fun CollectionStatusEditorDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg)
                 .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             DetailEditorHeader(title = "Collection status", subtitle = gameName)
             when {
                 state.loading -> Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     Text(
@@ -598,11 +651,11 @@ private fun CollectionStatusEditorDialog(
                     color = MaterialTheme.colorScheme.error
                 )
                 else -> {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                         DetailEditorLabel("Status")
                         FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             flags.forEach { (label, selected, update) ->
                                 BoardFlowFilterChip(
@@ -618,9 +671,9 @@ private fun CollectionStatusEditorDialog(
                         }
                     }
                     if (draft.wishlist) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                             DetailEditorLabel("Wishlist priority")
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                                 (1..5).forEach { priority ->
                                     BoardFlowFilterChip(
                                         selected = draft.wishlistPriority == priority,
@@ -649,7 +702,7 @@ private fun CollectionStatusEditorDialog(
             if (state.loaded) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End)
                 ) {
                     // Clearing every flag leaves a zeroed entry behind, so removal is its own action.
                     if (state.inCollection) {
@@ -716,8 +769,8 @@ private fun HeaderSection(
             .fillMaxWidth()
             // Fades out as it scrolls under the compact bar.
             .alpha((1f - collapse / 0.5f).coerceIn(0f, 1f))
-            .padding(top = 10.dp, bottom = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(top = 10.dp, bottom = Spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
         verticalAlignment = Alignment.Top
     ) {
         if (hasBackdrop) {
@@ -767,7 +820,7 @@ private fun HeaderSection(
             )
             Row(
                 modifier = Modifier.alpha(chipAlpha),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 game.rating?.let {
@@ -794,7 +847,7 @@ private fun HeaderSection(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    DialogPrimaryActionButton(onClick = onLogPlay) {
+                    DialogHeaderActionButton(onClick = onLogPlay) {
                         Icon(
                             Icons.Default.Casino,
                             contentDescription = null,
@@ -804,7 +857,7 @@ private fun HeaderSection(
                         Text("Log play", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false)
                     }
                     if (hasQuickSetup) {
-                        DialogPrimaryActionButton(onClick = onOpenQuickSetup) {
+                        DialogHeaderActionButton(onClick = onOpenQuickSetup) {
                             Icon(
                                 Icons.Default.Checklist,
                                 contentDescription = null,
@@ -815,7 +868,7 @@ private fun HeaderSection(
                         }
                     }
                     if (hasHistory) {
-                        DialogPrimaryActionButton(onClick = { onViewHistory(gameObjectId) }) {
+                        DialogHeaderActionButton(onClick = { onViewHistory(gameObjectId) }) {
                             Icon(
                                 Icons.Default.History,
                                 contentDescription = null,
@@ -859,7 +912,7 @@ private fun YourStatsCard(
             // Title
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 Icon(
                     Icons.Default.QueryStats,
@@ -878,7 +931,7 @@ private fun YourStatsCard(
             // Row 1: Total plays | Last played | Avg time
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 verticalAlignment = Alignment.Top
             ) {
                 Column(
@@ -944,7 +997,7 @@ private fun YourStatsCard(
             if (stats.bestScore != null || stats.mostWins != null) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     stats.bestScore?.let { (name, score) ->
                         Column(
@@ -971,7 +1024,7 @@ private fun YourStatsCard(
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = primary,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                        modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 3.dp)
                                     )
                                 }
                                 Text(
@@ -1022,7 +1075,7 @@ private fun YourStatsCard(
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = onSurface.copy(alpha = 0.82f),
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                        modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 3.dp)
                                     )
                                 }
                                 Text(
@@ -1053,7 +1106,7 @@ private fun YourStatsCard(
 
             // Frequent partners – pill chips
             if (stats.commonPlayers.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     Text(
                         text = "Frequent partners",
                         style = MaterialTheme.typography.labelSmall,
@@ -1061,7 +1114,7 @@ private fun YourStatsCard(
                     )
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
                         stats.commonPlayers.forEach { (name, count) ->
                             Surface(
@@ -1158,7 +1211,7 @@ private fun SleevesBlock(
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
                         Icon(
                             Icons.Default.Style,
@@ -1238,13 +1291,13 @@ internal fun SleeveTrackingActionSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp),
+                .padding(horizontal = Spacing.xs),
             verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             Text(
@@ -1324,7 +1377,7 @@ private fun SleeveTrackingActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = Spacing.lg, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -1391,7 +1444,7 @@ private fun MasteryStrip(
         color    = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
     ) {
         Row(
-            modifier              = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+            modifier              = Modifier.padding(horizontal = Spacing.md, vertical = 5.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment     = Alignment.CenterVertically
         ) {
@@ -1603,7 +1656,7 @@ private fun SleevesSection(
 
         grouped.isEmpty() -> Unit
 
-        else -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        else -> Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             grouped.forEachIndexed { index, (size, sets) ->
                 if (index > 0) {
                     HorizontalDivider(
@@ -1876,7 +1929,7 @@ private fun CompactStickyHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = 10.dp, vertical = Spacing.sm),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1914,21 +1967,25 @@ private fun masteryLabel(plays: Int): String? = when {
 
 private fun polishGameDetailStat(stat: SectionStat): SectionStat = stat
 
+/**
+ * The compact pills on the header art: Log play, Setup and History look the same, a solid
+ * amber pill with no outline.
+ */
 @Composable
-private fun DialogPrimaryActionButton(
+private fun DialogHeaderActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
 ) {
-    Button(
+    BoardFlowSecondaryButton(
         onClick = onClick,
-        modifier = modifier.heightIn(min = BoardFlowActionTokens.SecondaryButtonMinHeight),
-        shape = BoardFlowShape.Pill,
+        modifier = modifier,
+        compact = true,
+        border = null,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        contentPadding = BoardFlowActionTokens.SecondaryButtonContentPadding
+        )
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
