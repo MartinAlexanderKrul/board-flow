@@ -302,8 +302,9 @@ private val clankTiebreakers = listOf(ScoreTiebreaker("artifact", "Most valuable
 internal val clank = ScoreSheet(
     id = "clank",
     gameName = "Clank!",
-    gameIds = setOf(201808, 218103, 245377, 257276, 282426),
-    maxPlayers = 4,
+    // Sunken Treasures, Mummy's Curse (and Mummy Hunters), both Expeditions, Adventuring Party (5-6 players).
+    gameIds = setOf(201808, 218103, 245377, 250994, 257276, 282426, 308918),
+    maxPlayers = 6,
     rows = listOf(
         PointsRow("artifacts", "Artifacts"),
         CountRow("gold", "Gold"),
@@ -317,7 +318,9 @@ internal val clank = ScoreSheet(
 internal val clankInSpace = ScoreSheet(
     id = "clank-in-space",
     gameName = "Clank! In! Space!",
-    gameIds = setOf(233371, 286265, 333536, 254470),
+    // Also the card packs (Code Red, Triple Agents, W.H.I.S.K.E.R.S., Planetary Destruction, The Last
+    // Starkiller): their cards score through card points.
+    gameIds = setOf(233371, 286265, 333536, 254470, 233378, 238527, 257661, 257662, 333621),
     maxPlayers = 4,
     rows = listOf(
         PointsRow("artifacts", "Artifacts"),
@@ -325,6 +328,55 @@ internal val clankInSpace = ScoreSheet(
         PointsRow("tokens", "Tokens and items", hint = "Plans, crystals, keys, passes, med kits, contraband"),
         PointsRow("cards", "Card points"),
         PointsRow("mastery", "Mastery", hint = "20 if you escaped")
+    ),
+    tiebreakers = clankTiebreakers
+)
+
+/**
+ * Catacombs scoring (rulebook p.14): artifact, other tokens (the Mastery token is 20), gold, card
+ * points. Lairs and Lost Chambers adds trophies; Underworld adds artifact enhancers, Imp
+ * Assistants and fate cards, and undercoins count as gold. The Adventuring Party (5-6 players)
+ * adds no scoring of its own (its Invisibility Cloaks are items worth 5).
+ */
+internal val clankCatacombs = ScoreSheet(
+    id = "clank-catacombs",
+    gameName = "Clank! Catacombs",
+    gameIds = setOf(365717, 422869, 447586),
+    maxPlayers = 6,
+    modules = listOf(
+        ScoreModule("lairs", "Lairs and Lost Chambers", setOf(422869)),
+        ScoreModule("underworld", "Underworld", setOf(447586))
+    ),
+    rows = listOf(
+        PointsRow("artifacts", "Artifacts", hint = "No artifact, no score"),
+        PointsRow(
+            "enhancer", "Artifact enhancer", module = "underworld",
+            hint = "What it adds to your best artifact: 2x adds its value again, 1.5x half of it, rounded up"
+        ),
+        CountRow("gold", "Gold", hint = "Undercoins count as gold"),
+        PointsRow("tokens", "Tokens and items", hint = "Secrets, monkey idols, prisoners, crowns and other market items"),
+        PointsRow("cards", "Card points"),
+        PointsRow("trophies", "Trophies", module = "lairs", hint = "1 per lair monster, plus what TROPHY cards give"),
+        PointsRow("imp", "Imp Assistant", module = "underworld", hint = "Its number for each Secret Tome you have"),
+        PointsRow("fate", "Fate cards", module = "underworld"),
+        PointsRow("mastery", "Mastery", hint = "20 if you escaped")
+    ),
+    tiebreakers = clankTiebreakers
+)
+
+/** Legacy scores each game like Clank! (rulebook p.11), with the Mug token for reaching HQ. */
+internal val clankLegacy = ScoreSheet(
+    id = "clank-legacy",
+    gameName = "Clank! Legacy: Acquisitions Incorporated",
+    // Upper Management Pack, The "C" Team Pack, Shadow Council's Blessing, Pledge Support.
+    gameIds = setOf(266507, 275532, 289559, 293208, 298015),
+    maxPlayers = 4,
+    rows = listOf(
+        PointsRow("artifacts", "Artifacts", hint = "No artifact, no score"),
+        CountRow("gold", "Gold"),
+        PointsRow("tokens", "Tokens and items"),
+        PointsRow("cards", "Card points"),
+        PointsRow("mastery", "Mug", hint = "20 if you reached HQ")
     ),
     tiebreakers = clankTiebreakers
 )

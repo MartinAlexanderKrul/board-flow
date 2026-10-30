@@ -157,25 +157,21 @@ Already in the guide: Eradikus' flagship, Cyber Station 11, Pulsarcade (Master C
 - [ ] [Clank! In! Space!: The Last Starkiller](https://boardgamegeek.com/boardgameexpansion/333621) (2021) - no rules on BGG
 
 ## Clank!: A Deck-Building Adventure
-Already in the guide: Original board, Sunken Treasures board, Mummy's Curse board, Gold and Silk: the mine, Gold and Silk: Spider Queen's Lair, Ape Lords: Jungle side, Ape Lords: Temple side, Sunken Treasures cards & secrets, The Mummy's Curse cards & curses
+Already in the guide: Original board, Sunken Treasures board, Mummy's Curse board, Gold and Silk: the mine, Gold and Silk: Spider Queen's Lair, Ape Lords: Jungle side, Ape Lords: Temple side, Sunken Treasures cards & secrets, The Mummy's Curse cards & curses, Adventuring Party
 
 - [ ] [Santa's Renegades](https://boardgamegeek.com/boardgameexpansion/215186) (2016) - no rules on BGG
 - [ ] [Clank!: The Mummy's Curse – Mummy Hunters](https://boardgamegeek.com/boardgameexpansion/250994) (2018) - no rules on BGG
 - [ ] [Clank! Legacy: Acquisitions Incorporated – The "C" Team Pack](https://boardgamegeek.com/boardgameexpansion/289559) (2019) - no rules on BGG
 - [ ] [Clank! Legacy: Acquisitions Incorporated – Upper Management Pack](https://boardgamegeek.com/boardgameexpansion/275532) (2019)
-- [ ] [Clank!: Adventuring Party](https://boardgamegeek.com/boardgameexpansion/308918) (2020)
 - [ ] [Clank!: Traveler's Hat](https://boardgamegeek.com/boardgameexpansion/460386) (2025) - no rules on BGG
 - [ ] [Clank!: The Forgotten Vault](https://boardgamegeek.com/boardgameexpansion/477934) (2027) - no rules on BGG
 
 ## Clank!: Catacombs
-Already in the guide: Adventuring Party
+Already in the guide: Adventuring Party, Lairs and Lost Chambers, Underworld
 
 - [ ] [Clank! Legacy: Acquisitions Incorporated – The "C" Team Pack](https://boardgamegeek.com/boardgameexpansion/289559) (2019) - no rules on BGG
 - [ ] [Clank! Legacy: Acquisitions Incorporated – Upper Management Pack](https://boardgamegeek.com/boardgameexpansion/275532) (2019)
-- [ ] [Clank!: Adventuring Party](https://boardgamegeek.com/boardgameexpansion/308918) (2020)
-- [ ] [Clank!: Catacombs – Lairs and Lost Chambers](https://boardgamegeek.com/boardgameexpansion/422869) (2024)
 - [ ] [Clank!: Traveler's Hat](https://boardgamegeek.com/boardgameexpansion/460386) (2025) - no rules on BGG
-- [ ] [Clank!: Catacombs – Underworld](https://boardgamegeek.com/boardgameexpansion/447586) (2025)
 
 ## Codenames: Duet
 

@@ -219,6 +219,33 @@ class ScoreSheetScoringTest {
     }
 
     @Test
+    fun everyClankGameOpensItsSheet() {
+        val ids = mapOf(
+            201808 to "clank", 308918 to "clank", 245377 to "clank", 233371 to "clank-in-space", 233378 to "clank-in-space",
+            365717 to "clank-catacombs", 422869 to "clank-catacombs", 447586 to "clank-catacombs",
+            266507 to "clank-legacy", 275532 to "clank-legacy"
+        )
+        ids.forEach { (id, sheet) -> assertEquals("BGG $id", sheet, ScoreSheets.forGames(listOf(id))?.id) }
+        // Logging Catacombs with its expansions turns their rows on.
+        assertEquals(setOf("lairs", "underworld"), ScoreSheets.byId("clank-catacombs")!!.modulesFor(listOf(365717, 422869, 447586)))
+    }
+
+    @Test
+    fun catacombsUnderworldScoresTheEnhancerAndTiesGoToTheBestArtifact() {
+        // Underworld rulebook example: a 16-point artifact with the 2x enhancer is worth 32.
+        val sheet = ScoreSheets.byId("clank-catacombs")!!
+        val tied = draft(
+            sheet,
+            mapOf("artifacts" to 16, "enhancer" to 16, "gold" to 10, "mastery" to 20),
+            mapOf("artifacts" to 25, "gold" to 17, "cards" to 10, "fate" to 10),
+            modules = setOf("underworld")
+        )
+        val result = ScoreSheetScoring.score(sheet, tied)
+        assertEquals(listOf(62, 62), result.totals)
+        assertEquals("artifact", result.pendingTiebreaker?.id)
+    }
+
+    @Test
     fun everyGameOfBothFamiliesHasASheet() {
         val ids = mapOf(
             266192 to "wingspan", 290448 to "wingspan", 300580 to "wingspan", 461932 to "wingspan", 366161 to "wingspan",

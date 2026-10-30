@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gameId": 201808,
   "gameName": "Clank!: A Deck-Building Adventure",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
@@ -11,7 +11,8 @@
       "Sunken Treasures rules sheet",
       "The Mummy's Curse rulebook",
       "Expeditions: Gold and Silk rulebook",
-      "Expeditions: Temple of the Ape Lords rulebook"
+      "Expeditions: Temple of the Ape Lords rulebook",
+      "Adventuring Party rulebook (via RulesPal)"
     ]
   },
   "players": {
@@ -31,17 +32,33 @@
               "default": "",
               "byPlayers": {
                 "2": " (first box 2 random ones)",
-                "3": " (first box 1 random one)"
+                "3": " (first box 1 random one)",
+                "5": ", with the 5 Adventuring Party ones: shuffle all 12 facedown, box 2 at random, stack equal values with the original gold one on top",
+                "6": ", with the 5 Adventuring Party ones (12 in all); stack equal values with the original gold one on top"
               }
             }
           },
           "ref": "p.2",
-          "note": "Ape Lords boards: 33-point artifact replaces the 30; Spider's Lair: 8-point replaces the 7"
+          "note": "Ape Lords boards: 33-point artifact replaces the 30; Spider's Lair: 8-point replaces the 7. Adventuring Party: an artifact with no space of its value goes on the closest one, higher value on top"
         },
         {
           "id": "secrets",
           "text": "Shuffle Major and Minor Secrets separately; one on each Major space, two in each Minor room; box extras unseen",
-          "ref": "p.2"
+          "ref": "p.2",
+          "condition": {
+            "maxPlayers": 4
+          }
+        },
+        {
+          "id": "party-secrets",
+          "text": "Shuffle Major Secrets, one on each Major space (box extras unseen); mix the Adventuring Party Minor Secrets into the original ones and keep them all facedown in the Bank, none on the board",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook C-D"
         },
         {
           "id": "market",
@@ -54,6 +71,28 @@
           }
         },
         {
+          "id": "party-market",
+          "text": "Market Board beside the board: add the Adventuring Party Backpack, Crown and Master Key and 3 Invisibility Cloaks to the Market items",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook E"
+        },
+        {
+          "id": "party-cloaks",
+          "text": "Optional: Market Board beside the board with 2 Invisibility Cloaks among the Market items",
+          "condition": {
+            "maxPlayers": 4,
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook E"
+        },
+        {
           "id": "idols",
           "text": "3 Monkey Idols on the Monkey Shrine; 1 Mastery token per player near the top left",
           "ref": "p.2"
@@ -62,6 +101,16 @@
           "id": "bank",
           "text": "Gold tokens (1 and 5) as the Bank",
           "ref": "p.2"
+        },
+        {
+          "id": "party-gold",
+          "text": "Add the Adventuring Party Gold to the Bank",
+          "condition": {
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook H"
         },
         {
           "id": "dragon",
@@ -75,7 +124,21 @@
               }
             }
           },
-          "ref": "p.2"
+          "ref": "p.2",
+          "condition": {
+            "maxPlayers": 4
+          }
+        },
+        {
+          "id": "party-dragon",
+          "text": "Side board against the bottom edge of the board; Dragon marker (or the Hexavultus boss marker) on the first space of its Rage Track",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook I"
         },
         {
           "id": "bag",
@@ -88,10 +151,21 @@
           "ref": "p.2"
         },
         {
+          "id": "party-reserve",
+          "text": "Add the 4 extra Mercenary, Explore and Secret Tome cards to the Reserve piles",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook K"
+        },
+        {
           "id": "dungeon-row",
           "text": "Shuffle the Dungeon Deck; deal 6 faceup as the Dungeon Row, replacing any with Dragon Attack",
           "ref": "p.2",
-          "note": "Shuffle in the 35 Sunken Treasures and/or 40 Mummy's Curse cards first if used"
+          "note": "Shuffle in the 35 Sunken Treasures, 40 Mummy's Curse and/or 35 Adventuring Party cards first if used"
         },
         {
           "id": "market-board",
@@ -273,6 +347,28 @@
           "ref": "p.2"
         },
         {
+          "id": "party-players",
+          "text": "Players 5 and 6: cubes and pawns of the two new colors and the two extra 10-card starting decks",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook A"
+        },
+        {
+          "id": "party-characters",
+          "text": "Optional: everyone plays a character instead, with its board, its own 10-card starting deck and its tokens",
+          "condition": {
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook A",
+          "note": "Characters play only against other characters, never against regular starting decks"
+        },
+        {
           "id": "pawns",
           "text": "Pawns just outside the dungeon at the top of the board",
           "ref": "p.2"
@@ -293,6 +389,17 @@
           "id": "clank",
           "text": "Starting Clank! in the Clank! Area by seat: 3, 2, 1, 0",
           "ref": "p.2"
+        },
+        {
+          "id": "party-start",
+          "text": "Players 5 and 6 add no Clank!; player 5 takes 1 Gold, player 6 takes 2 Gold",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "party"
+            ]
+          },
+          "ref": "Adventuring Party rulebook N"
         }
       ]
     }
@@ -346,6 +453,17 @@
       "name": "The Mummy's Curse cards & curses",
       "bggId": 245377,
       "note": "First game: leave out the Sunken Treasures cards."
+    },
+    {
+      "id": "party",
+      "name": "Adventuring Party",
+      "bggId": 308918,
+      "extendsMaxPlayers": 6,
+      "forcedAtPlayers": [
+        5,
+        6
+      ],
+      "note": "Needed for 5-6 players. With 4 or fewer you may still use its cards, Gold, 2 Invisibility Cloaks and the characters."
     }
   ]
 }

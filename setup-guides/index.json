@@ -844,8 +844,8 @@
     {
       "gameId": 201808,
       "gameName": "Clank!: A Deck-Building Adventure",
-      "gameIds": [201808, 218103, 245377, 257276, 282426],
-      "version": 2,
+      "gameIds": [201808, 218103, 245377, 257276, 282426, 308918],
+      "version": 3,
       "schemaVersion": 1,
       "path": "201808.json"
     },
@@ -1540,8 +1540,8 @@
     {
       "gameId": 365717,
       "gameName": "Clank!: Catacombs",
-      "gameIds": [365717],
-      "version": 2,
+      "gameIds": [365717, 422869, 447586],
+      "version": 3,
       "schemaVersion": 1,
       "path": "365717.json"
     },

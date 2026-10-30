@@ -102,6 +102,8 @@ internal val guideDesigns: Map<String, ScoreSheetDesign> = mapOf(
     ),
     "clank" to clankDesign(Kit.Red),
     "clank-in-space" to clankDesign(Kit.Blue),
+    "clank-catacombs" to clankDesign(Kit.Teal),
+    "clank-legacy" to clankDesign(Kit.Purple),
     "clans-of-caledonia" to design(
         Kit.flag(Teal),
         "glory" to Kit.laurel(), "basic" to Kit.cube(Brown), "processed" to Kit.barrel(), "money" to Kit.coins(),
@@ -322,7 +324,9 @@ private fun mysticaDesign(c: Color) = design(
 private fun clankDesign(c: Color) = design(
     Kit.gem(c),
     "artifacts" to Kit.gem(c), "gold" to Kit.coins(), "credits" to Kit.coins(Teal), "tokens" to Kit.crown(),
-    "cards" to Kit.cards(c), "mastery" to Kit.medal(Gold, c), "tie.artifact" to Kit.gem(c)
+    "cards" to Kit.cards(c), "mastery" to Kit.medal(Gold, c), "tie.artifact" to Kit.gem(c),
+    // Catacombs expansions: Underworld enhancers, Imp Assistants, fate cards; Lairs trophies.
+    "enhancer" to Kit.plus(c), "imp" to Kit.book(Purple), "fate" to Kit.card(Purple, Gold), "trophies" to Kit.trophy()
 )
 
 private fun eclipseDesign() = design(

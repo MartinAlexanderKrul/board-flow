@@ -2,12 +2,14 @@
   "schemaVersion": 1,
   "gameId": 365717,
   "gameName": "Clank!: Catacombs",
-  "version": 2,
+  "version": 3,
   "provenance": {
     "origin": "BOARDFLOW",
     "author": "BoardFlow",
     "sources": [
-      "Clank! Catacombs rulebook (via RulesPal)"
+      "Clank! Catacombs rulebook (via RulesPal)",
+      "Lairs and Lost Chambers rulebook (via RulesPal)",
+      "Underworld rulebook (via RulesPal)"
     ]
   },
   "players": {
@@ -19,7 +21,31 @@
       "id": "adventuring-party",
       "name": "Adventuring Party",
       "extendsMaxPlayers": 6,
-      "note": "Enables 5-6 players."
+      "note": "Enables 5-6 players.",
+      "forcedAtPlayers": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "lairs",
+      "name": "Lairs and Lost Chambers",
+      "bggId": 422869,
+      "note": "First game: shuffle the new tiles and cards into the top half of their stacks."
+    },
+    {
+      "id": "underworld",
+      "name": "Underworld",
+      "bggId": 447586,
+      "note": "Front side of the Underworld starting tile is recommended for a first game."
+    },
+    {
+      "id": "underworld-back",
+      "name": "Underworld: back side of its starting tile",
+      "requires": [
+        "underworld"
+      ],
+      "note": "Moves the Monkey Shrine down to the Underworld."
     }
   ],
   "sections": [
@@ -35,17 +61,170 @@
               "default": "your number of"
             }
           },
-          "ref": "Setup A"
+          "ref": "Setup A",
+          "condition": {
+            "maxPlayers": 4
+          }
+        },
+        {
+          "id": "ap-side",
+          "text": "Adventuring Party side board next to the Clank! board for the Dragon's rage and the health of players 5 and 6; Dragon marker on the first space of its Rage Track",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "adventuring-party"
+            ]
+          },
+          "ref": "Adventuring Party (p.15)"
         },
         {
           "id": "tiles",
-          "text": "Shuffle the 22 Depths tiles facedown in the Bank; shuffle the other 6 square tiles, box 2 unseen, put 4 on top",
+          "text": "Shuffle the {n} facedown as a stack in the Bank",
+          "amounts": {
+            "n": {
+              "default": "22 Depths tiles",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "lairs"
+                    ]
+                  },
+                  "value": "32 Depths tiles (22 + 10 Lairs and Lost Chambers)"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "notModules": [
+              "underworld"
+            ]
+          },
           "ref": "Setup B"
+        },
+        {
+          "id": "uw-depths",
+          "text": "Shuffle the 6 Underworld Depths tiles and box 3 unseen. Shuffle the {n}, take the top 7, shuffle the 3 Underworld ones into those and put the 10 back on top, as a stack in the Bank",
+          "amounts": {
+            "n": {
+              "default": "22 Depths tiles",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "lairs"
+                    ]
+                  },
+                  "value": "32 Depths tiles (22 + 10 Lairs and Lost Chambers)"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
+          "id": "safe-tiles",
+          "text": "Shuffle the {n} other square tiles (safe tiles), box {b} unseen, put {k} on top of the Depths stack",
+          "amounts": {
+            "n": {
+              "default": "6",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "lairs"
+                    ]
+                  },
+                  "value": "8"
+                }
+              ]
+            },
+            "b": {
+              "default": "2",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "lairs",
+                      "underworld"
+                    ]
+                  },
+                  "value": "5"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "lairs"
+                    ]
+                  },
+                  "value": "4"
+                },
+                {
+                  "when": {
+                    "modules": [
+                      "underworld"
+                    ]
+                  },
+                  "value": "3"
+                }
+              ]
+            },
+            "k": {
+              "default": "4",
+              "cases": [
+                {
+                  "when": {
+                    "modules": [
+                      "underworld"
+                    ]
+                  },
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "ref": "Setup B",
+          "note": "Lairs and Lost Chambers adds 2 safe tiles; with Underworld only 3 tiles come before the Depths"
+        },
+        {
+          "id": "uw-tiles",
+          "text": "Shuffle the 7 Underworld tiles facedown as a separate stack next to the square tiles",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
         },
         {
           "id": "supply",
           "text": "Gold, Lockpicks, 5 white Ghost cubes and the Dragon bag with 24 black cubes in the Bank",
           "ref": "Setup C"
+        },
+        {
+          "id": "lairs-monsters",
+          "text": "5 monster tokens in the Bank: 3 Living Statues, Medusa and the Sphinx",
+          "condition": {
+            "modules": [
+              "lairs"
+            ]
+          },
+          "ref": "Lairs and Lost Chambers rulebook: Setup"
+        },
+        {
+          "id": "uw-bank",
+          "text": "Undercoins, the 8 harpy tokens and the 5 ladder tokens in the Bank",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
         },
         {
           "id": "artifacts",
@@ -68,9 +247,34 @@
           "ref": "Setup C"
         },
         {
+          "id": "uw-tokens",
+          "text": "Shuffle the Underworld major secrets, minor secrets and prisoners in with the tokens of the same kind",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
           "id": "market",
           "text": "Market Board: 2 Backpacks, 2 Blood Amulets, 3 Burglar's Kits, 3 Crowns (10 on top, 8 at the bottom)",
-          "ref": "Setup C"
+          "ref": "Setup C",
+          "condition": {
+            "notModules": [
+              "underworld"
+            ]
+          }
+        },
+        {
+          "id": "uw-market",
+          "text": "Underworld Market Board instead, in two rows: top row 2 Backpacks, 2 Blood Amulets, 3 Burglar's Kits, 3 Crowns (10 on top, 8 at the bottom) and the River Lamp; bottom row the 5 Underworld market items",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
         },
         {
           "id": "ap-market",
@@ -94,9 +298,70 @@
           "ref": "Setup D"
         },
         {
+          "id": "uw-start",
+          "text": "Underworld starting tile in your playing space, front side up, with room between it and the Catacombs starting tile",
+          "condition": {
+            "modules": [
+              "underworld"
+            ],
+            "notModules": [
+              "underworld-back"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
+          "id": "uw-start-back",
+          "text": "Underworld starting tile in your playing space, back side up, with room between it and the Catacombs starting tile",
+          "condition": {
+            "modules": [
+              "underworld-back"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
+          "id": "uw-rooms",
+          "text": "On the Underworld starting tile: the Magic Lyre (16-point artifact); the 3 artifact enhancers (2x on top) with the Underworld Guardian marker; the 3 Imp Assistants (4 on top); a harpy token from the Bank in its harpy room",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
+          "id": "uw-prisoner",
+          "text": "A random prisoner faceup in the marked prison room of the Underworld starting tile (not freed: no immediate effect)",
+          "condition": {
+            "modules": [
+              "underworld"
+            ],
+            "notModules": [
+              "underworld-back"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
+          "id": "uw-idols",
+          "text": "3 Monkey Idols on the Monkey Shrine of the Underworld starting tile; cover the Catacombs Monkey Shrine with the replacement token",
+          "condition": {
+            "modules": [
+              "underworld-back"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
           "id": "idols",
           "text": "3 Monkey Idols on the Monkey Shrine room",
-          "ref": "Setup D"
+          "ref": "Setup D",
+          "condition": {
+            "notModules": [
+              "underworld-back"
+            ]
+          }
         },
         {
           "id": "mastery",
@@ -121,12 +386,62 @@
           "ref": "Setup E"
         },
         {
+          "id": "uw-guardian",
+          "text": "Underworld Guardian card in the Reserve next to the Goblin",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
+          "id": "lairs-cards",
+          "text": "Shuffle the 50 Lairs and Lost Chambers cards into the Dungeon Deck",
+          "condition": {
+            "modules": [
+              "lairs"
+            ]
+          },
+          "ref": "Lairs and Lost Chambers rulebook: Setup"
+        },
+        {
+          "id": "uw-cards",
+          "text": "Shuffle the 50 Underworld cards into the Dungeon Deck",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
+          "id": "ap-cards",
+          "text": "Shuffle the 35 Adventuring Party cards into the Dungeon Deck",
+          "condition": {
+            "modules": [
+              "adventuring-party"
+            ]
+          },
+          "ref": "Adventuring Party (p.15)"
+        },
+        {
           "id": "row",
           "text": "Shuffle the Dungeon Deck; deal {n} faceup as the Dungeon Row, replacing Dragon Attack cards (reshuffle those)",
           "amounts": {
             "n": 6
           },
           "ref": "Setup E"
+        },
+        {
+          "id": "uw-fate",
+          "text": "Shuffle the 22 fate cards; fate deck next to the Dungeon Deck",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
         }
       ]
     },
@@ -138,6 +453,17 @@
           "id": "color",
           "text": "Each player: 30 Clank! cubes of their color; pawn on the Crypt of the starting tile",
           "ref": "Setup F"
+        },
+        {
+          "id": "ap-colors",
+          "text": "Players 5 and 6: cubes and pawns of the two Adventuring Party colors",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "adventuring-party"
+            ]
+          },
+          "ref": "Adventuring Party (p.15)"
         },
         {
           "id": "lockpicks",
@@ -153,9 +479,112 @@
           "ref": "Setup G"
         },
         {
+          "id": "ap-characters",
+          "text": "Optional: everyone plays an Adventuring Party character instead, with its board, its own starting deck and its tokens",
+          "condition": {
+            "modules": [
+              "adventuring-party"
+            ]
+          },
+          "ref": "Adventuring Party (p.15)"
+        },
+        {
+          "id": "uw-reference",
+          "text": "Each player takes an Underworld reference card",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
+          "id": "uw-coin",
+          "text": "First game: each player takes 1 undercoin from the Bank",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Setup"
+        },
+        {
           "id": "clank",
           "text": "Starting Clank! on the board: 1st player 3, 2nd 2, 3rd 1, 4th 0",
           "ref": "Setup H"
+        },
+        {
+          "id": "ap-start",
+          "text": "Players 5 and 6 add no Clank!; player 5 takes 1 Gold, player 6 takes 2 Gold",
+          "condition": {
+            "minPlayers": 5,
+            "modules": [
+              "adventuring-party"
+            ]
+          },
+          "ref": "Adventuring Party (p.15)"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "title": "Easy to forget",
+      "kind": "REMINDERS",
+      "steps": [
+        {
+          "id": "score-zero",
+          "text": "Knocked out without an artifact, or in the Depths, scores 0 points",
+          "ref": "Game End and Scoring"
+        },
+        {
+          "id": "trophies",
+          "text": "Trophies (defeated lair monsters, TROPHY cards) stay in your supply: their effect lasts and each lair monster is worth 1 point at the end",
+          "condition": {
+            "modules": [
+              "lairs"
+            ]
+          },
+          "ref": "Lairs and Lost Chambers rulebook: Trophies"
+        },
+        {
+          "id": "medusa",
+          "text": "Entering Medusa's Lair: fight her (needs a Secret Tome played this turn) or take 2 damage",
+          "condition": {
+            "modules": [
+              "lairs"
+            ]
+          },
+          "ref": "Lairs and Lost Chambers rulebook: Lairs"
+        },
+        {
+          "id": "toll",
+          "text": "Starting your turn in the Underworld costs 1 undercoin, or +2 Clank! if you have none",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: The Underworld Takes a Toll"
+        },
+        {
+          "id": "uw-knockout",
+          "text": "Knocked out in the Underworld also scores 0 points",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: The Underworld"
+        },
+        {
+          "id": "uw-scoring",
+          "text": "At the end: an artifact enhancer multiplies your best artifact (rounded up), an Imp Assistant scores its number per Secret Tome, fate cards and undercoins score too",
+          "condition": {
+            "modules": [
+              "underworld"
+            ]
+          },
+          "ref": "Underworld rulebook: Underworld Features"
         }
       ]
     },

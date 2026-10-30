@@ -276,8 +276,8 @@ object ScoreSheets {
     /** The Quick Setup games scored at the end (GuideSheetsAtoG.kt, GuideSheetsHtoZ.kt). */
     private val guideGames: List<ScoreSheet> = listOf(
         sevenWonders, sevenWondersDuel, feastForOdin, agricola, agricolaRevised, ageOfInnovation, akropolis,
-        anachrony, cartographers, cascadia, catan, caverna, citadels, clank, clankInSpace, clansOfCaledonia,
-        concordia, darwinsJourney, dominion, eclipse, eclipseSecondDawn, endeavorDeepSea, faraway, fiveTribes,
+        anachrony, cartographers, cascadia, catan, caverna, citadels, clank, clankInSpace, clankCatacombs,
+        clankLegacy, clansOfCaledonia, concordia, darwinsJourney, dominion, eclipse, eclipseSecondDawn, endeavorDeepSea, faraway, fiveTribes,
         forestShuffle, gaiaProject, greatWesternTrail, harmonies, itsAWonderfulWorld, kingdomino, kutnaHora,
         leHavre, lostCities, lostRuinsOfArnak, lordsOfWaterdeep, onMars, orleans, paladins, parks, patchwork,
         puertoRico, raceForTheGalaxy, revive, sagrada, scythe, seti, stoneAge, sushiGo, sushiGoParty, takenoko,
