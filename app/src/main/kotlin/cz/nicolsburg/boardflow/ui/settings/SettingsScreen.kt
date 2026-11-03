@@ -11,7 +11,13 @@ import cz.nicolsburg.boardflow.data.setupguide.GuideImportResult
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideCounts
 import cz.nicolsburg.boardflow.data.setupguide.SetupGuideRepository
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.ContentCopy
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.PersistableBundle
+import androidx.compose.ui.text.font.FontFamily
+import kotlinx.coroutines.delay
 import androidx.compose.material.icons.filled.Key
 import cz.nicolsburg.boardflow.ui.common.LocalBoardFlowMessenger
 import cz.nicolsburg.boardflow.ui.common.BoardFlowSectionTitle
@@ -174,6 +180,7 @@ fun SettingsScreen(
     var username by remember { mutableStateOf(prefs.bggUsername) }
     var password by remember { mutableStateOf(prefs.bggPassword) }
     var apiKey by remember { mutableStateOf(prefs.geminiApiKey) }
+    var extraKeys by remember { mutableStateOf(prefs.getGeminiExtraApiKeys()) }
     var modelEndpoint by remember { mutableStateOf(prefs.geminiModelEndpoint) }
     var showPwd by remember { mutableStateOf(false) }
     var showKey by remember { mutableStateOf(false) }
@@ -302,6 +309,7 @@ fun SettingsScreen(
                     username = prefs.bggUsername
                     password = prefs.bggPassword
                     apiKey = prefs.geminiApiKey
+                    extraKeys = prefs.getGeminiExtraApiKeys()
                     modelEndpoint = prefs.geminiModelEndpoint
                     syncViewModel.reloadLocalSyncPreferences()
                     syncViewModel.loadCachedCollection()
@@ -710,25 +718,24 @@ fun SettingsScreen(
                 item { BoardFlowSectionTitle(title = "Gemini", supporting = "Optional. Reads score sheet photos and writes chronicles.") }
                 item {
                     var showKeyDialog by remember { mutableStateOf(false) }
-                    var showBackupKeysDialog by remember { mutableStateOf(false) }
                     var modelPickerOpen by remember { mutableStateOf(false) }
-                    var extraKeys by remember { mutableStateOf(prefs.getGeminiExtraApiKeys()) }
                     val autoLabel = "Automatic"
+                    val keyCount = (listOf(apiKey) + extraKeys).count { it.isNotBlank() }
                     BoardFlowFormGroup {
                         BoardFlowSettingRow(
                             icon = Icons.Default.Key,
-                            title = "API key",
-                            detail = "From Google AI Studio",
+                            title = "API keys",
+                            detail = "From Google AI Studio. Backups take over when a key hits its limit",
                             onClick = { showKeyDialog = true }
-                        ) { BoardFlowSettingValue(if (apiKey.isBlank()) "Not set" else "Saved") }
-                        BoardFlowFormDivider()
-                        BoardFlowSettingRow(
-                            icon = Icons.Default.VpnKey,
-                            title = "Backup keys",
-                            detail = "Used when the main key hits its limit",
-                            enabled = apiKey.isNotBlank() || extraKeys.isNotEmpty(),
-                            onClick = { showBackupKeysDialog = true }
-                        ) { BoardFlowSettingValue(if (extraKeys.isEmpty()) "None" else extraKeys.size.toString()) }
+                        ) {
+                            BoardFlowSettingValue(
+                                when (keyCount) {
+                                    0 -> "Not set"
+                                    1 -> "1 key"
+                                    else -> "$keyCount keys"
+                                }
+                            )
+                        }
                         BoardFlowFormDivider()
                         BoardFlowSettingRow(
                             icon = Icons.Default.Tune,
@@ -762,25 +769,17 @@ fun SettingsScreen(
                         }
                     }
                     if (showKeyDialog) {
-                        GeminiKeyDialog(
-                            initial = apiKey,
-                            onSave = { key ->
-                                apiKey = key
-                                prefs.geminiApiKey = key
+                        GeminiKeysDialog(
+                            initial = (listOf(apiKey) + extraKeys).filter { it.isNotBlank() },
+                            onSave = { keys ->
+                                apiKey = keys.firstOrNull().orEmpty()
+                                extraKeys = keys.drop(1)
+                                prefs.geminiApiKey = apiKey
+                                prefs.saveGeminiExtraApiKeys(extraKeys)
                                 showKeyDialog = false
-                                messenger.show(if (key.isBlank()) "API key removed" else "API key saved")
+                                messenger.show(if (keys.isEmpty()) "API keys removed" else "API keys saved")
                             },
                             onDismiss = { showKeyDialog = false }
-                        )
-                    }
-                    if (showBackupKeysDialog) {
-                        BackupKeysDialog(
-                            keys = extraKeys,
-                            onChange = { updated ->
-                                extraKeys = updated
-                                prefs.saveGeminiExtraApiKeys(updated)
-                            },
-                            onDismiss = { showBackupKeysDialog = false }
                         )
                     }
                     if (modelPickerOpen) {
@@ -1220,12 +1219,29 @@ private fun CategoryTag(label: String) {
     }
 }
 
-/** Edits the main Gemini key. A blank key turns scanning and chronicles off. */
+/**
+ * Every Gemini key in one list: the first is the main key, the rest are backups the app
+ * moves to when a key hits its limit. Edits are a draft until Save; no keys turns scanning
+ * and chronicles off.
+ */
 @Composable
-private fun GeminiKeyDialog(initial: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
-    var value by remember { mutableStateOf(initial) }
+private fun GeminiKeysDialog(initial: List<String>, onSave: (List<String>) -> Unit, onDismiss: () -> Unit) {
+    var keys by remember { mutableStateOf(initial) }
+    var newKey by remember { mutableStateOf("") }
     var visible by remember { mutableStateOf(false) }
+    var copiedIndex by remember { mutableStateOf<Int?>(null) }
+    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+    LaunchedEffect(copiedIndex) {
+        if (copiedIndex != null) {
+            delay(1500)
+            copiedIndex = null
+        }
+    }
+    fun withNewKey(): List<String> {
+        val typed = newKey.trim()
+        return if (typed.isBlank() || typed in keys) keys else keys + typed
+    }
     AnimatedDialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -1234,22 +1250,90 @@ private fun GeminiKeyDialog(initial: String, onSave: (String) -> Unit, onDismiss
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             SettingsDialogHeader(
-                "Gemini API key",
-                "Create a key in Google AI Studio (your profile, API keys) and paste it here."
+                "Gemini API keys",
+                "Create a key in Google AI Studio (your profile, API keys) and paste it here. " +
+                    "When a key hits its limit and every model is busy, the app moves to the next one."
             )
+            if (keys.isNotEmpty()) {
+                BoardFlowFormGroup(raised = true) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .padding(start = Spacing.lg, end = Spacing.md),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Show keys",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        BoardFlowSwitch(checked = visible, onCheckedChange = { visible = it })
+                    }
+                    keys.forEachIndexed { index, key ->
+                        BoardFlowFormDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 56.dp)
+                                .padding(start = Spacing.lg, end = Spacing.xs, top = Spacing.xs, bottom = Spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                if (index == 0) "Main" else "Backup $index",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.width(72.dp)
+                            )
+                            Text(
+                                if (visible) key else "•••• " + key.takeLast(4),
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            BoardFlowIconButton(
+                                onClick = {
+                                    copySensitiveText(context, "Gemini API key", key)
+                                    copiedIndex = index
+                                }
+                            ) {
+                                Icon(
+                                    if (copiedIndex == index) Icons.Default.Check else Icons.Default.ContentCopy,
+                                    contentDescription = if (copiedIndex == index) "Copied" else "Copy key",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(Dimens.Icon)
+                                )
+                            }
+                            BoardFlowIconButton(
+                                onClick = {
+                                    keys = keys.filterIndexed { i, _ -> i != index }
+                                    copiedIndex = null
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Remove key", modifier = Modifier.size(Dimens.Icon))
+                            }
+                        }
+                    }
+                }
+            }
             BoardFlowTextField(
-                value = value,
-                onValueChange = { value = it },
-                label = { Text("API key") },
+                value = newKey,
+                onValueChange = { newKey = it },
+                label = { Text(if (keys.isEmpty()) "API key" else "Add a backup key") },
                 singleLine = true,
                 visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
-                    IconButton(onClick = { visible = !visible }) {
-                        Icon(
-                            if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (visible) "Hide key" else "Show key"
-                        )
+                    IconButton(
+                        onClick = {
+                            keys = withNewKey()
+                            newKey = ""
+                        },
+                        enabled = newKey.isNotBlank()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add key")
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -1261,84 +1345,18 @@ private fun GeminiKeyDialog(initial: String, onSave: (String) -> Unit, onDismiss
                 Spacer(Modifier.weight(1f))
                 BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Cancel") }
                 Spacer(Modifier.width(Spacing.sm))
-                BoardFlowButton(onClick = { onSave(value.trim()) }) { Text("Save") }
+                BoardFlowButton(onClick = { onSave(withNewKey()) }) { Text("Save") }
             }
         }
     }
 }
 
-/** Backup Gemini keys: the app moves to the next one when a key hits its limit. */
-@Composable
-private fun BackupKeysDialog(keys: List<String>, onChange: (List<String>) -> Unit, onDismiss: () -> Unit) {
-    var newKey by remember { mutableStateOf("") }
-    AnimatedDialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md)
-        ) {
-            SettingsDialogHeader(
-                "Backup keys",
-                "When the main key hits its limit and every model is busy, the app moves to the next key."
-            )
-            if (keys.isNotEmpty()) {
-                BoardFlowFormGroup(raised = true) {
-                    keys.forEachIndexed { index, key ->
-                        if (index > 0) BoardFlowFormDivider()
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 56.dp)
-                                .padding(start = Spacing.lg, end = Spacing.xs),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Key ${index + 1}",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.width(72.dp)
-                            )
-                            Text(
-                                "\u2022\u2022\u2022\u2022 " + key.takeLast(4),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
-                            BoardFlowIconButton(
-                                onClick = { onChange(keys.filterIndexed { i, _ -> i != index }) },
-                                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                            ) {
-                                Icon(Icons.Default.Delete, contentDescription = "Remove key ${index + 1}", modifier = Modifier.size(Dimens.Icon))
-                            }
-                        }
-                    }
-                }
-            }
-            BoardFlowTextField(
-                value = newKey,
-                onValueChange = { newKey = it },
-                label = { Text("Add a backup key") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BoardFlowInlineAction(onClick = onDismiss, neutral = true, large = true) { Text("Close") }
-                Spacer(Modifier.width(Spacing.sm))
-                BoardFlowButton(
-                    onClick = {
-                        onChange(keys + newKey.trim())
-                        newKey = ""
-                    },
-                    enabled = newKey.isNotBlank()
-                ) { Text("Add key") }
-            }
-        }
+/** Copies [text] and flags it as sensitive so Android does not preview it on screen. */
+private fun copySensitiveText(context: Context, label: String, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText(label, text)
+    clip.description.extras = PersistableBundle().apply {
+        putBoolean("android.content.extra.IS_SENSITIVE", true)
     }
+    clipboard.setPrimaryClip(clip)
 }
