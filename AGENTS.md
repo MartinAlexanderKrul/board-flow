@@ -358,14 +358,14 @@ Four tabs, each a list of sections (`BoardFlowSectionTitle` over a `BoardFlowFor
 
 - **Sync**: accounts (Google, BGG showing the username, Sheet showing its Google name), BoardGameGeek, Sleeves, Google Sheets
 - **Preferences**: Stats, Logging plays, Collection, Quick guides, Help
-- **Scan**: Gemini (key and backup keys edited in dialogs, model picker, refresh) and Learned from scans
+- **Scan**: Gemini (main and backup keys edited in one dialog, model picker, refresh) and Learned from scans
 - **Data**: Backup and restore, Storage
 
 Details:
 
 - manages BGG credentials (Sync > Accounts > BGG > Edit)
 - manages Google account and sheet connection (Sync > Accounts)
-- manages Gemini configuration (key, backup keys, model, model discovery)
+- manages Gemini configuration (keys, model, model discovery)
 - there is no theme setting: the app has one dark amber theme (`ui/theme/`: `Theme.kt` colours and `BoardFlowColors`, `Type.kt`, `Shape.kt`, `Spacing.kt`); use those tokens instead of raw sizes, radii and colours
 - manages sleeve manufacturer priority (`SleeveManufacturer`; persisted in `SecurePreferences`, exposed via `AppViewModel.sleevePreferredManufacturer`; used in `GameDetailDialog` via `SleeveEntry.preferredFor()`)
 - manages import/export (backup includes recognition templates since format v3)
@@ -589,7 +589,7 @@ Settings > Scan shows the count of saved player hints and a "Clear player recogn
 - text input outside a form group is `BoardFlowTextField` (tonal fill, label inside); inside a form group it is `BoardFlowInlineField`
 - labels are sentence case ("Refresh collection", not "Refresh Collection")
 - tab rows are `ScreenTabRow`: the label size is computed once so the widest label in `ScreenTabs.AllLabels` fits one line in a quarter of the screen (the most tabs any screen has), and every tab row uses that size; add new tab labels to `ScreenTabs.AllLabels`. Every tabbed screen also switches tabs on a horizontal swipe (`swipeToNavigateTabs`)
-- Settings and Sync are lists of sections: a `BoardFlowSectionTitle` (with an optional one-line `supporting`) over one `BoardFlowFormGroup` of `BoardFlowSettingRow`s (amber icon, title, grey detail, then a `BoardFlowSettingValue`, a switch or a chevron). Every action is a row, not a button; clear / delete rows are `destructive = true` (red). Text entry (Gemini key, backup keys) opens a dialog from its row. Results are snackbars
+- Settings and Sync are lists of sections: a `BoardFlowSectionTitle` (with an optional one-line `supporting`) over one `BoardFlowFormGroup` of `BoardFlowSettingRow`s (amber icon, title, grey detail, then a `BoardFlowSettingValue`, a switch or a chevron). Every action is a row, not a button; clear / delete rows are `destructive = true` (red). Text entry (Gemini keys) opens a dialog from its row. Results are snackbars
 - Journal play rows list every player on their own line (`HistoryListPlayerRow`)
 - every game, play and player shown is tappable: a game opens its detail dialog (inside the Journal on top of what is open, via `HistoryScreen.openGame` / `openGameNamed`; a game outside the collection opens too, built from BGG thing data by `SyncViewModel.loadGameItem` and staged like a shelf search result so a status edit adds it; thing details are stored in Room (`bgg_game_details`, DB v14, `CanonicalCollectionStore.getBggGameDetails` / `saveBggGameDetails`, JSON by `BggThingDetailJson`, used for 90 days) by `loadGameItem`, `fetchMissingHistoryThumbnails` and `findBasePlayFixes`, and each asks BGG only for games not stored yet; elsewhere, such as the Quick Setup header, as a dialog over that screen through `AppShell.openGameOverlay`, so back returns to it), a play opens its play details (`openPlay`, an expansion play opens its base play), a player opens their profile. In Journal > Stats a game (top games, records) still filters the play list, since the game dialog is one tap away from a play; rivalry and head-to-head names open the player and On this day opens the play. Challenge counted games, player profile recent plays and most played game, collection stats (Most played, Unplayed shelf), the play details title and expansion chips, and the game page play count all follow this. The Log Play form is the exception: its game header stays put so a half-filled play is not left behind
 - Log Play hides its tabs, search field and "Playing" row while the list scrolls down and brings them back on the way up; it follows the drag direction (`NestedScrollConnection`), not the list position, so a short list does not flicker

@@ -196,7 +196,7 @@ Every tab is a list of sections: a `BoardFlowSectionTitle` over one group of `Bo
 
 - **Sync** (`ui/sync/SyncScreen.kt`): Accounts (Google, BGG with your username, Sheet with its Google name), BoardGameGeek, Sleeves, Google Sheets (sync, CSV import, Drive folders and QR codes, the save-QR switch); the log bar and `LogDialog`; `GoogleManageDialog`, `BggEditDialog`, `SpreadsheetConnectDialog`
 - **Preferences:** Stats, Logging plays (recommendations, chronicles, player colours in plays, expansion plays in BGG win stats, mood templates via `CustomMoodsDialog`), Collection (sleeve brand), Quick guides (update guides, import a guide, clear downloaded guides), Score sheets (update score sheets: a forced catalog check that reports how many sheets were new or updated), Help (setup guide)
-- **Scan:** Gemini (API key via `GeminiKeyDialog`, backup keys via `BackupKeysDialog`, model picker, refresh models) and Learned from scans (`RecognitionTemplatesDialog`, player hints, red clear rows)
+- **Scan:** Gemini (API keys via `GeminiKeysDialog`: the first key is the main one, the rest are backups; a "Show keys" switch reveals them all and each key has a copy button, copied as sensitive; model picker, refresh models) and Learned from scans (`RecognitionTemplatesDialog`, player hints, red clear rows)
 - **Data:** Backup and restore (include secrets switch, export, import), Plays (Add missing base games via `BasePlayFixesDialog`) and Storage (red clear cache row)
 
 ## Intro
